@@ -1,15 +1,15 @@
-#include "catalyst.hh"
 #include "conf/board_conf.hh"
 #include "controls.hh"
 #include "debug.hh"
 #include "drivers/timekeeper.hh"
+#include "macro_seq.hh"
 #include "outputs.hh"
 #include "system.hh"
 
 namespace
 {
 // Initialize the system before main()
-// Catalyst2::System _init;
+Catalyst2::System _init;
 } // namespace
 
 void main()
@@ -34,9 +34,4 @@ void main()
 	while (true) {
 		__NOP();
 	}
-}
-
-void recover_from_task_fault()
-{
-	// Catalyst2::SystemTarget::restart();
 }
