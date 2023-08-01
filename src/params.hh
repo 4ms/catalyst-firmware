@@ -1,38 +1,27 @@
 #pragma once
-#include "controls.hh"
 #include "flags.hh"
+#include "scene.hh"
+#include "sequencer.hh"
 
 namespace Catalyst2
 {
-// Params holds all the modes, settings and parameters for the looping delay
-// Params are set by controls (knobs, jacks, buttons, etc)
+
+// Params holds all the modes, settings and parameters
+// Params are set by UI, based on reading of the user input
+
 struct Params {
-	Controls &controls;
-	Flags &flags;
+	Flags flags;
+	SceneBanks scenes;
+	Sequencer seq{64};
 
-	Params(Controls &controls, Flags &flags)
-		: controls{controls}
-		, flags{flags}
-	{}
+	unsigned cur_bank; //? do we need this? currently active bank?
 
-	void start()
-	{
-		controls.start();
-	}
+	// coefficient of fading from scene to scene
+	float morph_step = 1.f;
 
-	void update()
-	{
-		controls.update();
-	}
-
-private:
-	struct PotState {
-		int16_t cur_val = 0;
-		int16_t prev_val = 0;		  // old_i_smoothed_potadc
-		int16_t track_moving_ctr = 0; // track_moving_pot
-		int16_t delta = 0;			  // pot_delta
-		bool moved = false;			  // flag_pot_changed
-	} slider_state;
+	// TODO: clarify these and name them better, and add/remove as needed:
+	enum class Mode { Sequencer, Pathway, OutofOrderSequence };
+	Mode mode;
 };
 
 } // namespace Catalyst2

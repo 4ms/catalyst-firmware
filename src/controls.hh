@@ -1,8 +1,8 @@
 #pragma once
 #include "conf/board_conf.hh"
+#include "conf/model.hh"
 #include "debug.hh"
 #include "drivers/adc_builtin.hh"
-// #include "drivers/analog_in_ext.hh"
 #include "drivers/debounced_switch.hh"
 #include "util/filter.hh"
 
@@ -17,23 +17,28 @@ class Controls {
 public:
 	Controls() = default;
 
-	// Buttons/Switches:
-	// Board::ModeSwitch mode_switch;
+	Board::TrigJack trig_jack;
+	Board::ResetJack reset_jack;
 
-	// Trig Jacks
-	// Board::HoldJack inf_jack;
+	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
+		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
+		{Board::Enc2A, Board::Enc2B, Board::EncStepSize},
+		{Board::Enc3A, Board::Enc3B, Board::EncStepSize},
+		{Board::Enc4A, Board::Enc4B, Board::EncStepSize},
+		{Board::Enc5A, Board::Enc5B, Board::EncStepSize},
+		{Board::Enc6A, Board::Enc6B, Board::EncStepSize},
+		{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
+		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
+	}};
 
-	uint16_t read_pot(Board::AdcElement adcnum)
+	uint16_t read_pot(Model::AdcElement adcnum)
 	{
 		auto adc_chan_num = std::to_underlying(adcnum);
 		return analog[adc_chan_num].val();
 	}
 
-	enum class ModeSwitch { Sequence, Macro };
-
-	ModeSwitch read_mode_switch()
+	Model::ModeSwitch read_mode_switch()
 	{
-		// return static_cast<SwitchPos>(time_switch.read());
 		return {};
 	}
 
@@ -50,8 +55,17 @@ public:
 	{
 		// MUX IO
 		// Trig jacks
-		// rev_jack.update();
-		// inf_jack.update();
 	}
+
+	void set_led(unsigned led, float value)
+	{
+		if (led >= Model::NumChans)
+			return;
+		// else put the value in some buffer which is
+		//  written to the LED Driver chip later
+	}
+
+	void set_leds(const std::array<float, 8> &values)
+	{}
 };
 } // namespace Catalyst2

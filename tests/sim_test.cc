@@ -1,28 +1,40 @@
-#include "flags.hh"
 #include "macro_seq.hh"
-#include "outputs.hh"
+#include "params.hh"
 
-struct Params {};
+struct SimUI {
+	Catalyst2::Params &params;
+
+	SimUI(Catalyst2::Params &params)
+		: params{params}
+	{
+		// setup some way to read user input (keyboard, mouse, GUI window...)
+		// setup some way to display outputs and leds
+	}
+
+	void update()
+	{
+		// read inputs, and store into params
+	}
+
+	void set_outputs(Catalyst2::Model::OutputBuffer &outs)
+	{
+		// display the outputs
+		(void)outs;
+	}
+};
 
 // Test if we could make a simulator
 void sim_main()
 {
 	using namespace Catalyst2;
-	Flags flags;
-	Params params{controls, flags};
-	MacroSeq macroseq{params, flags};
-	Outputs outs;
 
-	mdrivlib::Timekeeper cvstream(Board::cv_stream_conf, [&macroseq, &params, &outs]() {
-		params.update();
-		auto out = macroseq.update();
-		outs.write(out);
-	});
-
-	params.start();
-	cvstream.start();
+	Params params;
+	SimUI ui{params};
+	MacroSeq macroseq{params};
 
 	while (true) {
-		__NOP();
+		ui.update();
+		auto out = macroseq.update();
+		ui.set_outputs(out);
 	}
 }

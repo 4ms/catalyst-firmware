@@ -1,5 +1,6 @@
 #pragma once
 #include "conf/board_conf.hh"
+#include "conf/model.hh"
 #include "drivers/spi.hh"
 
 namespace Catalyst2
@@ -14,9 +15,9 @@ public:
 		// use Board::DacConf
 	}
 
-	void write(const Board::OutputBuffer &out)
+	void write(const Model::OutputBuffer &out)
 	{
-		//
+		// write to the DAC
 	}
 };
 

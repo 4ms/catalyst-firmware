@@ -1,5 +1,5 @@
 #pragma once
-#include "conf/board_conf.hh"
+#include "conf/model.hh"
 #include "flags.hh"
 #include "params.hh"
 
@@ -8,20 +8,20 @@ namespace Catalyst2
 
 class MacroSeq {
 	Params &params;
-	Flags &flags;
 
 public:
-	MacroSeq(Params &params, Flags &flags)
+	MacroSeq(Params &params)
 		: params{params}
-		, flags{flags}
 	{}
 
-	Board::OutputBuffer update()
+	auto update()
 	{
-		Board::OutputBuffer buf;
+		Model::OutputBuffer buf;
 
 		for (auto &b : buf) {
-			b = 0;
+			// use params to figure out how to fill the output buffer
+			if (params.mode == Params::Mode::Sequencer)
+				b = 0;
 		}
 
 		return buf;

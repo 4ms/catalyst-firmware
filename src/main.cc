@@ -1,10 +1,9 @@
-#include "conf/board_conf.hh"
 #include "controls.hh"
 #include "debug.hh"
 #include "drivers/timekeeper.hh"
 #include "macro_seq.hh"
-#include "outputs.hh"
 #include "system.hh"
+#include "ui.hh"
 
 namespace
 {
@@ -17,19 +16,18 @@ void main()
 	using namespace Catalyst2;
 
 	Controls controls;
-	Flags flags;
-	Params params{controls, flags};
-	MacroSeq macroseq{params, flags};
-	Outputs outs;
+	Params params;
+	UI ui{controls, params};
+	MacroSeq macroseq{params};
 
-	mdrivlib::Timekeeper cvstream(Board::cv_stream_conf, [&macroseq, &params, &outs]() {
-		params.update();
+	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
+		ui.update();
 		auto out = macroseq.update();
-		outs.write(out);
+		ui.set_outputs(out);
 	});
 
-	params.start();
-	cvstream.start();
+	ui.start();
+	cv_stream.start();
 
 	while (true) {
 		__NOP();
