@@ -1,27 +1,48 @@
 #pragma once
+#include "conf/model.hh"
 #include "drivers/adc_builtin_conf.hh"
 #include "drivers/debounced_switch.hh"
+#include "drivers/rotary_general.hh"
 #include "drivers/spi_config_struct.hh"
 #include "drivers/timekeeper.hh"
 #include <array>
 
+// Configuration for everything that might change if we use a different ICs
 namespace Catalyst2::Board
 {
+
 using GPIO = mdrivlib::GPIO;
 using PinDef = mdrivlib::PinDef;
 using PinAF = mdrivlib::PinAF;
 using PinNum = mdrivlib::PinNum;
 using PinMode = mdrivlib::PinMode;
+using PinPolarity = mdrivlib::PinPolarity;
+using TimekeeperConfig = mdrivlib::TimekeeperConfig;
 
-enum class AdcElement { Slider, CVJack };
-constexpr auto NumAdcs = 2;
+//////////////// Trigger Inputs
 
-using DebugPin = mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output>;
+using TrigJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolarity::Normal>;
+using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_14}, PinPolarity::Normal>;
 
-constexpr uint32_t NumOuts = 8;
-using OutputBuffer = std::array<uint16_t, NumOuts>;
+//////////////// Encoders
 
-// using PingJack = mdrivlib::DebouncedPin<BrainPin::D6, Normal>;
+inline constexpr mdrivlib::RotaryStepSize EncStepSize = mdrivlib::RotaryHalfStep;
+inline constexpr PinDef Enc1A{GPIO::B, PinNum::_7};
+inline constexpr PinDef Enc1B{GPIO::C, PinNum::_15};
+inline constexpr PinDef Enc2A{GPIO::B, PinNum::_6};
+inline constexpr PinDef Enc2B{GPIO::B, PinNum::_5};
+inline constexpr PinDef Enc3A{GPIO::B, PinNum::_3};
+inline constexpr PinDef Enc3B{GPIO::B, PinNum::_4};
+inline constexpr PinDef Enc4A{GPIO::A, PinNum::_15};
+inline constexpr PinDef Enc4B{GPIO::A, PinNum::_12};
+inline constexpr PinDef Enc5A{GPIO::A, PinNum::_11};
+inline constexpr PinDef Enc5B{GPIO::A, PinNum::_10};
+inline constexpr PinDef Enc6A{GPIO::A, PinNum::_8};
+inline constexpr PinDef Enc6B{GPIO::A, PinNum::_9};
+inline constexpr PinDef Enc7A{GPIO::B, PinNum::_15};
+inline constexpr PinDef Enc7B{GPIO::B, PinNum::_14};
+inline constexpr PinDef Enc8A{GPIO::B, PinNum::_12};
+inline constexpr PinDef Enc8B{GPIO::B, PinNum::_13};
 
 //////////////// ADC
 
@@ -47,6 +68,7 @@ struct AdcConf : mdrivlib::DefaultAdcPeriphConf {
 	static constexpr uint16_t uni_min_value = 20;
 };
 
+constexpr auto NumAdcs = 2;
 constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
 	{{GPIO::A, PinNum::_0}, mdrivlib::AdcChanNum::_0, mdrivlib::AdcSamplingTime::_56Cycles},
 	{{GPIO::A, PinNum::_1}, mdrivlib::AdcChanNum::_1, mdrivlib::AdcSamplingTime::_56Cycles},
@@ -65,8 +87,17 @@ struct DacSpiConf : mdrivlib::DefaultSpiConf {
 	static constexpr auto data_dir = mdrivlib::SpiDataDir::TXOnly;
 };
 
-constexpr mdrivlib::TimekeeperConfig cv_stream_conf{
-	// TODO
+////////////////// Stream "thread" configuration
+
+const TimekeeperConfig cv_stream_conf{
+	.TIMx = TIM6,
+	.period_ns = TimekeeperConfig::Hz(1000),
+	.priority1 = 2,
+	.priority2 = 2,
 };
+
+///////////////// Debug pin
+
+using DebugPin = mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output>;
 
 } // namespace Catalyst2::Board
