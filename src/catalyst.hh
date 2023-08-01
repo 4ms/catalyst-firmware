@@ -10,12 +10,22 @@ class MacroSeq {
 	Params &params;
 	Flags &flags;
 
+public:
 	MacroSeq(Params &params, Flags &flags)
 		: params{params}
 		, flags{flags}
 	{}
+
 	Board::OutputBuffer update()
-	{}
+	{
+		Board::OutputBuffer buf;
+
+		for (auto &b : buf) {
+			b = 0;
+		}
+
+		return buf;
+	}
 };
 
 } // namespace Catalyst2

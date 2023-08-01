@@ -10,28 +10,28 @@ namespace Catalyst2
 {
 
 class Controls {
-	// ADCs (Pots and CV):
-	// static inline std::array<uint16_t, NumAdcs> cv_adc_buffer;
-	// mdrivlib::AdcDmaPeriph<Brain::CVAdcConf> cv_adcs{cv_adc_buffer,
-	//                                                  Board::CVAdcChans};
-	// std::array<Oversampler<256, uint16_t>, NumPots> pots;
+	static inline std::array<uint16_t, Board::NumAdcs> adc_buffer;
+	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
+	std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
 
 public:
 	Controls() = default;
 
 	// Buttons/Switches:
 	// Board::ModeSwitch mode_switch;
-	using SwitchPos = mdrivlib::SwitchPos;
 
 	// Trig Jacks
 	// Board::HoldJack inf_jack;
 
 	uint16_t read_pot(Board::AdcElement adcnum)
 	{
-		// return pots[adcnum].val();
+		auto adc_chan_num = std::to_underlying(adcnum);
+		return analog[adc_chan_num].val();
 	}
 
-	SwitchPos read_mode_switch()
+	enum class ModeSwitch { Sequence, Macro };
+
+	ModeSwitch read_mode_switch()
 	{
 		// return static_cast<SwitchPos>(time_switch.read());
 		return {};
@@ -39,11 +39,11 @@ public:
 
 	void start()
 	{
-		// pot_adcs.register_callback([this] {
-		//   for (unsigned i = 0; auto &pot : pots)
-		//     pot.add_val(pot_adc_buffer[i++]);
-		// });
-		// pot_adcs.start();
+		adc_dma.register_callback([this] {
+			for (unsigned i = 0; auto &a : analog)
+				a.add_val(adc_buffer[i++]);
+		});
+		adc_dma.start();
 	}
 
 	void update()

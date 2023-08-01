@@ -22,7 +22,7 @@ void main()
 	MacroSeq macroseq{params, flags};
 	Outputs outs;
 
-	Timekeeper cvstream(cv_stream_conf, [&macroseq, &params, &outs]() {
+	mdrivlib::Timekeeper cvstream(Board::cv_stream_conf, [&macroseq, &params, &outs]() {
 		params.update();
 		auto out = macroseq.update();
 		outs.write(out);

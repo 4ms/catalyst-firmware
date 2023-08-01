@@ -1,0 +1,8 @@
+---
+CompileFlags:
+  Add: [
+    "-std=c++2b"
+  ]
+  Remove: [
+    "-ffold-*"
+  ]
