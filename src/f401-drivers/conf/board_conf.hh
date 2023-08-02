@@ -71,6 +71,8 @@ inline constexpr MuxedIOConfig<Board::NumInputMuxChips, Board::NumOutputMuxChips
 	.SelectPins = Board::MuxSelectPins,
 };
 
+inline constexpr std::array<uint32_t, Model::NumChans> ButtonLedMap{4, 6, 2, 1, 7, 5, 3, 0};
+
 //////////////// LED Driver
 
 const mdrivlib::I2CConfig LedDriverConf{
@@ -81,6 +83,8 @@ const mdrivlib::I2CConfig LedDriverConf{
 };
 
 static constexpr uint8_t LedDriverAddr = 0b0101'0000;
+
+inline constexpr std::array<uint32_t, Model::NumChans> EncLedMap{4, 5, 6, 7, 0, 1, 2, 3};
 
 //////////////// ADC
 

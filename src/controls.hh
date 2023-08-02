@@ -76,25 +76,26 @@ public:
 	}
 
 	// TODO: Add More functions as needed: read_scene_button(num), read_encoder() etc.
-	///
 
 	void set_encoder_led(unsigned led, Color color)
 	{
-		if (led >= rgb_leds.size())
+		if (led >= Board::EncLedMap.size())
 			return;
 
-		rgb_leds[led] = color;
+		auto idx = Board::EncLedMap[led];
+		rgb_leds[idx] = color;
 	}
 
 	void set_button_led(unsigned led, bool on)
 	{
-		if (led >= Model::NumChans)
+		if (led >= Board::ButtonLedMap.size())
 			return;
 
+		auto bit = Board::ButtonLedMap[led];
 		if (on)
-			button_leds |= (1 << led);
+			button_leds |= (1 << bit);
 		else
-			button_leds &= ~(1 << led);
+			button_leds &= ~(1 << bit);
 	}
 
 	void start()
@@ -116,10 +117,23 @@ public:
 			enc.update();
 		}
 
-		update_buttons();
+		// FIXME: this is not concurrency-safe; if a call to set_button_led()
+		// is interrupted by controls.update(), an LED could be stuck on or off
+		auto mux_read = muxio.step(button_leds);
+		if (mux_read.has_value()) {
+			update_buttons(mux_read.value());
+		}
 	}
 
-	void update_buttons()
+	void write_to_encoder_leds()
+	{
+		// Takes about 620us to write all LEDs
+		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
+		led_driver.set_all_leds(raw_led_data);
+	}
+
+private:
+	void update_buttons(uint32_t raw_mux_read)
 	{
 		for (auto &but : scene_buttons)
 			but.update(raw_mux_read);
@@ -135,24 +149,6 @@ public:
 		trig_jack_sense.update(raw_mux_read);
 	}
 
-	void update_mux()
-	{
-		// TODO: consider concurrency: button_leds might be |= or &= and interrupted by update_mux()
-		auto result = muxio.step(button_leds);
-
-		// Update raw_mux_read only when muxio returns a complete value
-		if (result.has_value())
-			raw_mux_read = result.value();
-	}
-
-	void write_to_encoder_leds()
-	{
-		// Takes about 620us to write all LEDs
-		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
-		led_driver.set_all_leds(raw_led_data);
-	}
-
-private:
 	// Mux
 	MuxedIO<Board::MuxConf> muxio;
 
@@ -161,7 +157,6 @@ private:
 	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
 	uint32_t button_leds = 0;
-	uint32_t raw_mux_read = 0;
 	std::array<Color, Model::NumChans> rgb_leds;
 };
 } // namespace Catalyst2
