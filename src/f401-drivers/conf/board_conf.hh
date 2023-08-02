@@ -2,6 +2,8 @@
 #include "conf/model.hh"
 #include "drivers/adc_builtin_conf.hh"
 #include "drivers/debounced_switch.hh"
+#include "drivers/i2c_config_struct.hh"
+#include "drivers/muxed_io.hh"
 #include "drivers/rotary_general.hh"
 #include "drivers/spi_config_struct.hh"
 #include "drivers/timekeeper.hh"
@@ -44,6 +46,42 @@ inline constexpr PinDef Enc7B{GPIO::B, PinNum::_14};
 inline constexpr PinDef Enc8A{GPIO::B, PinNum::_12};
 inline constexpr PinDef Enc8B{GPIO::B, PinNum::_13};
 
+//////////////// Muxes
+
+inline constexpr unsigned NumInputMuxChips = 2;
+inline constexpr unsigned NumOutputMuxChips = 1;
+inline constexpr std::array<mdrivlib::PinDef, NumInputMuxChips> MuxInputChipPins{{
+	{GPIO::B, PinNum::_2},
+	{GPIO::B, PinNum::_10},
+}};
+inline constexpr std::array<mdrivlib::PinDef, NumOutputMuxChips> MuxOutputChipPins{{
+	{GPIO::A, PinNum::_3},
+}};
+inline constexpr std::array<mdrivlib::PinDef, 3> MuxSelectPins{{
+	{GPIO::A, PinNum::_6},
+	{GPIO::B, PinNum::_0},
+	{GPIO::B, PinNum::_1},
+}};
+inline constexpr MuxedIOConfig<Board::NumInputMuxChips, Board::NumOutputMuxChips> MuxConf{
+	.InputChipPins = {{
+		{GPIO::B, PinNum::_2},
+		{GPIO::B, PinNum::_10},
+	}},
+	.OutputChipPins = Board::MuxOutputChipPins,
+	.SelectPins = Board::MuxSelectPins,
+};
+
+//////////////// LED Driver
+
+const mdrivlib::I2CConfig LedDriverConf{
+	.I2Cx = I2C1,
+	.SCL = {GPIO::B, PinNum::_8},
+	.SDA = {GPIO::B, PinNum::_9},
+	.timing = {100'000},
+};
+
+static constexpr uint8_t LedDriverAddr = 0b0101'0000;
+
 //////////////// ADC
 
 struct AdcConf : mdrivlib::DefaultAdcPeriphConf {
@@ -61,8 +99,8 @@ struct AdcConf : mdrivlib::DefaultAdcPeriphConf {
 		static constexpr auto RequestNum = DMA_CHANNEL_0;
 		static constexpr auto dma_priority = Low;
 		static constexpr IRQn_Type IRQn = DMA2_Stream0_IRQn;
-		static constexpr uint32_t pri = 0;
-		static constexpr uint32_t subpri = 0;
+		static constexpr uint32_t pri = 3;
+		static constexpr uint32_t subpri = 3;
 	};
 
 	static constexpr uint16_t uni_min_value = 20;
@@ -70,8 +108,8 @@ struct AdcConf : mdrivlib::DefaultAdcPeriphConf {
 
 constexpr auto NumAdcs = 2;
 constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
-	{{GPIO::A, PinNum::_0}, mdrivlib::AdcChanNum::_0, mdrivlib::AdcSamplingTime::_56Cycles},
-	{{GPIO::A, PinNum::_1}, mdrivlib::AdcChanNum::_1, mdrivlib::AdcSamplingTime::_56Cycles},
+	{{GPIO::A, PinNum::_0}, mdrivlib::AdcChanNum::_0, 0, mdrivlib::AdcSamplingTime::_56Cycles},
+	{{GPIO::A, PinNum::_1}, mdrivlib::AdcChanNum::_1, 1, mdrivlib::AdcSamplingTime::_56Cycles},
 }};
 
 ////////////////// DAC

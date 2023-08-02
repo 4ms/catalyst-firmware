@@ -117,7 +117,7 @@ function(create_target target driver_arch)
     ${root}/src/libc_stub.c
     ${root}/src/libcpp_stub.cc
     ${root}/src/main.cc
-    # ${root}/src/hardware_tests/hardware_tests.cc
+    ${root}/src/hardware_tests/hardware_tests.cc
     ${TARGET_SOURCES}
     ${HAL_SOURCES}
   )
