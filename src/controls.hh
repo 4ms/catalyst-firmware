@@ -116,19 +116,14 @@ public:
 			enc.update();
 		}
 
-		// TODO: maybe update_mux() should happen on a separate timer so we don't get flicker?
-		// We might have concurrency issues though...
-		update_mux();
-
-		// TODO: maybe call write_to_encoder_leds() on a separate timer also?
-		//?? write_to_encoder_leds()
+		update_buttons();
 	}
 
-	void update_mux()
+	void update_buttons()
 	{
-		auto raw_mux_read = muxio.readwrite(button_leds);
 		for (auto &but : scene_buttons)
 			but.update(raw_mux_read);
+
 		alt_button.update(raw_mux_read);
 		latch_button.update(raw_mux_read);
 		bank_button.update(raw_mux_read);
@@ -140,13 +135,21 @@ public:
 		trig_jack_sense.update(raw_mux_read);
 	}
 
+	void update_mux()
+	{
+		// TODO: consider concurrency: button_leds might be |= or &= and interrupted by update_mux()
+		auto result = muxio.step(button_leds);
+
+		// Update raw_mux_read only when muxio returns a complete value
+		if (result.has_value())
+			raw_mux_read = result.value();
+	}
+
 	void write_to_encoder_leds()
 	{
-		// Takes about 2.3ms to write all LEDs
-		Debug::Pin0::high();
+		// Takes about 620us to write all LEDs
 		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
 		led_driver.set_all_leds(raw_led_data);
-		Debug::Pin0::low();
 	}
 
 private:
@@ -158,6 +161,7 @@ private:
 	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
 	uint32_t button_leds = 0;
+	uint32_t raw_mux_read = 0;
 	std::array<Color, Model::NumChans> rgb_leds;
 };
 } // namespace Catalyst2
