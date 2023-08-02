@@ -77,7 +77,7 @@ const mdrivlib::I2CConfig LedDriverConf{
 	.I2Cx = I2C1,
 	.SCL = {GPIO::B, PinNum::_8, PinAF::AltFunc4},
 	.SDA = {GPIO::B, PinNum::_9, PinAF::AltFunc4},
-	.timing = {100'000},
+	.timing = {400'000},
 };
 
 static constexpr uint8_t LedDriverAddr = 0b0101'0000;
