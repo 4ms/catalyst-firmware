@@ -4,6 +4,6 @@
 namespace Catalyst2
 {
 
-void run_hardware_test(Controls &controls);
+void run_hardware_test();
 
 }

@@ -6,33 +6,34 @@
 
 namespace Catalyst2
 {
-static Controls controls;
 
 void run_hardware_test()
 {
 	using namespace HWTests;
+
+	Controls controls;
 	UtilIF::link_controls(controls);
 
 	controls.start();
 
 	mdrivlib::Timekeeper encoder_led_update_task{
 		{
-			.TIMx = TIM7,
+			.TIMx = TIM2,
 			.period_ns = mdrivlib::TimekeeperConfig::Hz(120),
-			.priority1 = 1,
-			.priority2 = 1,
+			.priority1 = 2,
+			.priority2 = 0,
 		},
 		[&]() { controls.write_to_encoder_leds(); },
 	};
 
 	mdrivlib::Timekeeper controls_update_task{
 		{
-			.TIMx = TIM6,
+			.TIMx = TIM3,
 			.period_ns = mdrivlib::TimekeeperConfig::Hz(1000),
 			.priority1 = 1,
-			.priority2 = 1,
+			.priority2 = 0,
 		},
-		[&]() { controls.update(); },
+		[&]() { controls.update_mux(); },
 	};
 
 	controls_update_task.start();
@@ -53,8 +54,6 @@ void run_hardware_test()
 
 		auto cv = controls.read_cv() / 4096.f;
 		controls.set_encoder_led(1, Colors::black.blend(Colors::white, cv));
-
-		Color color = controls.a_button.button.is_pressed();
 
 		for (unsigned i = 0; i < Model::NumChans; i++) {
 			bool pressed = controls.get_scene_button(i).is_pressed();

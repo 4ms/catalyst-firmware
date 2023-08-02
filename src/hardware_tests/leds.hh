@@ -12,7 +12,7 @@ struct TestLEDs : ILEDTester {
 
 	void set_led(int led_id, bool turn_on) override
 	{
-		if (led_id < Model::NumChans) {
+		if (led_id < (int)Model::NumChans) {
 			UtilIF::controls->set_button_led(led_id, turn_on);
 		} else {
 			// all encoder leds same color

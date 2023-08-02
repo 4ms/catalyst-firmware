@@ -6,7 +6,7 @@
 namespace Catalyst2::HWTests
 {
 struct UtilIF {
-	static Controls *controls;
+	static inline Controls *controls;
 
 	static void link_controls(Controls &c)
 	{
