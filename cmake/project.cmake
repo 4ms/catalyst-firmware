@@ -125,7 +125,6 @@ function(create_target target driver_arch)
   target_include_directories(
     ${target}.elf
     PRIVATE ${root}/src
-            ${root}/src/hardware_tests
             ${root}/lib/brainboard
             ${root}/lib/mdrivlib
             ${root}/lib/CMSIS/Include

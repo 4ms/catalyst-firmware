@@ -50,6 +50,13 @@ public:
 	MuxedButton mode_switch{3};
 	MuxedButton trig_jack_sense{13}; // Sense pin detects if jack is patched or not
 
+	Toggler &get_scene_button(unsigned idx)
+	{
+		if (idx >= Model::NumChans)
+			idx = 0;
+		return scene_buttons[idx].button;
+	}
+
 	uint16_t read_slider()
 	{
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::Slider);
@@ -76,9 +83,18 @@ public:
 		if (led >= rgb_leds.size())
 			return;
 
-		// put the value in a buffer which is
-		//  written to the LED Driver chip later
 		rgb_leds[led] = color;
+	}
+
+	void set_button_led(unsigned led, bool on)
+	{
+		if (led >= Model::NumChans)
+			return;
+
+		if (on)
+			button_leds |= (1 << led);
+		else
+			button_leds &= ~(1 << led);
 	}
 
 	void start()
@@ -104,6 +120,7 @@ public:
 		// We might have concurrency issues though...
 		update_mux();
 
+		// TODO: maybe call write_to_encoder_leds() on a separate timer also?
 		//?? write_to_encoder_leds()
 	}
 

@@ -8,14 +8,13 @@ namespace Catalyst2
 {
 
 class UI {
-	Controls &controls;
+	Controls controls;
 	Params &params;
 	Outputs outputs;
 
 public:
-	UI(Controls &controls, Params &params)
-		: controls{controls}
-		, params{params}
+	UI(Params &params)
+		: params{params}
 	{}
 
 	void start()

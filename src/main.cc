@@ -14,13 +14,11 @@ void main()
 {
 	using namespace Catalyst2;
 
-	Controls controls;
-
 	// Force hardware test for now
-	run_hardware_test(controls);
+	run_hardware_test();
 
 	Params params;
-	UI ui{controls, params};
+	UI ui{params};
 	MacroSeq macroseq{params};
 
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
