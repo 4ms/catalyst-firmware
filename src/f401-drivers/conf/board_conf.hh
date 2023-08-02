@@ -75,8 +75,8 @@ inline constexpr MuxedIOConfig<Board::NumInputMuxChips, Board::NumOutputMuxChips
 
 const mdrivlib::I2CConfig LedDriverConf{
 	.I2Cx = I2C1,
-	.SCL = {GPIO::B, PinNum::_8},
-	.SDA = {GPIO::B, PinNum::_9},
+	.SCL = {GPIO::B, PinNum::_8, PinAF::AltFunc4},
+	.SDA = {GPIO::B, PinNum::_9, PinAF::AltFunc4},
 	.timing = {100'000},
 };
 

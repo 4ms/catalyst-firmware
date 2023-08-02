@@ -125,6 +125,7 @@ public:
 
 	void write_to_encoder_leds()
 	{
+		// Takes about 2.3ms to write all LEDs
 		Debug::Pin0::high();
 		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
 		led_driver.set_all_leds(raw_led_data);
