@@ -1,5 +1,8 @@
+#include "conf/palette.hh"
 #include "controls.hh"
+#include "hardware_tests/adc.hh"
 #include "hardware_tests/buttons.hh"
+#include "hardware_tests/encoders.hh"
 #include "hardware_tests/leds.hh"
 #include "hardware_tests/util.hh"
 #include "outputs.hh"
@@ -29,11 +32,11 @@ void run_hardware_test()
 	mdrivlib::Timekeeper controls_update_task{
 		{
 			.TIMx = TIM3,
-			.period_ns = mdrivlib::TimekeeperConfig::Hz(1000),
+			.period_ns = mdrivlib::TimekeeperConfig::Hz(500),
 			.priority1 = 1,
 			.priority2 = 0,
 		},
-		[&]() { controls.update_mux(); },
+		[&]() { controls.update(); },
 	};
 
 	controls_update_task.start();
@@ -47,21 +50,20 @@ void run_hardware_test()
 	TestButtons buttontester;
 	buttontester.run_test();
 
-	while (true) {
+	auto adc_test = TestAdc{controls};
+	adc_test.run_test();
 
-		uint8_t slider = controls.read_slider() / 16U;
-		controls.set_encoder_led(0, Colors::black.blend(Colors::white, slider));
+	auto enc_test = TestEncoders{controls};
+	enc_test.run_test();
 
-		auto cv = controls.read_cv() / 4096.f;
-		controls.set_encoder_led(1, Colors::black.blend(Colors::white, cv));
+	// TODO:
+	// DACTest;
 
-		for (unsigned i = 0; i < Model::NumChans; i++) {
-			bool pressed = controls.get_scene_button(i).is_pressed();
-			controls.set_button_led(i, pressed);
-		}
+	while (true)
+		;
 
-		HAL_Delay(10);
-	}
+	controls_update_task.stop();
+	encoder_led_update_task.stop();
 }
 
 } // namespace Catalyst2

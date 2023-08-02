@@ -15,6 +15,7 @@ void main()
 	using namespace Catalyst2;
 
 	// Force hardware test for now
+	//
 	run_hardware_test();
 
 	Params params;

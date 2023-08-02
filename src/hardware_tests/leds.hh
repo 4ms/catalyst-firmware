@@ -1,4 +1,5 @@
 #pragma once
+#include "conf/palette.hh"
 #include "hardware_tests/util.hh"
 #include "libhwtests/LEDTester.hh"
 
@@ -16,10 +17,11 @@ struct TestLEDs : ILEDTester {
 			UtilIF::controls->set_button_led(led_id, turn_on);
 		} else {
 			// all encoder leds same color
-			Color color = led_id == 8  ? Colors::red :
-						  led_id == 9  ? Colors::green :
-						  led_id == 10 ? Colors::blue :
-										 Colors::white;
+			Color color = turn_on == false ? Palette::black :
+						  led_id == 8	   ? Palette::red :
+						  led_id == 9	   ? Palette::green :
+						  led_id == 10	   ? Palette::blue :
+											 Palette::white;
 
 			for (unsigned i = 0; i < Model::NumChans; i++)
 				UtilIF::controls->set_encoder_led(i, color);
@@ -28,8 +30,7 @@ struct TestLEDs : ILEDTester {
 
 	void pause_between_steps() override
 	{
-		Util::pause_until_button_pressed();
-		Util::pause_until_button_released();
+		HAL_Delay(300);
 	}
 };
 } // namespace Catalyst2::HWTests

@@ -1,5 +1,6 @@
 #pragma once
 #include "conf/board_conf.hh"
+#include "conf/palette.hh"
 #include "hardware_tests/util.hh"
 #include "libhwtests/ButtonChecker.hh"
 
@@ -34,13 +35,13 @@ struct TestButtons : IButtonChecker {
 		if (channel == 14)
 			return UtilIF::controls->mode_switch.button.is_pressed();
 		if (channel == 15)
-			return UtilIF::controls->trig_jack_sense.button.is_pressed();
+			return !UtilIF::controls->trig_jack_sense.button.is_pressed();
 		return false;
 	}
 
 	void _set_error_indicator(uint8_t channel, ErrorType err) override
 	{
-		UtilIF::controls->set_encoder_led(7, err == ErrorType::None ? Colors::off : Colors::red);
+		UtilIF::controls->set_encoder_led(7, err == ErrorType::None ? Palette::off : Palette::red);
 	}
 
 	void _set_indicator(uint8_t indicator_num, bool newstate) override
@@ -48,7 +49,7 @@ struct TestButtons : IButtonChecker {
 		if (indicator_num < 8)
 			UtilIF::controls->set_button_led(indicator_num, newstate);
 		else
-			UtilIF::controls->set_encoder_led(indicator_num - 8, Colors::green);
+			UtilIF::controls->set_encoder_led(indicator_num - 8, newstate ? Palette::green : Palette::off);
 	}
 
 	void _check_max_one_pin_changed() override

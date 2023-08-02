@@ -17,10 +17,12 @@ struct UtilIF {
 	{
 		return controls->get_scene_button(0).is_pressed();
 	}
+
 	static void delay_ms(uint32_t ms)
 	{
 		HAL_Delay(ms);
 	}
+
 	static void set_main_button_led(bool turn_on)
 	{
 		controls->set_button_led(0, turn_on);
