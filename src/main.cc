@@ -1,13 +1,12 @@
 #include "controls.hh"
 #include "debug.hh"
 #include "drivers/timekeeper.hh"
+#include "hardware_tests/hardware_tests.hh"
 #include "macro_seq.hh"
 #include "system.hh"
 #include "ui.hh"
-
 namespace
 {
-// Initialize the system before main()
 Catalyst2::System _init;
 } // namespace
 
@@ -16,6 +15,10 @@ void main()
 	using namespace Catalyst2;
 
 	Controls controls;
+
+	// Force hardware test for now
+	run_hardware_test(controls);
+
 	Params params;
 	UI ui{controls, params};
 	MacroSeq macroseq{params};
