@@ -138,6 +138,13 @@ const TimekeeperConfig cv_stream_conf{
 	.priority2 = 2,
 };
 
+const TimekeeperConfig encoder_led_task{
+	.TIMx = TIM2,
+	.period_ns = TimekeeperConfig::Hz(120),
+	.priority1 = 2,
+	.priority2 = 0,
+};
+
 ///////////////// Debug pin
 
 using DebugPin = mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output>;

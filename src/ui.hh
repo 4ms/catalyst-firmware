@@ -15,36 +15,42 @@ class UI {
 public:
 	UI(Params &params)
 		: params{params}
-	{}
+	{
+		encoder_led_update_task.init(Board::encoder_led_task, [&]() { controls.write_to_encoder_leds(); });
+	}
 
 	void start()
 	{
+		encoder_led_update_task.start();
 		controls.start();
 	}
 
 	void update()
 	{
 		controls.update();
+
+		// TODO
 		// Check controls and update params:
 		// example;
 		//  if (...)
-		// 	    auto value_change = controls.read_encoder(i);
-		//      params.scenes[cur_bank][i] += value_change;
-		//      or: param.change_scene_chan(i, value_changed);
+		// 	    auto value_change = controls.read_encoder(chan);
+		//      params.scenes[cur_bank][chan] += value_change;
+		//      or: param.change_scene_chan(chan, value_changed);
 		//
 		//  if (controls.alt_button.is_pressed() && controls.read_encoder(SeqLength).motion)
-		//  	params.seq.length(...);
+		//  	params.seq.set_length(...);
 	}
 
 	void set_outputs(Model::OutputBuffer &outs)
 	{
 		outputs.write(outs);
 
-		// Then display outs on encoders, depending on the mode
-		// if (controls.set_encoder_leds(...)
+		// TODO: display outs on encoders, depending on the mode
 	}
 
 private:
+	mdrivlib::Timekeeper encoder_led_update_task;
+
 	// TODO:remove this if not using
 	struct PotState {
 		int16_t cur_val = 0;
