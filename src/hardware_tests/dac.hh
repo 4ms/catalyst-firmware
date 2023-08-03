@@ -3,6 +3,7 @@
 #include "controls.hh"
 #include "hardware_tests/util.hh"
 #include "outputs.hh"
+#include "util/countzip.hh"
 
 namespace Catalyst2::HWTests
 {
@@ -10,7 +11,7 @@ namespace Catalyst2::HWTests
 struct TestDac {
 	Controls &controls;
 	Outputs outputs;
-	std::array<uint8_t, 8> rotvals{0};
+	std::array<uint8_t, Model::NumChans> rotvals{0};
 	Model::OutputBuffer outs;
 
 	TestDac(Controls &controls)
@@ -21,11 +22,11 @@ struct TestDac {
 	{
 		while (true) {
 
-			for (unsigned i = 0; auto &r : rotvals) {
-				r += controls.encoders[i].read();
+			for (auto [i, r] : countzip(rotvals)) {
+				r += (1 + i);
 				controls.set_encoder_led(i, Palette::red.blend(Palette::blue, r));
 
-				outs[i] = r * 8;
+				outs[i] = r << 8;
 				outputs.write(outs);
 
 				i++;
