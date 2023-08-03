@@ -2,24 +2,32 @@
 #include "conf/palette.hh"
 #include "controls.hh"
 #include "hardware_tests/util.hh"
+#include "outputs.hh"
 
 namespace Catalyst2::HWTests
 {
 
-struct TestEncoders {
+struct TestDac {
 	Controls &controls;
+	Outputs outputs;
 	std::array<uint8_t, 8> rotvals{0};
+	Model::OutputBuffer outs;
 
-	TestEncoders(Controls &controls)
+	TestDac(Controls &controls)
 		: controls{controls}
 	{}
 
 	void run_test()
 	{
 		while (true) {
+
 			for (unsigned i = 0; auto &r : rotvals) {
-				r += controls.encoders[i].read() * 8;
-				controls.set_encoder_led(i, Palette::orange.blend(Palette::blue, r));
+				r += controls.encoders[i].read();
+				controls.set_encoder_led(i, Palette::red.blend(Palette::blue, r));
+
+				outs[i] = r * 8;
+				outputs.write(outs);
+
 				i++;
 			}
 
@@ -28,7 +36,6 @@ struct TestEncoders {
 			if (Util::main_button_pressed())
 				break;
 		}
-
 		while (Util::main_button_pressed())
 			;
 	}

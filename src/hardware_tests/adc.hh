@@ -45,7 +45,8 @@ struct TestAdc {
 
 			HAL_Delay(10);
 		}
-		while (!Util::main_button_pressed())
+
+		while (Util::main_button_pressed())
 			;
 	}
 };
