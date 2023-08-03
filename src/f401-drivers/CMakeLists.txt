@@ -15,16 +15,17 @@ set(ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mthumb)
 
 set(TARGET_INCLUDES
     ${root}/src/f401-drivers/
+    ${root}/lib/mdrivlib/target/stm32f401
     ${root}/lib/mdrivlib/target/stm32f4xx
     ${root}/lib/CMSIS/Device/ST/STM32F4xx/Include
     ${root}/lib/STM32F4xx_HAL_Driver/Inc
 )
 
 set(TARGET_SOURCES
-    # ${root}/src/f401-drivers/flash.cc
     ${root}/lib/mdrivlib/drivers/hal_handlers.cc
-    # ${root}/lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c
-    # ${root}/lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c
+    # ${root}/src/f401-drivers/flash.cc
+    ${root}/lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c
+    ${root}/lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c
 )
 
 set(WAV_ENCODE_PYTHON_CMD

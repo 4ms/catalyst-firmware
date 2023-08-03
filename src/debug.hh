@@ -1,17 +1,9 @@
 #pragma once
 #include "conf/board_conf.hh"
 
-namespace Debug
+namespace Catalyst2::Debug
 {
-struct Disabled {
-	static void high()
-	{}
-	static void low()
-	{}
-};
-
-using Pin0 = mdrivlib::FPin<Board::Debug1.gpio, Board::Debug1.pin>;
-
-}; // namespace Debug
+using Pin0 = Board::DebugPin;
+}; // namespace Catalyst2::Debug
 
 #define GCC_OPTIMIZE_OFF __attribute__((optimize("-O0")))

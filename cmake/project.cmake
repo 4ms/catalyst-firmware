@@ -32,19 +32,18 @@ endfunction()
 function(set_bootloader_hal_sources sources family_name)
   string(TOUPPER ${family_name} family_name_uc)
   set(${sources}
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_cortex.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_dma.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_gpio.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c_ex.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_pwr.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_pwr_ex.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_rcc.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_rcc_ex.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_sai.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_tim.c
-      # ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_ll_tim.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_cortex.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_dma.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_gpio.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c_ex.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_pwr.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_pwr_ex.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_rcc.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_rcc_ex.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_tim.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_ll_tim.c
       PARENT_SCOPE
   )
 endfunction()
@@ -105,6 +104,7 @@ function(create_target target driver_arch)
     ${root}/lib/mdrivlib/drivers/timekeeper.cc
     ${root}/lib/mdrivlib/drivers/i2c.cc
     ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
     ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c
     ${root}/lib/libhwtests/src/AdcChecker.cc
     ${root}/lib/libhwtests/src/AdcRangeChecker.cc
@@ -117,7 +117,7 @@ function(create_target target driver_arch)
     ${root}/src/libc_stub.c
     ${root}/src/libcpp_stub.cc
     ${root}/src/main.cc
-    # ${root}/src/hardware_tests/hardware_tests.cc
+    ${root}/src/hardware_tests/hardware_tests.cc
     ${TARGET_SOURCES}
     ${HAL_SOURCES}
   )
@@ -125,7 +125,6 @@ function(create_target target driver_arch)
   target_include_directories(
     ${target}.elf
     PRIVATE ${root}/src
-            ${root}/src/hardware_tests
             ${root}/lib/brainboard
             ${root}/lib/mdrivlib
             ${root}/lib/CMSIS/Include

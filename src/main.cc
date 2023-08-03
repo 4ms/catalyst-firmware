@@ -1,42 +1,37 @@
-#include "catalyst.hh"
-#include "conf/board_conf.hh"
 #include "controls.hh"
 #include "debug.hh"
 #include "drivers/timekeeper.hh"
-#include "outputs.hh"
+#include "hardware_tests/hardware_tests.hh"
+#include "macro_seq.hh"
 #include "system.hh"
-
+#include "ui.hh"
 namespace
 {
-// Initialize the system before main()
-// Catalyst2::System _init;
+Catalyst2::System _init;
 } // namespace
 
 void main()
 {
 	using namespace Catalyst2;
 
-	Controls controls;
-	Flags flags;
-	Params params{controls, flags};
-	MacroSeq macroseq{params, flags};
-	Outputs outs;
+	// Force hardware test for now
+	//
+	run_hardware_test();
 
-	Timekeeper cvstream(cv_stream_conf, [&macroseq, &params, &outs]() {
-		params.update();
+	Params params;
+	UI ui{params};
+	MacroSeq macroseq{params};
+
+	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
+		ui.update();
 		auto out = macroseq.update();
-		outs.write(out);
+		ui.set_outputs(out);
 	});
 
-	params.start();
-	cvstream.start();
+	ui.start();
+	cv_stream.start();
 
 	while (true) {
 		__NOP();
 	}
-}
-
-void recover_from_task_fault()
-{
-	// Catalyst2::SystemTarget::restart();
 }
