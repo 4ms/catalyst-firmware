@@ -141,6 +141,23 @@ function(create_target target driver_arch)
   target_link_libraries(libhwtests${target} PRIVATE ${target}_ARCH)
   target_link_libraries(${target}.elf PRIVATE libhwtests${target})
 
+  # Target: XXX-flash: Flashes bootloader and app to chip. Requires JFlashExe to be executable and in your $PATH
+  set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
+  add_custom_target(
+    ${target}-jflash-app
+    DEPENDS ${target}.elf
+    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}.hex -auto -exit
+    USES_TERMINAL
+  )
+
+  # FIXME: this only works for F4 chips:
+  add_custom_target(
+    ${target}-oflash-app
+    DEPENDS ${target}.bin
+    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.bin exit 0x08000000"
+    USES_TERMINAL
+  )
+
 endfunction()
 
 function(create_bootloader_target target driver_arch)
@@ -201,14 +218,5 @@ function(create_bootloader_target target driver_arch)
             ${TARGET_BASE}-combo.hex
   )
   set_target_properties(${target}-combo PROPERTIES ADDITIONAL_CLEAN_FILES "${TARGET_BASE}-combo.hex")
-
-  # Target: XXX-flash: Flashes bootloader and app to chip. Requires JFlashExe to be executable and in your $PATH
-  add_custom_target(
-    ${target}-flash
-    DEPENDS ${target}-combo
-    COMMAND echo "JFlashExe -openprj${CMAKE_SOURCE_DIR}/${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit"
-    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit
-    USES_TERMINAL
-  )
 
 endfunction()
