@@ -17,6 +17,22 @@ public:
 		// use Board::DacConf
 		spi.configure();
 		spi.enable();
+		uint8_t data[3];
+		data[2] = 0b0100*0000;
+		data[1] = 0;
+		data[0] = 0;
+
+		spi.select<0>();
+
+			for (auto data_byte = 0; data_byte < 3; data_byte++)
+			{
+				while(!spi.tx_space_available())
+				;
+				spi.load_tx_data(data[data_byte]);
+				// spi.start_transfer(); //not necessary ?
+			}	
+		spi.unselect<0>();
+
 	}
 
 	void write(const Model::OutputBuffer &out)
@@ -47,7 +63,7 @@ private:
 	//write to and update dac channel N
 	//datasheet page 20
 	static constexpr uint8_t write_command = 0b00110000; 
-	
+
 	SpiPeriph<Board::DacSpiConf> spi;
 };
 
