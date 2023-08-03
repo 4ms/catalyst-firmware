@@ -4,10 +4,8 @@
 
 namespace Catalyst2
 {
-// TODO: Is this a good way of assigning buttons to the raw bits from the Muxes?
-// Replace if needed...
-struct MuxedButton {
-	Toggler button;
+
+struct MuxedButton : Toggler {
 	uint8_t bit;
 
 	MuxedButton(uint8_t bit_num)
@@ -16,7 +14,7 @@ struct MuxedButton {
 
 	void update(uint32_t raw_mux_read)
 	{
-		button.set_state(raw_mux_read & (1 << bit));
+		register_state(raw_mux_read & (1 << bit));
 	}
 };
 

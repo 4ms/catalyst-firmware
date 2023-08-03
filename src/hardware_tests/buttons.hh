@@ -19,23 +19,23 @@ struct TestButtons : IButtonChecker {
 	bool _read_button(uint8_t channel) override
 	{
 		if (channel < 8)
-			return UtilIF::controls->get_scene_button(channel).is_pressed();
+			return UtilIF::controls->scene_button(channel).is_pressed();
 		if (channel == 8)
-			return UtilIF::controls->play_button.button.is_pressed();
+			return UtilIF::controls->play_button.is_pressed();
 		if (channel == 9)
-			return UtilIF::controls->a_button.button.is_pressed();
+			return UtilIF::controls->a_button.is_pressed();
 		if (channel == 10)
-			return UtilIF::controls->latch_button.button.is_pressed();
+			return UtilIF::controls->latch_button.is_pressed();
 		if (channel == 11)
-			return UtilIF::controls->b_button.button.is_pressed();
+			return UtilIF::controls->b_button.is_pressed();
 		if (channel == 12)
-			return UtilIF::controls->alt_button.button.is_pressed();
+			return UtilIF::controls->alt_button.is_pressed();
 		if (channel == 13)
-			return UtilIF::controls->bank_button.button.is_pressed();
+			return UtilIF::controls->bank_button.is_pressed();
 		if (channel == 14)
-			return UtilIF::controls->mode_switch.button.is_pressed();
+			return UtilIF::controls->mode_switch.is_pressed();
 		if (channel == 15)
-			return !UtilIF::controls->trig_jack_sense.button.is_pressed();
+			return !UtilIF::controls->trig_jack_sense.is_pressed();
 		return false;
 	}
 

@@ -38,6 +38,7 @@ public:
 	}};
 
 	// Buttons
+	// TODO: put these indices into board_conf.hh
 	std::array<MuxedButton, Model::NumChans> scene_buttons{11, 8, 7, 5, 9, 10, 4, 6};
 	MuxedButton alt_button{0};
 	MuxedButton latch_button{12};
@@ -48,13 +49,13 @@ public:
 
 	// Switches
 	MuxedButton mode_switch{3};
-	MuxedButton trig_jack_sense{13}; // Sense pin detects if jack is patched or not
+	MuxedButton trig_jack_sense{13};
 
-	Toggler &get_scene_button(unsigned idx)
+	auto &scene_button(unsigned idx)
 	{
 		if (idx >= Model::NumChans)
 			idx = 0;
-		return scene_buttons[idx].button;
+		return scene_buttons[idx];
 	}
 
 	uint16_t read_slider()
@@ -72,7 +73,7 @@ public:
 	Model::ModeSwitch read_mode_switch()
 	{
 		using enum Model::ModeSwitch;
-		return mode_switch.button.is_pressed() ? Sequence : Macro;
+		return mode_switch.is_pressed() ? Sequence : Macro;
 	}
 
 	// TODO: Add More functions as needed: read_scene_button(num), read_encoder() etc.
@@ -117,8 +118,9 @@ public:
 			enc.update();
 		}
 
-		// FIXME: this is not concurrency-safe; if a call to set_button_led()
-		// is interrupted by controls.update(), an LED could be stuck on or off
+		// TODO: double-check if this is concurrency-safe:
+		// - update() might interrupt the read-modify-write that happens in set_button_led()
+		// - update_buttons() might interrupt a button being read
 		auto mux_read = muxio.step(button_leds);
 		if (mux_read.has_value()) {
 			update_buttons(mux_read.value());
