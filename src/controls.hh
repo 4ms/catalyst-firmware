@@ -111,7 +111,7 @@ public:
 
 	void toggle_button_led(unsigned led)
 	{
-		bool temp = get_button_led(led);
+		auto temp = get_button_led(led);
 		temp ^= 1;
 		set_button_led(led, temp);
 	}
