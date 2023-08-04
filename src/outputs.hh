@@ -34,8 +34,8 @@ public:
 
 		for (auto [chan, val] : countzip(out)) {
 			data_buffer[0] = write_command | chan;
-			data_buffer[1] = static_cast<uint8_t>(val >> 8);
-			data_buffer[2] = static_cast<uint8_t>(val & 0xff);
+			data_buffer[1] = static_cast<uint8_t>(val >> 8) ^ 0xff;
+			data_buffer[2] = static_cast<uint8_t>(val & 0xff) ^ 0xff;
 			send_data(data_buffer);
 		}
 	}
