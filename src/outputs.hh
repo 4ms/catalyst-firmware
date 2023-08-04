@@ -3,6 +3,7 @@
 #include "conf/model.hh"
 #include "drivers/spi.hh"
 #include "util/countzip.hh"
+#include <span>
 
 using namespace mdrivlib;
 
@@ -41,7 +42,7 @@ public:
 	}
 
 private:
-	void send_data(std::span<uint8_t, 3> dbuf)
+	void send_data(std::span<uint8_t> dbuf)
 	{
 		spi.select<0>();
 
