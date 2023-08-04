@@ -31,8 +31,12 @@ public:
 	{
 		controls.update();
 
-		if (update_sequencer())
-			/* sequencer.step()?? */;
+		// for testing clock
+		params.mode = Params::Mode::Sequencer;
+		if (update_sequencer()) {
+			controls.toggle_button_led(0);
+			/* sequencer.step()?? */
+		}
 
 		// TODO
 		// Check controls and update params:
