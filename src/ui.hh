@@ -1,6 +1,7 @@
 #pragma once
 #include "conf/model.hh"
 #include "controls.hh"
+#include "intclock.hh"
 #include "outputs.hh"
 #include "params.hh"
 
@@ -10,6 +11,7 @@ namespace Catalyst2
 class UI {
 	Controls controls;
 	Params &params;
+	InternalClock<Board::cv_stream_hz> intclock;
 	Outputs outputs;
 
 public:
@@ -28,6 +30,9 @@ public:
 	void update()
 	{
 		controls.update();
+
+		if (update_sequencer())
+			/* sequencer.step()?? */;
 
 		// TODO
 		// Check controls and update params:
@@ -49,6 +54,20 @@ public:
 	}
 
 private:
+	bool update_sequencer()
+	{
+		bool pulse = false;
+
+		if (controls.trig_jack_sense.is_high()) {
+			intclock.update();
+			pulse = intclock.step();
+		} else {
+			pulse = controls.trig_jack.just_went_high();
+		}
+
+		return params.mode == Params::Mode::Sequencer ? pulse : false;
+	}
+
 	mdrivlib::Timekeeper encoder_led_update_task;
 
 	// TODO:remove this if not using
