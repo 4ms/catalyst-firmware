@@ -23,13 +23,13 @@ struct TestDac {
 		while (true) {
 
 			for (auto [i, r] : countzip(rotvals)) {
-				r += (1 + i);
-				controls.set_encoder_led(i, Palette::red.blend(Palette::blue, r));
 
+				bool x = i == (controls.read_slider() >> 9);
+				controls.set_button_led(i, x);
+				r = 255 * x;
+				controls.set_encoder_led(i, Palette::red.blend(Palette::blue, r));
 				outs[i] = r << 8;
 				outputs.write(outs);
-
-				i++;
 			}
 
 			HAL_Delay(10);
