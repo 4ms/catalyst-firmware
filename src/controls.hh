@@ -61,7 +61,7 @@ public:
 	uint16_t read_slider()
 	{
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::Slider);
-		return analog[adc_chan_num].val();
+		return (1ul << 12) - 1 - analog[adc_chan_num].val();
 	}
 
 	uint16_t read_cv()
