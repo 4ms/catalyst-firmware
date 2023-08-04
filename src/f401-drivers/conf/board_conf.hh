@@ -23,8 +23,8 @@ using TimekeeperConfig = mdrivlib::TimekeeperConfig;
 
 //////////////// Trigger Inputs
 
-using TrigJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolarity::Normal>;
-using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_14}, PinPolarity::Normal>;
+using TrigJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_14}, PinPolarity::Inverted>;
+using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolarity::Inverted>;
 
 //////////////// Encoders
 
@@ -130,17 +130,18 @@ struct DacSpiConf : mdrivlib::DefaultSpiConf {
 };
 
 ////////////////// Stream "thread" configuration
-
+constexpr unsigned cv_stream_hz = 1000;
 const TimekeeperConfig cv_stream_conf{
 	.TIMx = TIM3,
-	.period_ns = TimekeeperConfig::Hz(1000),
-	.priority1 = 2,
+	.period_ns = TimekeeperConfig::Hz(cv_stream_hz),
+	.priority1 = 1,
 	.priority2 = 2,
 };
 
+constexpr unsigned encoder_led_hz = 120;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
-	.period_ns = TimekeeperConfig::Hz(120),
+	.period_ns = TimekeeperConfig::Hz(encoder_led_hz),
 	.priority1 = 2,
 	.priority2 = 0,
 };
