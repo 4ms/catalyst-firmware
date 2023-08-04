@@ -16,7 +16,7 @@ void main()
 
 	// Force hardware test for now
 	//
-	run_hardware_test();
+	// run_hardware_test();
 
 	Params params;
 	UI ui{params};
