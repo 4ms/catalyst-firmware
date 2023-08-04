@@ -47,7 +47,7 @@ public:
 	}
 
 private:
-	unsigned bpm;
+	uint16_t bpm;
 	unsigned ticks_per_pulse;
 	unsigned tick{0};
 	bool step_{false};
