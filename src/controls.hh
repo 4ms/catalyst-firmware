@@ -112,18 +112,19 @@ public:
 
 	void update()
 	{
+		// TODO: double-check if this is concurrency-safe:
+		// - update() might interrupt the read-modify-write that happens in set_button_led()
+		// - update_buttons() might interrupt a button being read
+		// - do this routine first for the sake of non-flickering leds
+		auto mux_read = muxio.step(button_leds);
+		if (mux_read.has_value()) {
+			update_buttons(mux_read.value());
+		}
+
 		trig_jack.update();
 		reset_jack.update();
 		for (auto &enc : encoders) {
 			enc.update();
-		}
-
-		// TODO: double-check if this is concurrency-safe:
-		// - update() might interrupt the read-modify-write that happens in set_button_led()
-		// - update_buttons() might interrupt a button being read
-		auto mux_read = muxio.step(button_leds);
-		if (mux_read.has_value()) {
-			update_buttons(mux_read.value());
 		}
 	}
 
