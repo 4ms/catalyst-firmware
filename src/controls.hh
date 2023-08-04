@@ -99,6 +99,23 @@ public:
 			button_leds &= ~(1 << bit);
 	}
 
+	bool get_button_led(unsigned led)
+	{
+		if (led >= Board::ButtonLedMap.size())
+			return false;
+
+		auto bit = Board::ButtonLedMap[led];
+
+		return button_leds & (1 << bit);
+	}
+
+	void toggle_button_led(unsigned led)
+	{
+		bool temp = get_button_led(led);
+		temp ^= 1;
+		set_button_led(led, temp);
+	}
+
 	void start()
 	{
 		adc_dma.register_callback([this] {
