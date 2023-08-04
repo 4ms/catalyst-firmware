@@ -154,7 +154,7 @@ function(create_target target driver_arch)
   add_custom_target(
     ${target}-oflash-app
     DEPENDS ${target}.bin
-    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.bin exit 0x08000000"
+    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.hex verify reset exit"
     USES_TERMINAL
   )
 
