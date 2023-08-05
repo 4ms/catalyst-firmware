@@ -30,20 +30,18 @@ public:
 	}
 	void set_bpm(unsigned bpm)
 	{
+		// is there a clamping util?
+		if (bpm > 300)
+			bpm = 300;
+		if (bpm < 30)
+			bpm = 30;
+
 		this->bpm = bpm;
 		ticks_per_pulse = static_cast<unsigned>(updates_per_minute / bpm);
 	}
 	void bpm_inc(int by = 1)
 	{
-		int new_bpm = bpm + by;
-
-		// is there a clamping util?
-		if (new_bpm > 300)
-			new_bpm = 300;
-		if (new_bpm < 30)
-			new_bpm = 30;
-
-		set_bpm(new_bpm);
+		set_bpm(bpm + by);
 	}
 
 private:
