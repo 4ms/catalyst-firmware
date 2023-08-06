@@ -11,17 +11,22 @@ namespace Catalyst2
 
 struct Params {
 	Flags flags;
-	SceneBanks scenes;
-	Sequencer seq{64};
-
-	unsigned cur_bank; //? do we need this? currently active bank?
+	Part part;
+	// Sequencer seq{64};
 
 	// coefficient of fading from scene to scene
 	float morph_step = 1.f;
+	float cv_offset = 0.f;
 
 	// TODO: clarify these and name them better, and add/remove as needed:
-	enum class Mode { Sequencer, Pathway, OutofOrderSequence };
+	enum class Mode : bool { Sequencer, Macro };
 	Mode mode;
+
+	enum class SeqMode { Multi, Single };
+	SeqMode seqmode = SeqMode::Multi;
+
+	enum class MacroMode { Classic, Pathway, OutofOrderSequence };
+	MacroMode macromode = MacroMode::Classic;
 };
 
 } // namespace Catalyst2
