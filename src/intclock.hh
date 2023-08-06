@@ -1,5 +1,6 @@
 #pragma once
 #include "conf/model.hh"
+#include <algorithm>
 
 namespace Catalyst2
 {
@@ -30,13 +31,7 @@ public:
 	}
 	void set_bpm(unsigned bpm)
 	{
-		// is there a clamping util?
-		if (bpm > 300)
-			bpm = 300;
-		if (bpm < 30)
-			bpm = 30;
-
-		this->bpm = bpm;
+		this->bpm = std::clamp(bpm, 30u, 300u);
 		ticks_per_pulse = static_cast<unsigned>(updates_per_minute / bpm);
 	}
 	void bpm_inc(int by = 1)
