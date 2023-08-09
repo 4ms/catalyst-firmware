@@ -45,11 +45,6 @@ struct Part {
 
 		cur_bank = bank;
 	}
-	auto get_sel_bank()
-	{
-		return cur_bank;
-	}
-
 	void set_chan(unsigned scene, unsigned chan, Scene::ChannelValue_t val)
 	{
 		if (chan >= Model::NumChans || scene >= Model::NumChans)

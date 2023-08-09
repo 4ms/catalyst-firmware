@@ -128,6 +128,9 @@ private:
 				controls.set_button_led(
 					params.pathway.nearest_scene(Pathway::Vicinity::Absolute, params.morph_step).scene, true);
 			}
+			if (controls.bank_button.is_high()) {
+				controls.set_button_led(params.part.cur_bank, true);
+			}
 		} else if (down_count == 2) {
 
 			if (controls.a_button.is_high() || controls.b_button.is_high()) {
@@ -147,6 +150,15 @@ private:
 
 			if (controls.b_button.just_went_high() && controls.b_button.is_high() && controls.a_button.is_high()) {
 				params.pathway.remove_scene(params.morph_step);
+			}
+
+			if (controls.bank_button.is_high()) {
+				for (auto [chan, butt] : countzip(controls.scene_buttons)) {
+					if (butt.is_high()) {
+						params.part.sel_bank(chan);
+					}
+				}
+				controls.set_button_led(params.part.cur_bank, true);
 			}
 		}
 	}
