@@ -1,5 +1,6 @@
 #pragma once
 #include "conf/model.hh"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 
@@ -11,6 +12,8 @@ struct Scene {
 
 	enum class ChannelType : bool { CV, Gate };
 
+	static constexpr ChannelValue_t gate_high = Model::volts_to_uint(5.f);
+
 	std::array<ChannelValue_t, Model::NumChans> chans;
 	std::array<ChannelType, Model::NumChans> types;
 
@@ -18,6 +21,9 @@ struct Scene {
 	{
 		for (auto &c : chans) {
 			c = 0;
+		}
+		for (auto &t : types) {
+			t = ChannelType::CV;
 		}
 	}
 };
@@ -30,7 +36,6 @@ struct Bank {
 struct Part {
 	using Banks = std::array<Bank, Model::NumBanks>;
 	Banks bank;
-	std::array<uint8_t, 2> cur_scene{0, 4};
 	uint8_t cur_bank{0};
 
 	void sel_bank(unsigned bank)
@@ -45,44 +50,31 @@ struct Part {
 		return cur_bank;
 	}
 
-	void sel_scene(bool ab, unsigned scene)
+	void set_chan(unsigned scene, unsigned chan, Scene::ChannelValue_t val)
 	{
-		if (scene >= Model::NumChans)
+		if (chan >= Model::NumChans || scene >= Model::NumChans)
 			return;
 
-		cur_scene[ab] = scene;
+		bank[cur_bank].scene[scene].chans[chan] = val;
 	}
-	auto get_sel_scene(bool ab)
+	Scene::ChannelValue_t get_chan(unsigned scene, unsigned chan)
 	{
-		return cur_scene[ab];
-	}
-	auto &get_scene(bool ab)
-	{
-		return bank[cur_bank].scene[cur_scene[ab]];
-	}
-	void set_chan(bool ab, unsigned chan, Scene::ChannelValue_t val)
-	{
-		if (chan >= Model::NumChans)
-			return;
-
-		bank[cur_bank].scene[cur_scene[ab]].chans[chan] = val;
-	}
-	Scene::ChannelValue_t get_chan(bool ab, unsigned chan)
-	{
-		if (chan >= Model::NumChans)
+		if (chan >= Model::NumChans || scene >= Model::NumChans)
 			return 0;
 
-		return bank[cur_bank].scene[cur_scene[ab]].chans[chan];
+		return bank[cur_bank].scene[scene].chans[chan];
 	}
-	void inc_chan(bool ab, int chan, int by)
+	void inc_chan(unsigned scene, unsigned chan, int by)
 	{
-		int temp = get_chan(ab, chan);
-		temp += by;
-		if (temp < 0)
-			temp = 0;
-		if (temp >= 65536)
-			temp = 65535;
-		set_chan(ab, chan, temp);
+		if (chan >= Model::NumChans || scene >= Model::NumChans)
+			return;
+
+		if (bank[cur_bank].scene[scene].types[chan] == Scene::ChannelType::CV) {
+			int temp = bank[cur_bank].scene[scene].chans[chan];
+			temp += by;
+			temp = std::clamp(temp, 0, 65535);
+			bank[cur_bank].scene[scene].chans[chan] = static_cast<Scene::ChannelValue_t>(temp);
+		}
 	}
 };
 

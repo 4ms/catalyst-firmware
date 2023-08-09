@@ -1,5 +1,6 @@
 #pragma once
 #include "flags.hh"
+#include "pathway.hh"
 #include "scene.hh"
 #include "sequencer.hh"
 
@@ -12,6 +13,7 @@ namespace Catalyst2
 struct Params {
 	Flags flags;
 	Part part;
+	Pathway pathway;
 	// Sequencer seq{64};
 
 	// coefficient of fading from scene to scene

@@ -20,15 +20,19 @@ public:
 	{
 		Model::OutputBuffer buf;
 
-		if (params.mode == Params::Mode::Macro && params.macromode == Params::MacroMode::Classic)
+		if (params.mode == Params::Mode::Macro && params.macromode == Params::MacroMode::Classic) {
+			auto left = params.pathway.nearest_scene(Pathway::Vicinity::NearestLeft, params.morph_step);
+			auto phase = params.pathway.adjust_and_scale(params.morph_step);
+
 			for (auto [chan, out] : countzip(buf)) {
+				auto a = params.part.get_chan(left.scene, chan);
+				auto b = params.part.get_chan(left.next->scene, chan);
 				// use params to figure out how to fill the output buffer
-				auto a = params.part.get_chan(0, chan);
-				auto b = params.part.get_chan(1, chan);
-				auto phase = params.morph_step + params.cv_offset;
-				phase = std::clamp(phase, -1.f, 1.f);
+				phase += params.cv_offset;
+				phase = std::clamp(phase, 0.f, 1.f);
 				out = linear_interpolate(a, b, phase);
 			}
+		}
 
 		return buf;
 	}

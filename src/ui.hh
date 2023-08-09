@@ -15,7 +15,6 @@ class UI {
 	Params &params;
 	InternalClock<Board::cv_stream_hz> intclock;
 	Outputs outputs;
-	unsigned buttons_down;
 	bool display_output = false;
 
 public:
@@ -39,12 +38,6 @@ public:
 		update_slider();
 		update_cv();
 
-		// for testing clock
-		if (update_sequencer()) {
-			// controls.toggle_button_led(0);
-			/* sequencer.step()?? */
-		}
-
 		// TODO
 		// Check controls and update params:
 		// example;
@@ -64,6 +57,8 @@ public:
 			for (auto [chan, val] : countzip(outs)) {
 				controls.set_encoder_led(chan, encoder_blend(val));
 			}
+			controls.set_button_led(params.pathway.nearest_scene(Pathway::Vicinity::Absolute, params.morph_step).scene,
+									true);
 		}
 	}
 
@@ -96,13 +91,14 @@ private:
 
 	void update_slider()
 	{
-		params.morph_step = controls.read_slider() / 4095.f;
+		auto slider = controls.read_slider();
+		params.morph_step = slider / 4095.f;
 	}
 
 	void update_cv()
 	{
-		auto cv = controls.read_cv() / (4095.f * .5f);
-		params.cv_offset = cv - 1.f;
+		auto cv = controls.read_cv() / (4095.f);
+		params.cv_offset = cv;
 	}
 
 	void update_mode_macro_classic()
@@ -116,42 +112,65 @@ private:
 			controls.clear_encoders_state();
 			display_output = true;
 		} else if (down_count == 1) {
-			bool bbut = controls.b_button.is_high();
-			if (controls.a_button.is_high() || bbut) {
-				controls.set_button_led(params.part.get_sel_scene(bbut), true);
-
-				for (auto [chan, enc] : countzip(controls.encoders)) {
-					params.part.inc_chan(bbut, chan, enc.read() << 7);
-					controls.set_encoder_led(chan, encoder_blend(params.part.get_chan(bbut, chan)));
-				}
-			} else if (controls.bank_button.is_high()) {
-				controls.set_button_led(params.part.get_sel_bank(), true);
-			} else {
-				/*other buttons*/
-			}
-		} else if (down_count == 2) {
-			for (auto [chan, button] : countzip(controls.scene_buttons)) {
-				if (button.is_high()) {
-					bool bbut = controls.b_button.is_high();
-					if (controls.a_button.is_high() || bbut) {
-						controls.set_button_led(params.part.get_sel_scene(bbut), true);
-						for (auto [chan, val] : countzip(params.part.get_scene(bbut).chans)) {
-							controls.set_encoder_led(chan, encoder_blend(val));
-						}
-						params.part.sel_scene(bbut, chan);
-					} else if (controls.bank_button.is_high()) {
-						params.part.sel_bank(chan);
-					} else {
-						// invalid combo
+			for (auto [scene, butt] : countzip(controls.scene_buttons)) {
+				if (butt.is_high()) {
+					controls.set_button_led(scene, true);
+					for (auto [chan, enc] : countzip(controls.encoders)) {
+						params.part.inc_chan(scene, chan, enc.read() << 11);
+						controls.set_encoder_led(chan, encoder_blend(params.part.get_chan(scene, chan)));
 					}
 				}
+			}
+			if (controls.a_button.is_high() || controls.b_button.is_high()) {
+				for (size_t i = 0; i < params.pathway.count; i++) {
+					controls.set_encoder_led(i, Palette::magenta);
+				}
+				controls.set_button_led(
+					params.pathway.nearest_scene(Pathway::Vicinity::Absolute, params.morph_step).scene, true);
+			}
+		} else if (down_count == 2) {
+
+			if (controls.a_button.is_high() || controls.b_button.is_high()) {
+				for (size_t i = 0; i < params.pathway.count; i++) {
+					controls.set_encoder_led(i, Palette::magenta);
+				}
+
+				for (auto [scene, butt] : countzip(controls.scene_buttons)) {
+					if (butt.just_went_high() && butt.is_high()) {
+						if (controls.a_button.is_high())
+							params.pathway.insert_scene_before(scene, params.morph_step);
+						else if (controls.b_button.is_high())
+							params.pathway.insert_scene_after(scene, params.morph_step);
+					}
+				}
+			}
+
+			if (controls.b_button.just_went_high() && controls.b_button.is_high() && controls.a_button.is_high()) {
+				params.pathway.remove_scene(params.morph_step);
 			}
 		}
 	}
 
 	Color encoder_blend(uint16_t phase)
 	{
-		return Palette::red.blend(Palette::blue, static_cast<uint8_t>(phase >> 8));
+		constexpr auto zero_v = Model::volts_to_uint(0.f);
+		constexpr auto five_v = Model::volts_to_uint(5.f);
+
+		if (phase < zero_v) {
+			float temp = static_cast<float>(phase) / zero_v;
+			uint8_t o = temp * 255.f;
+			return Palette::red.blend(Palette::yellow, o);
+		} else if (phase < five_v) {
+			phase -= zero_v;
+			float temp = static_cast<float>(phase) / zero_v;
+			uint8_t o = temp * 255.f;
+			return Palette::yellow.blend(Palette::green, o);
+		} else {
+			phase -= five_v;
+			float temp = static_cast<float>(phase) / zero_v;
+			uint8_t o = temp * 255.f;
+			return Palette::green.blend(Palette::blue, o);
+		}
 	}
 
 	void update_mode_switch()
@@ -162,33 +181,7 @@ private:
 			params.mode = Params::Mode::Macro;
 	}
 
-	bool update_sequencer()
-	{
-		bool pulse = false;
-
-		if (controls.trig_jack_sense.is_high()) {
-			intclock.update();
-			pulse = intclock.step();
-		} else {
-			pulse = controls.trig_jack.just_went_high();
-		}
-
-		return params.mode == Params::Mode::Sequencer ? pulse : false;
-	}
-
 	mdrivlib::Timekeeper encoder_led_update_task;
-
-	// TODO:remove this if not using
-	// struct PotState {
-	// 	int16_t cur_val = 0;
-	// 	int16_t prev_val = 0;
-	// 	int16_t track_moving_ctr = 0;
-	// 	int16_t delta = 0;
-	// 	bool moved = false;
-	// 	bool moved_while_button_down = false; // can make this an array if need to track all buttons+slider
-	// } slider_state;
-
-	struct EncoderState {};
 };
 
 } // namespace Catalyst2
