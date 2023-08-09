@@ -149,7 +149,7 @@ struct Pathway {
 private:
 	void set_scene_width()
 	{
-		scene_width = 1.000000001f / (count - 1);
+		scene_width = 1.f / (count - 1);
 	}
 
 	/*
