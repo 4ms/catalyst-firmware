@@ -33,7 +33,6 @@ public:
 				if (left.next != nullptr)
 					b = params.part.get_chan(left.next->scene, chan);
 
-				// use params to figure out how to fill the output buffer
 				out = linear_interpolate(a, b, phase);
 			}
 		}

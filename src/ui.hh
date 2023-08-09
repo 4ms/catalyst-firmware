@@ -160,6 +160,23 @@ private:
 				}
 				controls.set_button_led(params.part.cur_bank, true);
 			}
+
+			if (controls.alt_button.is_high()) {
+				for (auto [scene, butt] : countzip(controls.scene_buttons)) {
+					if (butt.is_high()) {
+						auto enc = controls.encoders[6].read();
+						if (enc) {
+							auto r = rand();
+							for (size_t i = 0; i < Model::NumChans; i++) {
+								params.part.set_chan(scene, i, static_cast<unsigned>(r >> i));
+							}
+						}
+						for (size_t i = 0; i < Model::NumChans; i++) {
+							controls.set_encoder_led(i, encoder_blend(params.part.get_chan(scene, i)));
+						}
+					}
+				}
+			}
 		}
 	}
 
