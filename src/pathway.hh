@@ -7,6 +7,16 @@
 namespace Catalyst2
 {
 
+// DG: the linked-list operations should be extracted out so we can test them (unit tests):
+//    template<typename T, size_t MaxElements> class FixedLinkedList {...
+//    insert(), remove()
+//
+
+// DG: Do we need a double-linked list? Seems like prev is never used?
+
+// DG: Iterating path to find an unused node should be part of insert(), and it returns false, or nullopt or nullptr if
+// it's full.
+
 struct Pathway {
 	static constexpr size_t MaxPoints = 8; //???how many? is this model-specific?
 	using SceneId = unsigned;			   // could be a Scene ptr?
@@ -42,10 +52,14 @@ struct Pathway {
 		if (count == MaxPoints)
 			return false;
 
+		// DG: More clear if you use raw pointers OR references, not both mixed
 		PathPoint *nearest = &nearest_scene(Vicinity::Absolute, point);
 		PathPoint *new_ = nullptr;
 
+		// DG: new_ is nullptr, and is not guaranteed to be set by this loop
+		// but then we dereference it later
 		for (auto &temp : path) {
+			// Could use a separate var (bool used) or some constant that is 0xFFFFFFFF to indicate unused
 			if (temp.scene == Model::NumChans) {
 				// unused node
 				new_ = &temp;

@@ -29,10 +29,13 @@ struct Scene {
 };
 
 struct Bank {
+	// DG: I could see an 8-output device having more than 8 scenes per bank
+	//  we should change NumChans=>NumScenes or NumScenesPerBank
 	using Scenes = std::array<Scene, Model::NumChans>;
 	Scenes scene;
 };
 
+// DG: this is a great class, what does the name refer to?
 struct Part {
 	using Banks = std::array<Bank, Model::NumBanks>;
 	Banks bank;
@@ -65,9 +68,13 @@ struct Part {
 			return;
 
 		if (bank[cur_bank].scene[scene].types[chan] == Scene::ChannelType::CV) {
+			// DG: int != ChannelValue_t
 			int temp = bank[cur_bank].scene[scene].chans[chan];
 			temp += by;
+			// DG: These values depend on the what ChannelValue_t is, so somehow it should not be raw numbers. Maybe
+			// ChannelValueMax/Min?
 			temp = std::clamp(temp, 0, 65535);
+			// Don't need to static_cast, its already a uint16_t
 			bank[cur_bank].scene[scene].chans[chan] = static_cast<Scene::ChannelValue_t>(temp);
 		}
 	}

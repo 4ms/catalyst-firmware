@@ -3,6 +3,7 @@
 #include "flags.hh"
 #include "params.hh"
 #include "util/countzip.hh"
+#include "util/math.hh"
 #include <algorithm>
 
 namespace Catalyst2
@@ -41,6 +42,9 @@ public:
 	}
 
 private:
+	// DG: Use values, not references for Scene::ChannelValue_t
+	// Also, this is a general math function, no need to re-write
+	// MathTools::interpolate(float, float, float) would be the same
 	Scene::ChannelValue_t linear_interpolate(Scene::ChannelValue_t &from, Scene::ChannelValue_t &to, float phase)
 	{
 		auto temp = from * (1.f - phase);

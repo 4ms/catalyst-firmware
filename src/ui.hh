@@ -101,6 +101,16 @@ private:
 		params.cv_offset = cv;
 	}
 
+	// DG: This is a big function, probably needs its own file, maybe its own class, or still part of ui, but in a .cc
+	// elsewhere? Or maybe each if(down_count == ...) could be its own function (in some other file) Once we add more
+	// modes, ui.hh will be getting huge
+
+	// Might help to abstract out the iteration of scene_buttons, since it's done so many times. Or just do it once to
+	// see which one is pressed
+
+	// Seperating by number of buttons down has pros and cons, but one con is for example,
+	// if we want to have alt + encoder[6] randomize the current scene if no scene button is pressed,
+	// then that has to appear in the down_count==1 and ==2 blocks.
 	void update_mode_macro_classic()
 	{
 		const auto down_count = controls.button_high_count();
