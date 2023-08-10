@@ -12,7 +12,7 @@ namespace Catalyst2
 
 struct Params {
 	Flags flags;
-	Part part;
+	Banks banks;
 	Pathway pathway;
 	// Sequencer seq{64};
 

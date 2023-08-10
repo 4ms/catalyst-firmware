@@ -101,9 +101,8 @@ private:
 		params.cv_offset = cv;
 	}
 
-	// DG: This is a big function, probably needs its own file, maybe its own class, or still part of ui, but in a .cc
-	// elsewhere? Or maybe each if(down_count == ...) could be its own function (in some other file) Once we add more
-	// modes, ui.hh will be getting huge
+	// DG: This is a big function,already getting complex and there's more to add...
+	// maybe needs its own file, maybe its own class, or maybe still part of ui, but in its own .cc file
 
 	// Might help to abstract out the iteration of scene_buttons, since it's done so many times. Or just do it once to
 	// see which one is pressed
@@ -126,8 +125,8 @@ private:
 				if (butt.is_high()) {
 					controls.set_button_led(scene, true);
 					for (auto [chan, enc] : countzip(controls.encoders)) {
-						params.part.inc_chan(scene, chan, enc.read() << 11);
-						controls.set_encoder_led(chan, encoder_blend(params.part.get_chan(scene, chan)));
+						params.banks.inc_chan(scene, chan, enc.read() << 11);
+						controls.set_encoder_led(chan, encoder_blend(params.banks.get_chan(scene, chan)));
 					}
 				}
 			}
@@ -139,7 +138,7 @@ private:
 					params.pathway.nearest_scene(Pathway::Vicinity::Absolute, params.morph_step).scene, true);
 			}
 			if (controls.bank_button.is_high()) {
-				controls.set_button_led(params.part.cur_bank, true);
+				controls.set_button_led(params.banks.cur_bank, true);
 			}
 		} else if (down_count == 2) {
 
@@ -165,10 +164,10 @@ private:
 			if (controls.bank_button.is_high()) {
 				for (auto [chan, butt] : countzip(controls.scene_buttons)) {
 					if (butt.is_high()) {
-						params.part.sel_bank(chan);
+						params.banks.sel_bank(chan);
 					}
 				}
-				controls.set_button_led(params.part.cur_bank, true);
+				controls.set_button_led(params.banks.cur_bank, true);
 			}
 
 			if (controls.alt_button.is_high()) {
@@ -178,11 +177,11 @@ private:
 						if (enc) {
 							auto r = rand();
 							for (size_t i = 0; i < Model::NumChans; i++) {
-								params.part.set_chan(scene, i, static_cast<unsigned>(r >> i));
+								params.banks.set_chan(scene, i, static_cast<unsigned>(r >> i));
 							}
 						}
 						for (size_t i = 0; i < Model::NumChans; i++) {
-							controls.set_encoder_led(i, encoder_blend(params.part.get_chan(scene, i)));
+							controls.set_encoder_led(i, encoder_blend(params.banks.get_chan(scene, i)));
 						}
 					}
 				}
@@ -192,8 +191,8 @@ private:
 
 	Color encoder_blend(uint16_t phase)
 	{
-		constexpr auto zero_v = Model::volts_to_uint(0.f);
-		constexpr auto five_v = Model::volts_to_uint(5.f);
+		constexpr auto zero_v = ChannelValue::from_volts(0.f);
+		constexpr auto five_v = ChannelValue::from_volts(5.f);
 
 		if (phase < zero_v) {
 			float temp = static_cast<float>(phase) / zero_v;
