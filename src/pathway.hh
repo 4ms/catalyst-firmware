@@ -9,10 +9,8 @@ namespace Catalyst2
 
 // DG: the linked-list operations should be extracted out so we can test them (unit tests):
 //    template<typename T, size_t MaxElements> class FixedLinkedList {...
-//    insert(), remove()
+//    insert(), erase()
 //
-
-// DG: Do we need a double-linked list? Seems like prev is never used?
 
 // DG: Iterating path to find an unused node should be part of insert(), and it returns false, or nullopt or nullptr if
 // it's full.
