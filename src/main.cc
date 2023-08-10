@@ -10,13 +10,36 @@ namespace
 Catalyst2::System _init;
 } // namespace
 
+// DG: general opeations/thoughts
+
+// Fine/coarse??
+
+// Display nothing when between scenes
+// Insert if blank, add if button is lit
+// If hold Insert button down, more presses of scene buttons append
+
+// Rotation?
+
+// Some mode select:
+// --Pressing a scene button by itself should update the outputs immediately
+// --Pressing a scene button just displays the outputs on the encoders, but outputs don't change
+// .. and the channel buttons would blink between the two scenes youre in between
+
+// If a channel is selected by the slider (channel butotn is lit up), then turning encoder sets outputs directly
+
+// Changing CV does not update the channel buttons (CV + slider wraps)
+
+// Make sure if you program a path while CV is applied, that it still makes sense
+
+// Alt + encoder (ie. Randomize) should act upon the current scene if slider is selecting it
+
 void main()
 {
 	using namespace Catalyst2;
 
 	// Force hardware test for now
 	//
-	run_hardware_test();
+	// run_hardware_test();
 
 	Params params;
 	UI ui{params};

@@ -15,7 +15,7 @@ struct Palette {
 	static constexpr Color pale_pink = Color(255, 200, 200);
 	static constexpr Color tangerine = Color(255, 0, 200);
 	static constexpr Color orange = Color(255, 0, 127);
-	static constexpr Color yellow = Color(255, 0, 255);
+	static constexpr Color yellow = Color(127, 0, 127);
 	static constexpr Color green = Color(0, 0, 255);
 	static constexpr Color cyan = Color(0, 255, 255);
 	static constexpr Color blue = Color(0, 255, 0);

@@ -46,6 +46,7 @@ public:
 	MuxedButton a_button{14};
 	MuxedButton b_button{1};
 	MuxedButton play_button{15};
+	// static constexpr uint16_t ui_button_mask = 0b1101'1111'1111'0111;
 
 	// Switches
 	MuxedButton mode_switch{3};
@@ -56,6 +57,23 @@ public:
 		if (idx >= Model::NumChans)
 			idx = 0;
 		return scene_buttons[idx];
+	}
+
+	auto button_high_count()
+	{
+		auto down_count = 0;
+
+		for (auto &but : scene_buttons)
+			down_count += but.is_high();
+
+		down_count += alt_button.is_high();
+		down_count += latch_button.is_high();
+		down_count += bank_button.is_high();
+		down_count += a_button.is_high();
+		down_count += b_button.is_high();
+		down_count += play_button.is_high();
+
+		return down_count;
 	}
 
 	uint16_t read_slider()
@@ -87,6 +105,13 @@ public:
 		rgb_leds[idx] = color;
 	}
 
+	void set_all_encoder_leds(Color color)
+	{
+		for (auto &led : rgb_leds) {
+			led = color;
+		}
+	}
+
 	void set_button_led(unsigned led, bool on)
 	{
 		if (led >= Board::ButtonLedMap.size())
@@ -97,6 +122,37 @@ public:
 			button_leds |= (1 << bit);
 		else
 			button_leds &= ~(1 << bit);
+	}
+
+	void set_button_led_masked(uint32_t mask, bool on)
+	{
+		if (on) {
+			button_leds |= mask;
+		} else {
+			button_leds &= ~(mask);
+		}
+	}
+
+	void clear_button_leds()
+	{
+		button_leds = 0;
+	}
+
+	bool get_button_led(unsigned led)
+	{
+		if (led >= Board::ButtonLedMap.size())
+			return false;
+
+		auto bit = Board::ButtonLedMap[led];
+
+		return button_leds & (1 << bit);
+	}
+
+	void toggle_button_led(unsigned led)
+	{
+		auto temp = get_button_led(led);
+		temp ^= 1;
+		set_button_led(led, temp);
 	}
 
 	void start()
@@ -110,20 +166,27 @@ public:
 			__BKPT();
 	}
 
+	void clear_encoders_state()
+	{
+		for (auto &x : encoders)
+			x.read();
+	}
+
 	void update()
 	{
+		// TODO: double-check if this is concurrency-safe:
+		// - update() might interrupt the read-modify-write that happens in set_button_led()
+		// - update_buttons() might interrupt a button being read
+		// - do this routine first for the sake of non-flickering leds
+		auto mux_read = muxio.step(button_leds);
+		if (mux_read.has_value()) {
+			update_buttons(mux_read.value());
+		}
+
 		trig_jack.update();
 		reset_jack.update();
 		for (auto &enc : encoders) {
 			enc.update();
-		}
-
-		// TODO: double-check if this is concurrency-safe:
-		// - update() might interrupt the read-modify-write that happens in set_button_led()
-		// - update_buttons() might interrupt a button being read
-		auto mux_read = muxio.step(button_leds);
-		if (mux_read.has_value()) {
-			update_buttons(mux_read.value());
 		}
 	}
 
