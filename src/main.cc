@@ -11,19 +11,27 @@ Catalyst2::System _init;
 } // namespace
 
 // DG: general opeations/thoughts
-//  After/Before insert... cool idea. Still feeling it out. Can be frustrating, for instance try to make a sequence of
-//  steps 1->8 in that order We probably need to calibrate the colors better Ideas for fine/coarse adjustments?
 
-// Bug/missing feature:
-// Pressing a scene button by itself should update the outputs
-// Holding B and tapping A repeatedly only deletes a step once. But holding A and tapping B repeatedly will delete on
-// each tap
-// Changing CV does not update the channel buttons
+// Fine/coarse??
+
+// Display nothing when between scenes
+// Insert if blank, add if button is lit
+// If hold Insert button down, more presses of scene buttons append
+
+// Rotation?
+
+// Some mode select:
+// --Pressing a scene button by itself should update the outputs immediately
+// --Pressing a scene button just displays the outputs on the encoders, but outputs don't change
+// .. and the channel buttons would blink between the two scenes youre in between
+
+// If a channel is selected by the slider (channel butotn is lit up), then turning encoder sets outputs directly
+
+// Changing CV does not update the channel buttons (CV + slider wraps)
+
 // Make sure if you program a path while CV is applied, that it still makes sense
 
-// Suggested feature:
-// Alt + encoder (ie. Randomize) should act upon the current scene if no scene button is pressed?
-// Could we blink the channel button that we're fading between (the non-closest one)
+// Alt + encoder (ie. Randomize) should act upon the current scene if slider is selecting it
 
 void main()
 {
