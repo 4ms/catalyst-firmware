@@ -1,0 +1,39 @@
+#include "../src/scene.hh"
+#include "doctest.h"
+
+TEST_CASE("Overflow with ints and unsigned")
+{
+	constexpr Catalyst2::ChannelValue::type Max = Catalyst2::ChannelValue::Max;
+	constexpr Catalyst2::ChannelValue::type Min = Catalyst2::ChannelValue::Min;
+	int32_t by = -1;
+
+	Catalyst2::Banks banks;
+
+	banks.set_chan(0, 0, Catalyst2::ChannelValue::Max);
+	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max);
+
+	banks.inc_chan(0, 0, by);
+	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max - 1);
+	banks.inc_chan(0, 0, -1);
+	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max - 2);
+
+	banks.inc_chan(0, 0, 3);
+	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max);
+
+	banks.set_chan(0, 0, Min);
+	banks.inc_chan(0, 0, Max - Min);
+	CHECK(banks.get_chan(0, 0) == Max);
+
+	banks.set_chan(0, 0, Max);
+	banks.inc_chan(0, 0, Min - Max);
+	CHECK(banks.get_chan(0, 0) == Min);
+
+	banks.set_chan(1, 1, Catalyst2::ChannelValue::Min);
+	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min);
+	banks.inc_chan(1, 1, -1);
+	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min);
+	banks.inc_chan(1, 1, 1);
+	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min + 1);
+	banks.inc_chan(1, 1, -2);
+	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min);
+}
