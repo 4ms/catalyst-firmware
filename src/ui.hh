@@ -57,8 +57,8 @@ public:
 			for (auto [chan, val] : countzip(outs)) {
 				controls.set_encoder_led(chan, encoder_blend(val));
 			}
-			controls.set_button_led(params.pathway.nearest_scene(Pathway::Vicinity::Absolute, params.morph_step).scene,
-									true);
+			if (params.pathway.scene_is_near(params.morph_step))
+				controls.set_button_led(params.pathway.nearest_scene(params.morph_step), true);
 		}
 	}
 
@@ -92,12 +92,12 @@ private:
 	void update_slider()
 	{
 		auto slider = controls.read_slider();
-		params.morph_step = slider / 4095.f;
+		params.morph_step = slider / 4096.f;
 	}
 
 	void update_cv()
 	{
-		auto cv = controls.read_cv() / (4095.f);
+		auto cv = controls.read_cv() / (4096.f);
 		params.cv_offset = cv;
 	}
 
@@ -115,76 +115,11 @@ private:
 		const auto down_count = controls.button_high_count();
 		controls.clear_button_leds();
 		controls.set_all_encoder_leds(Palette::off);
-		display_output = false;
+		display_output = true;
 
-		if (down_count == 0) {
-			controls.clear_encoders_state();
-			display_output = true;
-		} else if (down_count == 1) {
-			for (auto [scene, butt] : countzip(controls.scene_buttons)) {
-				if (butt.is_high()) {
-					controls.set_button_led(scene, true);
-					for (auto [chan, enc] : countzip(controls.encoders)) {
-						params.banks.inc_chan(scene, chan, enc.read() << 11);
-						controls.set_encoder_led(chan, encoder_blend(params.banks.get_chan(scene, chan)));
-					}
-				}
-			}
-			if (controls.a_button.is_high() || controls.b_button.is_high()) {
-				for (size_t i = 0; i < params.pathway.count; i++) {
-					controls.set_encoder_led(i, Palette::magenta);
-				}
-				controls.set_button_led(
-					params.pathway.nearest_scene(Pathway::Vicinity::Absolute, params.morph_step).scene, true);
-			}
-			if (controls.bank_button.is_high()) {
-				controls.set_button_led(params.banks.cur_bank, true);
-			}
-		} else if (down_count == 2) {
-
-			if (controls.a_button.is_high() || controls.b_button.is_high()) {
-				for (size_t i = 0; i < params.pathway.count; i++) {
-					controls.set_encoder_led(i, Palette::magenta);
-				}
-
-				for (auto [scene, butt] : countzip(controls.scene_buttons)) {
-					if (butt.just_went_high() && butt.is_high()) {
-						if (controls.a_button.is_high())
-							params.pathway.insert_scene_before(scene, params.morph_step);
-						else if (controls.b_button.is_high())
-							params.pathway.insert_scene_after(scene, params.morph_step);
-					}
-				}
-			}
-
-			if (controls.b_button.just_went_high() && controls.b_button.is_high() && controls.a_button.is_high()) {
-				params.pathway.remove_scene(params.morph_step);
-			}
-
-			if (controls.bank_button.is_high()) {
-				for (auto [chan, butt] : countzip(controls.scene_buttons)) {
-					if (butt.is_high()) {
-						params.banks.sel_bank(chan);
-					}
-				}
-				controls.set_button_led(params.banks.cur_bank, true);
-			}
-
-			if (controls.alt_button.is_high()) {
-				for (auto [scene, butt] : countzip(controls.scene_buttons)) {
-					if (butt.is_high()) {
-						auto enc = controls.encoders[6].read();
-						if (enc) {
-							auto r = rand();
-							for (size_t i = 0; i < Model::NumChans; i++) {
-								params.banks.set_chan(scene, i, static_cast<unsigned>(r >> i));
-							}
-						}
-						for (size_t i = 0; i < Model::NumChans; i++) {
-							controls.set_encoder_led(i, encoder_blend(params.banks.get_chan(scene, i)));
-						}
-					}
-				}
+		if (params.pathway.scene_is_near(params.morph_step)) {
+			for (auto [chan, enc] : countzip(controls.encoders)) {
+				params.banks.inc_chan(params.pathway.nearest_scene(params.morph_step), chan, enc.read() << 11);
 			}
 		}
 	}

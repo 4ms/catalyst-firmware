@@ -1,4 +1,5 @@
 #pragma once
+#include "fixed_list.hh"
 #include "scene.hh"
 #include <algorithm>
 #include <array>
@@ -7,172 +8,91 @@
 namespace Catalyst2
 {
 
-// DG: the linked-list operations should be extracted out so we can test them (unit tests):
-//    template<typename T, size_t MaxElements> class FixedLinkedList {...
-//    insert(), erase()
-//
-
-// DG: Iterating path to find an unused node should be part of insert(), and it returns false, or nullopt or nullptr if
-// it's full.
-
 struct Pathway {
 	static constexpr size_t MaxPoints = 8; //???how many? is this model-specific?
-	using SceneId = unsigned;			   // could be a Scene ptr?
-
-	uint8_t count{2};
-	float scene_width{1.f};
-
-	enum class Vicinity { NearestLeft, Absolute, NearestRight };
-
-	struct PathPoint {
-		SceneId scene = Model::NumChans;
-		PathPoint *next = nullptr;
-		PathPoint *prev = nullptr;
-	};
-
-	// TODO: is array the best way? double-linked-list? do they need to be in order?
-	// Do we re-order on insert, or calculate nearest on calls to nearest_scene_*()?
-	std::array<PathPoint, MaxPoints> path;
-	PathPoint *head;
+	static constexpr unsigned near_threshold = UINT16_MAX / Model::fader_width_mm * 2.5;
+	using SceneId = unsigned; // could be a Scene ptr?
+	FixedFwList<SceneId, MaxPoints> path{0, 7};
+	float scene_width;
 
 	Pathway()
 	{
-		path[0].next = &path[1];
-		path[0].next->prev = &path[0];
-		path[0].scene = 0;
-		path[0].next->scene = 7;
-		head = &path[0];
+		path.insert(0, 1);
+		path.insert(2);
+		path.insert(3);
+		path.insert(4);
+		path.insert(5);
+		path.insert(6);
+		update_scene_width();
 	}
 
 	// TODO; these are just ideas for an interface, take it or leave it!
-	bool insert_scene_before(SceneId scene, float point)
+	bool insert_scene(float point, SceneId scene)
 	{
-		if (count == MaxPoints)
-			return false;
-
-		// DG: More clear if you use raw pointers OR references, not both mixed
-		PathPoint *nearest = &nearest_scene(Vicinity::Absolute, point);
-		PathPoint *new_ = nullptr;
-
-		// DG: new_ is nullptr, and is not guaranteed to be set by this loop
-		// but then we dereference it later
-		for (auto &temp : path) {
-			// Could use a separate var (bool used) or some constant that is 0xFFFFFFFF to indicate unused
-			if (temp.scene == Model::NumChans) {
-				// unused node
-				new_ = &temp;
-				break;
-			}
-		}
-
-		if (nearest == head)
-			head = new_;
-
-		new_->prev = nearest->prev;
-		new_->next = nearest;
-		new_->scene = scene;
-		nearest->prev->next = new_;
-		nearest->prev = new_;
-
-		count += 1;
-
-		set_scene_width();
-		return true;
+		auto out = path.insert(phase_to_index(point), scene);
+		update_scene_width();
+		return out;
 	}
-	bool insert_scene_after(SceneId scene, float point)
+
+	bool insert_scene(SceneId scene)
 	{
-		if (count == MaxPoints)
-			return false;
-
-		PathPoint *nearest = &nearest_scene(Vicinity::Absolute, point);
-		PathPoint *new_ = nullptr;
-
-		for (auto &temp : path) {
-			if (temp.scene == Model::NumChans) {
-				// unused node
-				new_ = &temp;
-				break;
-			}
-		}
-
-		new_->next = nearest->next;
-		new_->prev = nearest;
-		new_->scene = scene;
-		nearest->next->prev = new_;
-		nearest->next = new_;
-
-		count += 1;
-
-		set_scene_width();
-		return true;
+		auto out = path.insert(scene);
+		update_scene_width();
+		return out;
 	}
+
 	bool remove_scene(float point)
 	{
-		if (count == 2)
-			return false;
-
-		auto *remove = &nearest_scene(Vicinity::Absolute, point);
-
-		if (remove == head) {
-			// removing head, need to update.
-			head = remove->next;
-		}
-
-		remove->prev->next = remove->next;
-		remove->next->prev = remove->prev;
-
-		remove->next = nullptr;
-		remove->prev = nullptr;
-		remove->scene = Model::NumChans;
-
-		count -= 1;
-
-		set_scene_width();
-
-		return true;
+		bool out = path.erase(phase_to_index(point));
+		update_scene_width();
+		return out;
 	}
-
-	PathPoint &nearest_scene(Vicinity v, float point)
+	bool scene_is_near(float point)
 	{
-		auto index = point / scene_width;
-		if (v == Vicinity::Absolute)
-			index += .5f;
-		else if (v == Vicinity::NearestRight)
-			index += 1.f;
+		auto p = static_cast<unsigned>(UINT16_MAX * point);
+		auto mod = static_cast<unsigned>(UINT16_MAX * scene_width);
+		p %= mod;
+		if (p != std::clamp(p, near_threshold, mod - near_threshold))
+			return true;
 
-		auto temp = static_cast<size_t>(index);
-
-		PathPoint *start = head;
-
-		while (temp--)
-			start = start->next;
-
-		return *start;
+		return false;
+	}
+	bool is_between_scenes(float point)
+	{
+		return !scene_is_near(point);
+	}
+	SceneId nearest_scene(float point)
+	{
+		point += (scene_width * .5f);
+		return scene_left(point);
+	}
+	SceneId scene_left(float point)
+	{
+		return path.read(phase_to_index(point));
+	}
+	SceneId scene_right(float point)
+	{
+		return path.read(phase_to_index(point) + 1);
 	}
 
-	float adjust_and_scale(float point)
+	// needs a better name
+	float adjust_and_scale(float point) const
 	{
 		while (point > scene_width)
 			point -= scene_width;
-		point *= count - 1;
+		point *= path.size() - 1;
 		return point;
 	}
 
 private:
-	void set_scene_width()
+	unsigned phase_to_index(float phase)
 	{
-		scene_width = 1.f / (count - 1);
+		return phase * (path.size() - 1);
 	}
-
-	/*
-	unsigned nearest_scene_right(float point)
+	void update_scene_width()
 	{
-		// nearest scene to the right
-		auto point_size = 1.f / count;
-		auto pos = static_cast<unsigned>(point / point_size);
-		return std::clamp(pos + 1, 0u, MaxPoints - 1);
+		scene_width = 1.f / (path.size() - 1);
 	}
-	*/
 };
 
 } // namespace Catalyst2
