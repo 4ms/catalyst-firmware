@@ -10,7 +10,7 @@ namespace Catalyst2
 
 struct ChannelValue {
 	using type = uint16_t;
-	static constexpr type Max = 0xFFFF;
+	static constexpr type Max = UINT16_MAX;
 	static constexpr type Min = 0;
 
 	static constexpr uint16_t from_volts(const float volts)
@@ -53,38 +53,45 @@ struct Banks {
 
 		cur_bank = bank;
 	}
+	auto get_sel_bank()
+	{
+		return cur_bank;
+	}
 	void set_chan(unsigned scene, unsigned chan, ChannelValue::type val)
 	{
-		if (chan >= Model::NumChans || scene >= Model::NumChans)
+		if (chan >= Model::NumChans || scene >= Model::NumScenes)
 			return;
 
 		banks[cur_bank].scene[scene].chans[chan] = val;
 	}
 	ChannelValue::type get_chan(unsigned scene, unsigned chan)
 	{
-		if (chan >= Model::NumChans || scene >= Model::NumChans)
+		if (chan >= Model::NumChans || scene >= Model::NumScenes)
 			return 0;
 
 		return banks[cur_bank].scene[scene].chans[chan];
 	}
-	void inc_chan(unsigned scene, unsigned chan, int by)
+	void inc_chan(unsigned scene, unsigned chan, int32_t by)
 	{
-		if (chan >= Model::NumChans || scene >= Model::NumChans)
-			return;
-
 		if (by == 0)
 			return;
 
+		if (chan >= Model::NumChans || scene >= Model::NumScenes)
+			return;
+
+		if (by == INT32_MIN)
+			by += 1;
+
 		if (banks[cur_bank].scene[scene].types[chan] == Scene::ChannelType::CV) {
 			auto temp = banks[cur_bank].scene[scene].chans[chan];
-			// TODO: fix failing tests
-			if (by > 0 && temp == ChannelValue::Max)
-				return;
-			if (by < 0 && temp == ChannelValue::Min)
-				return;
 
-			temp += by;
-			temp = std::clamp(temp, ChannelValue::Min, ChannelValue::Max);
+			if (by > 0 && ChannelValue::Max - temp < static_cast<ChannelValue::type>(by))
+				temp = ChannelValue::Max;
+			else if (by < 0 && by * -1 > temp)
+				temp = ChannelValue::Min;
+			else
+				temp += by;
+
 			banks[cur_bank].scene[scene].chans[chan] = temp;
 		}
 	}
@@ -92,8 +99,6 @@ struct Banks {
 private:
 	using BankArray = std::array<Bank, Model::NumBanks>;
 	BankArray banks;
-
-public: // TODO: make private and add a getter
 	uint8_t cur_bank{0};
 };
 
