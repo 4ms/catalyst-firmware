@@ -5,7 +5,9 @@ using namespace Catalyst2;
 
 TEST_CASE("Fixed Linked list")
 {
-	FixedFwList<uint8_t, 5> test(0, 1);
+	FixedFwList<uint8_t, 5> test;
+	test.insert(0, 0);
+	test.insert(0, 1);
 
 	CHECK(test.read(0) == 0);
 	CHECK(test.read(1) == 1);
@@ -33,9 +35,14 @@ TEST_CASE("Fixed Linked list")
 	CHECK(test.erase(4));
 	CHECK(test.erase(0));
 	CHECK(test.erase(0));
+	CHECK(test.erase(0));
+	CHECK(test.erase(0));
 
 	// cant erase too many
-	CHECK(test.erase(4) == false);
+	CHECK(test.erase(0) == false);
+
+	test.insert(0, 2);
+	test.insert(3);
 
 	CHECK(test.read(0) == 2);
 	CHECK(test.read(1) == 3);
