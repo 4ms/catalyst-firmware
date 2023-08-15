@@ -107,7 +107,14 @@ private:
 	{
 		while (point > scene_width)
 			point -= scene_width;
-		if (point != std::clamp(point, near_threshold, scene_width - near_threshold))
+
+		// this prevents undefined clamp behaviour
+		// after twelve or so scenes are in the the path a scene is always near with a 2.5mm threshold.
+		auto high = scene_width - near_threshold;
+		if (high < near_threshold)
+			high = near_threshold;
+
+		if (point != std::clamp(point, near_threshold, high))
 			return true;
 
 		return false;
