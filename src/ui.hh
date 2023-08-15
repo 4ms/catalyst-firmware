@@ -16,6 +16,7 @@ class UI {
 	InternalClock<Board::cv_stream_hz> intclock;
 	Outputs outputs;
 	bool display_output = false;
+	bool inserting = false;
 
 public:
 	UI(Params &params)
@@ -57,8 +58,6 @@ public:
 			for (auto [chan, val] : countzip(outs)) {
 				controls.set_encoder_led(chan, encoder_blend(val));
 			}
-			if (params.pathway.scene_is_near(params.morph_step))
-				controls.set_button_led(params.pathway.nearest_scene(params.morph_step), true);
 		}
 	}
 
@@ -112,35 +111,134 @@ private:
 	// then that has to appear in the down_count==1 and ==2 blocks.
 	void update_mode_macro_classic()
 	{
-		const auto down_count = controls.button_high_count();
 		controls.clear_button_leds();
 		controls.set_all_encoder_leds(Palette::off);
 		display_output = true;
 
-		if (params.pathway.scene_is_near(params.morph_step)) {
-			for (auto [chan, enc] : countzip(controls.encoders)) {
-				params.banks.inc_chan(params.pathway.nearest_scene(params.morph_step), chan, enc.read() << 11);
+		if (params.pathway.on_a_scene)
+			controls.set_button_led(params.pathway.scene_nearest(), true);
+
+		auto current_pos = params.morph_step;
+		params.pathway.update(current_pos);
+
+		if (controls.a_button.is_high() && controls.b_button.is_high()) {
+			params.pathway.clear_scenes();
+		}
+
+		if (controls.a_button.just_went_high()) {
+			inserting = true;
+		} else if (controls.a_button.just_went_low()) {
+			inserting = false;
+		}
+
+		if (controls.a_button.is_high()) {
+			display_output = false;
+			encoder_display_pathway_size();
+			if (inserting == true) {
+				if (params.pathway.on_a_scene) {
+					scene_button_just_went_low([&](unsigned scene) {
+						params.pathway.replace_scene(scene);
+						inserting = false;
+					});
+				} else {
+					scene_button_just_went_low([&](unsigned scene) {
+						params.pathway.insert_scene(scene);
+						inserting = false;
+					});
+				}
+			} else {
+				scene_button_just_went_low([&](unsigned scene) { params.pathway.insert_scene(scene, true); });
+			}
+		}
+
+		get_encoder([&](int inc, unsigned chan) {
+			get_scene_context([&](Pathway::SceneId scene) { params.banks.inc_chan(scene, chan, inc << 11); });
+		});
+	}
+
+	void get_scene_context(auto f)
+	{
+		if (scene_button_high([&](unsigned chan) { f(chan); }))
+			return;
+
+		if (params.pathway.on_a_scene) {
+			f(params.pathway.scene_nearest());
+		} else {
+			f(params.pathway.scene_left());
+			f(params.pathway.scene_right());
+		}
+	}
+
+	void scene_button_just_went_low(auto f)
+	{
+		for (auto [i, butt] : countzip(controls.scene_buttons)) {
+			if (butt.just_went_low()) {
+				f(i);
 			}
 		}
 	}
 
-	Color encoder_blend(uint16_t phase)
+	bool scene_button_high(auto f)
+	{
+		auto ret = false;
+
+		for (auto [i, butt] : countzip(controls.scene_buttons)) {
+			if (butt.is_high()) {
+				f(i);
+				ret = true;
+			}
+		}
+		return ret;
+	}
+
+	void get_encoder(auto f)
+	{
+		for (auto [i, enc] : countzip(controls.encoders)) {
+			auto inc = enc.read();
+			if (inc)
+				f(inc, i);
+		}
+	}
+
+	void encoder_display_pathway_size()
+	{
+		auto r = params.pathway.size();
+		auto phase = 1.f / (params.pathway.MaxPoints / static_cast<float>(r));
+
+		while (r > 8)
+			r -= 8;
+
+		encoder_display_count(Palette::green.blend(Palette::red, phase), r);
+	}
+
+	void encoder_display_count(Color c, unsigned count)
+	{
+		if (count > Model::NumChans)
+			return;
+
+		for (auto i = 0u; i < count; i++)
+			controls.set_encoder_led(i, c);
+	}
+
+	Color encoder_blend(uint16_t phase_)
 	{
 		constexpr auto zero_v = ChannelValue::from_volts(0.f);
 		constexpr auto five_v = ChannelValue::from_volts(5.f);
 
+		auto phase = static_cast<float>(phase_);
+
 		if (phase < zero_v) {
-			float temp = static_cast<float>(phase) / zero_v;
+			float temp = phase / zero_v;
 			uint8_t o = temp * 255.f;
 			return Palette::red.blend(Palette::yellow, o);
 		} else if (phase < five_v) {
 			phase -= zero_v;
-			float temp = static_cast<float>(phase) / zero_v;
+			float temp = phase / zero_v;
 			uint8_t o = temp * 255.f;
 			return Palette::yellow.blend(Palette::green, o);
 		} else {
 			phase -= five_v;
-			float temp = static_cast<float>(phase) / zero_v;
+			float temp = phase / zero_v;
 			uint8_t o = temp * 255.f;
 			return Palette::green.blend(Palette::blue, o);
 		}

@@ -9,70 +9,88 @@ namespace Catalyst2
 {
 
 struct Pathway {
-	static constexpr size_t MaxPoints = 8; //???how many? is this model-specific?
+private:
 	static constexpr unsigned near_threshold = UINT16_MAX / Model::fader_width_mm * 2.5;
-	using SceneId = unsigned; // could be a Scene ptr?
-	FixedFwList<SceneId, MaxPoints> path{0, 7};
 	float scene_width;
+
+public:
+	static constexpr size_t MaxPoints = 64; //???how many? is this model-specific?
+	using SceneId = unsigned;				// could be a Scene ptr?
+	FixedFwList<SceneId, MaxPoints> path;
+	unsigned index_left;
+	unsigned index_nearest;
+	bool on_a_scene;
 
 	Pathway()
 	{
-		path.insert(0, 1);
+		path.insert(0, 0);
+		path.insert(1);
 		path.insert(2);
 		path.insert(3);
 		path.insert(4);
 		path.insert(5);
 		path.insert(6);
+		path.insert(7);
 		update_scene_width();
 	}
 
-	// TODO; these are just ideas for an interface, take it or leave it!
-	bool insert_scene(float point, SceneId scene)
+	void update(float point)
 	{
-		auto out = path.insert(phase_to_index(point), scene);
+		on_a_scene = scene_is_near(point);
+		index_left = phase_to_index(point);
+		index_nearest = phase_to_index(point + (scene_width * .5f));
+	}
+
+	SceneId scene_left()
+	{
+		return path.read(index_left);
+	}
+	SceneId scene_right()
+	{
+		return path.read(index_left + 1);
+	}
+	SceneId scene_nearest()
+	{
+		return path.read(index_nearest);
+	}
+
+	bool replace_scene(SceneId scene)
+	{
+		return path.replace(index_nearest, scene);
+	}
+
+	// insert scene on path
+	bool insert_scene(SceneId scene, bool after_last = false)
+	{
+		auto out = false;
+
+		if (after_last)
+			out = path.insert(scene);
+		else
+			out = path.insert(index_left, scene);
 		update_scene_width();
 		return out;
 	}
 
-	bool insert_scene(SceneId scene)
+	// remove scene
+	bool remove_scene()
 	{
-		auto out = path.insert(scene);
+		bool out = path.erase(index_nearest);
 		update_scene_width();
 		return out;
 	}
 
-	bool remove_scene(float point)
+	void clear_scenes()
 	{
-		bool out = path.erase(phase_to_index(point));
+		// erase all scenes in between first and last one.
+		while (path.size() > 2 && path.erase(1))
+			;
 		update_scene_width();
-		return out;
 	}
-	bool scene_is_near(float point)
-	{
-		auto p = static_cast<unsigned>(UINT16_MAX * point);
-		auto mod = static_cast<unsigned>(UINT16_MAX * scene_width);
-		p %= mod;
-		if (p != std::clamp(p, near_threshold, mod - near_threshold))
-			return true;
 
-		return false;
-	}
-	bool is_between_scenes(float point)
+	unsigned size()
 	{
-		return !scene_is_near(point);
-	}
-	SceneId nearest_scene(float point)
-	{
-		point += (scene_width * .5f);
-		return scene_left(point);
-	}
-	SceneId scene_left(float point)
-	{
-		return path.read(phase_to_index(point));
-	}
-	SceneId scene_right(float point)
-	{
-		return path.read(phase_to_index(point) + 1);
+		return path.size();
 	}
 
 	// needs a better name
@@ -85,6 +103,16 @@ struct Pathway {
 	}
 
 private:
+	bool scene_is_near(float point)
+	{
+		auto p = static_cast<unsigned>(UINT16_MAX * point);
+		auto mod = static_cast<unsigned>(UINT16_MAX * scene_width);
+		p %= mod;
+		if (p != std::clamp(p, near_threshold, mod - near_threshold))
+			return true;
+
+		return false;
+	}
 	unsigned phase_to_index(float phase)
 	{
 		return phase * (path.size() - 1);

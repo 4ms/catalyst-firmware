@@ -25,8 +25,8 @@ public:
 			auto phase = params.morph_step;
 			// phase += params.cv_offset;
 			phase = std::clamp(phase, 0.f, .999f);
-			auto left = params.pathway.scene_left(phase);
-			auto right = params.pathway.scene_right(phase);
+			auto left = params.pathway.scene_left();
+			auto right = params.pathway.scene_right();
 			phase = params.pathway.adjust_and_scale(phase);
 
 			for (auto [chan, out] : countzip(buf)) {
