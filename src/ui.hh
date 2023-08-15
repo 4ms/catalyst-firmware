@@ -115,9 +115,6 @@ private:
 		controls.set_all_encoder_leds(Palette::off);
 		display_output = true;
 
-		if (params.pathway.on_a_scene)
-			controls.set_button_led(params.pathway.scene_nearest(), true);
-
 		auto current_pos = params.morph_step;
 		params.pathway.update(current_pos);
 
@@ -154,8 +151,11 @@ private:
 		get_encoder([&](int inc, unsigned chan) {
 			get_scene_context([&](Pathway::SceneId scene) { params.banks.inc_chan(scene, chan, inc << 11); });
 		});
+
+		get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 	}
 
+	// what should this be named?
 	void get_scene_context(auto f)
 	{
 		if (scene_button_high([&](unsigned chan) { f(chan); }))
