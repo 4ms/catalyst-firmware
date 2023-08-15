@@ -10,7 +10,7 @@ namespace Catalyst2
 
 struct Pathway {
 private:
-	static constexpr unsigned near_threshold = UINT16_MAX / Model::fader_width_mm * 2.5;
+	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
 	float scene_width;
 
 public:
@@ -105,10 +105,9 @@ public:
 private:
 	bool scene_is_near(float point)
 	{
-		auto p = static_cast<unsigned>(UINT16_MAX * point);
-		auto mod = static_cast<unsigned>(UINT16_MAX * scene_width);
-		p %= mod;
-		if (p != std::clamp(p, near_threshold, mod - near_threshold))
+		while (point > scene_width)
+			point -= scene_width;
+		if (point != std::clamp(point, near_threshold, scene_width - near_threshold))
 			return true;
 
 		return false;
