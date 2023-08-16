@@ -12,14 +12,14 @@ struct Pathway {
 private:
 	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
 	float scene_width;
+	unsigned index_left;
+	unsigned index_nearest;
+	bool on_a_scene_;
 
 public:
 	static constexpr size_t MaxPoints = 64; //???how many? is this model-specific?
 	using SceneId = unsigned;				// could be a Scene ptr?
 	FixedFwList<SceneId, MaxPoints> path;
-	unsigned index_left;
-	unsigned index_nearest;
-	bool on_a_scene;
 
 	Pathway()
 	{
@@ -36,7 +36,7 @@ public:
 
 	void update(float point)
 	{
-		on_a_scene = scene_is_near(point);
+		on_a_scene_ = scene_is_near(point);
 		index_left = phase_to_index(point);
 		index_nearest = phase_to_index(point + (scene_width * .5f));
 	}
@@ -53,12 +53,14 @@ public:
 	{
 		return path.read(index_nearest);
 	}
-
+	bool on_a_scene()
+	{
+		return on_a_scene_;
+	}
 	bool replace_scene(SceneId scene)
 	{
 		return path.replace(index_nearest, scene);
 	}
-
 	// insert scene on path
 	bool insert_scene(SceneId scene, bool after_last = false)
 	{
