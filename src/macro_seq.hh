@@ -21,7 +21,7 @@ public:
 	{
 		Model::OutputBuffer buf;
 
-		if (params.mode == Params::Mode::Macro && params.macromode == Params::MacroMode::Classic) {
+		if (params.mode == Params::Mode::Macro) {
 			auto phase = params.morph_step;
 			// phase += params.cv_offset;
 			phase = std::clamp(phase, 0.f, .999f);

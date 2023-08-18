@@ -9,27 +9,22 @@ namespace Catalyst2
 {
 
 struct Pathway {
+	using SceneId = unsigned;				// could be a Scene ptr?
+	static constexpr size_t MaxPoints = 64; //???how many? is this model-specific?
+
 private:
 	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
+
+	FixedFwList<SceneId, MaxPoints> path;
 	float scene_width;
 	unsigned index_left;
 	unsigned index_nearest;
 	bool on_a_scene_;
 
 public:
-	static constexpr size_t MaxPoints = 64; //???how many? is this model-specific?
-	using SceneId = unsigned;				// could be a Scene ptr?
-	FixedFwList<SceneId, MaxPoints> path;
-
 	Pathway()
 	{
 		path.insert(0, 0);
-		path.insert(1);
-		path.insert(2);
-		path.insert(3);
-		path.insert(4);
-		path.insert(5);
-		path.insert(6);
 		path.insert(7);
 		update_scene_width();
 	}
@@ -61,7 +56,7 @@ public:
 	{
 		return path.replace(index_nearest, scene);
 	}
-	// insert scene on path
+
 	bool insert_scene(SceneId scene, bool after_last = false)
 	{
 		auto out = false;
@@ -74,9 +69,11 @@ public:
 		return out;
 	}
 
-	// remove scene
 	bool remove_scene()
 	{
+		if (path.size() == 2)
+			return false;
+
 		bool out = path.erase(index_nearest);
 		update_scene_width();
 		return out;

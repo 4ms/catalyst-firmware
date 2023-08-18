@@ -9,7 +9,6 @@ namespace Catalyst2
 
 // Params holds all the modes, settings and parameters
 // Params are set by UI, based on reading of the user input
-
 struct Params {
 	Flags flags;
 	Banks banks;
@@ -23,12 +22,6 @@ struct Params {
 	// TODO: clarify these and name them better, and add/remove as needed:
 	enum class Mode : bool { Sequencer, Macro };
 	Mode mode;
-
-	enum class SeqMode { Multi, Single };
-	SeqMode seqmode = SeqMode::Multi;
-
-	enum class MacroMode { Classic, Pathway, OutofOrderSequence };
-	MacroMode macromode = MacroMode::Classic;
 };
 
 } // namespace Catalyst2
