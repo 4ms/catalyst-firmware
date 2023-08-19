@@ -16,6 +16,7 @@ struct Params {
 	// Sequencer seq{64};
 
 	// coefficient of fading from scene to scene
+	// f(x) = (1.f / (1.f - morph_step)) * x;
 	float morph_step = 1.f;
 	float cv_offset = 0.f;
 
