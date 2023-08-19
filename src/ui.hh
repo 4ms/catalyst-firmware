@@ -88,7 +88,7 @@ private:
 			// common to all states
 			controls.clear_button_leds();
 
-			auto current_pos = params.morph_step;
+			auto current_pos = params.slider_pos;
 			params.pathway.update(current_pos);
 
 			switch (state) {
@@ -115,7 +115,7 @@ private:
 	void update_slider()
 	{
 		auto slider = controls.read_slider();
-		params.morph_step = slider / 4096.f;
+		params.slider_pos = slider / 4096.f;
 	}
 
 	void update_cv()
