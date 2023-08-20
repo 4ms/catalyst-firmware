@@ -205,6 +205,19 @@ private:
 
 	void macro_state_alt()
 	{
+		display_output = false;
+		controls.set_all_encoder_leds(Palette::off);
+
+		controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
+
+		auto inc = controls.encoders[1].read();
+		if (inc > 0) {
+			params.morph_step += (1.f / 50.f);
+		} else if (inc < 0) {
+			params.morph_step -= (1.f / 50.f);
+		}
+		params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
+
 		if (!controls.alt_button.is_high()) {
 			state = State::MacroIdle;
 		}

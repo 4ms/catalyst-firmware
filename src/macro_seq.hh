@@ -26,7 +26,7 @@ public:
 			auto right = params.pathway.scene_right();
 
 			auto phase = params.slider_pos;
-			phase += params.cv_offset;
+			// phase += params.cv_offset;
 			phase = params.pathway.adjust_and_scale(phase);
 			phase = do_morph(phase);
 
@@ -43,8 +43,15 @@ public:
 private:
 	float do_morph(float in)
 	{
-		auto temp = ((1.f / (1.f - params.morph_step)) * (in - .5f)) + .5f;
-		return std::clamp(temp, 0.f, 1.f);
+		auto morph = params.morph_step;
+
+		// this avoids dividing by 0
+		if (morph >= 1.f) {
+			return in < .5f ? 0.f : 1.f;
+		}
+
+		morph = ((1.f / (1.f - morph)) * (in - .5f)) + .5f;
+		return std::clamp(morph, 0.f, 1.f);
 	}
 };
 

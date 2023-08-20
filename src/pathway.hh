@@ -95,7 +95,7 @@ public:
 	// needs a better name
 	float adjust_and_scale(float point) const
 	{
-		while (point > scene_width)
+		while (point >= scene_width)
 			point -= scene_width;
 		point *= path.size() - 1;
 		return point;
@@ -104,7 +104,7 @@ public:
 private:
 	bool scene_is_near(float point)
 	{
-		while (point > scene_width)
+		while (point >= scene_width)
 			point -= scene_width;
 
 		// this prevents undefined clamp behaviour
