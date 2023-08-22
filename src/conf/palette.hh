@@ -21,6 +21,12 @@ struct Palette {
 	static constexpr Color blue = Color(0, 255, 0);
 	static constexpr Color purple = Color(255, 255, 0);
 	static constexpr Color magenta = Color(200, 100, 0);
+
+	static Color from_raw(int val)
+	{
+		Color temp(val & 0xC0, (val >> 8) & 0xC0, (val >> 16) & 0xC0);
+		return temp;
+	}
 };
 
 } // namespace Catalyst2
