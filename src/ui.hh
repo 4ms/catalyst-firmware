@@ -23,6 +23,7 @@ class UI {
 	InternalClock<Board::cv_stream_hz> intclock;
 	Outputs outputs;
 	bool display_output = false;
+	bool fine_inc = false;
 
 public:
 	UI(Params &params)
@@ -74,17 +75,6 @@ private:
 
 		if (params.mode == Params::Mode::Macro) {
 
-			// we can initialize states here.
-			if (controls.alt_button.just_went_high()) {
-				state = State::MacroAlt;
-			} else if (controls.a_button.just_went_high() || controls.b_button.just_went_high()) {
-				state = State::MacroAB;
-				// clear the falling edge states
-				scene_button_just_went_low([](Pathway::SceneId garb) {});
-			} else if (controls.bank_button.just_went_high()) {
-				state = State::MacroBank;
-			}
-
 			// common to all states
 			controls.clear_button_leds();
 
@@ -102,6 +92,21 @@ private:
 					macro_state_bank();
 					break;
 				case State::MacroIdle:
+					// we can initialize states here.
+					if (controls.alt_button.just_went_high()) {
+						// clear falling edges.
+						controls.bank_button.just_went_low();
+						controls.b_button.just_went_low();
+						scene_button_just_went_low([](Pathway::SceneId garb) {});
+						state = State::MacroAlt;
+					} else if (controls.a_button.just_went_high() || controls.b_button.just_went_high()) {
+						state = State::MacroAB;
+						// clear the falling edge states
+						scene_button_just_went_low([](Pathway::SceneId garb) {});
+					} else if (controls.bank_button.just_went_high()) {
+						state = State::MacroBank;
+					}
+
 					macro_state_idle();
 					break;
 			}
@@ -124,109 +129,10 @@ private:
 		params.cv_offset = cv / 4096.f;
 	}
 
-	void macro_state_idle()
-	{
-		Pathway::SceneId scene_to_display = 0xff;
-
-		auto fine_inc = controls.latch_button.is_high();
-
-		if (scene_button_high([&](Pathway::SceneId scene) {
-				controls.set_button_led(scene, true);
-				scene_to_display = scene;
-			}))
-		{
-			// do this once regardless if any amount of buttons are pressed.
-			display_output = false;
-
-			// is this too redundant?
-			get_encoder([&](int inc, unsigned chan) {
-				scene_button_high([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
-			});
-
-			// TODO: somehow this scene needs to be sent out the output
-			encoder_display_scene(scene_to_display);
-		} else {
-			// do this if no scene buttons were pressed.
-			display_output = true;
-
-			// display the current scene based on slider pos
-			get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
-
-			get_encoder([&](int inc, unsigned chan) {
-				get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
-			});
-		}
-	}
-
-	void macro_state_ab()
-	{
-		static bool first = true;
-		display_output = false;
-		controls.set_all_encoder_leds(Palette::off);
-		encoder_display_pathway_size();
-
-		get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
-
-		/* a and b buttons*/
-		if (controls.a_button.is_high()) {
-
-			if (controls.b_button.is_high()) {
-				params.pathway.clear_scenes();
-			} else {
-				scene_button_just_went_low([&](unsigned scene) {
-					if (first) {
-						if (params.pathway.on_a_scene()) {
-							params.pathway.replace_scene(scene);
-						} else {
-							params.pathway.insert_scene(scene, false);
-						}
-						first = false;
-					} else {
-						params.pathway.insert_scene(scene, true);
-					}
-				});
-			}
-		} else if (controls.b_button.is_high()) {
-			// removing a scene is not nearly as intuitive as inserting them
-			if (params.pathway.on_a_scene()) {
-				scene_button_just_went_low([&](unsigned scene) {
-					if (scene == params.pathway.scene_nearest())
-						params.pathway.remove_scene();
-				});
-			}
-		}
-
-		if (!controls.a_button.is_high() && !controls.b_button.is_high()) {
-			state = State::MacroIdle;
-			first = true;
-		}
-	}
-
-	void macro_state_alt()
-	{
-		display_output = false;
-		controls.set_all_encoder_leds(Palette::off);
-
-		controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
-
-		auto inc = controls.encoders[1].read();
-		params.morph_step += (1.f / 100.f) * inc;
-		params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
-
-		if (!controls.alt_button.is_high()) {
-			state = State::MacroIdle;
-		}
-	}
-
-	void macro_state_bank()
-	{
-		scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
-		controls.set_button_led(params.banks.get_sel_bank(), true);
-
-		if (!controls.bank_button.is_high()) {
-			state = State::MacroIdle;
-		}
-	}
+	void macro_state_idle();
+	void macro_state_ab();
+	void macro_state_alt();
+	void macro_state_bank();
 
 	// what should this be named?
 	void get_scene_context(auto f)
