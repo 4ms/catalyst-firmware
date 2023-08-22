@@ -41,9 +41,9 @@ public:
 	{
 		controls.update();
 
-		update_mode();
 		update_slider();
 		update_cv();
+		update_mode();
 
 		// TODO
 		// Check controls and update params:
@@ -120,15 +120,15 @@ private:
 
 	void update_cv()
 	{
-		auto cv = controls.read_cv() / (4096.f);
-		params.cv_offset = cv;
+		auto cv = controls.read_cv();
+		params.cv_offset = cv / 4096.f;
 	}
 
 	void macro_state_idle()
 	{
-		// controls.set_all_encoder_leds(Palette::off);
-
 		Pathway::SceneId scene_to_display = 0xff;
+
+		auto fine_inc = controls.latch_button.is_high();
 
 		if (scene_button_high([&](Pathway::SceneId scene) {
 				controls.set_button_led(scene, true);
@@ -140,11 +140,10 @@ private:
 
 			// is this too redundant?
 			get_encoder([&](int inc, unsigned chan) {
-				scene_button_high([&](Pathway::SceneId scene) { params.banks.inc_chan(scene, chan, inc << 11); });
+				scene_button_high([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
 			});
 
 			// TODO: somehow this scene needs to be sent out the output
-
 			encoder_display_scene(scene_to_display);
 		} else {
 			// do this if no scene buttons were pressed.
@@ -154,7 +153,7 @@ private:
 			get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 
 			get_encoder([&](int inc, unsigned chan) {
-				get_scene_context([&](Pathway::SceneId scene) { params.banks.inc_chan(scene, chan, inc << 11); });
+				get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
 			});
 		}
 	}
@@ -211,11 +210,7 @@ private:
 		controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
 
 		auto inc = controls.encoders[1].read();
-		if (inc > 0) {
-			params.morph_step += (1.f / 50.f);
-		} else if (inc < 0) {
-			params.morph_step -= (1.f / 50.f);
-		}
+		params.morph_step += (1.f / 100.f) * inc;
 		params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
 
 		if (!controls.alt_button.is_high()) {
@@ -314,19 +309,16 @@ private:
 		auto phase = static_cast<float>(level);
 
 		if (phase < zero_v) {
-			float temp = phase / zero_v;
-			uint8_t o = temp * 255.f;
-			return Palette::red.blend(Palette::yellow, o);
+			phase /= zero_v;
+			return Palette::red.blend(Palette::yellow, phase);
 		} else if (phase < five_v) {
 			phase -= zero_v;
-			float temp = phase / zero_v;
-			uint8_t o = temp * 255.f;
-			return Palette::yellow.blend(Palette::green, o);
+			phase /= zero_v;
+			return Palette::yellow.blend(Palette::green, phase);
 		} else {
 			phase -= five_v;
-			float temp = phase / zero_v;
-			uint8_t o = temp * 255.f;
-			return Palette::green.blend(Palette::blue, o);
+			phase /= zero_v;
+			return Palette::green.blend(Palette::blue, phase);
 		}
 	}
 

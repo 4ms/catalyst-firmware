@@ -12,12 +12,16 @@ struct ChannelValue {
 	using type = uint16_t;
 	static constexpr type Max = UINT16_MAX;
 	static constexpr type Min = 0;
+	static constexpr type Range = Max - Min;
 
 	static constexpr uint16_t from_volts(const float volts)
 	{
 		auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
 		return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
 	}
+
+	static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
+	static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
 };
 
 struct Scene {
@@ -71,7 +75,9 @@ struct Banks {
 
 		return banks[cur_bank].scene[scene].chans[chan];
 	}
-	void inc_chan(unsigned scene, unsigned chan, int32_t by)
+
+	// i think i will remove this..
+	void adjust_chan(unsigned scene, unsigned chan, int32_t by)
 	{
 		if (by == 0)
 			return;
@@ -94,6 +100,50 @@ struct Banks {
 
 			banks[cur_bank].scene[scene].chans[chan] = temp;
 		}
+	}
+
+	void inc_chan(unsigned scene, unsigned chan, bool fine = false)
+	{
+		if (chan >= Model::NumChans || scene >= Model::NumScenes)
+			return;
+
+		auto inc = ChannelValue::inc_step;
+
+		if (fine)
+			inc = ChannelValue::inc_step_fine;
+
+		auto &out = banks[cur_bank].scene[scene].chans[chan];
+
+		if (ChannelValue::Max - out <= inc)
+			out = ChannelValue::Max;
+		else
+			out += inc;
+	}
+
+	void dec_chan(unsigned scene, unsigned chan, bool fine = false)
+	{
+		if (chan >= Model::NumChans || scene >= Model::NumScenes)
+			return;
+
+		auto inc = ChannelValue::inc_step;
+
+		if (fine)
+			inc = ChannelValue::inc_step_fine;
+
+		auto &out = banks[cur_bank].scene[scene].chans[chan];
+
+		if (out <= inc)
+			out = ChannelValue::Min;
+		else
+			out -= inc;
+	}
+
+	void adj_chan(unsigned scene, unsigned chan, int dir, bool fine = false)
+	{
+		if (dir > 0)
+			inc_chan(scene, chan, fine);
+		else if (dir < 0)
+			dec_chan(scene, chan, fine);
 	}
 
 private:

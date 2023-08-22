@@ -12,32 +12,32 @@ TEST_CASE("Overflow with ints and unsigned")
 	banks.set_chan(0, 0, Catalyst2::ChannelValue::Max);
 	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max);
 
-	banks.inc_chan(0, 0, by);
+	banks.adjust_chan(0, 0, by);
 	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max - 1);
-	banks.inc_chan(0, 0, -1);
+	banks.adjust_chan(0, 0, -1);
 	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max - 2);
 
-	banks.inc_chan(0, 0, 3);
+	banks.adjust_chan(0, 0, 3);
 	CHECK(banks.get_chan(0, 0) == Catalyst2::ChannelValue::Max);
 
 	// regarding the next two checks
 	/* if ChannelValue::type == uint32_t then incrementing chan by "Max - Min" or "Min - Max" would be undefined right?
-		max - min == UINT32_MAX and the inc_chan func wants an int32
+		max - min == UINT32_MAX and the adjust_chan func wants an int32
 	*/
 	banks.set_chan(0, 0, Min);
-	banks.inc_chan(0, 0, Max - Min);
+	banks.adjust_chan(0, 0, Max - Min);
 	CHECK(banks.get_chan(0, 0) == Max);
 
 	banks.set_chan(0, 0, Max);
-	banks.inc_chan(0, 0, Min - Max);
+	banks.adjust_chan(0, 0, Min - Max);
 	CHECK(banks.get_chan(0, 0) == Min);
 
 	banks.set_chan(1, 1, Catalyst2::ChannelValue::Min);
 	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min);
-	banks.inc_chan(1, 1, -1);
+	banks.adjust_chan(1, 1, -1);
 	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min);
-	banks.inc_chan(1, 1, 1);
+	banks.adjust_chan(1, 1, 1);
 	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min + 1);
-	banks.inc_chan(1, 1, -2);
+	banks.adjust_chan(1, 1, -2);
 	CHECK(banks.get_chan(1, 1) == Catalyst2::ChannelValue::Min);
 }

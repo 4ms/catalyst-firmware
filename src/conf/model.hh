@@ -22,6 +22,8 @@ enum class AdcElement { Slider, CVJack };
 static constexpr float max_output_voltage = 10.f;
 static constexpr float min_output_voltage = -5.f;
 
+static constexpr float output_octave_range = max_output_voltage - min_output_voltage;
+
 static constexpr unsigned fader_width_mm = 60;
 
 } // namespace Catalyst2::Model
