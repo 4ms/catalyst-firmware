@@ -24,8 +24,7 @@ struct Palette {
 
 	static Color from_raw(int val)
 	{
-		Color temp(val & 0xC0, (val >> 8) & 0xC0, (val >> 16) & 0xC0);
-		return temp;
+		return Color(val & 0xC0, (val >> 8) & 0xC0, (val >> 16) & 0xC0);
 	}
 };
 
