@@ -5,6 +5,7 @@
 #include "intclock.hh"
 #include "outputs.hh"
 #include "params.hh"
+#include "recorder.hh"
 #include "util/countzip.hh"
 
 namespace Catalyst2
@@ -21,6 +22,7 @@ class UI {
 	Controls controls;
 	Params &params;
 	InternalClock<Board::cv_stream_hz> intclock;
+	Recorder recorder;
 	Outputs outputs;
 	bool display_output = false;
 	bool fine_inc = false;
@@ -69,57 +71,10 @@ public:
 	}
 
 private:
-	void update_mode()
-	{
-		update_mode_switch();
-
-		if (params.mode == Params::Mode::Macro) {
-
-			// common to all states
-			controls.clear_button_leds();
-
-			auto current_pos = params.slider_pos;
-			params.pathway.update(current_pos);
-
-			switch (state) {
-				case State::MacroAlt:
-					macro_state_alt();
-					break;
-				case State::MacroAB:
-					macro_state_ab();
-					break;
-				case State::MacroBank:
-					macro_state_bank();
-					break;
-				case State::MacroIdle:
-					// we can initialize states here.
-					if (controls.alt_button.just_went_high()) {
-						// clear falling edges.
-						controls.bank_button.just_went_low();
-						controls.b_button.just_went_low();
-						scene_button_just_went_low([](Pathway::SceneId garb) {});
-						state = State::MacroAlt;
-					} else if (controls.a_button.just_went_high() || controls.b_button.just_went_high()) {
-						state = State::MacroAB;
-						// clear the falling edge states
-						scene_button_just_went_low([](Pathway::SceneId garb) {});
-					} else if (controls.bank_button.just_went_high()) {
-						state = State::MacroBank;
-					}
-
-					macro_state_idle();
-					break;
-			}
-
-		} else {
-		}
-
-		// sequencer mode
-	}
-
 	void update_slider()
 	{
-		auto slider = controls.read_slider();
+		auto slider = recorder.update(controls.read_slider());
+		// auto slider = controls.read_slider();
 		params.slider_pos = slider / 4096.f;
 	}
 
@@ -129,6 +84,7 @@ private:
 		params.cv_offset = cv / 4096.f;
 	}
 
+	void update_mode();
 	void macro_state_idle();
 	void macro_state_ab();
 	void macro_state_alt();

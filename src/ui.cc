@@ -3,9 +3,60 @@
 namespace Catalyst2
 {
 
+void UI::update_mode()
+{
+	update_mode_switch();
+
+	if (params.mode == Params::Mode::Macro) {
+
+		// common to all states
+		controls.clear_button_leds();
+
+		auto current_pos = params.slider_pos;
+		params.pathway.update(current_pos);
+
+		switch (state) {
+			case State::MacroAlt:
+				macro_state_alt();
+				break;
+			case State::MacroAB:
+				macro_state_ab();
+				break;
+			case State::MacroBank:
+				macro_state_bank();
+				break;
+			case State::MacroIdle:
+				// we can initialize states here.
+				if (controls.alt_button.just_went_high()) {
+					// clear falling edges.
+					controls.play_button.just_went_high();
+					controls.play_button.just_went_low();
+					controls.bank_button.just_went_low();
+					controls.b_button.just_went_low();
+					scene_button_just_went_low([](Pathway::SceneId garb) {});
+					state = State::MacroAlt;
+				} else if (controls.a_button.just_went_high() || controls.b_button.just_went_high()) {
+					state = State::MacroAB;
+					// clear the falling edge states
+					scene_button_just_went_low([](Pathway::SceneId garb) {});
+				} else if (controls.bank_button.just_went_high()) {
+					state = State::MacroBank;
+				}
+
+				macro_state_idle();
+				break;
+		}
+
+	} else {
+	}
+
+	// sequencer mode
+}
+
 void UI::macro_state_idle()
 {
 	Pathway::SceneId scene_to_display = 0xff;
+
 	if (scene_button_high([&](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
 			scene_to_display = scene;
@@ -65,7 +116,8 @@ void UI::macro_state_alt()
 			controls.set_encoder_led(6, Palette::from_raw(random_seed));
 			inc = controls.encoders[6].read();
 			if (inc) {
-				random_seed = std::rand();
+				// this feels random enough
+				random_seed = controls.read_cv();
 				std::srand(random_seed);
 				params.banks.randomize();
 			}
@@ -87,8 +139,17 @@ void UI::macro_state_alt()
 			break;
 		}
 		case AltState::IDLE: {
+			// just turn on fine tuning. we can also check if it's time to record a phrase
 			fine_inc = true;
 			macro_state_idle();
+
+			if (controls.play_button.just_went_high()) {
+				recorder.record();
+			}
+			if (controls.play_button.just_went_low()) {
+				recorder.stop();
+				recorder.play();
+			}
 			break;
 		}
 	}

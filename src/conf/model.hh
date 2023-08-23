@@ -26,4 +26,6 @@ static constexpr float output_octave_range = max_output_voltage - min_output_vol
 
 static constexpr unsigned fader_width_mm = 60;
 
+static constexpr unsigned rec_buffer_size = 2048;
+static constexpr unsigned rec_buffer_prescaler = 16;
 } // namespace Catalyst2::Model

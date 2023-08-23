@@ -146,6 +146,10 @@ const TimekeeperConfig encoder_led_task{
 	.priority2 = 0,
 };
 
+///////////////// SRAM size
+// is there somewhere this is already defined?
+constexpr unsigned sram_capacity = 96 * 1024;
+
 ///////////////// Debug pin
 
 using DebugPin = mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output>;
