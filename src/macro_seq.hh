@@ -28,7 +28,7 @@ public:
 			auto left = params.pathway.scene_left();
 			auto right = params.pathway.scene_right();
 
-			auto phase = params.slider_pos;
+			auto phase = params.pos;
 			// phase += params.cv_offset;
 			phase = params.pathway.adjust_and_scale(phase);
 			phase = do_morph(phase);
