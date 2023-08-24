@@ -22,6 +22,8 @@ class UI {
 	Controls controls;
 	Params &params;
 	InternalClock<Board::cv_stream_hz> intclock;
+
+	// should the recorder be in params?
 	Recorder recorder;
 	Outputs outputs;
 	bool display_output = false;
