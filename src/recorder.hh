@@ -8,6 +8,7 @@ namespace Catalyst2
 class Recorder {
 	static constexpr auto prescaler = Model::rec_buffer_prescaler;
 	static constexpr auto buff_size = Model::rec_buffer_size;
+	static constexpr auto max_record_lenth_seconds = (1.f / ((float)Board::cv_stream_hz / prescaler)) * buff_size;
 	static_assert(MathTools::is_power_of_2(prescaler));
 
 	std::array<uint16_t, buff_size> buffer;
@@ -37,6 +38,13 @@ public:
 	void play()
 	{
 		play_ = true;
+	}
+	void toggle()
+	{
+		if (play_)
+			stop();
+		else
+			restart();
 	}
 	void pause()
 	{
@@ -68,6 +76,14 @@ public:
 	auto size()
 	{
 		return size_;
+	}
+	auto capacity_filled()
+	{
+		return static_cast<float>(size_) / buff_size;
+	}
+	bool is_recordering()
+	{
+		return recording;
 	}
 
 private:

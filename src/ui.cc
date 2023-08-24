@@ -26,24 +26,25 @@ void UI::update_mode()
 				macro_state_bank();
 				break;
 			case State::MacroIdle:
+				macro_state_idle();
+				if (controls.play_button.just_went_high()) {
+					recorder.toggle();
+				}
+
 				// we can initialize states here.
-				if (controls.alt_button.just_went_high()) {
-					// clear falling edges.
-					controls.play_button.just_went_high();
-					controls.play_button.just_went_low();
-					controls.bank_button.just_went_low();
-					controls.b_button.just_went_low();
-					scene_button_just_went_low([](Pathway::SceneId garb) {});
+				// ie: clear lingering button edges
+				if (controls.alt_button.is_high()) {
 					state = State::MacroAlt;
-				} else if (controls.a_button.just_went_high() || controls.b_button.just_went_high()) {
+					controls.b_button.clear_events();
+					controls.bank_button.clear_events();
+					controls.play_button.clear_events();
+				} else if (controls.a_button.is_high() || controls.b_button.is_high()) {
 					state = State::MacroAB;
-					// clear the falling edge states
-					scene_button_just_went_low([](Pathway::SceneId garb) {});
-				} else if (controls.bank_button.just_went_high()) {
+					controls.scene_buttons_clear_events();
+				} else if (controls.bank_button.is_high()) {
 					state = State::MacroBank;
 				}
 
-				macro_state_idle();
 				break;
 		}
 
@@ -56,6 +57,11 @@ void UI::update_mode()
 void UI::macro_state_idle()
 {
 	Pathway::SceneId scene_to_display = 0xff;
+
+	if (recorder.is_recordering()) {
+		scene_button_display_recording();
+		return;
+	}
 
 	if (scene_button_high([&](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
@@ -72,17 +78,19 @@ void UI::macro_state_idle()
 
 		// TODO: somehow this scene needs to be sent out the output
 		encoder_display_scene(scene_to_display);
-	} else {
-		// do this if no scene buttons were pressed.
-		display_output = true;
 
-		// display the current scene based on slider pos
-		get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
-
-		get_encoder([&](int inc, unsigned chan) {
-			get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
-		});
+		return;
 	}
+
+	// do this if no scene buttons were pressed.
+	display_output = true;
+
+	// display the current scene based on slider pos
+	get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
+
+	get_encoder([&](int inc, unsigned chan) {
+		get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
+	});
 }
 
 void UI::macro_state_alt()
@@ -117,7 +125,7 @@ void UI::macro_state_alt()
 			inc = controls.encoders[6].read();
 			if (inc) {
 				// this feels random enough
-				random_seed = controls.read_cv();
+				random_seed += controls.read_cv() * controls.read_slider();
 				std::srand(random_seed);
 				params.banks.randomize();
 			}
@@ -146,10 +154,7 @@ void UI::macro_state_alt()
 			if (controls.play_button.just_went_high()) {
 				recorder.record();
 			}
-			if (controls.play_button.just_went_low()) {
-				recorder.stop();
-				recorder.play();
-			}
+
 			break;
 		}
 	}
@@ -173,7 +178,6 @@ void UI::macro_state_bank()
 
 void UI::macro_state_ab()
 {
-	static bool first = true;
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
 	encoder_display_pathway_size();
@@ -181,37 +185,42 @@ void UI::macro_state_ab()
 	get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 
 	/* a and b buttons*/
-	if (controls.a_button.is_high()) {
+	auto a = controls.a_button.is_high();
+	auto b = controls.b_button.is_high();
 
-		if (controls.b_button.is_high()) {
-			params.pathway.clear_scenes();
-		} else {
-			scene_button_just_went_low([&](unsigned scene) {
-				if (first) {
-					if (params.pathway.on_a_scene()) {
-						params.pathway.replace_scene(scene);
-					} else {
-						params.pathway.insert_scene(scene, false);
-					}
-					first = false;
-				} else {
-					params.pathway.insert_scene(scene, true);
-				}
-			});
-		}
-	} else if (controls.b_button.is_high()) {
+	if (a && b) {
+		params.pathway.clear_scenes();
+		return;
+	}
+
+	if (a) {
+		scene_button_just_went_low([&](unsigned scene) {
+			if (!controls.a_button.just_went_high()) {
+				params.pathway.insert_scene(scene, true);
+				return; // return from lambda
+			}
+
+			if (params.pathway.on_a_scene())
+				params.pathway.replace_scene(scene);
+			else
+				params.pathway.insert_scene(scene, false);
+		});
+
+		return;
+	}
+
+	if (b) {
 		// removing a scene is not nearly as intuitive as inserting them
+		// TODO: make it better
 		if (params.pathway.on_a_scene()) {
 			scene_button_just_went_low([&](unsigned scene) {
 				if (scene == params.pathway.scene_nearest())
 					params.pathway.remove_scene();
 			});
 		}
+		return;
 	}
 
-	if (!controls.a_button.is_high() && !controls.b_button.is_high()) {
-		state = State::MacroIdle;
-		first = true;
-	}
+	state = State::MacroIdle;
 }
 } // namespace Catalyst2

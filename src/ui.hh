@@ -135,6 +135,14 @@ private:
 		}
 	}
 
+	void scene_button_display_recording()
+	{
+		auto led = static_cast<unsigned>(recorder.capacity_filled() * 8u);
+		auto level = recorder.size() & 0x10;
+
+		controls.set_button_led(led, level);
+	}
+
 	void encoder_display_pathway_size()
 	{
 		auto r = params.pathway.size();
