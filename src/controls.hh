@@ -59,23 +59,6 @@ public:
 		return scene_buttons[idx];
 	}
 
-	auto button_high_count()
-	{
-		auto down_count = 0;
-
-		for (auto &but : scene_buttons)
-			down_count += but.is_high();
-
-		down_count += alt_button.is_high();
-		down_count += latch_button.is_high();
-		down_count += bank_button.is_high();
-		down_count += a_button.is_high();
-		down_count += b_button.is_high();
-		down_count += play_button.is_high();
-
-		return down_count;
-	}
-
 	uint16_t read_slider()
 	{
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::Slider);
@@ -170,6 +153,13 @@ public:
 	{
 		for (auto &x : encoders)
 			x.read();
+	}
+
+	void scene_buttons_clear_events()
+	{
+		for (auto &but : scene_buttons) {
+			but.clear_events();
+		}
 	}
 
 	void update()
