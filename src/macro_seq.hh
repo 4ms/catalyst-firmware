@@ -29,7 +29,6 @@ public:
 			auto right = params.pathway.scene_right();
 
 			auto phase = params.pos;
-			// phase += params.cv_offset;
 			phase = params.pathway.adjust_and_scale(phase);
 			phase = do_morph(phase);
 

@@ -60,6 +60,14 @@ void UI::macro_state_idle()
 		return;
 	}
 
+	if (controls.trig_jack.just_went_high() && recorder.size()) {
+		recorder.play();
+	}
+
+	if (controls.reset_jack.just_went_high() && recorder.size()) {
+		recorder.restart();
+	}
+
 	if (scene_button_high([&](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
 			scene_to_display = scene;
@@ -208,6 +216,12 @@ void UI::macro_state_ab()
 	}
 
 	if (b) {
+		// clear recording
+		if (controls.play_button.is_high()) {
+			recorder.clear();
+			return;
+		}
+
 		// removing a scene is not nearly as intuitive as inserting them
 		// TODO: make it better
 		if (params.pathway.on_a_scene()) {
