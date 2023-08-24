@@ -20,6 +20,7 @@ struct Params {
 	float morph_step = 0.f;
 	float slider_pos;
 	float cv_offset = 0.f;
+	float pos = 0.f;
 
 	// TODO: clarify these and name them better, and add/remove as needed:
 	enum class Mode : bool { Sequencer, Macro };

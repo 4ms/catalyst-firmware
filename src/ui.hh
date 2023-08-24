@@ -46,8 +46,7 @@ public:
 	{
 		controls.update();
 
-		update_slider();
-		update_cv();
+		update_slider_and_cv();
 		update_mode();
 
 		// TODO
@@ -73,17 +72,13 @@ public:
 	}
 
 private:
-	void update_slider()
+	void update_slider_and_cv()
 	{
-		auto slider = recorder.update(controls.read_slider());
-		// auto slider = controls.read_slider();
-		params.slider_pos = slider / 4096.f;
-	}
-
-	void update_cv()
-	{
+		auto slider = controls.read_slider();
 		auto cv = controls.read_cv();
-		params.cv_offset = cv / 4096.f;
+		auto rec = recorder.update(slider + cv);
+		params.pos = rec / 4096.f;
+		params.slider_pos = slider / 4096.f;
 	}
 
 	void update_mode();
@@ -143,6 +138,11 @@ private:
 		auto level = recorder.size() & 0x10;
 
 		controls.set_button_led(led, level);
+	}
+
+	void scene_button_display_nearest()
+	{
+		get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 	}
 
 	void encoder_display_pathway_size()

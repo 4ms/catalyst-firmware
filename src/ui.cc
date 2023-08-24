@@ -12,9 +12,6 @@ void UI::update_mode()
 		// common to all states
 		controls.clear_button_leds();
 
-		auto current_pos = params.slider_pos;
-		params.pathway.update(current_pos);
-
 		switch (state) {
 			case State::MacroAlt:
 				macro_state_alt();
@@ -85,8 +82,8 @@ void UI::macro_state_idle()
 	// do this if no scene buttons were pressed.
 	display_output = true;
 
-	// display the current scene based on slider pos
-	get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
+	// display the current scene
+	scene_button_display_nearest();
 
 	get_encoder([&](int inc, unsigned chan) {
 		get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, fine_inc); });
@@ -182,7 +179,8 @@ void UI::macro_state_ab()
 	controls.set_all_encoder_leds(Palette::off);
 	encoder_display_pathway_size();
 
-	get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
+	params.pathway.update(params.slider_pos);
+	scene_button_display_nearest();
 
 	/* a and b buttons*/
 	auto a = controls.a_button.is_high();

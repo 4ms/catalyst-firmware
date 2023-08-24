@@ -21,6 +21,9 @@ public:
 	{
 		Model::OutputBuffer buf;
 
+		// TODO: test
+		params.pathway.update(params.pos);
+
 		if (params.mode == Params::Mode::Macro) {
 			auto left = params.pathway.scene_left();
 			auto right = params.pathway.scene_right();
