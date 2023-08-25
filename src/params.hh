@@ -13,6 +13,7 @@ struct Params {
 	Flags flags;
 	Banks banks;
 	Pathway pathway;
+	Sequencer seq;
 	// Sequencer seq{64};
 
 	// coefficient of fading from scene to scene

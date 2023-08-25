@@ -7,10 +7,10 @@ void UI::update_mode()
 {
 	update_mode_switch();
 
-	if (params.mode == Params::Mode::Macro) {
+	// common to all states
+	controls.clear_button_leds();
 
-		// common to all states
-		controls.clear_button_leds();
+	if (params.mode == Params::Mode::Macro) {
 
 		switch (state) {
 			case State::MacroAlt:
@@ -43,12 +43,49 @@ void UI::update_mode()
 				}
 
 				break;
+
+			default:
+				state = State::MacroIdle;
+				break;
 		}
 
-	} else {
+		return;
 	}
-
 	// sequencer mode
+
+	// //somehow light up the sequence
+	// for (int i = 0u; i < Model::NumChans; i++) {
+	// 	auto length = params.seq.get_length(i);
+	// }
+	display_output = false;
+	controls.set_all_encoder_leds(Palette::off);
+	encoder_display_sequence();
+
+	auto step = false;
+
+	// if (controls.trig_jack_sense.is_high()) {
+	// 	step = controls.trig_jack.just_went_high();
+	// } else {
+	intclock.update();
+	step = intclock.step();
+	//}
+
+	if (step)
+		params.seq.step();
+
+	switch (state) {
+		case State::SeqIdle:
+			seq_state_idle();
+			break;
+		default:
+			state = State::SeqIdle;
+			break;
+	}
+}
+
+void UI::seq_state_idle()
+{
+	// auto temp = params.banks.
 }
 
 void UI::macro_state_idle()

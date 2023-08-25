@@ -59,7 +59,7 @@ struct Bank {
 struct Banks {
 	void randomize()
 	{
-		for (auto &b : banks) {
+		for (auto &b : bank) {
 			for (auto &s : b.scene) {
 				for (auto &c : s.random_value) {
 					c = std::rand();
@@ -70,12 +70,12 @@ struct Banks {
 
 	float get_scene_random_amount(unsigned scene)
 	{
-		return banks[cur_bank].scene[scene].random_amount;
+		return bank[cur_bank].scene[scene].random_amount;
 	}
 
 	void set_scene_random_amount(unsigned scene, float amount)
 	{
-		banks[cur_bank].scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
+		bank[cur_bank].scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
 	}
 
 	void sel_bank(unsigned bank)
@@ -94,7 +94,7 @@ struct Banks {
 		if (chan >= Model::NumChans || scene >= Model::NumScenes)
 			return;
 
-		banks[cur_bank].scene[scene].chans[chan] = val;
+		bank[cur_bank].scene[scene].chans[chan] = val;
 	}
 
 	ChannelValue::type get_chan(unsigned scene, unsigned chan)
@@ -102,7 +102,7 @@ struct Banks {
 		if (chan >= Model::NumChans || scene >= Model::NumScenes)
 			return 0;
 
-		auto &s = banks[cur_bank].scene[scene];
+		auto &s = bank[cur_bank].scene[scene];
 		auto temp = s.chans[chan];
 		int r = ((s.random_value[chan] / 128.f) * s.random_amount) * (ChannelValue::Range / 2);
 		if (r > 0) {
@@ -132,8 +132,8 @@ struct Banks {
 		if (by == INT32_MIN)
 			by += 1;
 
-		if (banks[cur_bank].scene[scene].types[chan] == Scene::ChannelType::CV) {
-			auto temp = banks[cur_bank].scene[scene].chans[chan];
+		if (bank[cur_bank].scene[scene].types[chan] == Scene::ChannelType::CV) {
+			auto temp = bank[cur_bank].scene[scene].chans[chan];
 
 			if (by > 0 && ChannelValue::Max - temp < static_cast<ChannelValue::type>(by))
 				temp = ChannelValue::Max;
@@ -142,7 +142,7 @@ struct Banks {
 			else
 				temp += by;
 
-			banks[cur_bank].scene[scene].chans[chan] = temp;
+			bank[cur_bank].scene[scene].chans[chan] = temp;
 		}
 	}
 
@@ -156,7 +156,7 @@ struct Banks {
 		if (fine)
 			inc = ChannelValue::inc_step_fine;
 
-		auto &out = banks[cur_bank].scene[scene].chans[chan];
+		auto &out = bank[cur_bank].scene[scene].chans[chan];
 
 		if (ChannelValue::Max - out <= inc)
 			out = ChannelValue::Max;
@@ -174,7 +174,7 @@ struct Banks {
 		if (fine)
 			inc = ChannelValue::inc_step_fine;
 
-		auto &out = banks[cur_bank].scene[scene].chans[chan];
+		auto &out = bank[cur_bank].scene[scene].chans[chan];
 
 		if (out <= inc)
 			out = ChannelValue::Min;
@@ -192,7 +192,7 @@ struct Banks {
 
 private:
 	using BankArray = std::array<Bank, Model::NumBanks>;
-	BankArray banks;
+	BankArray bank;
 	uint8_t cur_bank{0};
 };
 

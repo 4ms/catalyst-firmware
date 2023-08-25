@@ -37,6 +37,14 @@ public:
 				auto b = params.banks.get_chan(right, chan);
 				out = MathTools::interpolate(a, b, phase);
 			}
+
+			return buf;
+		}
+
+		// sequencer mode
+		for (auto [chan, out] : countzip(buf)) {
+			auto step = params.seq.get_step(chan);
+			out = params.banks.get_chan(step, chan);
 		}
 
 		return buf;

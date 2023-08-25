@@ -17,6 +17,7 @@ class UI {
 		MacroAlt,
 		MacroAB,
 		MacroBank,
+		SeqIdle,
 	};
 	State state = State::MacroIdle;
 	Controls controls;
@@ -86,6 +87,7 @@ private:
 	void macro_state_ab();
 	void macro_state_alt();
 	void macro_state_bank();
+	void seq_state_idle();
 
 	// what should this be named?
 	void get_scene_context(auto f)
@@ -170,6 +172,23 @@ private:
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			auto temp = params.banks.get_chan(scene, i);
 			controls.set_encoder_led(i, encoder_blend(temp));
+		}
+	}
+
+	void encoder_display_sequence()
+	{
+		auto chan = params.seq.get_sel_chan();
+		auto cur_step = params.seq.get_step(chan);
+		auto length = params.seq.get_length(chan);
+		controls.set_button_led(chan, true);
+
+		for (auto i = 0u; i < length; i++) {
+			if (i == cur_step) {
+				controls.set_encoder_led(i, Palette::magenta);
+			} else {
+				auto level = params.banks.get_chan(i, chan);
+				controls.set_encoder_led(i, encoder_blend(level));
+			}
 		}
 	}
 
