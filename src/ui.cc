@@ -63,12 +63,12 @@ void UI::update_mode()
 
 	auto step = false;
 
-	// if (controls.trig_jack_sense.is_high()) {
-	// 	step = controls.trig_jack.just_went_high();
-	// } else {
-	intclock.update();
-	step = intclock.step();
-	//}
+	if (controls.trig_jack_sense.is_high()) {
+		step = controls.trig_jack.just_went_high();
+	} else {
+		intclock.update();
+		step = intclock.step();
+	}
 
 	if (step)
 		params.seq.step();
