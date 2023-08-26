@@ -28,7 +28,7 @@ using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolari
 
 //////////////// Encoders
 
-inline constexpr mdrivlib::RotaryStepSize EncStepSize = mdrivlib::RotaryHalfStep;
+inline constexpr mdrivlib::RotaryStepSize EncStepSize = mdrivlib::RotaryFullStep;
 inline constexpr PinDef Enc1A{GPIO::B, PinNum::_7};
 inline constexpr PinDef Enc1B{GPIO::C, PinNum::_15};
 inline constexpr PinDef Enc2A{GPIO::B, PinNum::_6};
