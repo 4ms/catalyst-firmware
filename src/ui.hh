@@ -26,6 +26,8 @@ class UI {
 
 		SeqIdleInit,
 		SeqIdle,
+		SeqAlt_ChannelInit,
+		SeqAlt_Channel,
 	};
 	State state = State::MacroIdle;
 	Controls controls;
@@ -95,7 +97,9 @@ private:
 	void macro_state_alt_global();
 	void macro_state_alt_scene();
 	void macro_state_bank();
+
 	void seq_state_idle();
+	void seq_state_alt_channel();
 
 	void seq_update_step()
 	{

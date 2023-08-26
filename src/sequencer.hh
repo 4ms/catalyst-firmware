@@ -47,7 +47,7 @@ struct Sequencer {
 	{
 		for (auto &s : sequence) {
 			s.step += 1;
-			if (s.step == s.length)
+			if (s.step >= s.length)
 				s.step = 0;
 		}
 	}
@@ -57,6 +57,22 @@ struct Sequencer {
 		for (auto &s : sequence) {
 			s.step = 0;
 		}
+	}
+
+	void adj_length(SequenceId chan, int dir)
+	{
+		if (dir < 0)
+			dir = -1;
+		else if (dir > 0)
+			dir = 1;
+
+		sequence[chan].length += dir;
+
+		if (sequence[chan].length == 0)
+			sequence[chan].length = 1;
+
+		if (sequence[chan].length > 8)
+			sequence[chan].length = 8;
 	}
 
 	void set_length(SequenceId seq, uint8_t length)

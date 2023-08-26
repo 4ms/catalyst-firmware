@@ -64,6 +64,13 @@ void UI::update_mode()
 		case State::SeqIdle:
 			seq_state_idle();
 			break;
+
+		case State::SeqAlt_ChannelInit:
+			state = State::SeqAlt_Channel;
+		case State::SeqAlt_Channel:
+			seq_state_alt_channel();
+			break;
+
 		default:
 			state = State::SeqIdleInit;
 			break;
@@ -81,11 +88,39 @@ void UI::seq_state_idle()
 		encoder_display_sequence();
 		get_encoder(
 			[&](int inc, unsigned scene) { params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt); });
-
-		return;
+	} else {
+		display_output = true;
 	}
 
-	display_output = true;
+	if (alt) {
+		if (controls.b_button.just_went_high()) {
+			; // state = State::SeqAlt_GlobalInit;
+		} else if (controls.bank_button.just_went_high()) {
+			state = State::SeqAlt_ChannelInit;
+		}
+	}
+}
+
+void UI::seq_state_alt_channel()
+{
+	// force a channel to be selected.
+	if (!params.seq.is_chan_selected())
+		params.seq.sel_chan(0);
+	// don't allow it to be unselected
+	auto cur_chan = params.seq.get_sel_chan();
+	scene_button_just_went_low([&](unsigned chan) {
+		if (chan != cur_chan)
+			params.seq.sel_chan(chan);
+	});
+
+	display_output = false;
+	encoder_display_sequence();
+
+	// seq_length
+	auto inc = controls.encoders[5].read();
+	params.seq.adj_length(cur_chan, inc);
+
+	state = controls.alt_button.is_high() ? state : State::SeqIdleInit;
 }
 
 void UI::macro_state_idle()
@@ -144,6 +179,7 @@ void UI::macro_state_idle()
 		get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 	});
 
+	// check state
 	if (alt) {
 		if (controls.b_button.just_went_high()) {
 			state = State::MacroAlt_GlobalInit;
