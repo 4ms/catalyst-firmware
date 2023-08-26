@@ -70,8 +70,7 @@ struct Sequencer {
 
 		if (sequence[chan].length == 0)
 			sequence[chan].length = 1;
-
-		if (sequence[chan].length > 8)
+		else if (sequence[chan].length > 8)
 			sequence[chan].length = 8;
 	}
 
