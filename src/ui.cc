@@ -31,10 +31,11 @@ void UI::update_mode()
 				// we can initialize states here.
 				// ie: clear lingering button edges
 				if (controls.alt_button.is_high()) {
-					if (controls.b_button.just_went_high())
+					if (controls.b_button.just_went_high()) {
 						state = State::MacroAlt_Global;
-					else if (controls.bank_button.just_went_high())
+					} else if (controls.bank_button.just_went_high()) {
 						state = State::MacroAlt_Scene;
+					}
 				} else if (controls.a_button.is_high() || controls.b_button.is_high()) {
 					state = State::MacroAB;
 					controls.scene_buttons_clear_events();
@@ -45,17 +46,16 @@ void UI::update_mode()
 				break;
 
 			default:
+				// when switching from sequencer to macro we will hit this
 				state = State::MacroIdle;
 				break;
 		}
 
 		return;
 	}
-	// sequencer mode
 
-	display_output = false;
+	// sequencer mode
 	controls.set_all_encoder_leds(Palette::off);
-	encoder_display_sequence();
 	seq_update_step();
 
 	switch (state) {
@@ -63,6 +63,7 @@ void UI::update_mode()
 			seq_state_idle();
 			break;
 		default:
+			// when switching from macro to sequencer we will hit this.
 			state = State::SeqIdle;
 			break;
 	}
@@ -71,13 +72,26 @@ void UI::update_mode()
 void UI::seq_state_idle()
 {
 	// auto temp = params.banks.
+	scene_button_just_went_low([&](unsigned chan) { params.seq.sel_chan(chan); });
+	auto alt = controls.alt_button.is_high();
+
+	if (params.seq.is_chan_selected()) {
+		display_output = false;
+		encoder_display_sequence();
+		get_encoder(
+			[&](int inc, unsigned scene) { params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt); });
+
+		return;
+	}
+
+	display_output = true;
 }
 
 void UI::macro_state_idle()
 {
 	Pathway::SceneId scene_to_display = 0xff;
 
-	bool alt = controls.alt_button.is_high();
+	auto alt = controls.alt_button.is_high();
 
 	if (controls.play_button.just_went_high()) {
 		if (alt) {
@@ -132,12 +146,10 @@ void UI::macro_state_idle()
 
 void UI::macro_state_alt_global()
 {
-	// holding alt and then pressing B should get into the menu where morph, friction etc are adjusted
-
-	static int random_seed = 1;
-
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
+
+	// TODO: friction
 
 	// morph step
 	controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
@@ -145,7 +157,14 @@ void UI::macro_state_alt_global()
 	params.morph_step += (1.f / 100.f) * inc;
 	params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
 
+	// TODO: bounce
+
+	// seq length
+	// not needed here
+
 	// random seeding
+	// TODO: there is likely a better way to do this.
+	static int random_seed = 1;
 	controls.set_encoder_led(6, Palette::from_raw(random_seed));
 	inc = controls.encoders[6].read();
 	if (inc) {
@@ -155,15 +174,18 @@ void UI::macro_state_alt_global()
 		params.banks.randomize();
 	}
 
-	if (!controls.alt_button.is_high()) {
-		state = State::MacroIdle;
-	}
+	// quantize
+	// chromatic, major, minor, pentatonic?
+
+	state = controls.alt_button.is_high() ? state : State::MacroIdle;
 }
 
 void UI::macro_state_alt_scene()
 {
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
+
+	// random
 	auto scene = params.pathway.scene_nearest();
 	auto temp = params.banks.get_scene_random_amount(scene);
 	auto color = Palette::grey.blend(Palette::red, temp);
@@ -174,9 +196,7 @@ void UI::macro_state_alt_scene()
 	temp += (1.f / 100.f) * inc;
 	params.banks.set_scene_random_amount(scene, temp);
 
-	if (!controls.alt_button.is_high()) {
-		state = State::MacroIdle;
-	}
+	state = controls.alt_button.is_high() ? state : State::MacroIdle;
 }
 
 void UI::macro_state_bank()

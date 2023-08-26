@@ -6,9 +6,8 @@
 namespace Catalyst2
 {
 
-class Sequencer {
+struct Sequencer {
 	using SequenceId = uint8_t;
-
 	struct Sequence {
 		uint8_t length;
 		uint8_t step;
@@ -16,7 +15,6 @@ class Sequencer {
 	std::array<Sequence, Model::NumChans> sequence;
 	SequenceId cur_chan = 0;
 
-public:
 	Sequencer()
 	{
 		for (auto &s : sequence) {
@@ -25,10 +23,17 @@ public:
 		}
 	}
 
+	bool is_chan_selected()
+	{
+		return cur_chan < Model::NumChans;
+	}
+
 	void sel_chan(SequenceId chan)
 	{
-		if (chan >= Model::NumChans)
+		if (chan >= Model::NumChans || chan == cur_chan) {
+			cur_chan = Model::NumChans;
 			return;
+		}
 
 		cur_chan = chan;
 	}
