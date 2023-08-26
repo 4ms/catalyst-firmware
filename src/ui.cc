@@ -13,41 +13,41 @@ void UI::update_mode()
 	if (params.mode == Params::Mode::Macro) {
 
 		switch (state) {
+			case State::MacroAlt_GlobalInit:
+				state = State::MacroAlt_Global;
 			case State::MacroAlt_Global:
 				macro_state_alt_global();
 				break;
+
+			case State::MacroAlt_SceneInit:
+				state = State::MacroAlt_Scene;
 			case State::MacroAlt_Scene:
 				macro_state_alt_scene();
 				break;
+
+			case State::MacroABInit:
+				controls.scene_buttons_clear_events();
+				state = State::MacroAB;
 			case State::MacroAB:
 				macro_state_ab();
 				break;
+
+			case State::MacroBankInit:
+				state = State::MacroBank;
 			case State::MacroBank:
 				macro_state_bank();
 				break;
+
+			case State::MacroIdleInit:
+				controls.b_button.clear_events();
+				controls.bank_button.clear_events();
+				state = State::MacroIdle;
 			case State::MacroIdle:
 				macro_state_idle();
-
-				// we can initialize states here.
-				// ie: clear lingering button edges
-				if (controls.alt_button.is_high()) {
-					if (controls.b_button.just_went_high()) {
-						state = State::MacroAlt_Global;
-					} else if (controls.bank_button.just_went_high()) {
-						state = State::MacroAlt_Scene;
-					}
-				} else if (controls.a_button.is_high() || controls.b_button.is_high()) {
-					state = State::MacroAB;
-					controls.scene_buttons_clear_events();
-				} else if (controls.bank_button.is_high()) {
-					state = State::MacroBank;
-				}
-
 				break;
 
 			default:
-				// when switching from sequencer to macro we will hit this
-				state = State::MacroIdle;
+				state = State::MacroIdleInit;
 				break;
 		}
 
@@ -59,12 +59,13 @@ void UI::update_mode()
 	seq_update_step();
 
 	switch (state) {
+		case State::SeqIdleInit:
+			state = State::SeqIdle;
 		case State::SeqIdle:
 			seq_state_idle();
 			break;
 		default:
-			// when switching from macro to sequencer we will hit this.
-			state = State::SeqIdle;
+			state = State::SeqIdleInit;
 			break;
 	}
 }
@@ -142,6 +143,18 @@ void UI::macro_state_idle()
 	get_encoder([&](int inc, unsigned chan) {
 		get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 	});
+
+	if (alt) {
+		if (controls.b_button.just_went_high()) {
+			state = State::MacroAlt_GlobalInit;
+		} else if (controls.bank_button.just_went_high()) {
+			state = State::MacroAlt_SceneInit;
+		}
+	} else if (controls.a_button.is_high() || controls.b_button.is_high()) {
+		state = State::MacroABInit;
+	} else if (controls.bank_button.is_high()) {
+		state = State::MacroBankInit;
+	}
 }
 
 void UI::macro_state_alt_global()
@@ -177,7 +190,7 @@ void UI::macro_state_alt_global()
 	// quantize
 	// chromatic, major, minor, pentatonic?
 
-	state = controls.alt_button.is_high() ? state : State::MacroIdle;
+	state = controls.alt_button.is_high() ? state : State::MacroIdleInit;
 }
 
 void UI::macro_state_alt_scene()
@@ -196,7 +209,7 @@ void UI::macro_state_alt_scene()
 	temp += (1.f / 100.f) * inc;
 	params.banks.set_scene_random_amount(scene, temp);
 
-	state = controls.alt_button.is_high() ? state : State::MacroIdle;
+	state = controls.alt_button.is_high() ? state : State::MacroIdleInit;
 }
 
 void UI::macro_state_bank()
@@ -204,9 +217,7 @@ void UI::macro_state_bank()
 	scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
 	controls.set_button_led(params.banks.get_sel_bank(), true);
 
-	if (!controls.bank_button.is_high()) {
-		state = State::MacroIdle;
-	}
+	state = controls.bank_button.is_high() ? state : State::MacroIdleInit;
 }
 
 void UI::macro_state_ab()
@@ -261,6 +272,6 @@ void UI::macro_state_ab()
 		return;
 	}
 
-	state = State::MacroIdle;
+	state = State::MacroIdleInit;
 }
 } // namespace Catalyst2

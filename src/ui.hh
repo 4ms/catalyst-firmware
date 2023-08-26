@@ -13,11 +13,18 @@ namespace Catalyst2
 
 class UI {
 	enum class State {
+		MacroIdleInit,
 		MacroIdle,
+		MacroAlt_GlobalInit,
 		MacroAlt_Global,
+		MacroAlt_SceneInit,
 		MacroAlt_Scene,
+		MacroABInit,
 		MacroAB,
+		MacroBankInit,
 		MacroBank,
+
+		SeqIdleInit,
 		SeqIdle,
 	};
 	State state = State::MacroIdle;
