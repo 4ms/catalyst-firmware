@@ -14,7 +14,8 @@ namespace Catalyst2
 class UI {
 	enum class State {
 		MacroIdle,
-		MacroAlt,
+		MacroAlt_Global,
+		MacroAlt_Scene,
 		MacroAB,
 		MacroBank,
 		SeqIdle,
@@ -28,7 +29,6 @@ class UI {
 	Recorder recorder;
 	Outputs outputs;
 	bool display_output = false;
-	bool fine_inc = false;
 
 public:
 	UI(Params &params)
@@ -85,9 +85,25 @@ private:
 	void update_mode();
 	void macro_state_idle();
 	void macro_state_ab();
-	void macro_state_alt();
+	void macro_state_alt_global();
+	void macro_state_alt_scene();
 	void macro_state_bank();
 	void seq_state_idle();
+
+	void seq_update_step()
+	{
+		auto step = false;
+
+		if (controls.trig_jack_sense.is_high()) {
+			step = controls.trig_jack.just_went_high();
+		} else {
+			intclock.update();
+			step = intclock.step();
+		}
+
+		if (step)
+			params.seq.step();
+	}
 
 	// what should this be named?
 	void get_scene_context(auto f)
