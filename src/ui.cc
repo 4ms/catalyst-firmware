@@ -56,6 +56,8 @@ void UI::update_mode()
 
 	// sequencer mode
 	controls.set_all_encoder_leds(Palette::off);
+	if (controls.reset_jack.just_went_high())
+		params.seq.reset();
 	seq_update_step();
 
 	switch (state) {
