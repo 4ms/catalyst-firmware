@@ -94,6 +94,15 @@ private:
 	}
 
 	void update_mode();
+
+	void update_mode_switch()
+	{
+		if (controls.mode_switch.is_high())
+			params.mode = Params::Mode::Sequencer;
+		else
+			params.mode = Params::Mode::Macro;
+	}
+
 	void macro_state_idle();
 	void macro_state_ab();
 	void macro_state_alt_global();
@@ -262,14 +271,6 @@ private:
 			phase /= zero_v;
 			return Palette::green.blend(Palette::blue, phase);
 		}
-	}
-
-	void update_mode_switch()
-	{
-		if (controls.mode_switch.is_high())
-			params.mode = Params::Mode::Sequencer;
-		else
-			params.mode = Params::Mode::Macro;
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;

@@ -104,6 +104,8 @@ void UI::seq_state_idle()
 		} else if (controls.bank_button.just_went_high()) {
 			state = State::SeqAlt_ChannelInit;
 		}
+	} else if (controls.bank_button.is_high()) {
+		state = State::SeqBankInit;
 	}
 }
 
@@ -226,6 +228,7 @@ void UI::macro_state_alt_global()
 
 	// quantize
 	// chromatic, major, minor, pentatonic?
+	// magenta, blue, red, green... ?
 
 	state = controls.alt_button.is_high() ? state : State::MacroIdleInit;
 }
