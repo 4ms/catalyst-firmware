@@ -28,6 +28,8 @@ class UI {
 		SeqIdle,
 		SeqAlt_ChannelInit,
 		SeqAlt_Channel,
+		SeqBankInit,
+		SeqBank,
 	};
 	State state = State::MacroIdle;
 	Controls controls;
@@ -96,7 +98,9 @@ private:
 	void macro_state_ab();
 	void macro_state_alt_global();
 	void macro_state_alt_scene();
-	void macro_state_bank();
+
+	// this is the same for seq mode and macro mode...
+	void global_state_bank();
 
 	void seq_state_idle();
 	void seq_state_alt_channel();
@@ -174,8 +178,10 @@ private:
 		get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 	}
 
+	// encoder display funcs
 	void encoder_display_pathway_size()
 	{
+		display_output = false;
 		auto r = params.pathway.size();
 		auto phase = 1.f / (params.pathway.MaxPoints / static_cast<float>(r));
 
@@ -185,25 +191,28 @@ private:
 		encoder_display_count(Palette::green.blend(Palette::red, phase), r);
 	}
 
-	void encoder_display_count(Color c, unsigned count)
-	{
-		if (count > Model::NumChans)
-			return;
-
-		for (auto i = 0u; i < count; i++)
-			controls.set_encoder_led(i, c);
-	}
-
 	void encoder_display_scene(Pathway::SceneId scene)
 	{
+		display_output = false;
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			auto temp = params.banks.get_chan(scene, i);
 			controls.set_encoder_led(i, encoder_blend(temp));
 		}
 	}
 
+	void encoder_display_sequence_length()
+	{
+		display_output = false;
+		auto chan = params.seq.get_sel_chan();
+		auto length = params.seq.get_length(chan);
+		controls.set_button_led(chan, true);
+
+		encoder_display_count(Palette::red, length);
+	}
+
 	void encoder_display_sequence()
 	{
+		display_output = false;
 		auto chan = params.seq.get_sel_chan();
 		auto cur_step = params.seq.get_step(chan);
 		auto length = params.seq.get_length(chan);
@@ -217,6 +226,21 @@ private:
 				controls.set_encoder_led(i, encoder_blend(level));
 			}
 		}
+		for (auto i = 0u; i < Model::NumChans - length; i++)
+			controls.set_encoder_led(length + i, Palette::off);
+	}
+
+	// encoder display helper funcs
+	void encoder_display_count(Color c, unsigned count)
+	{
+		if (count > Model::NumChans)
+			return;
+
+		for (auto i = 0u; i < count; i++)
+			controls.set_encoder_led(i, c);
+
+		for (auto i = 0u; i < Model::NumChans - count; i++)
+			controls.set_encoder_led(count + i, Palette::off);
 	}
 
 	Color encoder_blend(uint16_t level)

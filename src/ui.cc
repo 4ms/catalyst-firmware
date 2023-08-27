@@ -9,6 +9,7 @@ void UI::update_mode()
 
 	// common to all states
 	controls.clear_button_leds();
+	display_output = true;
 
 	if (params.mode == Params::Mode::Macro) {
 
@@ -35,7 +36,7 @@ void UI::update_mode()
 			case State::MacroBankInit:
 				state = State::MacroBank;
 			case State::MacroBank:
-				macro_state_bank();
+				global_state_bank();
 				break;
 
 			case State::MacroIdleInit:
@@ -55,7 +56,6 @@ void UI::update_mode()
 	}
 
 	// sequencer mode
-	controls.set_all_encoder_leds(Palette::off);
 	if (controls.reset_jack.just_went_high())
 		params.seq.reset();
 	seq_update_step();
@@ -73,6 +73,12 @@ void UI::update_mode()
 			seq_state_alt_channel();
 			break;
 
+		case State::SeqBankInit:
+			state = State::SeqBank;
+		case State::SeqBank:
+			global_state_bank();
+			break;
+
 		default:
 			state = State::SeqIdleInit;
 			break;
@@ -81,17 +87,15 @@ void UI::update_mode()
 
 void UI::seq_state_idle()
 {
-	// auto temp = params.banks.
 	scene_button_just_went_low([&](unsigned chan) { params.seq.sel_chan(chan); });
 	auto alt = controls.alt_button.is_high();
 
 	if (params.seq.is_chan_selected()) {
-		display_output = false;
 		encoder_display_sequence();
 		get_encoder(
 			[&](int inc, unsigned scene) { params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt); });
 	} else {
-		display_output = true;
+		;
 	}
 
 	if (alt) {
@@ -115,8 +119,7 @@ void UI::seq_state_alt_channel()
 			params.seq.sel_chan(chan);
 	});
 
-	display_output = false;
-	encoder_display_sequence();
+	encoder_display_sequence_length();
 
 	// seq_length
 	auto inc = controls.encoders[5].read();
@@ -127,8 +130,6 @@ void UI::seq_state_alt_channel()
 
 void UI::macro_state_idle()
 {
-	Pathway::SceneId scene_to_display = 0xff;
-
 	auto alt = controls.alt_button.is_high();
 
 	if (controls.play_button.just_went_high()) {
@@ -152,14 +153,14 @@ void UI::macro_state_idle()
 		recorder.restart();
 	}
 
+	Pathway::SceneId scene_to_display = 0xff;
+
 	if (scene_button_high([&](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
 			scene_to_display = scene;
 		}))
 	{
 		// do this once regardless if any amount of buttons are pressed.
-		display_output = false;
-
 		// is this too redundant?
 		get_encoder([&](int inc, unsigned chan) {
 			scene_button_high([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
@@ -172,8 +173,6 @@ void UI::macro_state_idle()
 	}
 
 	// do this if no scene buttons were pressed.
-	display_output = true;
-
 	// display the current scene
 	scene_button_display_nearest();
 
@@ -250,18 +249,20 @@ void UI::macro_state_alt_scene()
 	state = controls.alt_button.is_high() ? state : State::MacroIdleInit;
 }
 
-void UI::macro_state_bank()
+void UI::global_state_bank()
 {
 	scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
 	controls.set_button_led(params.banks.get_sel_bank(), true);
 
-	state = controls.bank_button.is_high() ? state : State::MacroIdleInit;
+	State idle_state = State::MacroIdleInit;
+	if (params.mode == Params::Mode::Sequencer)
+		idle_state = State::SeqIdleInit;
+
+	state = controls.bank_button.is_high() ? state : idle_state;
 }
 
 void UI::macro_state_ab()
 {
-	display_output = false;
-	controls.set_all_encoder_leds(Palette::off);
 	encoder_display_pathway_size();
 
 	params.pathway.update(params.slider_pos);
