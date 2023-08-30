@@ -52,6 +52,8 @@ Catalyst2::System _init;
 
 // seq length clock divider trigger input
 
+// change the way colors are used for different settings
+
 void main()
 {
 	using namespace Catalyst2;
