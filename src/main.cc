@@ -33,6 +33,25 @@ Catalyst2::System _init;
 
 // Alt + encoder (ie. Randomize) should act upon the current scene if slider is selecting it
 
+// alt + b should go into the main menu thing regardless of which one is pressed first.
+// if only one is released we should remain in the menu
+// ditto in sequence mode
+
+// random right new seed
+// random left turns off
+
+// move random-amount setting into the main menu thing
+// and remove the scene setting menu
+
+// look into recording different sample rates as buffer gets filled
+// dont loop recording by default, maybe hold play to turn on loop?
+// do oneshot
+
+// arm recording with trigger where one trigger starts rec and next trigger stops
+// one shot should not reset to beginning of recording
+
+// seq length clock divider trigger input
+
 void main()
 {
 	using namespace Catalyst2;

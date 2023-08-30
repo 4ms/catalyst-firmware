@@ -11,6 +11,7 @@ namespace MathTools
 // if slope == 0 actual slope == 1
 // if slope is >= (max - min) actual slope == inf
 // if slope is negative than actual slope is less than 1
+// TODO: check if this is working properly
 constexpr float slope_adj(float in, float slope, float min, float max)
 {
 	auto range = max - min;

@@ -87,7 +87,7 @@ public:
 	}
 
 private:
-	// TODO: interpolate??
+	// TODO: interpolate?? YES
 	uint16_t read()
 	{
 		if (!scaler) {
