@@ -10,12 +10,6 @@ namespace Catalyst2
 template<typename T, unsigned max_size>
 class FixedFwList {
 public:
-	FixedFwList()
-	{
-		count = 0;
-		previous = 0;
-	}
-
 	unsigned size() const
 	{
 		return count;
@@ -23,28 +17,28 @@ public:
 
 	T read(unsigned index) const
 	{
-		if (count == 0)
-			return 0; // hmm
+		if (count == 0 || index >= count)
+			return 0;
 
-		return data[index % count];
+		return data[index];
 	}
 
 	bool replace(unsigned index, T d)
 	{
-		if (count == 0)
+		if (count == 0 || index >= count)
 			return false;
 
-		data[index % count] = d;
+		data[index] = d;
 		previous = index;
 		return true;
 	}
 
-	bool insert(const T &d)
+	bool insert(const T d)
 	{
 		return insert(previous, d);
 	}
 
-	bool insert(unsigned index, T d)
+	bool insert(unsigned index, const T d)
 	{
 		if (count >= max_size || index > count)
 			return false;
@@ -73,7 +67,7 @@ public:
 		return true;
 	}
 
-	bool erase(unsigned index)
+	bool erase(const unsigned index)
 	{
 		if (count == 0 || index >= count)
 			return false;
@@ -96,7 +90,7 @@ public:
 
 private:
 	std::array<T, max_size> data;
-	unsigned previous;
-	unsigned count;
+	unsigned previous{0};
+	unsigned count{0};
 };
 } // namespace Catalyst2

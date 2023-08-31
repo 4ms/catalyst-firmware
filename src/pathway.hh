@@ -42,11 +42,17 @@ public:
 	}
 	SceneId scene_right()
 	{
-		return path.read(index_left + 1);
+		if (index_left + 1 == path.size())
+			return path.read(0);
+		else
+			return path.read(index_left + 1);
 	}
 	SceneId scene_nearest()
 	{
-		return path.read(index_nearest);
+		if (index_nearest == path.size())
+			return path.read(0);
+		else
+			return path.read(index_nearest);
 	}
 	bool on_a_scene()
 	{
