@@ -54,6 +54,9 @@ Catalyst2::System _init;
 
 // change the way colors are used for different settings
 
+// simplify the ui states
+// set_state()!
+
 void main()
 {
 	using namespace Catalyst2;
