@@ -132,7 +132,7 @@ void UI::seq_state_alt_channel()
 
 void UI::macro_state_idle()
 {
-	auto alt = controls.alt_button.is_high();
+	const auto alt = controls.alt_button.is_high();
 
 	if (controls.play_button.just_went_high()) {
 		if (alt) {
@@ -155,11 +155,17 @@ void UI::macro_state_idle()
 		recorder.restart();
 	}
 
+	// display the last one pressed.
 	Pathway::SceneId scene_to_display = 0xff;
+	auto age = 0xffffffffu;
 
 	if (scene_button_high([&](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
-			scene_to_display = scene;
+
+			if (controls.scene_buttons[scene].time_high < age) {
+				age = controls.scene_buttons[scene].time_high;
+				scene_to_display = scene;
+			}
 		}))
 	{
 		// do this once regardless if any amount of buttons are pressed.
