@@ -5,94 +5,60 @@ namespace Catalyst2
 
 void UI::update_mode()
 {
-	update_mode_switch();
+	if (controls.mode_switch.just_went_high())
+		params.mode = Params::Mode::Sequencer;
+	else if (controls.mode_switch.just_went_low()) {
+		params.mode = Params::Mode::Macro;
+	}
+
+	if (params.mode == Params::Mode::Sequencer) {
+		if (controls.reset_jack.just_went_high())
+			params.seq.reset();
+
+		seq_update_step();
+	}
 
 	// common to all states
 	controls.clear_button_leds();
 	display_output = true;
 
-	if (params.mode == Params::Mode::Macro) {
-
-		switch (state) {
-			case State::MacroAlt_GlobalInit:
-				state = State::MacroAlt_Global;
-			case State::MacroAlt_Global:
-				macro_state_alt_global();
-				break;
-
-			case State::MacroAlt_SceneInit:
-				state = State::MacroAlt_Scene;
-			case State::MacroAlt_Scene:
-				macro_state_alt_scene();
-				break;
-
-			case State::MacroABInit:
-				controls.scene_buttons_clear_events();
-				state = State::MacroAB;
-			case State::MacroAB:
-				macro_state_ab();
-				break;
-
-			case State::MacroBankInit:
-				state = State::MacroBank;
-			case State::MacroBank:
-				global_state_bank();
-				break;
-
-			case State::MacroIdleInit:
-				controls.b_button.clear_events();
-				controls.bank_button.clear_events();
-				state = State::MacroIdle;
-			case State::MacroIdle:
-				macro_state_idle();
-				break;
-
-			default:
-				state = State::MacroIdleInit;
-				break;
-		}
-
-		return;
-	}
-
-	// sequencer mode
-	if (controls.reset_jack.just_went_high())
-		params.seq.reset();
-	seq_update_step();
-
 	switch (state) {
-		case State::SeqIdleInit:
-			state = State::SeqIdle;
-		case State::SeqIdle:
-			seq_state_idle();
+		case State::Settings:
+			state_settings();
 			break;
 
-		case State::SeqAlt_ChannelInit:
-			state = State::SeqAlt_Channel;
-		case State::SeqAlt_Channel:
-			seq_state_alt_channel();
+		case State::MacroAB:
+			state_macro_ab();
 			break;
 
-		case State::SeqBankInit:
-			state = State::SeqBank;
-		case State::SeqBank:
-			global_state_bank();
+		case State::Bank:
+			state_bank();
+			break;
+
+		case State::Macro:
+			state_macro();
+			break;
+
+		case State::Seq:
+			state_seq();
 			break;
 
 		default:
-			state = State::SeqIdleInit;
+			controls.b_button.clear_events();
+			controls.bank_button.clear_events();
+			state = params.mode == Params::Mode::Macro ? State::Macro : State::Seq;
 			break;
 	}
 }
 
-void UI::seq_state_idle()
+void UI::state_seq()
 {
-	scene_button_just_went_low([&](unsigned chan) { params.seq.sel_chan(chan); });
+	on_scene_button_release([&](unsigned chan) { params.seq.sel_chan(chan); });
 	auto alt = controls.alt_button.is_high();
 
 	if (params.seq.is_chan_selected()) {
 		encoder_display_sequence();
-		get_encoder(
+		on_encoder_inc(
 			[&](int inc, unsigned scene) { params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt); });
 	} else {
 		;
@@ -100,37 +66,14 @@ void UI::seq_state_idle()
 
 	if (alt) {
 		if (controls.b_button.just_went_high()) {
-			; // state = State::SeqAlt_GlobalInit;
-		} else if (controls.bank_button.just_went_high()) {
-			state = State::SeqAlt_ChannelInit;
+			state = State::Settings;
 		}
 	} else if (controls.bank_button.is_high()) {
-		state = State::SeqBankInit;
+		state = State::Reset;
 	}
 }
 
-void UI::seq_state_alt_channel()
-{
-	// force a channel to be selected.
-	if (!params.seq.is_chan_selected())
-		params.seq.sel_chan(0);
-	// don't allow it to be unselected
-	auto cur_chan = params.seq.get_sel_chan();
-	scene_button_just_went_low([&](unsigned chan) {
-		if (chan != cur_chan)
-			params.seq.sel_chan(chan);
-	});
-
-	encoder_display_sequence_length();
-
-	// seq_length
-	auto inc = controls.encoders[5].read();
-	params.seq.adj_length(cur_chan, inc);
-
-	state = controls.alt_button.is_high() ? state : State::SeqIdleInit;
-}
-
-void UI::macro_state_idle()
+void UI::state_macro()
 {
 	const auto alt = controls.alt_button.is_high();
 
@@ -159,7 +102,7 @@ void UI::macro_state_idle()
 	Pathway::SceneId scene_to_display = 0xff;
 	auto age = 0xffffffffu;
 
-	if (scene_button_high([&](Pathway::SceneId scene) {
+	if (on_scene_button_high([&](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
 
 			if (controls.scene_buttons[scene].time_high < age) {
@@ -170,8 +113,8 @@ void UI::macro_state_idle()
 	{
 		// do this once regardless if any amount of buttons are pressed.
 		// is this too redundant?
-		get_encoder([&](int inc, unsigned chan) {
-			scene_button_high([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
+		on_encoder_inc([&](int inc, unsigned chan) {
+			on_scene_button_high([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 		});
 
 		// TODO: somehow this scene needs to be sent out the output
@@ -184,25 +127,24 @@ void UI::macro_state_idle()
 	// display the current scene
 	scene_button_display_nearest();
 
-	get_encoder([&](int inc, unsigned chan) {
+	on_encoder_inc([&](int inc, unsigned chan) {
 		get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 	});
 
 	// check state
 	if (alt) {
 		if (controls.b_button.just_went_high()) {
-			state = State::MacroAlt_GlobalInit;
-		} else if (controls.bank_button.just_went_high()) {
-			state = State::MacroAlt_SceneInit;
+			state = State::Settings;
 		}
 	} else if (controls.a_button.is_high() || controls.b_button.is_high()) {
-		state = State::MacroABInit;
+		controls.scene_buttons_clear_events();
+		state = State::MacroAB;
 	} else if (controls.bank_button.is_high()) {
-		state = State::MacroBankInit;
+		state = State::Bank;
 	}
 }
 
-void UI::macro_state_alt_global()
+void UI::state_settings()
 {
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
@@ -218,68 +160,54 @@ void UI::macro_state_alt_global()
 	// TODO: bounce
 
 	// seq length
-	// not needed here
+	// if (params.mode.seq....)
+	// auto inc = controls.encoders[5].read();
+	// params.seq.adj_length(cur_chan, inc);
 
-	// random seeding
-	// TODO: there is likely a better way to do this.
-	static int random_seed = 1;
-	controls.set_encoder_led(6, Palette::from_raw(random_seed));
-	inc = controls.encoders[6].read();
-	if (inc) {
-		// this feels random enough
-		random_seed += controls.read_cv() * controls.read_slider();
-		std::srand(random_seed);
-		params.banks.randomize();
-	}
-
-	// quantize
-	// chromatic, major, minor, pentatonic?
-	// magenta, blue, red, green... ?
-
-	state = controls.alt_button.is_high() ? state : State::MacroIdleInit;
-}
-
-void UI::macro_state_alt_scene()
-{
-	display_output = false;
-	controls.set_all_encoder_leds(Palette::off);
-
-	// random
+	// random amount
 	auto scene = params.pathway.scene_nearest();
 	auto temp = params.banks.get_scene_random_amount(scene);
 	auto color = Palette::grey.blend(Palette::red, temp);
 	if (temp == 0.f)
 		color = Palette::green;
-	controls.set_encoder_led(6, color);
-	auto inc = controls.encoders[6].read();
+	controls.set_encoder_led(4, color);
+	inc = controls.encoders[4].read();
 	temp += (1.f / 100.f) * inc;
 	params.banks.set_scene_random_amount(scene, temp);
 
-	state = controls.alt_button.is_high() ? state : State::MacroIdleInit;
+	// random seeding
+	// turning right gets new rando values and turning left turns off random values
+	controls.set_encoder_led(6, Palette::from_raw(params.banks.get_random_seed()));
+	inc = controls.encoders[6].read();
+	if (inc > 0)
+		params.banks.randomize();
+	else if (inc < 0)
+		params.banks.clear_random();
+
+	// quantize
+	// chromatic, major, minor, pentatonic?
+	// magenta, blue, red, green... ?
+
+	state = controls.alt_button.is_high() ? state : State::Reset;
 }
 
-void UI::global_state_bank()
+void UI::state_bank()
 {
-	scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
+	on_scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
 	controls.set_button_led(params.banks.get_sel_bank(), true);
 
-	State idle_state = State::MacroIdleInit;
-	if (params.mode == Params::Mode::Sequencer)
-		idle_state = State::SeqIdleInit;
-
-	state = controls.bank_button.is_high() ? state : idle_state;
+	state = controls.bank_button.is_high() ? state : State::Reset;
 }
 
-void UI::macro_state_ab()
+void UI::state_macro_ab()
 {
 	encoder_display_pathway_size();
 
-	params.pathway.update(params.slider_pos);
 	scene_button_display_nearest();
 
 	/* a and b buttons*/
-	auto a = controls.a_button.is_high();
-	auto b = controls.b_button.is_high();
+	const auto a = controls.a_button.is_high();
+	const auto b = controls.b_button.is_high();
 
 	if (a && b) {
 		params.pathway.clear_scenes();
@@ -287,7 +215,7 @@ void UI::macro_state_ab()
 	}
 
 	if (a) {
-		scene_button_just_went_low([&](unsigned scene) {
+		on_scene_button_release([&](unsigned scene) {
 			if (!controls.a_button.just_went_high()) {
 				params.pathway.insert_scene(scene, true);
 				return; // return from lambda
@@ -312,7 +240,7 @@ void UI::macro_state_ab()
 		// removing a scene is not nearly as intuitive as inserting them
 		// TODO: make it better
 		if (params.pathway.on_a_scene()) {
-			scene_button_just_went_low([&](unsigned scene) {
+			on_scene_button_release([&](unsigned scene) {
 				if (scene == params.pathway.scene_nearest())
 					params.pathway.remove_scene();
 			});
@@ -320,6 +248,6 @@ void UI::macro_state_ab()
 		return;
 	}
 
-	state = State::MacroIdleInit;
+	state = State::Reset;
 }
 } // namespace Catalyst2
