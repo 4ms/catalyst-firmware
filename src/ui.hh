@@ -13,25 +13,14 @@ namespace Catalyst2
 
 class UI {
 	enum class State {
-		MacroIdleInit,
-		MacroIdle,
-		MacroAlt_GlobalInit,
-		MacroAlt_Global,
-		MacroAlt_SceneInit,
-		MacroAlt_Scene,
-		MacroABInit,
+		Macro,
 		MacroAB,
-		MacroBankInit,
-		MacroBank,
-
-		SeqIdleInit,
-		SeqIdle,
-		SeqAlt_ChannelInit,
-		SeqAlt_Channel,
-		SeqBankInit,
-		SeqBank,
+		Settings,
+		Bank,
+		Seq,
+		Reset,
 	};
-	State state = State::MacroIdle;
+	State state = State::Reset;
 	Controls controls;
 	Params &params;
 	InternalClock<Board::cv_stream_hz> intclock;
@@ -52,25 +41,16 @@ public:
 	{
 		encoder_led_update_task.start();
 		controls.start();
+		HAL_Delay(2);
+		std::srand(controls.read_slider() + controls.read_cv());
+		params.banks.clear_random();
 	}
 
 	void update()
 	{
 		controls.update();
-
 		update_slider_and_cv();
 		update_mode();
-
-		// TODO
-		// Check controls and update params:
-		// example;
-		//  if (...)
-		// 	    auto value_change = controls.read_encoder(chan);
-		//      params.scenes[cur_bank][chan] += value_change;
-		//      or: param.change_scene_chan(chan, value_changed);
-		//
-		//  if (controls.alt_button.is_pressed() && controls.read_encoder(SeqLength).motion)
-		//  	params.seq.set_length(...);
 	}
 
 	void set_outputs(Model::OutputBuffer &outs)
@@ -95,24 +75,11 @@ private:
 
 	void update_mode();
 
-	void update_mode_switch()
-	{
-		if (controls.mode_switch.is_high())
-			params.mode = Params::Mode::Sequencer;
-		else
-			params.mode = Params::Mode::Macro;
-	}
-
-	void macro_state_idle();
-	void macro_state_ab();
-	void macro_state_alt_global();
-	void macro_state_alt_scene();
-
-	// this is the same for seq mode and macro mode...
-	void global_state_bank();
-
-	void seq_state_idle();
-	void seq_state_alt_channel();
+	void state_macro();
+	void state_macro_ab();
+	void state_settings();
+	void state_bank();
+	void state_seq();
 
 	void seq_update_step()
 	{
@@ -140,7 +107,7 @@ private:
 		}
 	}
 
-	void scene_button_just_went_low(auto f)
+	void on_scene_button_release(auto f)
 	{
 		for (auto [i, butt] : countzip(controls.scene_buttons)) {
 			if (butt.just_went_low()) {
@@ -152,7 +119,7 @@ private:
 	/// @brief runs a function for each scene button currently pressed.
 	/// @param f
 	/// @return true if any scene buttons were pressed
-	bool scene_button_high(auto f)
+	bool on_scene_button_high(auto f)
 	{
 		auto ret = false;
 
@@ -165,7 +132,7 @@ private:
 		return ret;
 	}
 
-	void get_encoder(auto f)
+	void on_encoder_inc(auto f)
 	{
 		for (auto [i, enc] : countzip(controls.encoders)) {
 			auto inc = enc.read();
