@@ -1,5 +1,5 @@
 #pragma once
-#include "fixed_list.hh"
+#include "fixedvector.hh"
 #include "scene.hh"
 #include <algorithm>
 #include <array>
@@ -15,17 +15,19 @@ struct Pathway {
 private:
 	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
 
-	FixedFwList<SceneId, MaxPoints> path;
+	FixedVector<SceneId, MaxPoints> path;
 	float scene_width;
 	unsigned index_left;
 	unsigned index_nearest;
 	bool on_a_scene_;
+	unsigned prev_index = 0;
 
 public:
 	Pathway()
 	{
+
 		path.insert(0, 0);
-		path.insert(7);
+		path.insert(1, 7);
 		update_scene_width();
 	}
 
@@ -33,67 +35,66 @@ public:
 	{
 		on_a_scene_ = scene_is_near(point);
 		index_left = phase_to_index(point);
-		index_nearest = phase_to_index(point + (scene_width * .5f));
+		auto n = phase_to_index(point + (scene_width * .5f));
+		index_nearest = n >= size() ? 0 : n;
 	}
 
 	SceneId scene_left()
 	{
-		return path.read(index_left);
+		return path[index_left];
 	}
 	SceneId scene_right()
 	{
-		if (index_left + 1 == path.size())
-			return path.read(0);
-		else
-			return path.read(index_left + 1);
+		auto idx = index_left + 1;
+		idx = idx >= size() ? 0 : idx;
+		return path[idx];
 	}
 	SceneId scene_nearest()
 	{
-		if (index_nearest == path.size())
-			return path.read(0);
-		else
-			return path.read(index_nearest);
+		return path[index_nearest];
 	}
 	bool on_a_scene()
 	{
 		return on_a_scene_;
 	}
-	bool replace_scene(SceneId scene)
+	void replace_scene(SceneId scene)
 	{
-		return path.replace(index_nearest, scene);
+		path[index_nearest] = scene;
+		prev_index = index_nearest;
 	}
 
-	bool insert_scene(SceneId scene, bool after_last = false)
+	void insert_scene(SceneId scene, bool after_last = false)
 	{
-		auto out = false;
+		auto index = index_left;
 
 		if (after_last)
-			out = path.insert(scene);
+			index = prev_index++;
 		else
-			out = path.insert(index_left, scene);
+			prev_index = index + 1;
+
+		path.insert(index, scene);
 		update_scene_width();
-		return out;
 	}
 
-	bool remove_scene()
+	void remove_scene()
 	{
-		if (path.size() == 2)
-			return false;
+		if (size() <= 2)
+			return;
 
-		bool out = path.erase(index_nearest);
+		path.erase(index_nearest);
 		update_scene_width();
-		return out;
 	}
 
 	void clear_scenes()
 	{
 		// erase all scenes in between first and last one.
-		while (path.size() > 2 && path.erase(1))
-			;
+		while (size() > 2)
+			path.erase(1);
+
 		update_scene_width();
 	}
 
-	unsigned size()
+	std::size_t size() const
 	{
 		return path.size();
 	}
@@ -103,7 +104,7 @@ public:
 	{
 		while (point >= scene_width)
 			point -= scene_width;
-		point *= path.size() - 1;
+		point *= size() - 1;
 		return point;
 	}
 
@@ -126,11 +127,11 @@ private:
 	}
 	unsigned phase_to_index(float phase)
 	{
-		return phase * (path.size() - 1);
+		return phase * (size() - 1);
 	}
 	void update_scene_width()
 	{
-		scene_width = 1.f / (path.size() - 1);
+		scene_width = 1.f / (size() - 1);
 	}
 };
 
