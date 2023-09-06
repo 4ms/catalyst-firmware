@@ -1,4 +1,5 @@
 #pragma once
+#include "scales.hh"
 #include "util/math.hh"
 #include <algorithm>
 #include <array>
@@ -28,4 +29,11 @@ static constexpr unsigned fader_width_mm = 60;
 
 static constexpr unsigned rec_buffer_size = 2048;
 static constexpr unsigned rec_buffer_prescaler = 16;
+
+// quantizer scales
+// static constexpr Scales::Scale custom_example = {99.f, 22.f};
+static constexpr std::array scales = {
+	Scales::chromatic, Scales::major, Scales::minor,
+	//	custom_example,
+};
 } // namespace Catalyst2::Model
