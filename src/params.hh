@@ -1,6 +1,7 @@
 #pragma once
 #include "flags.hh"
 #include "pathway.hh"
+#include "quantizer.hh"
 #include "scene.hh"
 #include "sequencer.hh"
 
@@ -14,6 +15,7 @@ struct Params {
 	Banks banks;
 	Pathway pathway;
 	Sequencer seq;
+	Quantizer quan{Model::scales};
 
 	// coefficient of fading from scene to scene
 	// f(x) = (1.f / (1.f - morph_step)) * x;
@@ -24,7 +26,7 @@ struct Params {
 
 	// TODO: clarify these and name them better, and add/remove as needed:
 	enum class Mode : bool { Sequencer, Macro };
-	Mode mode;
+	Mode mode = Mode::Macro;
 };
 
 } // namespace Catalyst2
