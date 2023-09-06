@@ -18,6 +18,7 @@ class Recorder {
 	unsigned pos_ = 0;
 	uint8_t scaler = 0;
 	unsigned accum = 0;
+	bool loop = false;
 
 public:
 	uint16_t update(uint16_t sample)
@@ -27,7 +28,6 @@ public:
 
 		if (recording) {
 			if (!insert(sample)) {
-				// buffer full.
 				stop();
 			}
 			return sample;
@@ -37,7 +37,8 @@ public:
 	}
 	void play()
 	{
-		play_ = true;
+		if (size_ >= 2)
+			play_ = true;
 	}
 	void toggle()
 	{
@@ -87,18 +88,21 @@ public:
 	}
 
 private:
-	// TODO: interpolate?? YES
 	uint16_t read()
 	{
+		const auto coef = scaler / 16.f;
+		const auto out = MathTools::interpolate(buffer[pos_], buffer[pos_ + 1], coef);
+
 		if (!scaler) {
 			pos_ += 1;
-			if (pos_ >= size_) {
-				pos_ = 0;
+			if (pos_ >= size_ - 1) {
+				stop();
 			}
 		}
+
 		scaler++;
 		scaler &= prescaler - 1;
-		return buffer[pos_];
+		return out;
 	}
 	bool insert(uint16_t sample)
 	{
