@@ -22,9 +22,9 @@ struct Palette {
 	static constexpr Color purple = Color(255, 255, 0);
 	static constexpr Color magenta = Color(200, 100, 0);
 
-	static Color from_raw(int val)
+	static Color from_raw(int8_t val)
 	{
-		return Color(val, (val >> 8), (val >> 16));
+		return Color(val & 0xC0, (val << 2) & 0xC0, (val << 4) & 0xC0);
 	}
 };
 
