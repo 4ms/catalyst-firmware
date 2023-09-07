@@ -11,6 +11,7 @@ struct Sequencer {
 	struct Sequence {
 		uint8_t length;
 		uint8_t step;
+		uint8_t start_offset;
 	};
 	std::array<Sequence, Model::NumChans> sequence;
 	SequenceId cur_chan = 0;
@@ -19,6 +20,7 @@ struct Sequencer {
 	{
 		for (auto &s : sequence) {
 			s.step = 0;
+			s.start_offset = 0;
 			s.length = Model::NumChans;
 		}
 	}
@@ -74,6 +76,20 @@ struct Sequencer {
 			sequence[chan].length = 8;
 	}
 
+	void adj_start_offset(SequenceId chan, int dir)
+	{
+		int temp = sequence[chan].start_offset;
+
+		temp += dir;
+
+		if (temp < 0)
+			temp = 0;
+		else if (temp >= 8)
+			temp = 7;
+
+		sequence[chan].start_offset = temp;
+	}
+
 	void set_length(SequenceId seq, uint8_t length)
 	{
 		if (length > Model::NumChans || length == 0)
@@ -87,9 +103,14 @@ struct Sequencer {
 		return sequence[seq].length;
 	}
 
+	uint8_t get_start_offset(SequenceId seq)
+	{
+		return sequence[seq].start_offset;
+	}
+
 	uint8_t get_step(SequenceId seq)
 	{
-		return sequence[seq].step;
+		return (sequence[seq].step + sequence[seq].start_offset) % 8;
 	}
 };
 
