@@ -36,13 +36,14 @@ class MacroSeq {
 public:
 	MacroSeq(Params &params)
 		: params{params}
-	{}
+	{
+		params.quantizer.load_scale(Model::scales[1]);
+	}
 
 	auto update()
 	{
 		Model::OutputBuffer buf;
 
-		// TODO: test
 		params.pathway.update(params.pos);
 
 		if (params.mode == Params::Mode::Macro) {
@@ -57,6 +58,7 @@ public:
 				const auto a = params.banks.get_chan(left, chan);
 				const auto b = params.banks.get_chan(right, chan);
 				out = MathTools::interpolate(a, b, phase);
+				out = params.quantizer.process(out);
 			}
 
 			return buf;
