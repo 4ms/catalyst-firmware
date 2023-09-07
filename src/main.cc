@@ -37,14 +37,7 @@ Catalyst2::System _init;
 // if only one is released we should remain in the menu
 // ditto in sequence mode
 
-// random right new seed
-// random left turns off
-
-// move random-amount setting into the main menu thing
-// and remove the scene setting menu
-
-// look into recording different sample rates as buffer gets filled
-// dont loop recording by default, maybe hold play to turn on loop?
+// maybe hold play to turn on loop?
 // do oneshot
 
 // arm recording with trigger where one trigger starts rec and next trigger stops
@@ -56,6 +49,8 @@ Catalyst2::System _init;
 
 // simplify the ui states
 // set_state()!
+
+// TODO: make color fades appear more linear
 
 void main()
 {
