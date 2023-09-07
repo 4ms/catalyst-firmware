@@ -15,12 +15,14 @@ static constexpr ScalePalette off = {Palette::off, Scale{}};
 static constexpr ScalePalette chromatic = {Palette::grey, Scales::chromatic};
 static constexpr ScalePalette major = {Palette::green, Scales::major};
 static constexpr ScalePalette minor = {Palette::red, Scales::minor};
+static constexpr ScalePalette wholetone = {Palette::magenta, Scale{0.f, 2.f, 4.f, 8.f, 10.f}};
 
 static constexpr std::array Scales = {
 	off,
 	chromatic,
 	major,
 	minor,
+	wholetone,
 };
 
 } // namespace Catalyst2::Model
