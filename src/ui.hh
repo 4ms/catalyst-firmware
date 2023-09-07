@@ -1,7 +1,7 @@
 #pragma once
 #include "conf/model.hh"
 #include "conf/palette.hh"
-#include "conf/quantizer_scales.hh"
+//#include "conf/quantizer_scales.hh"
 #include "controls.hh"
 #include "intclock.hh"
 #include "outputs.hh"
@@ -51,6 +51,9 @@ public:
 	{
 		controls.update();
 		update_slider_and_cv();
+		update_switch();
+		update_trig_jack();
+		update_reset_jack();
 		update_mode();
 	}
 
@@ -65,6 +68,13 @@ public:
 	}
 
 private:
+	void update_mode();
+	void state_macro();
+	void state_macro_ab();
+	void state_settings();
+	void state_bank();
+	void state_seq();
+
 	void update_slider_and_cv()
 	{
 		auto slider = controls.read_slider();
@@ -74,27 +84,63 @@ private:
 		params.slider_pos = slider / 4096.f;
 	}
 
-	void update_mode();
-
-	void state_macro();
-	void state_macro_ab();
-	void state_settings();
-	void state_bank();
-	void state_seq();
-
-	void seq_update_step()
+	void update_switch()
 	{
-		auto step = false;
+		if (controls.mode_switch.just_went_high()) {
+			params.mode = Params::Mode::Sequencer;
+			params.seq.reset();
+			state = State::Reset;
+		} else if (controls.mode_switch.just_went_low()) {
+			params.mode = Params::Mode::Macro;
+			state = State::Reset;
+		}
+	}
 
-		if (!controls.trig_jack_sense.is_high()) {
-			step = controls.trig_jack.just_went_high();
-		} else {
+	void update_trig_jack()
+	{
+
+		const auto macro = params.mode == Params::Mode::Macro;
+
+		if (controls.trig_jack_sense.is_high()) {
+			if (macro)
+				return;
+
 			intclock.update();
-			step = intclock.step();
+
+			if (intclock.step())
+				params.seq.step();
+
+			return;
 		}
 
-		if (step)
+		const bool edge = controls.trig_jack.just_went_high();
+
+		if (!edge)
+			return;
+
+		if (!macro) {
 			params.seq.step();
+			return;
+		}
+
+		recorder.reset();
+	}
+
+	void update_reset_jack()
+	{
+		const auto edge = controls.reset_jack.just_went_high();
+
+		if (!edge)
+			return;
+
+		if (params.mode == Params::Mode::Sequencer) {
+			params.seq.reset();
+			return;
+		}
+
+		// macro mode
+		// what should reset do???
+		// recorder.cue_recording();
 	}
 
 	// what should this be named?

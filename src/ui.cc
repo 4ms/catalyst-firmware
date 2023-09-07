@@ -1,39 +1,11 @@
 #include "ui.hh"
+#include "conf/quantizer_scales.hh"
 
 namespace Catalyst2
 {
 
 void UI::update_mode()
 {
-	if (controls.mode_switch.just_went_high())
-		params.mode = Params::Mode::Sequencer;
-	else if (controls.mode_switch.just_went_low()) {
-		params.mode = Params::Mode::Macro;
-	}
-
-	if (params.mode == Params::Mode::Sequencer) {
-		if (controls.reset_jack.just_went_high())
-			params.seq.reset();
-
-		seq_update_step();
-	} else if (params.mode == Params::Mode::Macro) {
-		if (!controls.trig_jack_sense.is_high()) {
-			// plugged in
-			if (controls.trig_jack.just_went_high()) {
-				if (recorder.is_recordering()) {
-					recorder.restart();
-				} else {
-					if (recorder.size()) {
-						recorder.restart();
-					} else {
-						recorder.record();
-					}
-				}
-			}
-		} else {
-			// not
-		}
-	}
 
 	// common to all states
 	controls.clear_button_leds();
@@ -60,9 +32,9 @@ void UI::update_mode()
 			state_seq();
 			break;
 
+		case State::Reset:
 		default:
 			controls.b_button.clear_events();
-			controls.bank_button.clear_events();
 			state = params.mode == Params::Mode::Macro ? State::Macro : State::Seq;
 			break;
 	}
@@ -70,13 +42,14 @@ void UI::update_mode()
 
 void UI::state_seq()
 {
-	on_scene_button_release([&](unsigned chan) { params.seq.sel_chan(chan); });
+	on_scene_button_release([this](unsigned chan) { params.seq.sel_chan(chan); });
 	auto alt = controls.alt_button.is_high();
 
 	if (params.seq.is_chan_selected()) {
 		encoder_display_sequence();
-		on_encoder_inc(
-			[&](int inc, unsigned scene) { params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt); });
+		on_encoder_inc([this, alt](int inc, unsigned scene) {
+			params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt);
+		});
 	} else {
 		;
 	}
@@ -95,11 +68,10 @@ void UI::state_macro()
 	const auto alt = controls.alt_button.is_high();
 
 	if (controls.play_button.just_went_high()) {
-		if (alt) {
-			recorder.record();
-		} else {
-			recorder.toggle();
-		}
+		if (alt)
+			recorder.cue_recording();
+		if (controls.trig_jack_sense.is_high())
+			recorder.reset();
 	}
 
 	if (recorder.is_recordering()) {
@@ -107,15 +79,11 @@ void UI::state_macro()
 		return;
 	}
 
-	if (controls.reset_jack.just_went_high() && recorder.size()) {
-		recorder.restart();
-	}
-
 	// display the last one pressed.
 	Pathway::SceneId scene_to_display = 0xff;
 	auto age = 0xffffffffu;
 
-	if (on_scene_button_high([&](Pathway::SceneId scene) {
+	if (on_scene_button_high([this, &scene_to_display, &age](Pathway::SceneId scene) {
 			controls.set_button_led(scene, true);
 
 			if (controls.scene_buttons[scene].time_high < age) {
@@ -126,8 +94,9 @@ void UI::state_macro()
 	{
 		// do this once regardless if any amount of buttons are pressed.
 		// is this too redundant?
-		on_encoder_inc([&](int inc, unsigned chan) {
-			on_scene_button_high([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
+		on_encoder_inc([this, alt](int inc, unsigned chan) {
+			on_scene_button_high(
+				[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 		});
 
 		// TODO: somehow this scene needs to be sent out the output
@@ -140,8 +109,9 @@ void UI::state_macro()
 	// display the current scene
 	scene_button_display_nearest();
 
-	on_encoder_inc([&](int inc, unsigned chan) {
-		get_scene_context([&](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
+	on_encoder_inc([this, alt](int inc, unsigned chan) {
+		get_scene_context(
+			[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 	});
 
 	// check state
@@ -162,7 +132,27 @@ void UI::state_settings()
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
 
-	// TODO: friction
+	// seq length
+
+	if (params.mode == Params::Mode::Sequencer) {
+		controls.set_encoder_led(5, Palette::grey);
+		auto inc = controls.encoders[5].read();
+		const auto cur_chan = params.seq.get_sel_chan();
+
+		static uint16_t count_down = 0;
+		if (inc) {
+			count_down = 1000;
+			params.seq.adj_length(cur_chan, inc);
+		}
+
+		if (count_down) {
+			count_down -= 1;
+			encoder_display_count(Palette::red, params.seq.get_length(cur_chan));
+
+			if (controls.alt_button.is_high())
+				return;
+		}
+	}
 
 	// morph step
 	controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
@@ -172,7 +162,6 @@ void UI::state_settings()
 
 	// TODO: bounce
 
-	// seq length
 	// if (params.mode.seq....)
 	// auto inc = controls.encoders[5].read();
 	// params.seq.adj_length(cur_chan, inc);
@@ -200,8 +189,7 @@ void UI::state_settings()
 	// quantize
 	static int8_t cur_scale = 0;
 	controls.set_encoder_led(7, Model::Scales[cur_scale].color);
-	inc = controls.encoders[7].read();
-	if (inc) {
+	if ((inc = controls.encoders[7].read())) {
 		cur_scale += inc;
 		cur_scale = std::clamp<int8_t>(cur_scale, 0, Model::Scales.size() - 1);
 		params.quantizer.load_scale(Model::Scales[cur_scale].scale);
@@ -253,8 +241,8 @@ void UI::state_macro_ab()
 
 	if (b) {
 		// clear recording
-		if (controls.play_button.is_high()) {
-			recorder.clear();
+		if (controls.play_button.just_went_high()) {
+			recorder.stop();
 			return;
 		}
 
