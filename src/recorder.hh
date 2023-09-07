@@ -11,22 +11,26 @@ class Recorder {
 	static constexpr auto max_record_lenth_seconds = (1.f / ((float)Board::cv_stream_hz / prescaler)) * buff_size;
 	static_assert(MathTools::is_power_of_2(prescaler));
 
+	struct {
+		uint8_t recording : 1;
+		uint8_t playing : 1;
+		uint8_t loop_playback : 1 = 0;
+		uint8_t cue_rec : 1;
+	} flags;
+
 	std::array<uint16_t, buff_size> buffer;
-	bool recording = false;
-	bool play_ = false;
-	unsigned size_ = 0;
-	unsigned pos_ = 0;
-	uint8_t scaler = 0;
-	unsigned accum = 0;
-	bool loop = false;
+	unsigned size_{0};
+	unsigned pos_{0};
+	uint8_t scaler{0};
+	unsigned accum{0};
 
 public:
 	uint16_t update(uint16_t sample)
 	{
-		if (!play_ && !recording)
+		if (!flags.playing && !flags.recording)
 			return sample;
 
-		if (recording) {
+		if (flags.recording) {
 			if (!insert(sample)) {
 				stop();
 			}
@@ -35,56 +39,61 @@ public:
 
 		return read();
 	}
-	void play()
-	{
-		if (size_ >= 2)
-			play_ = true;
-	}
-	void toggle()
-	{
-		if (play_)
-			stop();
-		else
-			restart();
-	}
-	void pause()
-	{
-		play_ = false;
-	}
 	void stop()
 	{
-		pause();
-		recording = false;
-		scaler = 0;
-		pos_ = 0;
+		flags.playing = flags.recording = false;
+		scaler = pos_ = 0;
 	}
-	void restart()
+	void cue_recording()
 	{
-		stop();
-		play();
+		flags.cue_rec = true;
 	}
-	void clear()
+	void play()
 	{
-		size_ = 0;
+		flags.playing = true;
 	}
 	void record()
 	{
-		stop();
-		clear();
-		accum = 0;
-		recording = true;
+		if (!flags.cue_rec)
+			return;
+
+		flags.cue_rec = false;
+		flags.recording = true;
 	}
-	auto size()
+	void clear_recording()
 	{
-		return size_;
+		size_ = 0;
+	}
+	void reset()
+	{
+		stop();
+		if (flags.cue_rec) {
+			flags.cue_rec = false;
+			flags.recording = true;
+			size_ = 0;
+			return;
+		}
+		flags.playing = true;
+	}
+	void toggle_loop()
+	{
+		flags.loop_playback ^= 1;
 	}
 	auto capacity_filled()
 	{
 		return static_cast<float>(size_) / buff_size;
 	}
+	auto size()
+	{
+		return size_;
+	}
 	bool is_recordering()
 	{
-		return recording;
+		return flags.recording;
+	}
+	bool is_cued()
+	{
+		return flags.cue_rec;
 	}
 
 private:
@@ -97,6 +106,8 @@ private:
 			pos_ += 1;
 			if (pos_ >= size_ - 1) {
 				stop();
+				if (flags.loop_playback)
+					play();
 			}
 		}
 
