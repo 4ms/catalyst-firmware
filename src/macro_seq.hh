@@ -1,5 +1,6 @@
 #pragma once
 #include "conf/model.hh"
+#include "conf/quantizer_scales.hh"
 #include "flags.hh"
 #include "params.hh"
 #include "util/countzip.hh"
@@ -36,9 +37,7 @@ class MacroSeq {
 public:
 	MacroSeq(Params &params)
 		: params{params}
-	{
-		params.quantizer.load_scale(Model::scales[1]);
-	}
+	{}
 
 	auto update()
 	{

@@ -15,7 +15,7 @@ struct Params {
 	Banks banks;
 	Pathway pathway;
 	Sequencer seq;
-	Quantizer quan{Model::scales};
+	Quantizer<static_cast<std::size_t>(Model::output_octave_range)> quantizer;
 
 	// coefficient of fading from scene to scene
 	// f(x) = (1.f / (1.f - morph_step)) * x;

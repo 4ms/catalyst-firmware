@@ -13,7 +13,10 @@ struct Quantizer {
 	static constexpr float oct_size = (65536.f / range_octaves) + .5f;
 	static constexpr float note_size = (65536.f / (range_octaves * 12)) + .5f;
 
-	Quantizer(){};
+	Quantizer()
+	{
+		load_scale(Scale{});
+	};
 
 	uint16_t process(const uint16_t input)
 	{
@@ -38,22 +41,22 @@ struct Quantizer {
 
 		return (upper * note_size) + (octave * oct_size);
 	}
-	void load_scale(const Scales::Scale &scl)
+	void load_scale(const Scale &scl)
 	{
 		scale = scl;
 	}
-	void enable(Scales::Scale &scl)
+	void enable(Scale &scl)
 	{
 		load_scale(scl);
 	}
 	void disable()
 	{
-		Scales::Scale empty;
+		Scale empty;
 		load_scale(empty);
 	}
 
 private:
-	Scales::Scale scale{};
+	Scale scale{};
 };
 
 } // namespace Catalyst2

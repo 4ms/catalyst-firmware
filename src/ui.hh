@@ -1,6 +1,7 @@
 #pragma once
 #include "conf/model.hh"
 #include "conf/palette.hh"
+#include "conf/quantizer_scales.hh"
 #include "controls.hh"
 #include "intclock.hh"
 #include "outputs.hh"

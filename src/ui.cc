@@ -198,6 +198,14 @@ void UI::state_settings()
 		params.banks.clear_random();
 
 	// quantize
+	static int8_t cur_scale = 0;
+	controls.set_encoder_led(7, Model::Scales[cur_scale].color);
+	inc = controls.encoders[7].read();
+	if (inc) {
+		cur_scale += inc;
+		cur_scale = std::clamp<int8_t>(cur_scale, 0, Model::Scales.size() - 1);
+		params.quantizer.load_scale(Model::Scales[cur_scale].scale);
+	}
 	// chromatic, major, minor, pentatonic?
 	// magenta, blue, red, green... ?
 
