@@ -1,5 +1,5 @@
 #pragma once
-#include "util/colors.hh"
+#include "../../lib/cpputil/util/colors.hh"
 
 namespace Catalyst2
 {
