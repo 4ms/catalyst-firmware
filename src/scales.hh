@@ -15,9 +15,17 @@ struct Scale {
 	{
 		return scl[idx];
 	}
-	constexpr std::size_t size()
+	constexpr std::size_t size() const
 	{
 		return size_;
+	}
+	constexpr const auto begin() const
+	{
+		return scl.begin();
+	}
+	constexpr const auto end() const
+	{
+		return begin() + size_;
 	}
 
 private:
