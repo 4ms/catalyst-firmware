@@ -222,7 +222,7 @@ private:
 	Color encoder_blend(uint16_t level)
 	{
 		auto phase = static_cast<uint8_t>(level >> 8);
-		return Palette::red.blend(Palette::green, phase);
+		return Palette::red.blend(Palette::yellow, phase);
 	}
 
 	Color encoder_blend_old(uint16_t level)

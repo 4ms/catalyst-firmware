@@ -16,6 +16,23 @@ void UI::update_mode()
 			params.seq.reset();
 
 		seq_update_step();
+	} else if (params.mode == Params::Mode::Macro) {
+		if (!controls.trig_jack_sense.is_high()) {
+			// plugged in
+			if (controls.trig_jack.just_went_high()) {
+				if (recorder.is_recordering()) {
+					recorder.restart();
+				} else {
+					if (recorder.size()) {
+						recorder.restart();
+					} else {
+						recorder.record();
+					}
+				}
+			}
+		} else {
+			// not
+		}
 	}
 
 	// common to all states
@@ -88,10 +105,6 @@ void UI::state_macro()
 	if (recorder.is_recordering()) {
 		scene_button_display_recording();
 		return;
-	}
-
-	if (controls.trig_jack.just_went_high() && recorder.size()) {
-		recorder.play();
 	}
 
 	if (controls.reset_jack.just_went_high() && recorder.size()) {
