@@ -34,13 +34,13 @@ struct Scene {
 	std::array<ChannelValue::type, Model::NumChans> chans;
 	// TODO: Figure out randomness
 	std::array<int8_t, Model::NumChans> random_value;
-	float random_amount = 1.f;
+	float random_amount = 1.f / 15.f;
 	std::array<ChannelType, Model::NumChans> types;
 
 	Scene()
 	{
 		for (auto &c : chans) {
-			c = ChannelValue::Center;
+			c = ChannelValue::from_volts(2.f);
 		}
 		for (auto &t : types) {
 			t = ChannelType::CV;
