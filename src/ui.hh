@@ -79,37 +79,20 @@ private:
 	{
 		switch (state) {
 			case State::Settings:
-				if (controls.alt_button.is_high() || controls.b_button.is_high())
-					return;
+
 				break;
 
 			case State::Bank:
-				if (controls.bank_button.is_high())
-					return;
+
 				break;
 
 			case State::AB:
-				if (controls.a_button.is_high())
-					return;
-				if (controls.b_button.is_high()) {
-					if (controls.alt_button.is_high())
-						state = State::Settings;
-					return;
-				}
+
 				break;
 
 			case State::Main:
-				if (controls.alt_button.is_high() && controls.b_button.is_high())
-					state = State::Settings;
-				else if (controls.a_button.is_high() || controls.b_button.is_high()) {
-					state = State::AB;
-					controls.scene_buttons_clear_events();
-				} else if (controls.bank_button.is_high())
-					state = State::Bank;
-				return;
+				break;
 		}
-
-		state = State::Main;
 	}
 
 	void update_slider_and_cv()

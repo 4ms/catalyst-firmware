@@ -45,34 +45,40 @@ public:
 
 		params.pathway.update(params.pos);
 
-		if (params.mode == Params::Mode::Macro) {
-			const auto left = params.pathway.scene_left();
-			const auto right = params.pathway.scene_right();
-
-			auto phase = params.pos;
-			phase = params.pathway.adjust_and_scale(phase);
-			phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
-
-			for (auto [chan, out] : countzip(buf)) {
-				const auto a = params.banks.get_chan(left, chan);
-				const auto b = params.banks.get_chan(right, chan);
-				out = MathTools::interpolate(a, b, phase);
-			}
-
-			return buf;
-		}
-
-		// sequencer mode
-		for (auto [chan, out] : countzip(buf)) {
-			auto step = params.seq.get_step(chan);
-			out = params.banks.get_chan(step, chan);
-		}
+		if (params.mode == Params::Mode::Macro)
+			macro(buf);
+		else
+			seq(buf);
 
 		for (auto &out : buf) {
 			out = params.quantizer.process(out);
 		}
 
 		return buf;
+	}
+
+private:
+	void macro(auto &in)
+	{
+		const auto left = params.pathway.scene_left();
+		const auto right = params.pathway.scene_right();
+
+		auto phase = params.pos;
+		phase = params.pathway.adjust_and_scale(phase);
+		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
+
+		for (auto [chan, out] : countzip(in)) {
+			const auto a = params.banks.get_chan(left, chan);
+			const auto b = params.banks.get_chan(right, chan);
+			out = MathTools::interpolate(a, b, phase);
+		}
+	}
+	void seq(auto &in)
+	{
+		for (auto [chan, out] : countzip(in)) {
+			const auto step = params.seq.get_step(chan);
+			out = params.banks.get_chan(step, chan);
+		}
 	}
 };
 

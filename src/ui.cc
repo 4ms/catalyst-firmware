@@ -14,6 +14,9 @@ void UI::update_mode()
 	switch (state) {
 		case State::Settings:
 			state_settings();
+
+			if (controls.alt_button.is_high() || controls.b_button.is_high())
+				return;
 			break;
 
 		case State::AB:
@@ -21,10 +24,21 @@ void UI::update_mode()
 				state_macro_ab();
 			else
 				state_seq_ab();
+
+			if (controls.a_button.is_high())
+				return;
+			if (controls.b_button.is_high()) {
+				if (controls.alt_button.is_high())
+					state = State::Settings;
+				return;
+			}
 			break;
 
 		case State::Bank:
 			state_bank();
+
+			if (controls.bank_button.is_high())
+				return;
 			break;
 
 		case State::Main:
@@ -32,8 +46,17 @@ void UI::update_mode()
 				state_macro();
 			else
 				state_seq();
-			break;
+
+			if (controls.alt_button.is_high() && controls.b_button.is_high())
+				state = State::Settings;
+			else if (controls.a_button.is_high() || controls.b_button.is_high()) {
+				state = State::AB;
+				controls.scene_buttons_clear_events();
+			} else if (controls.bank_button.is_high())
+				state = State::Bank;
+			return;
 	}
+	state = State::Main;
 }
 
 void UI::state_seq()
@@ -148,6 +171,21 @@ void UI::state_settings()
 
 void UI::state_bank()
 {
+	display_output = false;
+	// display which banks are edited vs which ones arent on the encoders.
+	for (auto x = 0u; x < Model::NumBanks; ++x) {
+		auto edt = params.banks.is_edited(x);
+		Color c = Palette::off;
+		if (edt)
+			c = Palette::tangerine;
+		controls.set_encoder_led(x, c);
+
+		auto inc = controls.encoders[x].read();
+
+		if (inc < 0)
+			params.banks.reset_bank(x);
+	}
+
 	on_scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
 	controls.set_button_led(params.banks.get_sel_bank(), true);
 }
@@ -177,10 +215,8 @@ void UI::state_seq_ab()
 		return;
 	}
 
-	if (!b)
-		return;
-
-	params.seq.adj_length(chan, inc);
+	if (b)
+		params.seq.adj_length(chan, inc);
 }
 
 void UI::state_macro_ab()
