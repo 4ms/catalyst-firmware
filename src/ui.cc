@@ -114,11 +114,7 @@ void UI::state_settings()
 	params.morph_step += (1.f / 100.f) * inc;
 	params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
 
-	// TODO: bounce
-
-	// if (params.mode.seq....)
-	// auto inc = controls.encoders[5].read();
-	// params.seq.adj_length(cur_chan, inc);
+	// TODO: bounce?
 
 	// random amount
 	auto scene = params.pathway.scene_nearest();
@@ -148,8 +144,6 @@ void UI::state_settings()
 		cur_scale = std::clamp<int8_t>(cur_scale, 0, Model::Scales.size() - 1);
 		params.quantizer.load_scale(Model::Scales[cur_scale].scale);
 	}
-	// chromatic, major, minor, pentatonic?
-	// magenta, blue, red, green... ?
 }
 
 void UI::state_bank()
