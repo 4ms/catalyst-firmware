@@ -60,6 +60,12 @@ public:
 private:
 	void macro(auto &in)
 	{
+		if (params.override_output.has_value()) {
+			for (auto [chan, out] : countzip(in))
+				out = params.banks.get_chan(params.override_output.value(), chan);
+			return;
+		}
+
 		const auto left = params.pathway.scene_left();
 		const auto right = params.pathway.scene_right();
 
