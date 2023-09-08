@@ -5,17 +5,17 @@
 
 using namespace Catalyst2;
 
-TEST_CASE("Fixed Linked list")
+TEST_CASE("Quantizer list")
 {
-	Quantizer<15> quantizer;
+	constexpr auto octave_range = 15;
+	Quantizer<octave_range> quantizer;
 	quantizer.load_scale(Scales::chromatic);
 
-	constexpr auto max_notes = Scales::chromatic.size() * 15;
+	constexpr auto max_notes = Scales::chromatic.size() * octave_range;
 
 	auto is_diff = -1;
 	auto num_diffs = 0;
 	for (int x = 0; x < 0xffff; x++) {
-
 		auto temp = quantizer.process(x);
 		if (temp != is_diff) {
 			is_diff = temp;
