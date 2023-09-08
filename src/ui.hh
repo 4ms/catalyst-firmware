@@ -1,7 +1,6 @@
 #pragma once
 #include "conf/model.hh"
 #include "conf/palette.hh"
-//#include "conf/quantizer_scales.hh"
 #include "controls.hh"
 #include "intclock.hh"
 #include "outputs.hh"
@@ -52,8 +51,8 @@ public:
 		update_switch();
 		update_trig_jack();
 		update_reset_jack();
+		update_output_override();
 		update_mode();
-		update_state();
 	}
 
 	void set_outputs(Model::OutputBuffer &outs)
@@ -75,24 +74,9 @@ private:
 	void state_seq();
 	void state_seq_ab();
 
-	void update_state()
+	void update_output_override()
 	{
-		switch (state) {
-			case State::Settings:
-
-				break;
-
-			case State::Bank:
-
-				break;
-
-			case State::AB:
-
-				break;
-
-			case State::Main:
-				break;
-		}
+		params.override_output = controls.youngest_scene_button();
 	}
 
 	void update_slider_and_cv()
@@ -169,40 +153,6 @@ private:
 		} else {
 			f(params.pathway.scene_left());
 			f(params.pathway.scene_right());
-		}
-	}
-
-	void on_scene_button_release(auto f)
-	{
-		for (auto [i, butt] : countzip(controls.scene_buttons)) {
-			if (butt.just_went_low()) {
-				f(i);
-			}
-		}
-	}
-
-	/// @brief runs a function for each scene button currently pressed.
-	/// @param f
-	/// @return true if any scene buttons were pressed
-	bool on_scene_button_high(auto f)
-	{
-		auto ret = false;
-
-		for (auto [i, butt] : countzip(controls.scene_buttons)) {
-			if (butt.is_high()) {
-				f(i);
-				ret = true;
-			}
-		}
-		return ret;
-	}
-
-	void on_encoder_inc(auto f)
-	{
-		for (auto [i, enc] : countzip(controls.encoders)) {
-			auto inc = enc.read();
-			if (inc)
-				f(inc, i);
 		}
 	}
 
@@ -290,27 +240,6 @@ private:
 	{
 		auto phase = static_cast<uint8_t>(level >> 8);
 		return Palette::red.blend(Palette::yellow, phase);
-	}
-
-	Color encoder_blend_old(uint16_t level)
-	{
-		constexpr auto zero_v = ChannelValue::from_volts(0.f);
-		constexpr auto five_v = ChannelValue::from_volts(5.f);
-
-		auto phase = static_cast<float>(level);
-
-		if (phase < zero_v) {
-			phase /= zero_v;
-			return Palette::red.blend(Palette::yellow, phase);
-		} else if (phase < five_v) {
-			phase -= zero_v;
-			phase /= zero_v;
-			return Palette::yellow.blend(Palette::green, phase);
-		} else {
-			phase -= five_v;
-			phase /= zero_v;
-			return Palette::green.blend(Palette::blue, phase);
-		}
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;

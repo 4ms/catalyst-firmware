@@ -61,12 +61,12 @@ void UI::update_mode()
 
 void UI::state_seq()
 {
-	on_scene_button_release([this](unsigned chan) { params.seq.sel_chan(chan); });
+	controls.for_each_scene_butt_released([this](unsigned chan) { params.seq.sel_chan(chan); });
 	auto alt = controls.alt_button.is_high();
 
 	if (params.seq.is_chan_selected()) {
 		encoder_display_sequence();
-		on_encoder_inc([this, alt](int inc, unsigned scene) {
+		controls.for_each_encoder_inc([this, alt](int inc, unsigned scene) {
 			params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt);
 		});
 	} else {
@@ -90,40 +90,26 @@ void UI::state_macro()
 		return;
 	}
 
-	// display the last one pressed.
-	Pathway::SceneId scene_to_display = 0xff;
-	auto age = 0xffffffffu;
+	if (params.override_output.has_value()) {
+		// show the most recently pressed scene
+		encoder_display_scene(params.override_output.value());
 
-	if (on_scene_button_high([this, &scene_to_display, &age](Pathway::SceneId scene) {
-			controls.set_button_led(scene, true);
+		// set each pressed led
+		controls.for_each_scene_button_high([this](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 
-			if (controls.scene_buttons[scene].time_high < age) {
-				age = controls.scene_buttons[scene].time_high;
-				scene_to_display = scene;
-			}
-		}))
-	{
-		// do this once regardless if any amount of buttons are pressed.
-		// is this too redundant?
-		on_encoder_inc([this, alt](int inc, unsigned chan) {
-			on_scene_button_high(
+		// encoders blah blah
+		controls.for_each_encoder_inc([this, alt](int inc, unsigned chan) {
+			controls.for_each_scene_button_high(
 				[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 		});
+	} else {
+		scene_button_display_nearest();
 
-		// TODO: somehow this scene needs to be sent out the output
-		encoder_display_scene(scene_to_display);
-
-		return;
+		controls.for_each_encoder_inc([this, alt](int inc, unsigned chan) {
+			get_scene_context(
+				[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
+		});
 	}
-
-	// do this if no scene buttons were pressed.
-	// display the current scene
-	scene_button_display_nearest();
-
-	on_encoder_inc([this, alt](int inc, unsigned chan) {
-		get_scene_context(
-			[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
-	});
 }
 
 void UI::state_settings()
@@ -141,6 +127,12 @@ void UI::state_settings()
 
 	// random amount
 	auto scene = params.pathway.scene_nearest();
+	if (params.override_output.has_value()) {
+		scene = params.override_output.value();
+		controls.set_button_led(params.override_output.value(), true);
+	} else {
+		scene_button_display_nearest();
+	}
 	auto temp = params.banks.get_scene_random_amount(scene);
 	auto color = Palette::grey.blend(Palette::red, temp);
 	if (temp == 0.f)
@@ -160,19 +152,20 @@ void UI::state_settings()
 		params.banks.clear_random();
 
 	// quantize
-	static int8_t cur_scale = 0;
-	controls.set_encoder_led(7, Model::Scales[cur_scale].color);
+	auto &scl = params.current_scale;
+	controls.set_encoder_led(7, Model::Scales[scl].color);
 	if ((inc = controls.encoders[7].read())) {
-		cur_scale += inc;
-		cur_scale = std::clamp<int8_t>(cur_scale, 0, Model::Scales.size() - 1);
-		params.quantizer.load_scale(Model::Scales[cur_scale].scale);
+		scl += inc;
+		scl = std::clamp<int8_t>(scl, 0, Model::Scales.size() - 1);
+		params.quantizer.load_scale(Model::Scales[scl].scale);
 	}
 }
 
 void UI::state_bank()
 {
 	display_output = false;
-	// display which banks are edited vs which ones arent on the encoders.
+	params.override_output = std::nullopt;
+
 	for (auto x = 0u; x < Model::NumBanks; ++x) {
 		auto edt = params.banks.is_edited(x);
 		Color c = Palette::off;
@@ -184,9 +177,11 @@ void UI::state_bank()
 
 		if (inc < 0)
 			params.banks.reset_bank(x);
+
+		if (controls.scene_buttons[x].is_high())
+			params.banks.sel_bank(x);
 	}
 
-	on_scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
 	controls.set_button_led(params.banks.get_sel_bank(), true);
 }
 
@@ -225,6 +220,8 @@ void UI::state_macro_ab()
 
 	scene_button_display_nearest();
 
+	params.override_output = std::nullopt;
+
 	/* a and b buttons*/
 	const auto a = controls.a_button.is_high();
 	const auto b = controls.b_button.is_high();
@@ -235,7 +232,7 @@ void UI::state_macro_ab()
 	}
 
 	if (a) {
-		on_scene_button_release([&](unsigned scene) {
+		controls.for_each_scene_butt_released([&](unsigned scene) {
 			if (!controls.a_button.just_went_high()) {
 				params.pathway.insert_scene(scene, true);
 				return; // return from lambda
@@ -262,7 +259,7 @@ void UI::state_macro_ab()
 	// removing a scene is not nearly as intuitive as inserting them
 	// TODO: make it better
 	if (params.pathway.on_a_scene()) {
-		on_scene_button_release([&](unsigned scene) {
+		controls.for_each_scene_butt_released([&](unsigned scene) {
 			if (scene == params.pathway.scene_nearest())
 				params.pathway.remove_scene();
 		});
