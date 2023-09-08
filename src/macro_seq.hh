@@ -57,7 +57,6 @@ public:
 				const auto a = params.banks.get_chan(left, chan);
 				const auto b = params.banks.get_chan(right, chan);
 				out = MathTools::interpolate(a, b, phase);
-				out = params.quantizer.process(out);
 			}
 
 			return buf;
@@ -67,6 +66,10 @@ public:
 		for (auto [chan, out] : countzip(buf)) {
 			auto step = params.seq.get_step(chan);
 			out = params.banks.get_chan(step, chan);
+		}
+
+		for (auto &out : buf) {
+			out = params.quantizer.process(out);
 		}
 
 		return buf;
