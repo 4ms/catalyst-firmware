@@ -9,6 +9,8 @@
 #include "muxed_button.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
+#include <optional>
+#include <util/countzip.hh>
 
 namespace Catalyst2
 {
@@ -160,6 +162,55 @@ public:
 		for (auto &but : scene_buttons) {
 			but.clear_events();
 		}
+	}
+
+	void for_each_encoder_inc(auto func)
+	{
+		for (auto [i, enc] : countzip(encoders)) {
+			auto inc = enc.read();
+			if (inc)
+				func(inc, i);
+		}
+	}
+
+	void for_each_scene_button_high(auto f)
+	{
+		for (auto [i, b] : countzip(scene_buttons)) {
+			if (!b.is_high())
+				continue;
+
+			f(i);
+		}
+	}
+
+	void for_each_scene_butt_released(auto f)
+	{
+		for (auto [i, butt] : countzip(scene_buttons)) {
+			if (butt.just_went_low()) {
+				f(i);
+			}
+		}
+	}
+
+	std::optional<uint8_t> youngest_scene_button()
+	{
+		auto age = 0xffffffffu;
+		uint8_t youngest = 0xff;
+
+		for (auto [i, b] : countzip(scene_buttons)) {
+			if (!b.is_high())
+				continue;
+
+			if (b.time_high > age)
+				continue;
+
+			age = b.time_high;
+			youngest = i;
+		}
+		if (youngest == 0xff)
+			return std::nullopt;
+
+		return youngest;
 	}
 
 	void update()
