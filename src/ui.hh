@@ -14,14 +14,12 @@ namespace Catalyst2
 
 class UI {
 	enum class State {
-		Macro,
-		MacroAB,
+		Main,
 		Settings,
 		Bank,
-		Seq,
-		Reset,
+		AB,
 	};
-	State state = State::Reset;
+	State state;
 	Controls controls;
 	Params &params;
 	InternalClock<Board::cv_stream_hz> intclock;
@@ -55,6 +53,7 @@ public:
 		update_trig_jack();
 		update_reset_jack();
 		update_mode();
+		update_state();
 	}
 
 	void set_outputs(Model::OutputBuffer &outs)
@@ -74,6 +73,44 @@ private:
 	void state_settings();
 	void state_bank();
 	void state_seq();
+	void state_seq_ab();
+
+	void update_state()
+	{
+		switch (state) {
+			case State::Settings:
+				if (controls.alt_button.is_high() || controls.b_button.is_high())
+					return;
+				break;
+
+			case State::Bank:
+				if (controls.bank_button.is_high())
+					return;
+				break;
+
+			case State::AB:
+				if (controls.a_button.is_high())
+					return;
+				if (controls.b_button.is_high()) {
+					if (controls.alt_button.is_high())
+						state = State::Settings;
+					return;
+				}
+				break;
+
+			case State::Main:
+				if (controls.alt_button.is_high() && controls.b_button.is_high())
+					state = State::Settings;
+				else if (controls.a_button.is_high() || controls.b_button.is_high()) {
+					state = State::AB;
+					controls.scene_buttons_clear_events();
+				} else if (controls.bank_button.is_high())
+					state = State::Bank;
+				return;
+		}
+
+		state = State::Main;
+	}
 
 	void update_slider_and_cv()
 	{
@@ -89,10 +126,8 @@ private:
 		if (controls.mode_switch.just_went_high()) {
 			params.mode = Params::Mode::Sequencer;
 			params.seq.reset();
-			state = State::Reset;
 		} else if (controls.mode_switch.just_went_low()) {
 			params.mode = Params::Mode::Macro;
-			state = State::Reset;
 		}
 	}
 
@@ -228,42 +263,44 @@ private:
 		display_output = false;
 		auto chan = params.seq.get_sel_chan();
 		auto length = params.seq.get_length(chan);
-		controls.set_button_led(chan, true);
+		auto offset = params.seq.get_start_offset(chan);
 
-		encoder_display_count(Palette::red, length);
+		encoder_display_count(Palette::red, length, offset);
+		controls.set_encoder_led(offset, Palette::grey);
 	}
 
 	void encoder_display_sequence()
 	{
 		display_output = false;
-		auto chan = params.seq.get_sel_chan();
-		auto cur_step = params.seq.get_step(chan);
-		auto length = params.seq.get_length(chan);
-		controls.set_button_led(chan, true);
+		const auto chan = params.seq.get_sel_chan();
+		const auto cur_step = params.seq.get_step(chan);
+		const auto length = params.seq.get_length(chan);
+		const auto offset = params.seq.get_start_offset(chan);
 
-		for (auto i = 0u; i < length; i++) {
+		for (auto x = offset; x < length + offset; x++) {
+			const auto i = x & 7;
 			if (i == cur_step) {
 				controls.set_encoder_led(i, Palette::magenta);
 			} else {
-				auto level = params.banks.get_chan(i, chan);
+				const auto level = params.banks.get_chan(i, chan);
 				controls.set_encoder_led(i, encoder_blend(level));
 			}
 		}
-		for (auto i = 0u; i < Model::NumChans - length; i++)
-			controls.set_encoder_led(length + i, Palette::off);
+		for (auto x = offset; x < Model::NumChans - length + offset; x++)
+			controls.set_encoder_led((length + x) & 7, Palette::off);
 	}
 
 	// encoder display helper funcs
-	void encoder_display_count(Color c, unsigned count)
+	void encoder_display_count(Color c, unsigned count, unsigned offset = 0)
 	{
 		if (count > Model::NumChans)
 			return;
 
 		for (auto i = 0u; i < count; i++)
-			controls.set_encoder_led(i, c);
+			controls.set_encoder_led((i + offset) & 7, c);
 
 		for (auto i = 0u; i < Model::NumChans - count; i++)
-			controls.set_encoder_led(count + i, Palette::off);
+			controls.set_encoder_led((count + i + offset) & 7, Palette::off);
 	}
 
 	Color encoder_blend(uint16_t level)

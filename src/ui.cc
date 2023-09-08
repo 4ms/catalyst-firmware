@@ -16,26 +16,22 @@ void UI::update_mode()
 			state_settings();
 			break;
 
-		case State::MacroAB:
-			state_macro_ab();
+		case State::AB:
+			if (params.mode == Params::Mode::Macro)
+				state_macro_ab();
+			else
+				state_seq_ab();
 			break;
 
 		case State::Bank:
 			state_bank();
 			break;
 
-		case State::Macro:
-			state_macro();
-			break;
-
-		case State::Seq:
-			state_seq();
-			break;
-
-		case State::Reset:
-		default:
-			controls.b_button.clear_events();
-			state = params.mode == Params::Mode::Macro ? State::Macro : State::Seq;
+		case State::Main:
+			if (params.mode == Params::Mode::Macro)
+				state_macro();
+			else
+				state_seq();
 			break;
 	}
 }
@@ -52,14 +48,6 @@ void UI::state_seq()
 		});
 	} else {
 		;
-	}
-
-	if (alt) {
-		if (controls.b_button.just_went_high()) {
-			state = State::Settings;
-		}
-	} else if (controls.bank_button.is_high()) {
-		state = State::Reset;
 	}
 }
 
@@ -113,46 +101,12 @@ void UI::state_macro()
 		get_scene_context(
 			[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 	});
-
-	// check state
-	if (alt) {
-		if (controls.b_button.just_went_high()) {
-			state = State::Settings;
-		}
-	} else if (controls.a_button.is_high() || controls.b_button.is_high()) {
-		controls.scene_buttons_clear_events();
-		state = State::MacroAB;
-	} else if (controls.bank_button.is_high()) {
-		state = State::Bank;
-	}
 }
 
 void UI::state_settings()
 {
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
-
-	// seq length
-
-	if (params.mode == Params::Mode::Sequencer) {
-		controls.set_encoder_led(5, Palette::grey);
-		auto inc = controls.encoders[5].read();
-		const auto cur_chan = params.seq.get_sel_chan();
-
-		static uint16_t count_down = 0;
-		if (inc) {
-			count_down = 1000;
-			params.seq.adj_length(cur_chan, inc);
-		}
-
-		if (count_down) {
-			count_down -= 1;
-			encoder_display_count(Palette::red, params.seq.get_length(cur_chan));
-
-			if (controls.alt_button.is_high())
-				return;
-		}
-	}
 
 	// morph step
 	controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
@@ -196,16 +150,43 @@ void UI::state_settings()
 	}
 	// chromatic, major, minor, pentatonic?
 	// magenta, blue, red, green... ?
-
-	state = controls.alt_button.is_high() ? state : State::Reset;
 }
 
 void UI::state_bank()
 {
 	on_scene_button_high([&](unsigned chan) { params.banks.sel_bank(chan); });
 	controls.set_button_led(params.banks.get_sel_bank(), true);
+}
 
-	state = controls.bank_button.is_high() ? state : State::Reset;
+void UI::state_seq_ab()
+{
+	encoder_display_sequence_length();
+
+	/* a and b buttons*/
+	const auto a = controls.a_button.is_high();
+	const auto b = controls.b_button.is_high();
+	const auto chan = params.seq.get_sel_chan();
+
+	if (a && b) {
+		params.seq.reset_length(chan);
+		params.seq.reset_start_offset(chan);
+		return;
+	}
+
+	auto inc = controls.encoders[5].read();
+
+	if (!inc)
+		return;
+
+	if (a) {
+		params.seq.adj_start_offset(chan, inc);
+		return;
+	}
+
+	if (!b)
+		return;
+
+	params.seq.adj_length(chan, inc);
 }
 
 void UI::state_macro_ab()
@@ -239,24 +220,23 @@ void UI::state_macro_ab()
 		return;
 	}
 
-	if (b) {
-		// clear recording
-		if (controls.play_button.just_went_high()) {
-			recorder.stop();
-			return;
-		}
+	if (!b)
+		return;
 
-		// removing a scene is not nearly as intuitive as inserting them
-		// TODO: make it better
-		if (params.pathway.on_a_scene()) {
-			on_scene_button_release([&](unsigned scene) {
-				if (scene == params.pathway.scene_nearest())
-					params.pathway.remove_scene();
-			});
-		}
+	// clear recording
+	if (controls.play_button.just_went_high()) {
+		recorder.stop();
 		return;
 	}
 
-	state = State::Reset;
+	// removing a scene is not nearly as intuitive as inserting them
+	// TODO: make it better
+	if (params.pathway.on_a_scene()) {
+		on_scene_button_release([&](unsigned scene) {
+			if (scene == params.pathway.scene_nearest())
+				params.pathway.remove_scene();
+		});
+	}
+	return;
 }
 } // namespace Catalyst2
