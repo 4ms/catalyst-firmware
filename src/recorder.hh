@@ -12,10 +12,10 @@ class Recorder {
 	static_assert(MathTools::is_power_of_2(prescaler));
 
 	struct {
-		uint8_t recording : 1;
-		uint8_t playing : 1;
+		uint8_t recording : 1 = 0;
+		uint8_t playing : 1 = 0;
 		uint8_t loop_playback : 1 = 0;
-		uint8_t cue_rec : 1;
+		uint8_t cue_rec : 1 = 0;
 	} flags;
 
 	std::array<uint16_t, buff_size> buffer;
@@ -42,7 +42,9 @@ public:
 	void stop()
 	{
 		flags.playing = flags.recording = false;
-		scaler = pos_ = 0;
+		scaler = 0;
+		accum = 0;
+		pos_ = 0;
 	}
 	void cue_recording()
 	{
@@ -73,7 +75,8 @@ public:
 			size_ = 0;
 			return;
 		}
-		flags.playing = true;
+		if (size_ >= 2)
+			flags.playing = true;
 	}
 	void toggle_loop()
 	{
