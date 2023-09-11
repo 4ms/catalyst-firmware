@@ -6,8 +6,6 @@ namespace Catalyst2
 
 void UI::update_mode()
 {
-
-	// common to all states
 	controls.clear_button_leds();
 	display_output = true;
 

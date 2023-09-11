@@ -130,9 +130,8 @@ private:
 
 	void update_reset_jack()
 	{
-		const auto edge = controls.reset_jack.just_went_high();
-
-		if (!edge)
+		// edge?
+		if (!controls.reset_jack.just_went_high())
 			return;
 
 		if (params.mode == Params::Mode::Sequencer) {
