@@ -81,11 +81,9 @@ private:
 
 	void update_slider_and_cv()
 	{
-		auto slider = controls.read_slider();
-		auto cv = controls.read_cv();
-		auto rec = recorder.update(slider + cv);
-		params.pos = rec / 4096.f;
-		params.slider_pos = slider / 4096.f;
+		const auto slider = controls.read_slider();
+		const auto cv = controls.read_cv();
+		params.pos = recorder.update(slider + cv) / 4096.f;
 	}
 
 	void update_switch()
