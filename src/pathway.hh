@@ -1,6 +1,5 @@
 #pragma once
 #include "fixedvector.hh"
-#include "scene.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>

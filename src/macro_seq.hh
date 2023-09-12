@@ -79,12 +79,44 @@ private:
 			out = MathTools::interpolate(a, b, phase);
 		}
 	}
-	void seq(auto &in)
+	void seq(Model::OutputBuffer &in)
 	{
 		for (auto [chan, out] : countzip(in)) {
 			const auto step = params.seq.get_step(chan);
 			out = params.banks.get_chan(step, chan);
 		}
+		in = rotate_(in, params.pos);
+	}
+
+	Model::OutputBuffer rotate_(const Model::OutputBuffer &in, float point)
+	{
+		static constexpr float width = 1.f / (Model::NumChans - 1);
+
+		auto distance = 0u;
+
+		while (point >= width) {
+			point -= width;
+			++distance;
+		}
+
+		point *= Model::NumChans;
+
+		Model::OutputBuffer out;
+
+		for (auto i = 0u; i < Model::NumChans; ++i) {
+			auto idx = (Model::NumChans - i + distance);
+			auto idx_next = idx + 1;
+			if constexpr (MathTools::is_power_of_2(Model::NumChans)) {
+				idx &= Model::NumChans - 1;
+				idx_next &= Model::NumChans - 1;
+			} else {
+				idx %= Model::NumChans;
+				idx_next %= Model::NumChans;
+			}
+			out[i] = MathTools::interpolate(in[idx], in[idx_next], point);
+		}
+
+		return out;
 	}
 };
 
