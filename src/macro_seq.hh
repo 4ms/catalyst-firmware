@@ -81,42 +81,51 @@ private:
 	}
 	void seq(Model::OutputBuffer &in)
 	{
-		for (auto [chan, out] : countzip(in)) {
+		for (auto [chan, o] : countzip(in)) {
 			const auto step = params.seq.get_step(chan);
-			out = params.banks.get_chan(step, chan);
+			o = params.banks.get_chan(step, chan);
 		}
-		in = rotate_(in, params.pos);
+
+		Model::OutputBuffer temp;
+
+		auto phase = params.pos;
+		auto idx = get_rotator_index(phase);
+
+		for (auto [chan, t] : countzip(temp)) {
+			t = rotate_(in, chan, idx, phase);
+		}
+
+		in = temp;
 	}
 
-	Model::OutputBuffer rotate_(const Model::OutputBuffer &in, float point)
+	uint16_t rotate_(const Model::OutputBuffer &in, uint8_t chan, uint8_t index, float point)
+	{
+		auto idx = Model::NumChans - chan + index;
+		auto idx_next = idx + 1;
+
+		if constexpr (MathTools::is_power_of_2(Model::NumChans)) {
+			idx &= Model::NumChans - 1;
+			idx_next &= Model::NumChans - 1;
+		} else {
+			idx %= Model::NumChans;
+			idx_next %= Model::NumChans;
+		}
+
+		return MathTools::interpolate(in[idx], in[idx_next], point);
+	}
+
+	uint8_t get_rotator_index(float &point)
 	{
 		static constexpr float width = 1.f / (Model::NumChans - 1);
 
 		auto distance = 0u;
-
 		while (point >= width) {
 			point -= width;
 			++distance;
 		}
 
-		point *= Model::NumChans;
-
-		Model::OutputBuffer out;
-
-		for (auto i = 0u; i < Model::NumChans; ++i) {
-			auto idx = (Model::NumChans - i + distance);
-			auto idx_next = idx + 1;
-			if constexpr (MathTools::is_power_of_2(Model::NumChans)) {
-				idx &= Model::NumChans - 1;
-				idx_next &= Model::NumChans - 1;
-			} else {
-				idx %= Model::NumChans;
-				idx_next %= Model::NumChans;
-			}
-			out[i] = MathTools::interpolate(in[idx], in[idx_next], point);
-		}
-
-		return out;
+		point *= Model::NumChans - 1;
+		return distance;
 	}
 };
 
