@@ -37,22 +37,13 @@ struct Quantizer {
 
 		value = note + (value / note_size);
 
-		auto upper = *(std::upper_bound(scale.begin(), scale.end(), value) - 1);
+		value = *(std::upper_bound(scale.begin(), scale.end(), value) - 1);
 
-		return (upper * note_size) + (octave * oct_size);
+		return (value * note_size) + (octave * oct_size);
 	}
 	void load_scale(const Scale &scl)
 	{
 		scale = scl;
-	}
-	void enable(Scale &scl)
-	{
-		load_scale(scl);
-	}
-	void disable()
-	{
-		Scale empty;
-		load_scale(empty);
 	}
 
 private:
