@@ -237,7 +237,7 @@ private:
 	{
 		constexpr auto neg = ChannelValue::from_volts(0.f);
 
-		ChannelValue::type temp = level - neg;
+		auto temp = level - neg;
 
 		auto c = Palette::blue;
 
@@ -246,7 +246,7 @@ private:
 			c = Palette::red;
 		}
 
-		auto phase = (temp / (neg * 2.f));
+		const auto phase = (temp / (neg * 2.f));
 
 		return Palette::crux.blend(c, phase);
 	}
