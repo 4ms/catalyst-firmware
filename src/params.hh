@@ -1,5 +1,4 @@
 #pragma once
-#include "flags.hh"
 #include "pathway.hh"
 #include "quantizer.hh"
 #include "scene.hh"
@@ -12,7 +11,6 @@ namespace Catalyst2
 // Params holds all the modes, settings and parameters
 // Params are set by UI, based on reading of the user input
 struct Params {
-	Flags flags;
 	Banks banks;
 	Pathway pathway;
 	Sequencer seq;
