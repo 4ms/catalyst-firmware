@@ -235,8 +235,20 @@ private:
 
 	Color encoder_blend(uint16_t level)
 	{
-		auto phase = static_cast<uint8_t>(level >> 8);
-		return Palette::red.blend(Palette::yellow, phase);
+		constexpr auto neg = ChannelValue::from_volts(0.f);
+
+		ChannelValue::type temp = level - neg;
+
+		auto c = Palette::blue;
+
+		if (temp < 0) {
+			temp *= -2;
+			c = Palette::red;
+		}
+
+		auto phase = (temp / (neg * 2.f));
+
+		return Palette::crux.blend(c, phase);
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;
