@@ -14,7 +14,6 @@ struct ChannelValue {
 	static constexpr type Max = UINT16_MAX;
 	static constexpr type Min = 0;
 	static constexpr type Range = Max - Min;
-	static constexpr type Center = (Range / 2) + Min;
 
 	static constexpr type from_volts(const float volts)
 	{
@@ -44,7 +43,7 @@ struct Scene {
 	void init()
 	{
 		for (auto &c : chans) {
-			c = ChannelValue::from_volts(2.f);
+			c = ChannelValue::from_volts(0.f);
 		}
 		for (auto &t : types) {
 			t = ChannelType::CV;
@@ -68,24 +67,6 @@ class Banks {
 	std::bitset<Model::NumBanks> edited;
 
 public:
-	// i dont know where to put this...
-	// struct RangeSetting {
-	// 	ChannelValue::type Min;
-	// 	ChannelValue::type Max;
-	// };
-
-	// static constexpr RangeSetting full{ChannelValue::Min, ChannelValue::Max};
-	// static constexpr RangeSetting bip5{ChannelValue::from_volts(-5.f), ChannelValue::from_volts(5.f)};
-	// static constexpr RangeSetting pos5{ChannelValue::from_volts(0.f), ChannelValue::from_volts(5.f)};
-	// static constexpr RangeSetting pos10{ChannelValue::from_volts(0.f), ChannelValue::from_volts(10.f)};
-
-	// static constexpr std::array output_ranges = {
-	// 	full,
-	// 	bip5,
-	// 	pos5,
-	// 	pos10,
-	// };
-
 	void randomize()
 	{
 		auto &b = bank[cur_bank];
