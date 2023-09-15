@@ -101,7 +101,7 @@ void UI::state_macro()
 				[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 		});
 	} else {
-		scene_button_display_nearest();
+		// scene_button_display_nearest();
 
 		controls.for_each_encoder_inc([this, alt](int inc, unsigned chan) {
 			get_scene_context(

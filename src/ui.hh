@@ -57,12 +57,20 @@ public:
 		update_mode();
 	}
 
-	void set_outputs(Model::OutputBuffer &outs)
+	void set_outputs(const Model::OutputBuffer &outs)
 	{
 		outputs.write(outs);
 		if (display_output) {
 			for (auto [chan, val] : countzip(outs)) {
 				controls.set_encoder_led(chan, encoder_blend(val));
+			}
+			auto l = params.pathway.scene_left();
+			auto r = params.pathway.scene_right();
+			if (l == r)
+				controls.set_button_led(l, 1.f);
+			else {
+				controls.set_button_led(l, 1.f - params.pos);
+				controls.set_button_led(r, params.pos);
 			}
 		}
 	}

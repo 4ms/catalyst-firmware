@@ -9,6 +9,7 @@
 #include "muxed_button.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
+#include <cmath>
 #include <optional>
 #include <util/countzip.hh>
 
@@ -108,30 +109,30 @@ public:
 		}
 	}
 
-	void set_button_led(unsigned led, bool on)
-	{
-		if (led >= Board::ButtonLedMap.size())
-			return;
+	// void set_button_led(unsigned led, bool on)
+	// {
+	// 	if (led >= Board::ButtonLedMap.size())
+	// 		return;
 
-		auto bit = Board::ButtonLedMap[led];
-		if (on)
-			button_leds |= (1 << bit);
-		else
-			button_leds &= ~(1 << bit);
-	}
+	// 	auto bit = Board::ButtonLedMap[led];
+	// 	if (on)
+	// 		button_leds |= (1 << bit);
+	// 	else
+	// 		button_leds &= ~(1 << bit);
+	// }
 
-	void set_button_led_masked(uint32_t mask, bool on)
+	void set_button_led(unsigned led, float intensity)
 	{
-		if (on) {
-			button_leds |= mask;
-		} else {
-			button_leds &= ~(mask);
-		}
+		static constexpr std::array<uint8_t, 64> lut = {0, 0, 0, 0, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
+														5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32};
+		intensity = std::clamp<float>(0, .99, intensity);
+		button_led_duty[led] = lut[intensity * 32];
 	}
 
 	void clear_button_leds()
 	{
-		button_leds = 0;
+		for (auto &a : button_led_duty)
+			a = 0;
 	}
 
 	bool get_button_led(unsigned led)
@@ -228,9 +229,22 @@ public:
 
 	void update_muxio()
 	{
+		static uint8_t cnt = 0;
+		auto button_leds = 0u;
+		for (auto x = 0u; x < Model::NumChans; x++) {
+			auto led = button_led_duty[x];
+			if (cnt < led)
+				button_leds |= 1ul << Board::ButtonLedMap[x];
+		}
+
 		auto mux_read = muxio.step(button_leds);
 		if (mux_read.has_value()) {
 			update_buttons(mux_read.value());
+			cnt++;
+			if (cnt >= 32) {
+				cnt = 0;
+				update_buttons(mux_read.value());
+			}
 		}
 	}
 
@@ -266,6 +280,7 @@ private:
 	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
 	uint32_t button_leds = 0;
+	std::array<uint8_t, Model::NumChans> button_led_duty;
 	std::array<Color, Model::NumChans> rgb_leds;
 };
 } // namespace Catalyst2

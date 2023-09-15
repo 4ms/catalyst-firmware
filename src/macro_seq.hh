@@ -70,6 +70,7 @@ private:
 		auto phase = params.pos;
 		phase = params.pathway.adjust_and_scale(phase);
 		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
+		params.pos = phase;
 
 		for (auto [chan, out] : countzip(in)) {
 			const auto a = params.banks.get_chan(left, chan);
