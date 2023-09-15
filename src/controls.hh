@@ -54,6 +54,17 @@ public:
 	MuxedButton mode_switch{3};
 	MuxedButton trig_jack_sense{13};
 
+	void start()
+	{
+		adc_dma.register_callback([this] {
+			for (unsigned i = 0; auto &a : analog)
+				a.add_val(adc_buffer[i++]);
+		});
+		adc_dma.start();
+		if (!led_driver.init())
+			__BKPT();
+	}
+
 	auto &scene_button(unsigned idx)
 	{
 		if (idx >= Model::NumChans)
@@ -140,17 +151,6 @@ public:
 		set_button_led(led, temp);
 	}
 
-	void start()
-	{
-		adc_dma.register_callback([this] {
-			for (unsigned i = 0; auto &a : analog)
-				a.add_val(adc_buffer[i++]);
-		});
-		adc_dma.start();
-		if (!led_driver.init())
-			__BKPT();
-	}
-
 	void clear_encoders_state()
 	{
 		for (auto &x : encoders)
@@ -219,15 +219,18 @@ public:
 		// - update() might interrupt the read-modify-write that happens in set_button_led()
 		// - update_buttons() might interrupt a button being read
 		// - do this routine first for the sake of non-flickering leds
-		auto mux_read = muxio.step(button_leds);
-		if (mux_read.has_value()) {
-			update_buttons(mux_read.value());
-		}
-
 		trig_jack.update();
 		reset_jack.update();
 		for (auto &enc : encoders) {
 			enc.update();
+		}
+	}
+
+	void update_muxio()
+	{
+		auto mux_read = muxio.step(button_leds);
+		if (mux_read.has_value()) {
+			update_buttons(mux_read.value());
 		}
 	}
 

@@ -33,11 +33,13 @@ public:
 		: params{params}
 	{
 		encoder_led_update_task.init(Board::encoder_led_task, [&]() { controls.write_to_encoder_leds(); });
+		muxio_update_task.init(Board::muxio_conf, [&]() { controls.update_muxio(); });
 	}
 
 	void start()
 	{
 		encoder_led_update_task.start();
+		muxio_update_task.start();
 		controls.start();
 		HAL_Delay(2);
 		std::srand(controls.read_slider() + controls.read_cv());
@@ -163,7 +165,7 @@ private:
 
 	void scene_button_display_nearest()
 	{
-		get_scene_context([&](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
+		get_scene_context([&c = controls](Pathway::SceneId scene) { c.set_button_led(scene, true); });
 	}
 
 	// encoder display funcs
@@ -252,6 +254,7 @@ private:
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;
+	mdrivlib::Timekeeper muxio_update_task;
 };
 
 } // namespace Catalyst2

@@ -146,6 +146,14 @@ const TimekeeperConfig encoder_led_task{
 	.priority2 = 0,
 };
 
+constexpr unsigned muxio_update_hz = 16000;
+const TimekeeperConfig muxio_conf{
+	.TIMx = TIM5,
+	.period_ns = TimekeeperConfig::Hz(muxio_update_hz),
+	.priority1 = 0,
+	.priority2 = 2,
+};
+
 ///////////////// SRAM size
 // is there somewhere this is already defined?
 constexpr unsigned sram_capacity = 96 * 1024;
