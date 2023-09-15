@@ -109,18 +109,6 @@ public:
 		}
 	}
 
-	// void set_button_led(unsigned led, bool on)
-	// {
-	// 	if (led >= Board::ButtonLedMap.size())
-	// 		return;
-
-	// 	auto bit = Board::ButtonLedMap[led];
-	// 	if (on)
-	// 		button_leds |= (1 << bit);
-	// 	else
-	// 		button_leds &= ~(1 << bit);
-	// }
-
 	void set_button_led(unsigned led, float intensity)
 	{
 		static constexpr std::array<uint8_t, 64> lut = {0, 0, 0, 0, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
