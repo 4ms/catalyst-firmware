@@ -138,12 +138,12 @@ const TimekeeperConfig cv_stream_conf{
 	.priority2 = 2,
 };
 
-constexpr unsigned encoder_led_hz = 120;
+constexpr unsigned encoder_led_hz = 60;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
 	.period_ns = TimekeeperConfig::Hz(encoder_led_hz),
 	.priority1 = 2,
-	.priority2 = 0,
+	.priority2 = 2,
 };
 
 constexpr unsigned muxio_update_hz = 16000;
