@@ -51,6 +51,7 @@ Catalyst2::System _init;
 // set_state()!
 
 // TODO: make color fades appear more linear
+volatile uint32_t time;
 
 void main()
 {
@@ -65,9 +66,11 @@ void main()
 	MacroSeq macroseq{params};
 
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
+		auto time_now = HAL_GetTick();
 		ui.update();
 		auto out = macroseq.update();
 		ui.set_outputs(out);
+		time = HAL_GetTick() - time_now;
 	});
 
 	ui.start();

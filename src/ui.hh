@@ -27,12 +27,16 @@ class UI {
 	Recorder recorder;
 	Outputs outputs;
 	bool display_output = false;
+	bool encoder_leds_ready = false;
 
 public:
 	UI(Params &params)
 		: params{params}
 	{
-		encoder_led_update_task.init(Board::encoder_led_task, [&]() { controls.write_to_encoder_leds(); });
+		encoder_led_update_task.init(Board::encoder_led_task, [&]() {
+			controls.write_to_encoder_leds();
+			encoder_leds_ready = true;
+		});
 		muxio_update_task.init(Board::muxio_conf, [&]() { controls.update_muxio(); });
 	}
 
@@ -60,7 +64,8 @@ public:
 	void set_outputs(const Model::OutputBuffer &outs)
 	{
 		outputs.write(outs);
-		if (display_output) {
+		if (encoder_leds_ready && display_output) {
+			encoder_leds_ready = false;
 			for (auto [chan, val] : countzip(outs)) {
 				controls.set_encoder_led(chan, encoder_blend(val));
 			}
