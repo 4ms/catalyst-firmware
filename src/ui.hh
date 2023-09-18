@@ -79,6 +79,10 @@ public:
 				controls.set_button_led(r, params.pos);
 			}
 		}
+
+		if (state == State::Main && !params.override_output.has_value()) {
+			// yea/
+		}
 	}
 
 private:
@@ -97,9 +101,9 @@ private:
 
 	void update_slider_and_cv()
 	{
-		const auto slider = controls.read_slider();
-		const auto cv = controls.read_cv();
-		params.pos = recorder.update(slider + cv) / 4096.f;
+		auto temp = controls.read_slider();
+		temp += controls.read_cv();
+		params.pos = recorder.update(temp) / 4096.f;
 	}
 
 	void update_switch()
@@ -114,7 +118,6 @@ private:
 
 	void update_trig_jack()
 	{
-
 		const auto macro = params.mode == Params::Mode::Macro;
 
 		if (controls.trig_jack_sense.is_high()) {
@@ -158,17 +161,6 @@ private:
 		// recorder.cue_recording();
 	}
 
-	// what should this be named?
-	void get_scene_context(auto f)
-	{
-		if (params.pathway.on_a_scene()) {
-			f(params.pathway.scene_nearest());
-		} else {
-			f(params.pathway.scene_left());
-			f(params.pathway.scene_right());
-		}
-	}
-
 	void scene_button_display_recording()
 	{
 		auto led = static_cast<unsigned>(recorder.capacity_filled() * 8u);
@@ -179,7 +171,8 @@ private:
 
 	void scene_button_display_nearest()
 	{
-		get_scene_context([&c = controls](Pathway::SceneId scene) { c.set_button_led(scene, true); });
+		if (params.pathway.on_a_scene())
+			controls.set_button_led(params.pathway.scene_nearest(), 1.f);
 	}
 
 	// encoder display funcs

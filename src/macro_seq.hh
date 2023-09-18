@@ -67,8 +67,8 @@ private:
 		const auto left = params.pathway.scene_left();
 		const auto right = params.pathway.scene_right();
 
-		auto phase = params.pos;
-		phase = params.pathway.adjust_and_scale(phase);
+		auto phase = params.pos / params.pathway.get_scene_width();
+		phase -= static_cast<unsigned>(phase);
 		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
 		params.pos = phase;
 
@@ -87,30 +87,17 @@ private:
 
 		Model::OutputBuffer temp;
 
-		auto phase = params.pos;
-		auto idx = get_rotator_index(phase);
+		auto phase = params.pos / (1.f / (Model::NumChans - 1));
+		const auto middle = static_cast<unsigned>(phase) & (Model::NumChans - 1);
+		std::rotate(in.begin(), &in[Model::NumChans - middle - 1], in.end());
+		phase -= static_cast<unsigned>(phase);
 		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
-		std::rotate(in.begin(), &in[Model::NumChans - idx - 1], in.end());
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			temp[i] = MathTools::interpolate(in[(i + 1) & (Model::NumChans - 1)], in[i], phase);
 		}
 
 		in = temp;
-	}
-
-	uint8_t get_rotator_index(float &point)
-	{
-		static constexpr float width = 1.f / (Model::NumChans - 1);
-
-		auto distance = 0u;
-		while (point >= width) {
-			point -= width;
-			++distance;
-		}
-
-		point *= Model::NumChans - 1;
-		return distance;
 	}
 };
 
