@@ -98,13 +98,9 @@ public:
 		return path.size();
 	}
 
-	// needs a better name
-	float adjust_and_scale(float point) const
+	float get_scene_width() const
 	{
-		while (point >= scene_width)
-			point -= scene_width;
-		point *= size() - 1;
-		return point;
+		return scene_width;
 	}
 
 private:
