@@ -89,28 +89,14 @@ private:
 
 		auto phase = params.pos;
 		auto idx = get_rotator_index(phase);
+		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
+		std::rotate(in.begin(), &in[Model::NumChans - idx - 1], in.end());
 
-		for (auto [chan, t] : countzip(temp)) {
-			t = rotate_(in, chan, idx, phase);
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			temp[i] = MathTools::interpolate(in[(i + 1) & (Model::NumChans - 1)], in[i], phase);
 		}
 
 		in = temp;
-	}
-
-	uint16_t rotate_(const Model::OutputBuffer &in, uint8_t chan, uint8_t index, float point)
-	{
-		auto idx = Model::NumChans - chan + index;
-		auto idx_next = idx + 1;
-
-		if constexpr (MathTools::is_power_of_2(Model::NumChans)) {
-			idx &= Model::NumChans - 1;
-			idx_next &= Model::NumChans - 1;
-		} else {
-			idx %= Model::NumChans;
-			idx_next %= Model::NumChans;
-		}
-
-		return MathTools::interpolate(in[idx], in[idx_next], point);
 	}
 
 	uint8_t get_rotator_index(float &point)
