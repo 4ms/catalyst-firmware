@@ -27,7 +27,7 @@ class UI {
 	Recorder recorder;
 	Outputs outputs;
 	bool display_output = false;
-	bool encoder_leds_ready = false;
+	bool encoder_leds_ready_flag = false;
 
 public:
 	UI(Params &params)
@@ -35,7 +35,7 @@ public:
 	{
 		encoder_led_update_task.init(Board::encoder_led_task, [&]() {
 			controls.write_to_encoder_leds();
-			encoder_leds_ready = true;
+			encoder_leds_ready_flag = true;
 		});
 		muxio_update_task.init(Board::muxio_conf, [&]() { controls.update_muxio(); });
 	}
@@ -64,10 +64,11 @@ public:
 	void set_outputs(const Model::OutputBuffer &outs)
 	{
 		outputs.write(outs);
-		if (encoder_leds_ready && display_output) {
-			encoder_leds_ready = false;
-			for (auto [chan, val] : countzip(outs)) {
-				controls.set_encoder_led(chan, encoder_blend(val));
+		if (display_output) {
+			if (encoder_leds_ready()) {
+				for (auto [chan, val] : countzip(outs)) {
+					controls.set_encoder_led(chan, encoder_blend(val));
+				}
 			}
 			auto l = params.pathway.scene_left();
 			auto r = params.pathway.scene_right();
@@ -185,6 +186,8 @@ private:
 	void encoder_display_pathway_size()
 	{
 		display_output = false;
+		if (!encoder_leds_ready())
+			return;
 		auto r = params.pathway.size();
 		auto phase = 1.f / (params.pathway.MaxPoints / static_cast<float>(r));
 
@@ -197,6 +200,8 @@ private:
 	void encoder_display_scene(Pathway::SceneId scene)
 	{
 		display_output = false;
+		if (!encoder_leds_ready())
+			return;
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			auto temp = params.banks.get_chan(scene, i);
 			controls.set_encoder_led(i, encoder_blend(temp));
@@ -206,6 +211,8 @@ private:
 	void encoder_display_sequence_length()
 	{
 		display_output = false;
+		if (!encoder_leds_ready())
+			return;
 		auto chan = params.seq.get_sel_chan();
 		auto length = params.seq.get_length(chan);
 		auto offset = params.seq.get_start_offset(chan);
@@ -217,6 +224,9 @@ private:
 	void encoder_display_sequence()
 	{
 		display_output = false;
+		if (!encoder_leds_ready())
+			return;
+
 		const auto chan = params.seq.get_sel_chan();
 		const auto cur_step = params.seq.get_step(chan);
 		const auto length = params.seq.get_length(chan);
@@ -236,6 +246,15 @@ private:
 	}
 
 	// encoder display helper funcs
+	bool encoder_leds_ready()
+	{
+		if (!encoder_leds_ready_flag)
+			return false;
+
+		encoder_leds_ready_flag = false;
+		return true;
+	}
+
 	void encoder_display_count(Color c, unsigned count, unsigned offset = 0)
 	{
 		if (count > Model::NumChans)
