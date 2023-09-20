@@ -166,17 +166,12 @@ void UI::state_bank()
 	display_output = false;
 	params.override_output = std::nullopt;
 
-	for (auto x = 0u; x < Model::NumBanks; ++x) {
-		auto edt = params.banks.is_edited(x);
-		Color c = Palette::off;
-		if (edt)
-			c = Palette::tangerine;
+	for (auto x = 0u; x < Model::NumChans; ++x) {
+		auto c = params.banks.is_chan_type_gate(x) ? Color{0, 0, 2} : Palette::crux;
 		controls.set_encoder_led(x, c);
 
-		auto inc = controls.encoders[x].read();
-
-		if (inc < 0)
-			params.banks.reset_bank(x);
+		const auto inc = controls.encoders[x].read();
+		params.banks.adj_chan_type(x, inc);
 
 		if (controls.scene_buttons[x].is_high())
 			params.banks.sel_bank(x);

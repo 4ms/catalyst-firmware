@@ -51,6 +51,47 @@ Catalyst2::System _init;
 // set_state()!
 
 // TODO: make color fades appear more linear
+
+// explore sequencing banks.
+// start with bank 1 but allow increasing to all 8 banks
+// handle changin bank length and startpoint while seq is running into next banks
+// look into dimming leds
+
+// better way to delete banks
+
+// skip or mute steps in seq
+
+// adding scenes to pathway from other banks?
+// each bank should have a path. You just stay in a bank
+//  OR:
+// Idea:
+// Bank+scene button is like paging through bank (preview/view a bank, doesn't changes outputs or current scene)
+// Press bank + scene, then press a scene button and that scene&bank goes active to the outputs
+// or any A+scene, B+scene uses the current "bank"
+// So-- it's not one path per bank , so we need some way to save/recall paths. Maybe Latch button is actually Path?
+//
+// Idea: (ties into above)
+// "Load" or "Slot" (big bank). There are 8 of them, only one is availble at a time
+// Alt+Bank + scene button loads it.
+// It contains the jack gate/cv types (global to the entire Slot)
+// and the voltage range for jacks
+// and one pathway
+// and one sequence (lengths, start pos, for each channel, and also bank start/pos)
+
+// copy and pasting scenes.
+
+// scene random amount 0% not working fully
+
+// interp array (utils)
+
+// Idea:
+// a channel can only be a gate or a cv, not both (per bank)
+//
+// Idea:
+// globally, an output jack can be cv or gate. the value in the scenes get translated to voltage or pulse width
+
+// red to blue with cv
+// green for gate?
 volatile uint32_t time;
 
 void main()

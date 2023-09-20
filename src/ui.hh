@@ -67,7 +67,12 @@ public:
 		if (display_output) {
 			if (encoder_leds_ready()) {
 				for (auto [chan, val] : countzip(outs)) {
-					controls.set_encoder_led(chan, encoder_blend(val));
+					Color c;
+					if (params.banks.is_chan_type_gate(chan))
+						c = encoder_gate_blend(val);
+					else
+						c = encoder_cv_blend(val);
+					controls.set_encoder_led(chan, c);
 				}
 			}
 			auto l = params.pathway.scene_left();
@@ -195,9 +200,14 @@ private:
 		display_output = false;
 		if (!encoder_leds_ready())
 			return;
-		for (auto i = 0u; i < Model::NumChans; i++) {
-			auto temp = params.banks.get_chan(scene, i);
-			controls.set_encoder_led(i, encoder_blend(temp));
+		for (auto chan = 0u; chan < Model::NumChans; chan++) {
+			auto temp = params.banks.get_chan(scene, chan);
+			Color c;
+			if (params.banks.is_chan_type_gate(chan))
+				c = encoder_gate_blend(temp);
+			else
+				c = encoder_cv_blend(temp);
+			controls.set_encoder_led(chan, c);
 		}
 	}
 
@@ -231,7 +241,7 @@ private:
 				controls.set_encoder_led(i, Palette::magenta);
 			} else {
 				const auto level = params.banks.get_chan(i, chan);
-				controls.set_encoder_led(i, encoder_blend(level));
+				controls.set_encoder_led(i, encoder_cv_blend(level));
 			}
 		}
 		for (auto x = offset; x < Model::NumChans - length + offset; x++)
@@ -260,7 +270,7 @@ private:
 			controls.set_encoder_led((count + i + offset) & 7, Palette::off);
 	}
 
-	Color encoder_blend(uint16_t level)
+	Color encoder_cv_blend(uint16_t level)
 	{
 		constexpr auto neg = ChannelValue::from_volts(0.f);
 
@@ -276,6 +286,11 @@ private:
 		const auto phase = (temp / (neg * 2.f));
 
 		return Palette::crux.blend(c, phase);
+	}
+
+	Color encoder_gate_blend(uint16_t level)
+	{
+		return level == ChannelValue::from_volts(5.0) ? Palette::green : Color{0, 0, 2};
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;

@@ -29,8 +29,52 @@ constexpr float slope_adj(float in, float slope, float min, float max)
 namespace Catalyst2
 {
 
+class Trigger {
+	static constexpr uint8_t trig_length = 20;
+	uint8_t trig_time = 0;
+	bool is_trigged = false;
+
+public:
+	void trig(uint8_t time_now)
+	{
+		if (is_trigged)
+			return;
+
+		trig_time = time_now;
+		is_trigged = true;
+	}
+	bool get(uint8_t time_now)
+	{
+		if (!is_trigged)
+			return false;
+		uint8_t elapsed = time_now - trig_time;
+		if (elapsed >= trig_length) {
+			is_trigged = false;
+			return false;
+		}
+
+		return true;
+	}
+};
+
+class Tick {
+	uint8_t c = 0;
+
+public:
+	void Update()
+	{
+		c++; // haha
+	}
+	uint8_t get()
+	{
+		return c;
+	}
+};
+
 class MacroSeq {
 	Params &params;
+	Tick tick;
+	std::array<Trigger, Model::NumChans> trigger;
 
 public:
 	MacroSeq(Params &params)
@@ -39,6 +83,8 @@ public:
 
 	auto update()
 	{
+		tick.Update();
+
 		Model::OutputBuffer buf;
 
 		params.pathway.update(params.pos);
@@ -72,10 +118,31 @@ private:
 		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
 		params.pos = phase;
 
+		const auto time_now = tick.get();
+
+		static Pathway::SceneId last_scene_on = Model::NumScenes;
+		const Pathway::SceneId current_scene =
+			params.pathway.on_a_scene() ? params.pathway.scene_nearest() : Model::NumScenes;
+		bool do_trigs = false;
+		if (current_scene != last_scene_on) {
+			last_scene_on = current_scene;
+			if (current_scene < Model::NumScenes)
+				do_trigs = true;
+		}
+
 		for (auto [chan, out] : countzip(in)) {
-			const auto a = params.banks.get_chan(left, chan);
-			const auto b = params.banks.get_chan(right, chan);
-			out = MathTools::interpolate(a, b, phase);
+			if (params.banks.is_chan_type_gate(chan)) {
+				if (do_trigs && params.banks.get_chan(current_scene, chan) == ChannelValue::from_volts(5.f)) {
+					trigger[chan].trig(time_now);
+				}
+
+				out = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : ChannelValue::from_volts(0.f);
+
+			} else {
+				const auto a = params.banks.get_chan(left, chan);
+				const auto b = params.banks.get_chan(right, chan);
+				out = MathTools::interpolate(a, b, phase);
+			}
 		}
 	}
 	void seq(Model::OutputBuffer &in)
