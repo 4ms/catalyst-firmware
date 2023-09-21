@@ -9,21 +9,25 @@
 namespace Catalyst2
 {
 
-struct ChannelValue {
-	using type = int32_t;
-	static constexpr type Max = UINT16_MAX;
-	static constexpr type Min = 0;
-	static constexpr type Range = Max - Min;
+namespace ChannelValue
+{
+using type = int32_t;
 
-	static constexpr type from_volts(const float volts)
-	{
-		auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
-		return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
-	}
+static constexpr type Max = UINT16_MAX;
+static constexpr type Min = 0;
+static constexpr type Range = Max - Min;
 
-	static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
-	static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
-};
+static constexpr type from_volts(const float volts)
+{
+	auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
+	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
+}
+
+static constexpr type Gate = from_volts(5.f);
+
+static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
+static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
+} // namespace ChannelValue
 
 struct Scene {
 	std::array<ChannelValue::type, Model::NumChans> chans;
@@ -55,10 +59,14 @@ class Banks {
 	using BankArray = std::array<Bank, Model::NumBanks>;
 	using IsGate = std::bitset<Model::NumChans>;
 	BankArray bank;
-	uint8_t cur_bank{0};
+	const uint8_t &cur_bank;
 	std::array<IsGate, Model::NumBanks> is_gate;
 
 public:
+	Banks(uint8_t &b)
+		: cur_bank{b}
+	{}
+
 	void randomize()
 	{
 		for (auto &s : bank[cur_bank].scene) {
@@ -92,19 +100,6 @@ public:
 	void set_scene_random_amount(unsigned scene, float amount)
 	{
 		bank[cur_bank].scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
-	}
-
-	void sel_bank(unsigned bank)
-	{
-		if (bank >= Model::NumBanks)
-			return;
-
-		cur_bank = bank;
-	}
-
-	auto get_sel_bank() const
-	{
-		return cur_bank;
 	}
 
 	ChannelValue::type get_chan(unsigned scene, unsigned chan) const
