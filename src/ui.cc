@@ -116,6 +116,7 @@ void UI::state_settings()
 {
 	display_output = false;
 	controls.set_all_encoder_leds(Palette::off);
+	const auto alt = controls.alt_button.is_high();
 
 	// morph step
 	controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
@@ -123,7 +124,11 @@ void UI::state_settings()
 	params.morph_step += (1.f / 100.f) * inc;
 	params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
 
-	// TODO: bounce?
+	// bpm
+	auto flipper = params.seq.get_clock();
+	controls.set_encoder_led(2, flipper ? Palette::off : Palette::orange);
+	inc = controls.encoders[2].read();
+	intclock.bpm_inc(inc, alt);
 
 	// random amount
 	auto scene = params.pathway.scene_nearest();
@@ -167,17 +172,19 @@ void UI::state_bank()
 	params.override_output = std::nullopt;
 
 	for (auto x = 0u; x < Model::NumChans; ++x) {
-		auto c = params.banks.is_chan_type_gate(x) ? Color{0, 0, 2} : Palette::crux;
+		auto c = params.banks.is_chan_type_gate(x) ? Color{0, 0, 2} : Color{1, 0, 0};
 		controls.set_encoder_led(x, c);
 
 		const auto inc = controls.encoders[x].read();
 		params.banks.adj_chan_type(x, inc);
 
-		if (controls.scene_buttons[x].is_high())
-			params.banks.sel_bank(x);
+		if (controls.scene_buttons[x].is_high()) {
+			params.current_bank = x;
+			params.pathway.refresh();
+		}
 	}
 
-	controls.set_button_led(params.banks.get_sel_bank(), true);
+	controls.set_button_led(params.current_bank, true);
 }
 
 void UI::state_seq_ab()

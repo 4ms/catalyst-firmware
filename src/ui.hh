@@ -285,7 +285,7 @@ private:
 
 		const auto phase = (temp / (neg * 2.f));
 
-		return Palette::crux.blend(c, phase);
+		return Palette::off.blend(c, phase);
 	}
 
 	Color encoder_gate_blend(uint16_t level)

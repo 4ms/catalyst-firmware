@@ -104,9 +104,20 @@ public:
 private:
 	void macro(auto &in)
 	{
+		static auto do_trigs = false;
+		const auto time_now = tick.get();
+
 		if (params.override_output.has_value()) {
-			for (auto [chan, out] : countzip(in))
-				out = params.banks.get_chan(params.override_output.value(), chan);
+			for (auto [chan, out] : countzip(in)) {
+				if (params.banks.is_chan_type_gate(chan)) {
+					if (do_trigs)
+						trigger[chan].trig(time_now);
+					out = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : ChannelValue::from_volts(0.f);
+				} else {
+					out = params.banks.get_chan(params.override_output.value(), chan);
+				}
+			}
+			do_trigs = false;
 			return;
 		}
 
@@ -118,12 +129,10 @@ private:
 		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
 		params.pos = phase;
 
-		const auto time_now = tick.get();
-
 		static Pathway::SceneId last_scene_on = Model::NumScenes;
 		const Pathway::SceneId current_scene =
 			params.pathway.on_a_scene() ? params.pathway.scene_nearest() : Model::NumScenes;
-		bool do_trigs = false;
+		do_trigs = false;
 		if (current_scene != last_scene_on) {
 			last_scene_on = current_scene;
 			if (current_scene < Model::NumScenes)
@@ -144,12 +153,29 @@ private:
 				out = MathTools::interpolate(a, b, phase);
 			}
 		}
+
+		do_trigs = true;
 	}
 	void seq(Model::OutputBuffer &in)
 	{
+		static auto prev_ = false;
+		auto cur = params.seq.get_clock();
+		bool do_trigs = false;
+		if (prev_ != cur) {
+			prev_ = cur;
+			do_trigs = true;
+		}
+		const auto time_now = tick.get();
+
 		for (auto [chan, o] : countzip(in)) {
 			const auto step = params.seq.get_step(chan);
-			o = params.banks.get_chan(step, chan);
+			if (params.banks.is_chan_type_gate(chan)) {
+				if (do_trigs && params.banks.get_chan(step, chan) == ChannelValue::from_volts(5.f))
+					trigger[chan].trig(time_now);
+				o = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : ChannelValue::from_volts(0.f);
+			} else {
+				o = params.banks.get_chan(step, chan);
+			}
 		}
 
 		Model::OutputBuffer temp;
