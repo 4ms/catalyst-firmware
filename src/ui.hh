@@ -241,7 +241,10 @@ private:
 				controls.set_encoder_led(i, Palette::magenta);
 			} else {
 				const auto level = params.banks.get_chan(i, chan);
-				controls.set_encoder_led(i, encoder_cv_blend(level));
+				if (params.banks.is_chan_type_gate(chan))
+					controls.set_encoder_led(i, encoder_gate_blend(level));
+				else
+					controls.set_encoder_led(i, encoder_cv_blend(level));
 			}
 		}
 		for (auto x = offset; x < Model::NumChans - length + offset; x++)
@@ -290,7 +293,7 @@ private:
 
 	Color encoder_gate_blend(uint16_t level)
 	{
-		return level == ChannelValue::from_volts(5.0) ? Palette::green : Color{0, 0, 2};
+		return level > ChannelValue::from_volts(0.0) ? Palette::green : Color{0, 0, 2};
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;

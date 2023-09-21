@@ -62,10 +62,22 @@ class Banks {
 	const uint8_t &cur_bank;
 	std::array<IsGate, Model::NumBanks> is_gate;
 
+	Scene clipboard;
+
 public:
 	Banks(uint8_t &b)
 		: cur_bank{b}
 	{}
+
+	void copy_scene_to_clipboard(uint8_t scene)
+	{
+		clipboard = bank[cur_bank].scene[scene];
+	}
+
+	void paste_to_scene(uint8_t scene)
+	{
+		bank[cur_bank].scene[scene] = clipboard;
+	}
 
 	void randomize()
 	{

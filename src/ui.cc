@@ -95,12 +95,23 @@ void UI::state_macro()
 		// set each pressed led
 		controls.for_each_scene_button_high([this](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
 
+		// copy paste
+		if (controls.latch_button.just_went_high()) {
+			params.banks.copy_scene_to_clipboard(params.override_output.value());
+		} else if (controls.latch_button.is_high()) {
+			if (controls.scene_buttons[params.override_output.value()].just_went_high())
+				params.banks.paste_to_scene(params.override_output.value());
+		}
+
 		// encoders blah blah
 		controls.for_each_encoder_inc([this, alt](int inc, unsigned chan) {
 			controls.for_each_scene_button_high(
 				[this, inc, chan, alt](Pathway::SceneId scene) { params.banks.adj_chan(scene, chan, inc, alt); });
 		});
 	} else {
+		if (controls.latch_button.just_went_high())
+			; // necessary for copy paste
+
 		controls.for_each_encoder_inc([this, alt](int inc, unsigned chan) {
 			if (params.pathway.on_a_scene())
 				params.banks.adj_chan(params.pathway.scene_nearest(), chan, inc, alt);
@@ -255,6 +266,7 @@ void UI::state_macro_ab()
 	// clear recording
 	if (controls.play_button.just_went_high()) {
 		recorder.stop();
+		recorder.clear_recording();
 		return;
 	}
 
