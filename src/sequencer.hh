@@ -47,8 +47,15 @@ struct Sequencer {
 		return cur_chan;
 	}
 
+	bool get_clock() const
+	{
+		return clock_;
+	}
+
 	void step()
 	{
+		clock_ = !clock_;
+
 		for (auto &s : sequence) {
 			s.counter += 1;
 			if (s.counter >= s.length + 1)
@@ -69,7 +76,7 @@ struct Sequencer {
 	{
 		int temp = sequence[chan].length;
 
-		adjust(temp, dir);
+		temp = adjust(temp, dir);
 
 		sequence[chan].length = temp;
 	}
@@ -78,7 +85,7 @@ struct Sequencer {
 	{
 		int temp = sequence[chan].start_offset;
 
-		adjust(temp, dir);
+		temp = adjust(temp, dir);
 
 		sequence[chan].start_offset = temp;
 	}
@@ -109,7 +116,9 @@ struct Sequencer {
 	}
 
 private:
-	void adjust(int &val, int dir)
+	bool clock_ = false;
+
+	int adjust(int val, int dir)
 	{
 		val += dir;
 
@@ -117,6 +126,8 @@ private:
 			val = 0;
 		else if (val >= 8)
 			val = 7;
+
+		return val;
 	}
 };
 
