@@ -31,12 +31,16 @@ public:
 	}
 	void set_bpm(unsigned bpm)
 	{
-		this->bpm = std::clamp(bpm, 30u, 300u);
+		this->bpm = std::clamp(bpm, 30u, 1200u);
 		ticks_per_pulse = static_cast<unsigned>(updates_per_minute / bpm);
 	}
-	void bpm_inc(int by = 1)
+	void bpm_inc(int by, bool fine = false)
 	{
-		set_bpm(bpm + by);
+		auto inc = fine ? 1 : 10;
+		if (by > 0)
+			set_bpm(bpm + inc);
+		else if (by < 0)
+			set_bpm(bpm - inc);
 	}
 
 private:
