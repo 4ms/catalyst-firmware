@@ -293,7 +293,13 @@ private:
 
 	Color encoder_gate_blend(uint16_t level)
 	{
-		return level > ChannelValue::from_volts(0.0) ? Palette::green : Color{0, 0, 2};
+		if (level == ChannelValue::from_volts(0.1f))
+			return Color{0, 0, 2};
+
+		if (level == ChannelValue::from_volts(5.f))
+			return Palette::green;
+
+		return Palette::off;
 	}
 
 	mdrivlib::Timekeeper encoder_led_update_task;

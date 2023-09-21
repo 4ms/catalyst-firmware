@@ -161,7 +161,7 @@ public:
 		if (is_gate[cur_bank][chan]) {
 
 			if (dir > 0)
-				out = ChannelValue::from_volts(5.0);
+				out = ChannelValue::from_volts(.1f);
 			else if (dir < 0)
 				out = ChannelValue::from_volts(0.0);
 		} else {

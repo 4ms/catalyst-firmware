@@ -110,7 +110,8 @@ private:
 		if (params.override_output.has_value()) {
 			for (auto [chan, out] : countzip(in)) {
 				if (params.banks.is_chan_type_gate(chan)) {
-					if (do_trigs)
+					auto is_primed = params.banks.get_chan(params.override_output.value(), chan);
+					if (do_trigs && is_primed == ChannelValue::from_volts(.1f))
 						trigger[chan].trig(time_now);
 					out = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : ChannelValue::from_volts(0.f);
 				} else {
@@ -141,11 +142,12 @@ private:
 
 		for (auto [chan, out] : countzip(in)) {
 			if (params.banks.is_chan_type_gate(chan)) {
-				if (do_trigs && params.banks.get_chan(current_scene, chan) == ChannelValue::from_volts(5.f)) {
+				auto is_primed = params.banks.get_chan(current_scene, chan);
+				if (do_trigs && is_primed == ChannelValue::from_volts(.1f)) {
 					trigger[chan].trig(time_now);
 				}
 
-				out = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : ChannelValue::from_volts(0.f);
+				out = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : is_primed;
 
 			} else {
 				const auto a = params.banks.get_chan(left, chan);
@@ -170,9 +172,10 @@ private:
 		for (auto [chan, o] : countzip(in)) {
 			const auto step = params.seq.get_step(chan);
 			if (params.banks.is_chan_type_gate(chan)) {
-				if (do_trigs && params.banks.get_chan(step, chan) == ChannelValue::from_volts(5.f))
+				auto is_primed = params.banks.get_chan(step, chan);
+				if (do_trigs && is_primed == ChannelValue::from_volts(.1f))
 					trigger[chan].trig(time_now);
-				o = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : ChannelValue::from_volts(0.f);
+				o = trigger[chan].get(time_now) ? ChannelValue::from_volts(5.f) : is_primed;
 			} else {
 				o = params.banks.get_chan(step, chan);
 			}
