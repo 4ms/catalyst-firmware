@@ -111,10 +111,15 @@ public:
 
 	void set_button_led(unsigned led, float intensity)
 	{
-		static constexpr std::array<uint8_t, 64> lut = {0, 0, 0, 0, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
+		static constexpr std::array<uint8_t, 32> lut = {0, 0, 0, 0, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
 														5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32};
 		intensity = std::clamp<float>(0, .99, intensity);
 		button_led_duty[led] = lut[intensity * 32];
+	}
+
+	void set_button_led(unsigned led, bool on)
+	{
+		button_led_duty[led] = on ? 32 : 0;
 	}
 
 	void clear_button_leds()
