@@ -23,7 +23,9 @@ static constexpr type from_volts(const float volts)
 	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
 }
 
-static constexpr type Gate = from_volts(5.f);
+static constexpr type GateHigh = from_volts(5.f);
+static constexpr type GateSetFlag = from_volts(.1f);
+static constexpr type GateOffFlag = from_volts(.0f);
 
 static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
 static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
@@ -69,6 +71,7 @@ public:
 		: cur_bank{b}
 	{}
 
+	// for copy pasting scenes
 	void copy_scene_to_clipboard(uint8_t scene)
 	{
 		clipboard = bank[cur_bank].scene[scene];
@@ -77,6 +80,21 @@ public:
 	void paste_to_scene(uint8_t scene)
 	{
 		bank[cur_bank].scene[scene] = clipboard;
+	}
+
+	// for copy pasting channels (as a sequencer)
+	void copy_channel_to_clipboard(uint8_t chan)
+	{
+		for (auto i = 0u; i < Model::NumScenes; i++) {
+			clipboard.chans[i] = bank[cur_bank].scene[i].chans[chan];
+		}
+	}
+
+	void paste_to_channel(uint8_t chan)
+	{
+		for (auto i = 0u; i < Model::NumScenes; i++) {
+			bank[cur_bank].scene[i].chans[chan] = clipboard.chans[i];
+		}
 	}
 
 	void randomize()
@@ -161,9 +179,9 @@ public:
 		if (is_gate[cur_bank][chan]) {
 
 			if (dir > 0)
-				out = ChannelValue::from_volts(.1f);
+				out = ChannelValue::GateSetFlag;
 			else if (dir < 0)
-				out = ChannelValue::from_volts(0.0);
+				out = ChannelValue::GateOffFlag;
 		} else {
 			auto inc = ChannelValue::inc_step;
 
