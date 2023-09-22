@@ -1,14 +1,10 @@
 #include "ui.hh"
-#include "conf/quantizer_scales.hh"
 
 namespace Catalyst2
 {
 
 void UI::update_mode()
 {
-	controls.clear_button_leds();
-	display_output = true;
-
 	switch (state) {
 		case State::Settings:
 			state_settings();
@@ -59,16 +55,36 @@ void UI::update_mode()
 
 void UI::state_seq()
 {
-	controls.for_each_scene_butt_released([this](unsigned chan) { params.seq.sel_chan(chan); });
+	controls.for_each_scene_butt_released([this](unsigned chan) {
+		params.seq.sel_chan(chan);
+		if (controls.latch_button.is_high()) {
+			if (!params.seq.is_chan_selected())
+				params.seq.sel_chan(chan);
+		}
+	});
 	auto alt = controls.alt_button.is_high();
 
 	if (params.seq.is_chan_selected()) {
-		encoder_display_sequence();
 		controls.for_each_encoder_inc([this, alt](int inc, unsigned scene) {
 			params.banks.adj_chan(scene, params.seq.get_sel_chan(), inc, alt);
 		});
 	} else {
-		;
+		controls.for_each_encoder_inc([this, alt](int inc, unsigned scene) {
+			; // clear encoder states
+		});
+	}
+	if (params.override_output.has_value()) {
+
+		if (controls.latch_button.just_went_high()) {
+			params.banks.copy_channel_to_clipboard(params.override_output.value());
+			params.seq.sel_chan(Model::NumChans);
+		} else if (controls.latch_button.is_high()) {
+			if (controls.scene_buttons[params.override_output.value()].just_went_high())
+				params.banks.paste_to_channel(params.override_output.value());
+		}
+	} else {
+		if (controls.latch_button.just_went_high())
+			; // necessary for copy paste
 	}
 }
 
@@ -83,18 +99,7 @@ void UI::state_macro()
 			recorder.reset();
 	}
 
-	if (recorder.is_recordering()) {
-		scene_button_display_recording();
-		return;
-	}
-
 	if (params.override_output.has_value()) {
-		// show the most recently pressed scene
-		encoder_display_scene(params.override_output.value());
-
-		// set each pressed led
-		controls.for_each_scene_button_high([this](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
-
 		// copy paste
 		if (controls.latch_button.just_went_high()) {
 			params.banks.copy_scene_to_clipboard(params.override_output.value());
@@ -125,19 +130,14 @@ void UI::state_macro()
 
 void UI::state_settings()
 {
-	display_output = false;
-	controls.set_all_encoder_leds(Palette::off);
 	const auto alt = controls.alt_button.is_high();
 
 	// morph step
-	controls.set_encoder_led(1, Palette::grey.blend(Palette::red, params.morph_step));
 	auto inc = controls.encoders[1].read();
 	params.morph_step += (1.f / 100.f) * inc;
 	params.morph_step = std::clamp(params.morph_step, 0.f, 1.f);
 
 	// bpm
-	auto flipper = params.seq.get_clock();
-	controls.set_encoder_led(2, flipper ? Palette::off : Palette::orange);
 	inc = controls.encoders[2].read();
 	intclock.bpm_inc(inc, alt);
 
@@ -145,22 +145,15 @@ void UI::state_settings()
 	auto scene = params.pathway.scene_nearest();
 	if (params.override_output.has_value()) {
 		scene = params.override_output.value();
-		controls.set_button_led(params.override_output.value(), true);
 	} else {
-		scene_button_display_nearest();
 	}
 	auto temp = params.banks.get_scene_random_amount(scene);
-	auto color = Palette::grey.blend(Palette::red, temp);
-	if (temp == 0.f)
-		color = Palette::green;
-	controls.set_encoder_led(4, color);
 	inc = controls.encoders[4].read();
 	temp += (1.f / 100.f) * inc;
 	params.banks.set_scene_random_amount(scene, temp);
 
 	// random seeding
 	// turning right gets new rando values and turning left turns off random values
-	controls.set_encoder_led(6, Palette::from_raw(params.banks.get_random_seed()));
 	inc = controls.encoders[6].read();
 	if (inc > 0)
 		params.banks.randomize();
@@ -169,7 +162,6 @@ void UI::state_settings()
 
 	// quantize
 	auto &scl = params.current_scale;
-	controls.set_encoder_led(7, Model::Scales[scl].color);
 	if ((inc = controls.encoders[7].read())) {
 		scl += inc;
 		scl = std::clamp<int8_t>(scl, 0, Model::Scales.size() - 1);
@@ -179,32 +171,31 @@ void UI::state_settings()
 
 void UI::state_bank()
 {
-	display_output = false;
 	params.override_output = std::nullopt;
 
-	for (auto x = 0u; x < Model::NumChans; ++x) {
-		auto c = params.banks.is_chan_type_gate(x) ? Color{0, 0, 2} : Color{1, 0, 0};
-		controls.set_encoder_led(x, c);
+	for (auto i = 0u; i < Model::NumChans; ++i) {
+		const auto inc = controls.encoders[i].read();
+		params.banks.adj_chan_type(i, inc);
 
-		const auto inc = controls.encoders[x].read();
-		params.banks.adj_chan_type(x, inc);
-
-		if (controls.scene_buttons[x].is_high()) {
-			params.current_bank = x;
+		if (controls.scene_buttons[i].is_high()) {
+			params.current_bank = i;
 			params.pathway.refresh();
 		}
 	}
-
-	controls.set_button_led(params.current_bank, true);
 }
 
 void UI::state_seq_ab()
 {
-	encoder_display_sequence_length();
-
 	/* a and b buttons*/
+	controls.for_each_scene_butt_released([this](unsigned chan) { params.seq.sel_chan(chan); });
+
 	const auto a = controls.a_button.is_high();
 	const auto b = controls.b_button.is_high();
+
+	// don't allow adjusting the length of a non existant sequence
+	if (!params.seq.is_chan_selected())
+		params.seq.sel_chan(0);
+
 	const auto chan = params.seq.get_sel_chan();
 
 	if (a && b) {
@@ -229,10 +220,6 @@ void UI::state_seq_ab()
 
 void UI::state_macro_ab()
 {
-	encoder_display_pathway_size();
-
-	scene_button_display_nearest();
-
 	params.override_output = std::nullopt;
 
 	/* a and b buttons*/
@@ -279,5 +266,101 @@ void UI::state_macro_ab()
 		});
 	}
 	return;
+}
+
+void UI::paint_leds(const Model::OutputBuffer &outs)
+{
+	if (!leds_ready_flag)
+		return;
+	leds_ready_flag = false;
+
+	controls.set_all_encoder_leds(Palette::off);
+	controls.clear_button_leds();
+
+	switch (state) {
+		case State::Main:
+			if (params.mode == Params::Mode::Macro) {
+				if (params.override_output.has_value()) {
+					encoder_display_scene(params.override_output.value());
+					controls.for_each_scene_button_high(
+						[this](Pathway::SceneId scene) { controls.set_button_led(scene, true); });
+				} else {
+					encoder_display_output(outs);
+					if (recorder.is_recordering())
+						scene_button_display_recording();
+					else {
+						const auto l = params.pathway.scene_left();
+						const auto r = params.pathway.scene_right();
+						if (l == r)
+							controls.set_button_led(l, true);
+						else {
+							controls.set_button_led(l, 1.f - params.pos);
+							controls.set_button_led(r, params.pos);
+						}
+					}
+				}
+
+			} else if (params.mode == Params::Mode::Sequencer) {
+				if (params.seq.is_chan_selected()) {
+					encoder_display_sequence();
+					controls.set_button_led(params.seq.get_sel_chan(), true);
+				} else
+					encoder_display_output(outs);
+			}
+			break;
+		case State::AB: {
+			if (params.mode == Params::Mode::Macro) {
+				encoder_display_pathway_size();
+				scene_button_display_nearest();
+			} else if (params.mode == Params::Mode::Sequencer) {
+				encoder_display_sequence_length();
+				controls.set_button_led(params.seq.get_sel_chan(), true);
+			}
+			break;
+		}
+		case State::Settings: {
+			// scene button
+			const auto scene = params.override_output.has_value() ? params.override_output.value() :
+							   params.pathway.on_a_scene()		  ? params.pathway.scene_nearest() :
+																	Model::NumScenes;
+
+			if (scene < Model::NumScenes) {
+				controls.set_button_led(scene, true);
+
+				// random amount
+				const auto temp = params.banks.get_scene_random_amount(scene);
+				auto c = Palette::grey.blend(Palette::red, temp);
+				if (temp == 0.f)
+					c = Palette::green;
+				controls.set_encoder_led(4, c);
+			}
+
+			// morph step
+			auto c = Palette::grey.blend(Palette::red, params.morph_step);
+			if (params.morph_step == 0.f)
+				c = Palette::green;
+			controls.set_encoder_led(1, c);
+
+			// bpm
+			const auto flipper = params.seq.get_clock();
+			controls.set_encoder_led(2, flipper ? Palette::off : Palette::orange);
+
+			// random seed
+			controls.set_encoder_led(6, Palette::from_raw(params.banks.get_random_seed()));
+
+			// quantize
+			controls.set_encoder_led(7, Model::Scales[params.current_scale].color);
+			break;
+		}
+		case State::Bank: {
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				auto c = params.banks.is_chan_type_gate(i) ? Color{0, 0, 2} : Color{1, 0, 0};
+				controls.set_encoder_led(i, c);
+			}
+			controls.set_button_led(params.current_bank, true);
+
+			break;
+		}
+	}
 }
 } // namespace Catalyst2

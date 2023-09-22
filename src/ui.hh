@@ -1,6 +1,7 @@
 #pragma once
 #include "conf/model.hh"
 #include "conf/palette.hh"
+#include "conf/quantizer_scales.hh"
 #include "controls.hh"
 #include "intclock.hh"
 #include "outputs.hh"
@@ -22,12 +23,9 @@ class UI {
 	Controls controls;
 	Params &params;
 	InternalClock<Board::cv_stream_hz> intclock;
-
-	// should the recorder be in params?
 	Recorder recorder;
 	Outputs outputs;
-	bool display_output = false;
-	bool encoder_leds_ready_flag = false;
+	bool leds_ready_flag = false;
 
 public:
 	UI(Params &params)
@@ -35,7 +33,7 @@ public:
 	{
 		encoder_led_update_task.init(Board::encoder_led_task, [&]() {
 			controls.write_to_encoder_leds();
-			encoder_leds_ready_flag = true;
+			leds_ready_flag = true;
 		});
 		muxio_update_task.init(Board::muxio_conf, [&]() { controls.update_muxio(); });
 	}
@@ -64,30 +62,7 @@ public:
 	void set_outputs(const Model::OutputBuffer &outs)
 	{
 		outputs.write(outs);
-		if (display_output) {
-			if (encoder_leds_ready()) {
-				for (auto [chan, val] : countzip(outs)) {
-					Color c;
-					if (params.banks.is_chan_type_gate(chan))
-						c = encoder_gate_blend(val);
-					else
-						c = encoder_cv_blend(val);
-					controls.set_encoder_led(chan, c);
-				}
-			}
-			auto l = params.pathway.scene_left();
-			auto r = params.pathway.scene_right();
-			if (l == r)
-				controls.set_button_led(l, 1.f);
-			else {
-				controls.set_button_led(l, 1.f - params.pos);
-				controls.set_button_led(r, params.pos);
-			}
-		}
-
-		if (state == State::Main && !params.override_output.has_value()) {
-			// yea/
-		}
+		paint_leds(outs);
 	}
 
 private:
@@ -98,6 +73,7 @@ private:
 	void state_bank();
 	void state_seq();
 	void state_seq_ab();
+	void paint_leds(const Model::OutputBuffer &outs);
 
 	void update_output_override()
 	{
@@ -169,7 +145,7 @@ private:
 	void scene_button_display_recording()
 	{
 		auto led = static_cast<unsigned>(recorder.capacity_filled() * 8u);
-		auto level = recorder.size() & 0x10;
+		auto level = (recorder.size() & 0x10) > 0;
 
 		controls.set_button_led(led, level);
 	}
@@ -183,9 +159,6 @@ private:
 	// encoder display funcs
 	void encoder_display_pathway_size()
 	{
-		display_output = false;
-		if (!encoder_leds_ready())
-			return;
 		auto r = params.pathway.size();
 		auto phase = 1.f / (params.pathway.MaxPoints / static_cast<float>(r));
 
@@ -195,27 +168,25 @@ private:
 		encoder_display_count(Palette::green.blend(Palette::red, phase), r);
 	}
 
+	void encoder_display_output(const Model::OutputBuffer &buf)
+	{
+		for (auto [chan, val] : countzip(buf)) {
+			Color c = encoder_blend(val, params.banks.is_chan_type_gate(chan));
+			controls.set_encoder_led(chan, c);
+		}
+	}
+
 	void encoder_display_scene(Pathway::SceneId scene)
 	{
-		display_output = false;
-		if (!encoder_leds_ready())
-			return;
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
 			auto temp = params.banks.get_chan(scene, chan);
-			Color c;
-			if (params.banks.is_chan_type_gate(chan))
-				c = encoder_gate_blend(temp);
-			else
-				c = encoder_cv_blend(temp);
+			Color c = encoder_blend(temp, params.banks.is_chan_type_gate(chan));
 			controls.set_encoder_led(chan, c);
 		}
 	}
 
 	void encoder_display_sequence_length()
 	{
-		display_output = false;
-		if (!encoder_leds_ready())
-			return;
 		auto chan = params.seq.get_sel_chan();
 		auto length = params.seq.get_length(chan);
 		auto offset = params.seq.get_start_offset(chan);
@@ -226,10 +197,6 @@ private:
 
 	void encoder_display_sequence()
 	{
-		display_output = false;
-		if (!encoder_leds_ready())
-			return;
-
 		const auto chan = params.seq.get_sel_chan();
 		const auto cur_step = params.seq.get_step(chan);
 		const auto length = params.seq.get_length(chan);
@@ -241,10 +208,8 @@ private:
 				controls.set_encoder_led(i, Palette::magenta);
 			} else {
 				const auto level = params.banks.get_chan(i, chan);
-				if (params.banks.is_chan_type_gate(chan))
-					controls.set_encoder_led(i, encoder_gate_blend(level));
-				else
-					controls.set_encoder_led(i, encoder_cv_blend(level));
+				Color c = encoder_blend(level, params.banks.is_chan_type_gate(chan));
+				controls.set_encoder_led(i, c);
 			}
 		}
 		for (auto x = offset; x < Model::NumChans - length + offset; x++)
@@ -252,15 +217,6 @@ private:
 	}
 
 	// encoder display helper funcs
-	bool encoder_leds_ready()
-	{
-		if (!encoder_leds_ready_flag)
-			return false;
-
-		encoder_leds_ready_flag = false;
-		return true;
-	}
-
 	void encoder_display_count(Color c, unsigned count, unsigned offset = 0)
 	{
 		if (count > Model::NumChans)
@@ -271,6 +227,14 @@ private:
 
 		for (auto i = 0u; i < Model::NumChans - count; i++)
 			controls.set_encoder_led((count + i + offset) & 7, Palette::off);
+	}
+
+	Color encoder_blend(uint16_t level, bool chan_type_gate)
+	{
+		if (chan_type_gate)
+			return encoder_gate_blend(level);
+		else
+			return encoder_cv_blend(level);
 	}
 
 	Color encoder_cv_blend(uint16_t level)
@@ -293,10 +257,10 @@ private:
 
 	Color encoder_gate_blend(uint16_t level)
 	{
-		if (level == ChannelValue::from_volts(0.1f))
+		if (level == ChannelValue::GateSetFlag)
 			return Color{0, 0, 2};
 
-		if (level == ChannelValue::from_volts(5.f))
+		if (level == ChannelValue::GateHigh)
 			return Palette::green;
 
 		return Palette::off;
