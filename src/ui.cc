@@ -354,7 +354,11 @@ void UI::paint_leds(const Model::OutputBuffer &outs)
 		}
 		case State::Bank: {
 			for (auto i = 0u; i < Model::NumChans; i++) {
-				auto c = params.banks.is_chan_type_gate(i) ? Color{0, 0, 2} : Color{1, 0, 0};
+				auto c = Color{2, 0, 0};
+				if (params.banks.is_chan_type_gate(i))
+					c = Color{0, 0, 2};
+				else if (params.banks.is_chan_quantized(i))
+					c = Color{0, 2, 0};
 				controls.set_encoder_led(i, c);
 			}
 			controls.set_button_led(params.current_bank, true);

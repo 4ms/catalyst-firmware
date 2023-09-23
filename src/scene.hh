@@ -60,9 +60,11 @@ struct Bank {
 class Banks {
 	using BankArray = std::array<Bank, Model::NumBanks>;
 	using IsGate = std::bitset<Model::NumChans>;
+	using IsQuantized = std::bitset<Model::NumChans>;
 	BankArray bank;
 	const uint8_t &cur_bank;
 	std::array<IsGate, Model::NumBanks> is_gate;
+	std::array<IsQuantized, Model::NumBanks> is_quantized;
 
 	Scene clipboard;
 
@@ -158,15 +160,26 @@ public:
 	void adj_chan_type(unsigned chan, int dir)
 	{
 		if (dir > 0) {
-			is_gate[cur_bank][chan] = true;
+			if (is_quantized[cur_bank][chan])
+				is_quantized[cur_bank][chan] = false;
+			else
+				is_gate[cur_bank][chan] = true;
 		} else if (dir < 0) {
-			is_gate[cur_bank][chan] = false;
+			if (is_gate[cur_bank][chan])
+				is_gate[cur_bank][chan] = false;
+			else
+				is_quantized[cur_bank][chan] = true;
 		}
 	}
 
 	bool is_chan_type_gate(unsigned chan)
 	{
 		return is_gate[cur_bank][chan];
+	}
+
+	bool is_chan_quantized(unsigned chan)
+	{
+		return is_quantized[cur_bank][chan];
 	}
 
 	void adj_chan(unsigned scene, unsigned chan, int dir, bool fine = false)

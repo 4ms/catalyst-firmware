@@ -94,8 +94,9 @@ public:
 		else
 			seq(buf);
 
-		for (auto &out : buf) {
-			out = params.quantizer.process(out);
+		for (auto [i, out] : countzip(buf)) {
+			if (params.banks.is_chan_quantized(i))
+				out = params.quantizer.process(out);
 		}
 
 		return buf;
