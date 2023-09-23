@@ -102,8 +102,8 @@ private:
 		const auto macro = params.mode == Params::Mode::Macro;
 
 		if (controls.trig_jack_sense.is_high()) {
-			if (macro)
-				return;
+			// if (macro)
+			//	return;
 
 			intclock.update();
 
