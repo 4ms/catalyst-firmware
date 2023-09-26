@@ -19,6 +19,7 @@ static constexpr ScalePalette major_pentatonic = {Palette::orange, Scale{0.f, 2.
 static constexpr ScalePalette minor_pentatonic = {Palette::purple, Scale{0.f, 3.f, 5.f, 7.f, 10.f}};
 static constexpr ScalePalette wholetone = {Palette::cyan, Scale{0.f, 2.f, 4.f, 8.f, 10.f}};
 
+// TODO: make sure Scales is not a name used elsewhere
 static constexpr std::array Scales = {
 	off,
 	chromatic,
