@@ -103,7 +103,7 @@ public:
 	}
 
 private:
-	void macro(auto &in)
+	void macro(Model::OutputBuffer &in)
 	{
 		static auto do_trigs = false;
 		const auto time_now = tick.get();
