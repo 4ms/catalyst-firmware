@@ -52,6 +52,12 @@ private:
 			spi.load_tx_data(dbyte);
 		}
 
+		// See note in Reference Manual (sec 20.3.5)
+		// During discontinuous communications, there is a 2 APB clock period delay between the write operation to
+		// SPI_DR and the BSY bit setting. As a consequence, in transmit-only mode, it is mandatory to wait first until
+		// TXE is set and then until BSY is cleared after writing the last data.
+		while (!spi.tx_space_available())
+			;
 		while (!spi.is_end_of_transfer())
 			;
 		spi.unselect<0>();
