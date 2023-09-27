@@ -92,6 +92,15 @@ Catalyst2::System _init;
 
 // red to blue with cv
 // green for gate?
+
+// rotate is probably too weird
+// have slider be more similar to macro mode...
+
+/*
+turning on and defaulting to sequencer mode and having it act the way it currently does seems like the most intuitive
+way that this module could possibly work
+*/
+
 volatile uint32_t time;
 
 void main()
@@ -116,7 +125,6 @@ void main()
 
 	ui.start();
 	cv_stream.start();
-
 	while (true) {
 		__NOP();
 	}
