@@ -14,8 +14,7 @@ struct Pathway {
 private:
 	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
 
-	const uint8_t &cur_bank;
-	std::array<FixedVector<SceneId, MaxPoints>, Model::NumBanks> path;
+	FixedVector<SceneId, MaxPoints> path;
 	float scene_width;
 	unsigned index_left;
 	unsigned index_nearest;
@@ -23,13 +22,10 @@ private:
 	unsigned prev_index = 0;
 
 public:
-	Pathway(uint8_t &c)
-		: cur_bank{c}
+	Pathway()
 	{
-		for (auto &p : path) {
-			p.insert(0, 0);
-			p.insert(1, 7);
-		}
+		path.insert(0, 0);
+		path.insert(1, 7);
 		update_scene_width();
 	}
 	void refresh()
@@ -46,17 +42,17 @@ public:
 
 	SceneId scene_left()
 	{
-		return path[cur_bank][index_left];
+		return path[index_left];
 	}
 	SceneId scene_right()
 	{
 		auto idx = index_left + 1;
 		idx = idx >= size() ? 0 : idx;
-		return path[cur_bank][idx];
+		return path[idx];
 	}
 	SceneId scene_nearest()
 	{
-		return path[cur_bank][index_nearest];
+		return path[index_nearest];
 	}
 	bool on_a_scene()
 	{
@@ -64,7 +60,7 @@ public:
 	}
 	void replace_scene(SceneId scene)
 	{
-		path[cur_bank][index_nearest] = scene;
+		path[index_nearest] = scene;
 		prev_index = index_nearest;
 	}
 
@@ -77,7 +73,7 @@ public:
 		else
 			prev_index = index + 1;
 
-		path[cur_bank].insert(index, scene);
+		path.insert(index, scene);
 		update_scene_width();
 	}
 
@@ -86,7 +82,7 @@ public:
 		if (size() <= 2)
 			return;
 
-		path[cur_bank].erase(index_nearest);
+		path.erase(index_nearest);
 		update_scene_width();
 	}
 
@@ -94,14 +90,14 @@ public:
 	{
 		// erase all scenes in between first and last one.
 		while (size() > 2)
-			path[cur_bank].erase(1);
+			path.erase(1);
 
 		update_scene_width();
 	}
 
 	std::size_t size() const
 	{
-		return path[cur_bank].size();
+		return path.size();
 	}
 
 	float get_scene_width() const

@@ -1,5 +1,8 @@
 #pragma once
+#include "channelvalue.hh"
 #include "conf/model.hh"
+#include "pathway.hh"
+#include "randompool.hh"
 #include "util/math.hh"
 #include <algorithm>
 #include <array>
@@ -9,225 +12,110 @@
 namespace Catalyst2
 {
 
-namespace ChannelValue
-{
-using type = int32_t;
-
-static constexpr type Max = UINT16_MAX;
-static constexpr type Min = 0;
-static constexpr type Range = Max - Min;
-
-static constexpr type from_volts(const float volts)
-{
-	auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
-	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
-}
-
-static constexpr type GateHigh = from_volts(5.f);
-static constexpr type GateSetFlag = from_volts(.1f);
-static constexpr type GateOffFlag = from_volts(.0f);
-
-static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
-static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
-} // namespace ChannelValue
-
-struct Scene {
-	std::array<ChannelValue::type, Model::NumChans> chans;
-	std::array<int8_t, Model::NumChans> random_value;
-	float random_amount;
-
-	Scene()
-	{
-		init();
-	}
-	void init()
-	{
-		for (auto &c : chans) {
-			c = ChannelValue::from_volts(0.f);
-		}
-		for (auto &rv : random_value) {
-			rv = 0;
-		}
-		random_amount = 1.f / 15.f;
-	}
-};
-
-struct Bank {
-	using Scenes = std::array<Scene, Model::NumScenes>;
-	Scenes scene;
-};
-
 class Banks {
+	using ChannelArray = std::array<Channel, Model::NumChans>;
+	struct Scene {
+		ChannelArray channel;
+		float random_amount = 0.f;
+	};
+	using SceneArray = std::array<Scene, Model::NumScenes>;
+	struct Bank {
+		SceneArray scene;
+		Pathway path;
+		std::bitset<Model::NumChans> isgate;
+		std::bitset<Model::NumChans> isQuantized;
+	};
 	using BankArray = std::array<Bank, Model::NumBanks>;
-	using IsGate = std::bitset<Model::NumChans>;
-	using IsQuantized = std::bitset<Model::NumChans>;
-	BankArray bank;
-	const uint8_t &cur_bank;
-	std::array<IsGate, Model::NumBanks> is_gate;
-	std::array<IsQuantized, Model::NumBanks> is_quantized;
+	struct Clipboard {
+		uint8_t scene : 3;
+		uint8_t bank : 3;
+	};
 
-	Scene clipboard;
+	// member variables
+	BankArray bank;
+	Clipboard clipboard = {.scene = 0, .bank = 0};
+	uint8_t cur_bank = 0;
 
 public:
-	Banks(uint8_t &b)
-		: cur_bank{b}
-	{}
-
-	// for copy pasting scenes
-	void copy_scene_to_clipboard(uint8_t scene)
+	Pathway &Path()
 	{
-		clipboard = bank[cur_bank].scene[scene];
+		return bank[cur_bank].path;
 	}
 
-	void paste_to_scene(uint8_t scene)
+	void CopySceneToClipboard(uint8_t scene)
 	{
-		bank[cur_bank].scene[scene] = clipboard;
+		clipboard.bank = cur_bank;
+		clipboard.scene = scene;
 	}
 
-	// for copy pasting channels (as a sequencer)
-	void copy_channel_to_clipboard(uint8_t chan)
+	void PasteToScene(uint8_t scene)
 	{
-		for (auto i = 0u; i < Model::NumScenes; i++) {
-			clipboard.chans[i] = bank[cur_bank].scene[i].chans[chan];
-		}
+		bank[cur_bank].scene[scene] = bank[clipboard.bank].scene[clipboard.scene];
 	}
 
-	void paste_to_channel(uint8_t chan)
+	float GetRandomAmount(uint8_t scene)
 	{
-		for (auto i = 0u; i < Model::NumScenes; i++) {
-			bank[cur_bank].scene[i].chans[chan] = clipboard.chans[i];
-		}
-	}
+		if (scene >= Model::NumScenes)
+			return 0.f;
 
-	void randomize()
-	{
-		for (auto &s : bank[cur_bank].scene) {
-			for (auto &c : s.random_value) {
-				c = std::rand();
-			}
-		}
-	}
-
-	void clear_random()
-	{
-		for (auto &b : bank) {
-			for (auto &s : b.scene) {
-				for (auto &c : s.random_value) {
-					c = 0;
-				}
-			}
-		}
-	}
-
-	auto get_random_seed() const
-	{
-		return bank[0].scene[0].random_value[0];
-	}
-
-	float get_scene_random_amount(unsigned scene) const
-	{
 		return bank[cur_bank].scene[scene].random_amount;
 	}
 
-	void set_scene_random_amount(unsigned scene, float amount)
+	void SetRandomAmount(uint8_t scene, float amount)
 	{
 		bank[cur_bank].scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
 	}
 
-	ChannelValue::type get_chan(unsigned scene, unsigned chan) const
+	bool IsChanTypeGate(uint8_t channel)
 	{
-		if (chan >= Model::NumChans || scene >= Model::NumScenes)
+		if (channel >= Model::NumChans)
+			return false;
+
+		return bank[cur_bank].isgate[channel];
+	}
+
+	bool IsChanQuantized(uint8_t channel)
+	{
+		if (channel >= Model::NumChans)
+			return false;
+
+		return bank[cur_bank].isQuantized[channel];
+	}
+
+	ChannelValue::type GetChannel(uint8_t scene, uint8_t channel)
+	{
+		if (channel >= Model::NumChans || scene >= Model::NumScenes)
 			return 0;
 
-		auto &s = bank[cur_bank].scene[scene];
-		auto temp = s.chans[chan];
-		int r = ((s.random_value[chan] / 128.f) * s.random_amount) * (ChannelValue::Range / 2);
-		if (r > 0) {
-			if (ChannelValue::Max - temp <= r)
-				temp = ChannelValue::Max;
-			else
-				temp += r;
-		} else {
-			r *= -1;
-			if (temp <= r)
-				temp = ChannelValue::Min;
-			else
-				temp -= r;
+		auto rand = static_cast<int32_t>(RandomPool::GetRandomVal(cur_bank, scene, channel) *
+										 bank[cur_bank].scene[scene].random_amount * ChannelValue::Range);
+
+		if (bank[cur_bank].isgate[channel]) {
+			// gates not affected by randomness?
+			rand = 0;
 		}
-		return temp;
+		auto temp = bank[cur_bank].scene[scene].channel[channel].val + rand;
+		return std::clamp<int32_t>(temp, ChannelValue::Min, ChannelValue::Max);
 	}
 
-	void adj_chan_type(unsigned chan, int dir)
+	void IncChan(uint8_t scene, uint8_t channel, int32_t dir, bool fine)
 	{
-		if (dir > 0) {
-			if (is_quantized[cur_bank][chan])
-				is_quantized[cur_bank][chan] = false;
-			else
-				is_gate[cur_bank][chan] = true;
-		} else if (dir < 0) {
-			if (is_gate[cur_bank][chan])
-				is_gate[cur_bank][chan] = false;
-			else
-				is_quantized[cur_bank][chan] = true;
-		}
+		if (channel >= Model::NumChans || scene >= Model::NumScenes)
+			return;
+		bank[cur_bank].scene[scene].channel[channel].Inc(dir, fine, IsChanTypeGate(channel));
 	}
 
-	bool is_chan_type_gate(unsigned chan)
+	uint8_t GetSelBank()
 	{
-		return is_gate[cur_bank][chan];
+		return cur_bank;
 	}
 
-	bool is_chan_quantized(unsigned chan)
+	void SelBank(uint8_t bank)
 	{
-		return is_quantized[cur_bank][chan];
-	}
-
-	void adj_chan(unsigned scene, unsigned chan, int dir, bool fine = false)
-	{
-		if (chan >= Model::NumChans || scene >= Model::NumScenes)
+		if (bank >= Model::NumBanks)
 			return;
 
-		auto out = bank[cur_bank].scene[scene].chans[chan];
-
-		if (is_gate[cur_bank][chan]) {
-
-			if (dir > 0)
-				out = ChannelValue::GateSetFlag;
-			else if (dir < 0)
-				out = ChannelValue::GateOffFlag;
-		} else {
-			auto inc = ChannelValue::inc_step;
-
-			if (fine)
-				inc = ChannelValue::inc_step_fine;
-
-			if (dir > 0)
-				out = inc_chan(out, inc);
-			else if (dir < 0)
-				out = dec_chan(out, inc);
-		}
-		bank[cur_bank].scene[scene].chans[chan] = out;
-	}
-
-private:
-	ChannelValue::type inc_chan(auto out, auto inc)
-	{
-		if (ChannelValue::Max - out <= inc)
-			out = ChannelValue::Max;
-		else
-			out += inc;
-
-		return out;
-	}
-
-	ChannelValue::type dec_chan(auto out, auto inc)
-	{
-		if (out <= inc)
-			out = ChannelValue::Min;
-		else
-			out -= inc;
-
-		return out;
+		cur_bank = bank;
 	}
 };
 

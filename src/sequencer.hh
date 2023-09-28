@@ -9,10 +9,10 @@ namespace Catalyst2
 struct Sequencer {
 	using SequenceId = uint8_t;
 	struct Sequence {
-		uint16_t length : 3;
-		uint16_t counter : 3;
-		uint16_t step : 3;
-		uint16_t start_offset : 3;
+		uint32_t length : 6;
+		uint32_t counter : 6;
+		uint32_t step : 6;
+		uint32_t start_offset : 6;
 	};
 	std::array<Sequence, Model::NumChans> sequence;
 	SequenceId cur_chan = 0;

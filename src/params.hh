@@ -11,9 +11,7 @@ namespace Catalyst2
 // Params holds all the modes, settings and parameters
 // Params are set by UI, based on reading of the user input
 struct Params {
-	uint8_t current_bank = 0;
-	Banks banks{current_bank};
-	Pathway pathway{current_bank};
+	Banks banks;
 	Sequencer seq;
 	Quantizer<static_cast<std::size_t>(Model::output_octave_range)> quantizer;
 	int8_t current_scale = 0;

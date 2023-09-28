@@ -8,10 +8,10 @@
 // Configuration for everything that might change if we make a version with more or less user-facing features
 namespace Catalyst2::Model
 {
-
-constexpr uint32_t NumChans = 8;
-constexpr uint32_t NumScenes = 8;
-constexpr uint32_t NumBanks = 8;
+static constexpr uint32_t NumChans = 8;
+static constexpr uint32_t NumScenes = 8;
+static constexpr uint32_t NumBanks = 8;
+static constexpr uint32_t MaxSeqSteps = NumScenes * NumBanks;
 
 using OutputBuffer = std::array<uint16_t, NumChans>;
 
@@ -28,5 +28,4 @@ static constexpr unsigned fader_width_mm = 60;
 
 static constexpr unsigned rec_buffer_size = 2048;
 static constexpr unsigned rec_buffer_prescaler = 16;
-
 } // namespace Catalyst2::Model

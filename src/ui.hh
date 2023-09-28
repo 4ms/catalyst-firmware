@@ -6,6 +6,7 @@
 #include "intclock.hh"
 #include "outputs.hh"
 #include "params.hh"
+#include "randompool.hh"
 #include "recorder.hh"
 #include "util/countzip.hh"
 
@@ -44,8 +45,7 @@ public:
 		muxio_update_task.start();
 		controls.start();
 		HAL_Delay(2);
-		std::srand(controls.read_slider() + controls.read_cv());
-		params.banks.clear_random();
+		RandomPool::Init(controls.read_slider() + controls.read_cv());
 	}
 
 	void update()
@@ -152,15 +152,18 @@ private:
 
 	void scene_button_display_nearest()
 	{
-		if (params.pathway.on_a_scene())
-			controls.set_button_led(params.pathway.scene_nearest(), 1.f);
+		auto &p = params.banks.Path();
+		if (p.on_a_scene())
+			controls.set_button_led(p.scene_nearest(), 1.f);
 	}
 
 	// encoder display funcs
 	void encoder_display_pathway_size()
 	{
-		auto r = params.pathway.size();
-		auto phase = 1.f / (params.pathway.MaxPoints / static_cast<float>(r));
+		auto &p = params.banks.Path();
+
+		auto r = p.size();
+		auto phase = 1.f / (p.MaxPoints / static_cast<float>(r));
 
 		while (r > 8)
 			r -= 8;
@@ -171,7 +174,7 @@ private:
 	void encoder_display_output(const Model::OutputBuffer &buf)
 	{
 		for (auto [chan, val] : countzip(buf)) {
-			Color c = encoder_blend(val, params.banks.is_chan_type_gate(chan));
+			Color c = encoder_blend(val, params.banks.IsChanTypeGate(chan));
 			controls.set_encoder_led(chan, c);
 		}
 	}
@@ -179,8 +182,8 @@ private:
 	void encoder_display_scene(Pathway::SceneId scene)
 	{
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
-			auto temp = params.banks.get_chan(scene, chan);
-			Color c = encoder_blend(temp, params.banks.is_chan_type_gate(chan));
+			auto temp = params.banks.GetChannel(scene, chan);
+			Color c = encoder_blend(temp, params.banks.IsChanTypeGate(chan));
 			controls.set_encoder_led(chan, c);
 		}
 	}
@@ -207,8 +210,8 @@ private:
 			if (i == cur_step) {
 				controls.set_encoder_led(i, Palette::magenta);
 			} else {
-				const auto level = params.banks.get_chan(i, chan);
-				Color c = encoder_blend(level, params.banks.is_chan_type_gate(chan));
+				const auto level = params.banks.GetChannel(i, chan);
+				Color c = encoder_blend(level, params.banks.IsChanTypeGate(chan));
 				controls.set_encoder_led(i, c);
 			}
 		}

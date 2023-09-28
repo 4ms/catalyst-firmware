@@ -87,7 +87,7 @@ public:
 
 		Model::OutputBuffer buf;
 
-		params.pathway.update(params.pos);
+		params.banks.Path().update(params.pos);
 
 		if (params.mode == Params::Mode::Macro)
 			macro(buf);
@@ -95,7 +95,7 @@ public:
 			seq(buf);
 
 		for (auto [i, out] : countzip(buf)) {
-			if (params.banks.is_chan_quantized(i))
+			if (params.banks.IsChanQuantized(i))
 				out = params.quantizer.process(out);
 		}
 
@@ -110,30 +110,30 @@ private:
 
 		if (params.override_output.has_value()) {
 			for (auto [chan, out] : countzip(in)) {
-				if (params.banks.is_chan_type_gate(chan)) {
-					auto is_primed = params.banks.get_chan(params.override_output.value(), chan);
+				if (params.banks.IsChanTypeGate(chan)) {
+					auto is_primed = params.banks.GetChannel(params.override_output.value(), chan);
 					if (do_trigs && is_primed == ChannelValue::GateSetFlag)
 						trigger[chan].trig(time_now);
 					out = trigger[chan].get(time_now) ? ChannelValue::GateHigh : ChannelValue::from_volts(0.f);
 				} else {
-					out = params.banks.get_chan(params.override_output.value(), chan);
+					out = params.banks.GetChannel(params.override_output.value(), chan);
 				}
 			}
 			do_trigs = false;
 			return;
 		}
 
-		const auto left = params.pathway.scene_left();
-		const auto right = params.pathway.scene_right();
+		const auto left = params.banks.Path().scene_left();
+		const auto right = params.banks.Path().scene_right();
 
-		auto phase = params.pos / params.pathway.get_scene_width();
+		auto phase = params.pos / params.banks.Path().get_scene_width();
 		phase -= static_cast<unsigned>(phase);
 		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
 		params.pos = phase;
 
 		static Pathway::SceneId last_scene_on = Model::NumScenes;
 		const Pathway::SceneId current_scene =
-			params.pathway.on_a_scene() ? params.pathway.scene_nearest() : Model::NumScenes;
+			params.banks.Path().on_a_scene() ? params.banks.Path().scene_nearest() : Model::NumScenes;
 		do_trigs = false;
 		if (current_scene != last_scene_on) {
 			last_scene_on = current_scene;
@@ -142,18 +142,18 @@ private:
 		}
 
 		for (auto [chan, out] : countzip(in)) {
-			if (params.banks.is_chan_type_gate(chan)) {
+			if (params.banks.IsChanTypeGate(chan)) {
 				auto is_primed = ChannelValue::from_volts(0.f);
 				if (current_scene < Model::NumScenes)
-					is_primed = params.banks.get_chan(current_scene, chan);
+					is_primed = params.banks.GetChannel(current_scene, chan);
 				if (do_trigs && is_primed == ChannelValue::GateSetFlag) {
 					trigger[chan].trig(time_now);
 				}
 
 				out = trigger[chan].get(time_now) ? ChannelValue::GateHigh : is_primed;
 			} else {
-				const auto a = params.banks.get_chan(left, chan);
-				const auto b = params.banks.get_chan(right, chan);
+				const auto a = params.banks.GetChannel(left, chan);
+				const auto b = params.banks.GetChannel(right, chan);
 				out = MathTools::interpolate(a, b, phase);
 			}
 		}
@@ -173,29 +173,15 @@ private:
 
 		for (auto [chan, o] : countzip(in)) {
 			const auto step = params.seq.get_step(chan);
-			if (params.banks.is_chan_type_gate(chan)) {
-				auto is_primed = params.banks.get_chan(step, chan);
+			if (params.banks.IsChanTypeGate(chan)) {
+				auto is_primed = params.banks.GetChannel(step, chan);
 				if (do_trigs && is_primed == ChannelValue::GateSetFlag)
 					trigger[chan].trig(time_now);
 				o = trigger[chan].get(time_now) ? ChannelValue::GateHigh : is_primed;
 			} else {
-				o = params.banks.get_chan(step, chan);
+				o = params.banks.GetChannel(step, chan);
 			}
 		}
-
-		Model::OutputBuffer temp;
-
-		auto phase = params.pos / (1.f / (Model::NumChans - 1));
-		const auto middle = static_cast<unsigned>(phase) & (Model::NumChans - 1);
-		std::rotate(in.begin(), &in[Model::NumChans - middle - 1], in.end());
-		phase -= static_cast<unsigned>(phase);
-		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
-
-		for (auto i = 0u; i < Model::NumChans; i++) {
-			temp[i] = MathTools::interpolate(in[(i + 1) & (Model::NumChans - 1)], in[i], phase);
-		}
-
-		in = temp;
 	}
 };
 
