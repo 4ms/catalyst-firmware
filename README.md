@@ -26,4 +26,10 @@
 	- **Alt + Bank**: adjust per scene params.
 		- Random amount, inc and dec
 - Seq Mode:
-	- **TODO**: add this info
+	- **Scene Button**: Select Seq Channel
+    - **B Button**: Selected Seq Length
+    - **A Button**: Selected Seq Start Point
+    - **A + B Buttons**: Reset Selected Seq Length && Start Point
+    - **Bank button**: Selected Seq CV type (quan, gate, unquan), clock div, seq direction, random amount, random seed
+    - **Alt + B** Global seq settings: Bpm, Clock div....
+    
