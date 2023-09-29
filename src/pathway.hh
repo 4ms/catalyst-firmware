@@ -125,7 +125,7 @@ private:
 	unsigned phase_to_index(float phase)
 	{
 		auto out = static_cast<unsigned>(phase * (size() - 1));
-		return out & (Model::NumChans - 1);
+		return out % size();
 	}
 	void update_scene_width()
 	{
