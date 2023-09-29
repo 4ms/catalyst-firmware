@@ -128,7 +128,7 @@ private:
 
 		auto phase = params.pos / params.banks.Path().get_scene_width();
 		phase -= static_cast<unsigned>(phase);
-		phase = MathTools::slope_adj(phase, params.morph_step, 0.f, 1.f);
+		phase = MathTools::slope_adj(phase, 1.f - params.morph_step, 0.f, 1.f);
 		params.pos = phase;
 
 		static Pathway::SceneId last_scene_on = Model::NumScenes;

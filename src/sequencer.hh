@@ -1,4 +1,5 @@
 #pragma once
+#include "channelvalue.hh"
 #include "conf/model.hh"
 #include <array>
 #include <cstdint>
@@ -8,14 +9,19 @@ namespace Catalyst2
 
 struct Sequencer {
 	using SequenceId = uint8_t;
+	using SeqData = std::array<Channel, Model::MaxSeqSteps>;
 	struct Sequence {
+		SeqData data;
 		uint32_t length : 6;
 		uint32_t counter : 6;
 		uint32_t step : 6;
 		uint32_t start_offset : 6;
+		uint32_t reserved : 8;
 	};
+
 	std::array<Sequence, Model::NumChans> sequence;
 	SequenceId cur_chan = 0;
+	uint8_t cur_page = 0;
 
 	Sequencer()
 	{
@@ -25,6 +31,12 @@ struct Sequencer {
 			s.start_offset = 0;
 			s.length = Model::NumChans - 1;
 		}
+	}
+
+	void IncStep(uint8_t channel, uint8_t step)
+	{
+		if (channel >= Model::NumChans || step >= Model::MaxSeqSteps)
+			return;
 	}
 
 	bool is_chan_selected()
