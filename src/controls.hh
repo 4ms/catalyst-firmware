@@ -7,6 +7,7 @@
 #include "drivers/led_driver_lp5024.hh"
 #include "drivers/muxed_io.hh"
 #include "muxed_button.hh"
+#include "switch_state.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
 #include <cmath>
@@ -21,27 +22,6 @@ class Controls {
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
 	std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
 
-public:
-	Controls() = default;
-
-	// Jacks
-	Board::TrigJack trig_jack;
-	Board::ResetJack reset_jack;
-
-	// Encoders
-	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
-		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
-		{Board::Enc2A, Board::Enc2B, Board::EncStepSize},
-		{Board::Enc3A, Board::Enc3B, Board::EncStepSize},
-		{Board::Enc4A, Board::Enc4B, Board::EncStepSize},
-		{Board::Enc5A, Board::Enc5B, Board::EncStepSize},
-		{Board::Enc6A, Board::Enc6B, Board::EncStepSize},
-		{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
-		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
-	}};
-
-	// Buttons
-	// TODO: put these indices into board_conf.hh
 	std::array<MuxedButton, Model::NumChans> scene_buttons{
 		Board::Buttons::SceneMap[0],
 		Board::Buttons::SceneMap[1],
@@ -58,50 +38,149 @@ public:
 	MuxedButton fine_button{Board::Buttons::Fine};
 	MuxedButton add_button{Board::Buttons::Add};
 	MuxedButton play_button{Board::Buttons::Play};
-	// static constexpr uint16_t ui_button_mask = 0b1101'1111'1111'0111;
 
 	// Switches
-	MuxedButton mode_switch{3};
-	MuxedButton trig_jack_sense{13};
+	MuxedButton mode_switch{Board::ModeSwitch};
+	MuxedButton trig_jack_sense{Board::TrigJackSense};
 
-	void start()
+	// Encoders
+	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
+		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
+		{Board::Enc2A, Board::Enc2B, Board::EncStepSize},
+		{Board::Enc3A, Board::Enc3B, Board::EncStepSize},
+		{Board::Enc4A, Board::Enc4B, Board::EncStepSize},
+		{Board::Enc5A, Board::Enc5B, Board::EncStepSize},
+		{Board::Enc6A, Board::Enc6B, Board::EncStepSize},
+		{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
+		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
+	}};
+
+	// Jacks
+	Board::TrigJack trig_jack;
+	Board::ResetJack reset_jack;
+
+public:
+	Controls() = default;
+
+	SwitchState ModeSwitchState()
 	{
-		adc_dma.register_callback([this] {
-			for (unsigned i = 0; auto &a : analog)
-				a.add_val(adc_buffer[i++]);
-		});
-		adc_dma.start();
-		if (!led_driver.init())
-			__BKPT();
+		return GetSwitchState(mode_switch);
 	}
 
-	auto &scene_button(unsigned idx)
+	SwitchState TrigJackSenseState()
 	{
-		if (idx >= Model::NumChans)
-			idx = 0;
-		return scene_buttons[idx];
+		return GetSwitchState(trig_jack_sense);
 	}
 
-	uint16_t read_slider()
+	SwitchState TrigJackState()
+	{
+		return GetSwitchState(trig_jack);
+	}
+
+	SwitchState ResetJackState()
+	{
+		return GetSwitchState(reset_jack);
+	}
+
+	SwitchState SceneButtonState(unsigned idx)
+	{
+		return GetSwitchState(scene_buttons[idx]);
+	}
+
+	void ForEachSceneButton(SwitchState state, auto f)
+	{
+		for (auto [i, b] : countzip(scene_buttons)) {
+			if (GetSwitchState(b) != state)
+				continue;
+
+			f(i);
+		}
+	}
+
+	std::optional<uint8_t> YoungestSceneButton()
+	{
+		auto age = 0xffffffffu;
+		uint8_t youngest = 0xff;
+
+		for (auto [i, b] : countzip(scene_buttons)) {
+			if (!b.is_high())
+				continue;
+
+			if (b.time_high > age)
+				continue;
+
+			age = b.time_high;
+			youngest = i;
+		}
+		if (youngest == 0xff)
+			return std::nullopt;
+
+		return youngest;
+	}
+
+	SwitchState ShiftButtonState()
+	{
+		return GetSwitchState(shift_button);
+	}
+
+	SwitchState CopyButtonState()
+	{
+		return GetSwitchState(copy_button);
+	}
+
+	SwitchState BankButtonState()
+	{
+		return GetSwitchState(bank_button);
+	}
+
+	SwitchState FineButtonState()
+	{
+		return GetSwitchState(fine_button);
+	}
+
+	SwitchState AddButtonState()
+	{
+		return GetSwitchState(add_button);
+	}
+
+	SwitchState PlayButtonState()
+	{
+		return GetSwitchState(play_button);
+	}
+
+	int32_t GetEncoder(uint8_t idx)
+	{
+		return encoders[idx].read();
+	}
+
+	void ForEachEncoderInc(auto func)
+	{
+		for (auto [i, enc] : countzip(encoders)) {
+			auto inc = enc.read();
+			if (inc)
+				func(inc, i);
+		}
+	}
+
+	void ClearEncodersState()
+	{
+		for (auto &x : encoders)
+			x.read();
+	}
+
+	uint16_t ReadSlider()
 	{
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::Slider);
 		return (1ul << 12) - 1 - analog[adc_chan_num].val();
 	}
 
-	uint16_t read_cv()
+	uint16_t ReadCv()
 	{
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::CVJack);
 		return analog[adc_chan_num].val();
 	}
 
-	Model::ModeSwitch read_mode_switch()
-	{
-		using enum Model::ModeSwitch;
-		return mode_switch.is_pressed() ? Sequence : Macro;
-	}
-
-	// TODO: Add More functions as needed: read_scene_button(num), read_encoder() etc.
-
+	// needs work below this
 	void set_encoder_led(unsigned led, Color color)
 	{
 		if (led >= Board::EncLedMap.size())
@@ -118,7 +197,7 @@ public:
 		}
 	}
 
-	void set_button_led(unsigned led, float intensity)
+	void SetButtonLed(unsigned led, float intensity)
 	{
 		static constexpr std::array<uint8_t, 32> lut = {0, 0, 1, 1, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
 														5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32};
@@ -126,7 +205,7 @@ public:
 		button_led_duty[led] = lut[intensity * lut.size()];
 	}
 
-	void set_button_led(unsigned led, bool on)
+	void SetButtonLed(unsigned led, bool on)
 	{
 		button_led_duty[led] = on ? 32 : 0;
 	}
@@ -151,13 +230,7 @@ public:
 	{
 		auto temp = get_button_led(led);
 		temp ^= 1;
-		set_button_led(led, temp);
-	}
-
-	void clear_encoders_state()
-	{
-		for (auto &x : encoders)
-			x.read();
+		SetButtonLed(led, temp);
 	}
 
 	void scene_buttons_clear_events()
@@ -167,56 +240,7 @@ public:
 		}
 	}
 
-	void for_each_encoder_inc(auto func)
-	{
-		for (auto [i, enc] : countzip(encoders)) {
-			auto inc = enc.read();
-			if (inc)
-				func(inc, i);
-		}
-	}
-
-	void for_each_scene_button_high(auto f)
-	{
-		for (auto [i, b] : countzip(scene_buttons)) {
-			if (!b.is_high())
-				continue;
-
-			f(i);
-		}
-	}
-
-	void for_each_scene_butt_released(auto f)
-	{
-		for (auto [i, butt] : countzip(scene_buttons)) {
-			if (butt.just_went_low()) {
-				f(i);
-			}
-		}
-	}
-
-	std::optional<uint8_t> youngest_scene_button()
-	{
-		auto age = 0xffffffffu;
-		uint8_t youngest = 0xff;
-
-		for (auto [i, b] : countzip(scene_buttons)) {
-			if (!b.is_high())
-				continue;
-
-			if (b.time_high > age)
-				continue;
-
-			age = b.time_high;
-			youngest = i;
-		}
-		if (youngest == 0xff)
-			return std::nullopt;
-
-		return youngest;
-	}
-
-	void update()
+	void Update()
 	{
 		// TODO: double-check if this is concurrency-safe:
 		// - update() might interrupt the read-modify-write that happens in set_button_led()
@@ -229,7 +253,7 @@ public:
 		}
 	}
 
-	void update_muxio()
+	void UpdateMuxio()
 	{
 		static uint8_t cnt = 0;
 		auto button_leds = 0u;
@@ -241,16 +265,27 @@ public:
 
 		auto mux_read = muxio.step(button_leds);
 		if (mux_read.has_value()) {
-			update_buttons(mux_read.value());
+			UpdateButtons(mux_read.value());
 			cnt++;
 			if (cnt >= 32) {
 				cnt = 0;
-				update_buttons(mux_read.value());
+				UpdateButtons(mux_read.value());
 			}
 		}
 	}
 
-	void write_to_encoder_leds()
+	void Start()
+	{
+		adc_dma.register_callback([this] {
+			for (unsigned i = 0; auto &a : analog)
+				a.add_val(adc_buffer[i++]);
+		});
+		adc_dma.start();
+		if (!led_driver.init())
+			__BKPT();
+	}
+
+	void WriteToEncoderLeds()
 	{
 		// Takes about 620us to write all LEDs
 		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
@@ -258,7 +293,7 @@ public:
 	}
 
 private:
-	void update_buttons(uint32_t raw_mux_read)
+	void UpdateButtons(uint32_t raw_mux_read)
 	{
 		for (auto &but : scene_buttons)
 			but.update(raw_mux_read);
