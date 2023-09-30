@@ -28,23 +28,28 @@ using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolari
 
 //////////////// Buttons
 
-inline constexpr std::array<uint8_t, Model::NumScenes> SceneButtonMap{
-	11,
-	8,
-	7,
-	5,
-	9,
-	10,
-	4,
-	6,
+struct Buttons {
+	static constexpr std::array<uint8_t, Model::NumScenes> SceneMap{
+		11,
+		8,
+		7,
+		5,
+		9,
+		10,
+		4,
+		6,
+	};
+
+	static constexpr uint8_t Shift = 1;
+	static constexpr uint8_t Copy = 12;
+	static constexpr uint8_t Bank = 2;
+	static constexpr uint8_t Fine = 14;
+	static constexpr uint8_t Add = 0;
+	static constexpr uint8_t Play = 15;
 };
 
-inline constexpr uint8_t ShiftButton = 1;
-inline constexpr uint8_t CopyButton = 12;
-inline constexpr uint8_t BankButton = 2;
-inline constexpr uint8_t FineButton = 14;
-inline constexpr uint8_t AddButton = 0;
-inline constexpr uint8_t PlayButton = 15;
+inline constexpr uint8_t ModeSwitch = 3;
+inline constexpr uint8_t TrigJackSense = 13;
 
 //////////////// Encoders
 
