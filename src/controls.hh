@@ -42,13 +42,22 @@ public:
 
 	// Buttons
 	// TODO: put these indices into board_conf.hh
-	std::array<MuxedButton, Model::NumChans> scene_buttons{11, 8, 7, 5, 9, 10, 4, 6};
-	MuxedButton alt_button{0};
-	MuxedButton latch_button{12};
-	MuxedButton bank_button{2};
-	MuxedButton a_button{14};
-	MuxedButton b_button{1};
-	MuxedButton play_button{15};
+	std::array<MuxedButton, Model::NumChans> scene_buttons{
+		Board::Buttons::SceneMap[0],
+		Board::Buttons::SceneMap[1],
+		Board::Buttons::SceneMap[2],
+		Board::Buttons::SceneMap[3],
+		Board::Buttons::SceneMap[4],
+		Board::Buttons::SceneMap[5],
+		Board::Buttons::SceneMap[6],
+		Board::Buttons::SceneMap[7],
+	};
+	MuxedButton shift_button{Board::Buttons::Shift};
+	MuxedButton copy_button{Board::Buttons::Copy};
+	MuxedButton bank_button{Board::Buttons::Bank};
+	MuxedButton fine_button{Board::Buttons::Fine};
+	MuxedButton add_button{Board::Buttons::Add};
+	MuxedButton play_button{Board::Buttons::Play};
 	// static constexpr uint16_t ui_button_mask = 0b1101'1111'1111'0111;
 
 	// Switches
@@ -114,7 +123,7 @@ public:
 		static constexpr std::array<uint8_t, 32> lut = {0, 0, 1, 1, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
 														5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32};
 		intensity = std::clamp<float>(0, .99, intensity);
-		button_led_duty[led] = lut[intensity * 32];
+		button_led_duty[led] = lut[intensity * lut.size()];
 	}
 
 	void set_button_led(unsigned led, bool on)
@@ -254,11 +263,11 @@ private:
 		for (auto &but : scene_buttons)
 			but.update(raw_mux_read);
 
-		alt_button.update(raw_mux_read);
-		latch_button.update(raw_mux_read);
+		shift_button.update(raw_mux_read);
+		copy_button.update(raw_mux_read);
 		bank_button.update(raw_mux_read);
-		a_button.update(raw_mux_read);
-		b_button.update(raw_mux_read);
+		fine_button.update(raw_mux_read);
+		add_button.update(raw_mux_read);
 		play_button.update(raw_mux_read);
 
 		mode_switch.update(raw_mux_read);

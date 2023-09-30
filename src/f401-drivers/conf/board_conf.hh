@@ -26,6 +26,26 @@ using TimekeeperConfig = mdrivlib::TimekeeperConfig;
 using TrigJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_14}, PinPolarity::Inverted>;
 using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolarity::Inverted>;
 
+//////////////// Buttons
+
+inline constexpr std::array<uint8_t, Model::NumScenes> SceneButtonMap{
+	11,
+	8,
+	7,
+	5,
+	9,
+	10,
+	4,
+	6,
+};
+
+inline constexpr uint8_t ShiftButton = 1;
+inline constexpr uint8_t CopyButton = 12;
+inline constexpr uint8_t BankButton = 2;
+inline constexpr uint8_t FineButton = 14;
+inline constexpr uint8_t AddButton = 0;
+inline constexpr uint8_t PlayButton = 15;
+
 //////////////// Encoders
 
 inline constexpr mdrivlib::RotaryStepSize EncStepSize = mdrivlib::RotaryFullStep;
