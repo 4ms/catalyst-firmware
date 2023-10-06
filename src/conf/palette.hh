@@ -1,5 +1,7 @@
 #pragma once
 #include "../../lib/cpputil/util/colors.hh"
+#include "model.hh"
+#include <array>
 
 namespace Catalyst2
 {
@@ -21,6 +23,42 @@ struct Palette {
 	static constexpr Color blue = Color(0, 255, 0);
 	static constexpr Color purple = Color(255, 255, 0);
 	static constexpr Color magenta = Color(200, 100, 0);
+
+	struct Voltage {
+		static constexpr auto Negative = red;
+		static constexpr auto Positive = blue;
+	};
+
+	struct Gate {
+		static constexpr auto Primed = Color{0, 0, 2};
+		static constexpr auto High = green;
+	};
+
+	// the color that each channel mode is represented by
+	static constexpr std::array<Color, Model::ChannelModeCount> ChannelMode = {
+		off,	 // off
+		magenta, // chromatic
+		blue,	 // major
+		red,	 // minor
+		cyan,	 // major pent
+		yellow,	 // minor pent
+		pink,	 // wholetone
+		green,	 // gate
+	};
+
+	// cant use red or blue or green because they are used to indicate voltages and we dont want it to be confusing
+	static constexpr std::array<Color, Model::SeqPages> SeqPage{
+		magenta,
+		orange,
+		grey,
+		pink,
+		cyan,
+		purple,
+		yellow,
+		tangerine,
+	};
+
+	static constexpr auto seqhead = magenta;
 
 	static Color from_raw(int8_t val)
 	{
