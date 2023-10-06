@@ -27,23 +27,8 @@ static constexpr type GateOffFlag = from_volts(.0f);
 
 static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
 static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
-
-static constexpr type Inc(type val, int32_t dir, bool fine, bool is_gate)
-{
-	if (is_gate) {
-		if (dir > 0)
-			return GateSetFlag;
-		else if (dir < 0)
-			return GateOffFlag;
-	} else {
-		if (dir > 0)
-			dir = fine ? inc_step_fine : inc_step;
-		else if (dir < 0)
-			dir = fine ? inc_step_fine * -1 : inc_step * -1;
-		return std::clamp<int32_t>(val + dir, 0, Max);
-	}
-}
 } // namespace ChannelValue
+
 struct Channel {
 	ChannelValue::type val = ChannelValue::from_volts(0.f);
 	void Inc(int32_t dir, bool fine, bool is_gate)
