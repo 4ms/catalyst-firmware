@@ -112,18 +112,19 @@ void main()
 	// run_hardware_test();
 
 	Params params;
-	UI ui{params};
+	Ui::UserInterface ui{params};
+	// UI ui{params};
 	MacroSeq macroseq{params};
 
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
 		auto time_now = HAL_GetTick();
-		ui.update();
+		ui.Update();
 		auto out = macroseq.update();
-		ui.set_outputs(out);
+		ui.SetOutputs(out);
 		time = HAL_GetTick() - time_now;
 	});
 
-	ui.start();
+	ui.Start();
 	cv_stream.start();
 	while (true) {
 		__NOP();

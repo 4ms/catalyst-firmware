@@ -95,8 +95,8 @@ public:
 			seq(buf);
 
 		for (auto [i, out] : countzip(buf)) {
-			if (params.banks.IsChanQuantized(i))
-				out = params.quantizer.process(out);
+			if (params.banks.GetChanMode(i).IsQuantized())
+				out = params.quantizer_bank[i].process(out);
 		}
 
 		return buf;
@@ -110,7 +110,7 @@ private:
 
 		if (params.override_output.has_value()) {
 			for (auto [chan, out] : countzip(in)) {
-				if (params.banks.IsChanTypeGate(chan)) {
+				if (params.banks.GetChanMode(chan).IsGate()) {
 					auto is_primed = params.banks.GetChannel(params.override_output.value(), chan);
 					if (do_trigs && is_primed == ChannelValue::GateSetFlag)
 						trigger[chan].trig(time_now);
@@ -142,7 +142,7 @@ private:
 		}
 
 		for (auto [chan, out] : countzip(in)) {
-			if (params.banks.IsChanTypeGate(chan)) {
+			if (params.banks.GetChanMode(chan).IsGate()) {
 				auto is_primed = ChannelValue::from_volts(0.f);
 				if (current_scene < Model::NumScenes)
 					is_primed = params.banks.GetChannel(current_scene, chan);
@@ -163,7 +163,7 @@ private:
 	void seq(Model::OutputBuffer &in)
 	{
 		static auto prev_ = false;
-		auto cur = params.seq.get_clock();
+		auto cur = params.seq.GetClock();
 		bool do_trigs = false;
 		if (prev_ != cur) {
 			prev_ = cur;
@@ -172,14 +172,14 @@ private:
 		const auto time_now = tick.get();
 
 		for (auto [chan, o] : countzip(in)) {
-			const auto step = params.seq.get_step(chan);
-			if (params.banks.IsChanTypeGate(chan)) {
-				auto is_primed = params.banks.GetChannel(step, chan);
+			const auto step = params.seq.GetStep(chan);
+			if (params.seq.GetChanMode(chan).IsGate()) {
+				auto is_primed = params.seq.GetStepValue(chan, step);
 				if (do_trigs && is_primed == ChannelValue::GateSetFlag)
 					trigger[chan].trig(time_now);
 				o = trigger[chan].get(time_now) ? ChannelValue::GateHigh : is_primed;
 			} else {
-				o = params.banks.GetChannel(step, chan);
+				o = params.seq.GetStepValue(chan, step);
 			}
 		}
 	}
