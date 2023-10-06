@@ -1,4 +1,5 @@
 #pragma once
+#include "channelmode.hh"
 #include "channelvalue.hh"
 #include "conf/model.hh"
 #include "pathway.hh"
@@ -22,8 +23,7 @@ class Banks {
 	struct Bank {
 		SceneArray scene;
 		Pathway path;
-		std::bitset<Model::NumChans> isgate;
-		std::bitset<Model::NumChans> isQuantized;
+		std::array<ChannelMode, Model::NumChans> channelmode;
 	};
 	using BankArray = std::array<Bank, Model::NumBanks>;
 	struct Clipboard {
@@ -66,20 +66,19 @@ public:
 		bank[cur_bank].scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
 	}
 
-	bool IsChanTypeGate(uint8_t channel)
+	void IncChanMode(uint8_t chan, int32_t dir)
 	{
-		if (channel >= Model::NumChans)
-			return false;
-
-		return bank[cur_bank].isgate[channel];
+		bank[cur_bank].channelmode[chan].Inc(dir);
 	}
 
-	bool IsChanQuantized(uint8_t channel)
+	ChannelMode GetChanMode(uint8_t chan)
 	{
-		if (channel >= Model::NumChans)
-			return false;
+		return bank[cur_bank].channelmode[chan];
+	}
 
-		return bank[cur_bank].isQuantized[channel];
+	void SetChanMode(uint8_t chan, ChannelMode mode)
+	{
+		bank[cur_bank].channelmode[chan] = mode;
 	}
 
 	ChannelValue::type GetChannel(uint8_t scene, uint8_t channel)
@@ -90,7 +89,7 @@ public:
 		auto rand = static_cast<int32_t>(RandomPool::GetRandomVal(cur_bank, scene, channel) *
 										 bank[cur_bank].scene[scene].random_amount * ChannelValue::Range);
 
-		if (bank[cur_bank].isgate[channel]) {
+		if (GetChanMode(channel).IsGate()) {
 			// gates not affected by randomness?
 			rand = 0;
 		}
@@ -102,7 +101,7 @@ public:
 	{
 		if (channel >= Model::NumChans || scene >= Model::NumScenes)
 			return;
-		bank[cur_bank].scene[scene].channel[channel].Inc(dir, fine, IsChanTypeGate(channel));
+		bank[cur_bank].scene[scene].channel[channel].Inc(dir, fine, GetChanMode(channel).IsGate());
 	}
 
 	uint8_t GetSelBank()
