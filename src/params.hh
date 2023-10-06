@@ -13,8 +13,8 @@ namespace Catalyst2
 struct Params {
 	Banks banks;
 	Sequencer seq;
-	Quantizer<static_cast<std::size_t>(Model::output_octave_range)> quantizer;
-	int8_t current_scale = 0;
+	using Quan = Quantizer<static_cast<std::size_t>(Model::output_octave_range)>;
+	std::array<Quan, Model::NumChans> quantizer_bank;
 
 	std::optional<uint8_t> override_output;
 
