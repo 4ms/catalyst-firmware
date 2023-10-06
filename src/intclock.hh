@@ -42,6 +42,10 @@ public:
 		else if (by < 0)
 			set_bpm(bpm - inc);
 	}
+	void Reset()
+	{
+		tick = 0;
+	}
 
 private:
 	uint16_t bpm;
