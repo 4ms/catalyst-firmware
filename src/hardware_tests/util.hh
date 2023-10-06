@@ -15,7 +15,7 @@ struct UtilIF {
 
 	static bool main_button_pressed()
 	{
-		return controls->scene_button(0).is_pressed();
+		return controls->button.scene[0].is_high();
 	}
 
 	static void delay_ms(uint32_t ms)
@@ -25,7 +25,7 @@ struct UtilIF {
 
 	static void set_main_button_led(bool turn_on)
 	{
-		controls->set_button_led(0, turn_on);
+		controls->SetButtonLed(0, turn_on);
 	}
 };
 

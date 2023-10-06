@@ -18,8 +18,8 @@ struct TestEncoders {
 	{
 		while (true) {
 			for (unsigned i = 0; auto &r : rotvals) {
-				r += controls.encoders[i].read() * 8;
-				controls.set_encoder_led(i, Palette::orange.blend(Palette::blue, r));
+				r += controls.GetEncoder(i) * 8;
+				controls.SetEncoderLed(i, Palette::orange.blend(Palette::blue, r));
 				i++;
 			}
 

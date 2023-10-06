@@ -19,37 +19,37 @@ struct TestButtons : IButtonChecker {
 	bool _read_button(uint8_t channel) override
 	{
 		if (channel < 8)
-			return UtilIF::controls->scene_button(channel).is_pressed();
+			return UtilIF::controls->button.scene[channel].is_high();
 		if (channel == 8)
-			return UtilIF::controls->play_button.is_pressed();
+			return UtilIF::controls->button.play.is_high();
 		if (channel == 9)
-			return UtilIF::controls->a_button.is_pressed();
+			return UtilIF::controls->button.fine.is_high();
 		if (channel == 10)
-			return UtilIF::controls->latch_button.is_pressed();
+			return UtilIF::controls->button.copy.is_high();
 		if (channel == 11)
-			return UtilIF::controls->b_button.is_pressed();
+			return UtilIF::controls->button.add.is_high();
 		if (channel == 12)
-			return UtilIF::controls->alt_button.is_pressed();
+			return UtilIF::controls->button.shift.is_high();
 		if (channel == 13)
-			return UtilIF::controls->bank_button.is_pressed();
+			return UtilIF::controls->button.bank.is_high();
 		if (channel == 14)
-			return UtilIF::controls->mode_switch.is_pressed();
+			return UtilIF::controls->toggle.mode.is_high();
 		if (channel == 15)
-			return !UtilIF::controls->trig_jack_sense.is_pressed();
+			return UtilIF::controls->toggle.trig_sense.is_high();
 		return false;
 	}
 
 	void _set_error_indicator(uint8_t channel, ErrorType err) override
 	{
-		UtilIF::controls->set_encoder_led(7, err == ErrorType::None ? Palette::off : Palette::red);
+		UtilIF::controls->SetEncoderLed(7, err == ErrorType::None ? Palette::off : Palette::red);
 	}
 
 	void _set_indicator(uint8_t indicator_num, bool newstate) override
 	{
 		if (indicator_num < 8)
-			UtilIF::controls->set_button_led(indicator_num, newstate);
+			UtilIF::controls->SetButtonLed(indicator_num, newstate);
 		else
-			UtilIF::controls->set_encoder_led(indicator_num - 8, newstate ? Palette::green : Palette::off);
+			UtilIF::controls->SetEncoderLed(indicator_num - 8, newstate ? Palette::green : Palette::off);
 	}
 
 	void _check_max_one_pin_changed() override

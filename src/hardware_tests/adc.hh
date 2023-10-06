@@ -22,23 +22,23 @@ struct TestAdc {
 	void run_test()
 	{
 		while (true) {
-			controls.set_encoder_led(slider_map[slider_left_led], Palette::black);
-			controls.set_encoder_led(slider_map[slider_right_led], Palette::black);
-			float slider = 4.f - controls.read_slider() * 4 / 4096.f; // 0..3
+			controls.SetEncoderLed(slider_map[slider_left_led], Palette::black);
+			controls.SetEncoderLed(slider_map[slider_right_led], Palette::black);
+			float slider = 4.f - controls.ReadSlider() * 4 / 4096.f; // 0..3
 			slider_left_led = (unsigned)slider;
 			slider_right_led = (slider_left_led + 1) & 0b11;
 			float slider_phase = slider - (float)slider_left_led;
-			controls.set_encoder_led(slider_map[slider_left_led], Palette::white.blend(Palette::black, slider_phase));
-			controls.set_encoder_led(slider_map[slider_right_led], Palette::black.blend(Palette::white, slider_phase));
+			controls.SetEncoderLed(slider_map[slider_left_led], Palette::white.blend(Palette::black, slider_phase));
+			controls.SetEncoderLed(slider_map[slider_right_led], Palette::black.blend(Palette::white, slider_phase));
 
-			controls.set_encoder_led(cv_map[cv_left_led], Palette::black);
-			controls.set_encoder_led(cv_map[cv_right_led], Palette::black);
-			float cv = controls.read_cv() * 4 / 4096.f; // 0..3
+			controls.SetEncoderLed(cv_map[cv_left_led], Palette::black);
+			controls.SetEncoderLed(cv_map[cv_right_led], Palette::black);
+			float cv = controls.ReadCv() * 4 / 4096.f; // 0..3
 			cv_left_led = (unsigned)cv;
 			cv_right_led = (cv_left_led + 1) & 0b11;
 			float cv_phase = cv - (float)cv_left_led;
-			controls.set_encoder_led(cv_map[cv_left_led], Palette::pink.blend(Palette::black, cv_phase));
-			controls.set_encoder_led(cv_map[cv_right_led], Palette::black.blend(Palette::pink, cv_phase));
+			controls.SetEncoderLed(cv_map[cv_left_led], Palette::pink.blend(Palette::black, cv_phase));
+			controls.SetEncoderLed(cv_map[cv_right_led], Palette::black.blend(Palette::pink, cv_phase));
 
 			if (Util::main_button_pressed())
 				break;

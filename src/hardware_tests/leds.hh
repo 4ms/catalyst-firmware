@@ -14,7 +14,7 @@ struct TestLEDs : ILEDTester {
 	void set_led(int led_id, bool turn_on) override
 	{
 		if (led_id < (int)Model::NumChans) {
-			UtilIF::controls->set_button_led(led_id, turn_on);
+			UtilIF::controls->SetButtonLed(led_id, turn_on);
 		} else {
 			// all encoder leds same color
 			Color color = turn_on == false ? Palette::black :
@@ -24,7 +24,7 @@ struct TestLEDs : ILEDTester {
 											 Palette::white;
 
 			for (unsigned i = 0; i < Model::NumChans; i++)
-				UtilIF::controls->set_encoder_led(i, color);
+				UtilIF::controls->SetEncoderLed(i, color);
 		}
 	}
 

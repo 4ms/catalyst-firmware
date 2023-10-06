@@ -7,7 +7,6 @@
 #include "drivers/led_driver_lp5024.hh"
 #include "drivers/muxed_io.hh"
 #include "muxed_button.hh"
-#include "switch_state.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
 #include <cmath>
@@ -22,27 +21,34 @@ class Controls {
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
 	std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
 
-	std::array<MuxedButton, Model::NumChans> scene_buttons{
-		Board::Buttons::SceneMap[0],
-		Board::Buttons::SceneMap[1],
-		Board::Buttons::SceneMap[2],
-		Board::Buttons::SceneMap[3],
-		Board::Buttons::SceneMap[4],
-		Board::Buttons::SceneMap[5],
-		Board::Buttons::SceneMap[6],
-		Board::Buttons::SceneMap[7],
+	struct Buttons {
+		std::array<MuxedButton, Model::NumChans> scene{
+			Board::Buttons::SceneMap[0],
+			Board::Buttons::SceneMap[1],
+			Board::Buttons::SceneMap[2],
+			Board::Buttons::SceneMap[3],
+			Board::Buttons::SceneMap[4],
+			Board::Buttons::SceneMap[5],
+			Board::Buttons::SceneMap[6],
+			Board::Buttons::SceneMap[7],
+		};
+		MuxedButton shift{Board::Buttons::Shift};
+		MuxedButton copy{Board::Buttons::Copy};
+		MuxedButton bank{Board::Buttons::Bank};
+		MuxedButton fine{Board::Buttons::Fine};
+		MuxedButton add{Board::Buttons::Add};
+		MuxedButton play{Board::Buttons::Play};
 	};
-	MuxedButton shift_button{Board::Buttons::Shift};
-	MuxedButton copy_button{Board::Buttons::Copy};
-	MuxedButton bank_button{Board::Buttons::Bank};
-	MuxedButton fine_button{Board::Buttons::Fine};
-	MuxedButton add_button{Board::Buttons::Add};
-	MuxedButton play_button{Board::Buttons::Play};
-
 	// Switches
-	MuxedButton mode_switch{Board::ModeSwitch};
-	MuxedButton trig_jack_sense{Board::TrigJackSense};
-
+	struct Toggles {
+		MuxedButton mode{Board::ModeSwitch};
+		MuxedButton trig_sense{Board::TrigJackSense};
+	};
+	// Jacks
+	struct Jacks {
+		Board::TrigJack trig;
+		Board::ResetJack reset;
+	};
 	// Encoders
 	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
 		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
@@ -55,54 +61,19 @@ class Controls {
 		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
 	}};
 
-	// Jacks
-	Board::TrigJack trig_jack;
-	Board::ResetJack reset_jack;
-
 public:
+	Buttons button;
+	Toggles toggle;
+	Jacks jack;
+
 	Controls() = default;
-
-	SwitchState ModeSwitchState()
-	{
-		return GetSwitchState(mode_switch);
-	}
-
-	SwitchState TrigJackSenseState()
-	{
-		return GetSwitchState(trig_jack_sense);
-	}
-
-	SwitchState TrigJackState()
-	{
-		return GetSwitchState(trig_jack);
-	}
-
-	SwitchState ResetJackState()
-	{
-		return GetSwitchState(reset_jack);
-	}
-
-	SwitchState SceneButtonState(unsigned idx)
-	{
-		return GetSwitchState(scene_buttons[idx]);
-	}
-
-	void ForEachSceneButton(SwitchState state, auto f)
-	{
-		for (auto [i, b] : countzip(scene_buttons)) {
-			if (GetSwitchState(b) != state)
-				continue;
-
-			f(i);
-		}
-	}
 
 	std::optional<uint8_t> YoungestSceneButton()
 	{
 		auto age = 0xffffffffu;
 		uint8_t youngest = 0xff;
 
-		for (auto [i, b] : countzip(scene_buttons)) {
+		for (auto [i, b] : countzip(button.scene)) {
 			if (!b.is_high())
 				continue;
 
@@ -118,36 +89,7 @@ public:
 		return youngest;
 	}
 
-	SwitchState ShiftButtonState()
-	{
-		return GetSwitchState(shift_button);
-	}
-
-	SwitchState CopyButtonState()
-	{
-		return GetSwitchState(copy_button);
-	}
-
-	SwitchState BankButtonState()
-	{
-		return GetSwitchState(bank_button);
-	}
-
-	SwitchState FineButtonState()
-	{
-		return GetSwitchState(fine_button);
-	}
-
-	SwitchState AddButtonState()
-	{
-		return GetSwitchState(add_button);
-	}
-
-	SwitchState PlayButtonState()
-	{
-		return GetSwitchState(play_button);
-	}
-
+	// unused
 	int32_t GetEncoder(uint8_t idx)
 	{
 		return encoders[idx].read();
@@ -158,14 +100,8 @@ public:
 		for (auto [i, enc] : countzip(encoders)) {
 			auto inc = enc.read();
 			if (inc)
-				func(inc, i);
+				func(i, inc);
 		}
-	}
-
-	void ClearEncodersState()
-	{
-		for (auto &x : encoders)
-			x.read();
 	}
 
 	uint16_t ReadSlider()
@@ -180,8 +116,38 @@ public:
 		return analog[adc_chan_num].val();
 	}
 
-	// needs work below this
-	void set_encoder_led(unsigned led, Color color)
+	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color c)
+	{
+		for (auto i = 0u; i < count; i++)
+			SetEncoderLed((i + offset) & 7, c);
+
+		for (auto i = 0u; i < Model::NumChans - count; i++)
+			SetEncoderLed((count + i + offset) & 7, Colors::off);
+	}
+
+	void SetEncoderLedsAddition(uint8_t num, Color c)
+	{
+		static constexpr auto max_val = [] {
+			uint8_t out = 0;
+			for (auto i = 1u; i <= Model::NumChans; i++)
+				out += i;
+			return out;
+		}();
+
+		if (num > max_val)
+			return;
+
+		uint8_t t = Model::NumChans;
+
+		while (num >= t) {
+			num -= t;
+			t -= 1;
+			SetEncoderLed(t, c);
+		}
+		SetEncoderLed(num - 1, c);
+	}
+
+	void SetEncoderLed(unsigned led, Color color)
 	{
 		if (led >= Board::EncLedMap.size())
 			return;
@@ -190,11 +156,10 @@ public:
 		rgb_leds[idx] = color;
 	}
 
-	void set_all_encoder_leds(Color color)
+	void SetButtonLedsCount(uint8_t count, bool on)
 	{
-		for (auto &led : rgb_leds) {
-			led = color;
-		}
+		for (auto i = 0u; i < count; i++)
+			SetButtonLed(i, on);
 	}
 
 	void SetButtonLed(unsigned led, float intensity)
@@ -210,34 +175,16 @@ public:
 		button_led_duty[led] = on ? 32 : 0;
 	}
 
-	void clear_button_leds()
+	void ClearButtonLeds()
 	{
 		for (auto &a : button_led_duty)
 			a = 0;
 	}
 
-	bool get_button_led(unsigned led)
+	void ClearEncoderLeds()
 	{
-		if (led >= Board::ButtonLedMap.size())
-			return false;
-
-		auto bit = Board::ButtonLedMap[led];
-
-		return button_leds & (1 << bit);
-	}
-
-	void toggle_button_led(unsigned led)
-	{
-		auto temp = get_button_led(led);
-		temp ^= 1;
-		SetButtonLed(led, temp);
-	}
-
-	void scene_buttons_clear_events()
-	{
-		for (auto &but : scene_buttons) {
-			but.clear_events();
-		}
+		for (auto &led : rgb_leds)
+			led = Colors::off;
 	}
 
 	void Update()
@@ -245,9 +192,8 @@ public:
 		// TODO: double-check if this is concurrency-safe:
 		// - update() might interrupt the read-modify-write that happens in set_button_led()
 		// - update_buttons() might interrupt a button being read
-		// - do this routine first for the sake of non-flickering leds
-		trig_jack.update();
-		reset_jack.update();
+		jack.trig.update();
+		jack.reset.update();
 		for (auto &enc : encoders) {
 			enc.update();
 		}
@@ -295,18 +241,18 @@ public:
 private:
 	void UpdateButtons(uint32_t raw_mux_read)
 	{
-		for (auto &but : scene_buttons)
+		for (auto &but : button.scene)
 			but.update(raw_mux_read);
 
-		shift_button.update(raw_mux_read);
-		copy_button.update(raw_mux_read);
-		bank_button.update(raw_mux_read);
-		fine_button.update(raw_mux_read);
-		add_button.update(raw_mux_read);
-		play_button.update(raw_mux_read);
+		button.shift.update(raw_mux_read);
+		button.copy.update(raw_mux_read);
+		button.bank.update(raw_mux_read);
+		button.fine.update(raw_mux_read);
+		button.add.update(raw_mux_read);
+		button.play.update(raw_mux_read);
 
-		mode_switch.update(raw_mux_read);
-		trig_jack_sense.update(raw_mux_read);
+		toggle.mode.update(raw_mux_read);
+		toggle.trig_sense.update(raw_mux_read);
 	}
 
 	// Mux

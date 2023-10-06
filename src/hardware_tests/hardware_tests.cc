@@ -18,7 +18,7 @@ void run_hardware_test()
 	Controls controls;
 	UtilIF::link_controls(controls);
 
-	controls.start();
+	controls.Start();
 
 	mdrivlib::Timekeeper encoder_led_update_task{
 		{
@@ -27,7 +27,7 @@ void run_hardware_test()
 			.priority1 = 2,
 			.priority2 = 0,
 		},
-		[&]() { controls.write_to_encoder_leds(); },
+		[&]() { controls.WriteToEncoderLeds(); },
 	};
 
 	mdrivlib::Timekeeper controls_update_task{
@@ -37,7 +37,7 @@ void run_hardware_test()
 			.priority1 = 1,
 			.priority2 = 0,
 		},
-		[&]() { controls.update(); },
+		[&]() { controls.Update(); },
 	};
 
 	controls_update_task.start();

@@ -24,10 +24,10 @@ struct TestDac {
 
 			for (auto [i, r] : countzip(rotvals)) {
 
-				bool x = i == (controls.read_slider() >> 9);
-				controls.set_button_led(i, x);
+				bool x = i == (controls.ReadSlider() >> 9);
+				controls.SetButtonLed(i, x);
 				r = 255 * x;
-				controls.set_encoder_led(i, Palette::red.blend(Palette::blue, r));
+				controls.SetEncoderLed(i, Palette::red.blend(Palette::blue, r));
 				outs[i] = r << 8;
 				outputs.write(outs);
 			}
