@@ -8,37 +8,43 @@ namespace Catalyst2
 {
 
 class ClockDivider {
-	static constexpr std::array<uint8_t, 5> divideroptions = {1, 2, 4, 8, 24};
-	uint8_t divide_by = 1;
+	static constexpr std::array<uint8_t, 12> divideroptions = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 24, 32};
+	uint8_t div_idx = 0;
 	uint8_t counter = 0;
+	bool step = false;
 
 public:
+	void Update()
+	{
+		counter += 1;
+		if (counter >= divideroptions[div_idx]) {
+			step = true;
+			counter = 0;
+		}
+	}
 	bool Step()
 	{
 		bool ret = false;
-
-		if (!counter)
+		if (step) {
 			ret = true;
-
-		counter += 1;
-		if (counter >= divideroptions[divide_by])
-			counter = 0;
-
+			step = false;
+		}
 		return ret;
 	}
 	void Reset()
 	{
 		counter = 0;
+		step = false;
+	}
+	void IncDiv(int32_t inc)
+	{
+		int32_t t = div_idx;
+		t += inc;
+		div_idx = std::clamp<int32_t>(t, 0, divideroptions.size() - 1);
 	}
 	uint8_t GetDiv()
 	{
-		return divide_by;
+		return divideroptions[div_idx];
 	}
-	void SetDiv(uint8_t div)
-	{
-		divide_by = std::clamp<uint8_t>(div, 0, divideroptions.size() - 1);
-	}
-
-private:
 };
 } // namespace Catalyst2
