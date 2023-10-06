@@ -72,13 +72,13 @@ public:
 			return 0;
 		return val[bank * bank_offset + scene * Model::NumScenes + chan] / 128.f;
 	}
-	static float GetRandomVal(uint8_t seqchan, uint8_t step)
+	static uint8_t GetRandomVal(uint8_t seqchan, uint8_t step)
 	{
 		if (step >= Model::MaxSeqSteps || seqchan >= Model::NumChans)
 			return 0;
 
 		const auto offset = seqchan * Model::MaxSeqSteps;
-		return val[offset + step] / 256.f;
+		return val[offset + step];
 	}
 
 private:
