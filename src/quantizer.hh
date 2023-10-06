@@ -1,6 +1,5 @@
 #pragma once
 
-#include "scales.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -8,15 +7,40 @@
 namespace Catalyst2
 {
 
+struct QuantizerScale {
+	static constexpr auto MaxScaleNotes = 12;
+
+	template<typename... T>
+	constexpr QuantizerScale(T... ts)
+		: scl{ts...}
+		, size_(sizeof...(T))
+	{}
+	constexpr const float &operator[](const std::size_t idx) const
+	{
+		return scl[idx];
+	}
+	constexpr std::size_t size() const
+	{
+		return size_;
+	}
+	constexpr auto begin() const
+	{
+		return scl.begin();
+	}
+	constexpr auto end() const
+	{
+		return begin() + size_;
+	}
+
+private:
+	std::array<float, MaxScaleNotes> scl;
+	std::size_t size_;
+};
+
 template<std::size_t range_octaves>
 struct Quantizer {
 	static constexpr float oct_size = (65536.f / range_octaves) + .5f;
 	static constexpr float note_size = (65536.f / (range_octaves * 12)) + .5f;
-
-	Quantizer()
-	{
-		load_scale(Scale{});
-	};
 
 	uint16_t process(const uint16_t input)
 	{
@@ -41,13 +65,13 @@ struct Quantizer {
 
 		return (value * note_size) + (octave * oct_size);
 	}
-	void load_scale(const Scale &scl)
+	void load_scale(const QuantizerScale &scl)
 	{
 		scale = scl;
 	}
 
 private:
-	Scale scale{};
+	QuantizerScale scale{};
 };
 
 } // namespace Catalyst2
