@@ -1,6 +1,10 @@
 #pragma once
+#include "channelmode.hh"
 #include "channelvalue.hh"
+#include "clockdivider.hh"
 #include "conf/model.hh"
+#include "randompool.hh"
+#include "util/countzip.hh"
 #include <array>
 #include <cstdint>
 
@@ -8,43 +12,52 @@ namespace Catalyst2
 {
 
 struct Sequencer {
+	enum class PlayMode : uint8_t {
+		Sequential,
+		PingPong,
+		Random,
+		NumPlayModes,
+	};
 	using SequenceId = uint8_t;
 	using SeqData = std::array<Channel, Model::MaxSeqSteps>;
 	struct Sequence {
 		SeqData data;
-		uint32_t length : 6;
-		uint32_t counter : 6;
-		uint32_t step : 6;
-		uint32_t start_offset : 6;
-		uint32_t reserved : 8;
+		uint8_t length = Model::SeqStepsPerPage;
+		uint8_t start_offset = 0;
+		ChannelMode channelmode;
+	};
+	struct Player {
+		ClockDivider clockdivider;
+		PlayMode playmode = PlayMode::Sequential;
+		uint8_t counter = 0;
+		uint8_t step = 0;
+		bool pingpong = true;
 	};
 
 	std::array<Sequence, Model::NumChans> sequence;
+	std::array<Player, Model::NumChans> player;
 	SequenceId cur_chan = 0;
-	uint8_t cur_page = 0;
+	uint8_t cur_page = Model::SeqPages;
 
-	Sequencer()
+	ClockDivider &ClockDiv()
 	{
-		for (auto &s : sequence) {
-			s.counter = 0;
-			s.step = 0;
-			s.start_offset = 0;
-			s.length = Model::NumChans - 1;
-		}
+		return player[cur_chan].clockdivider;
 	}
 
-	void IncStep(uint8_t channel, uint8_t step)
+	void IncStep(uint8_t step, int32_t inc, bool fine)
 	{
-		if (channel >= Model::NumChans || step >= Model::MaxSeqSteps)
+		if (step >= Model::MaxSeqSteps)
 			return;
+
+		sequence[cur_chan].data[step].Inc(inc, fine, GetChanMode(cur_chan).IsGate());
 	}
 
-	bool is_chan_selected()
+	bool IsChanSelected()
 	{
 		return cur_chan < Model::NumChans;
 	}
 
-	void sel_chan(SequenceId chan)
+	void SelChan(SequenceId chan)
 	{
 		if (chan >= Model::NumChans || chan == cur_chan) {
 			cur_chan = Model::NumChans;
@@ -54,93 +67,176 @@ struct Sequencer {
 		cur_chan = chan;
 	}
 
-	SequenceId get_sel_chan()
+	void DeselChan()
+	{
+		cur_chan = Model::NumChans;
+	}
+
+	SequenceId GetSelChan()
 	{
 		return cur_chan;
 	}
 
-	bool get_clock() const
+	void SelPage(uint8_t page)
+	{
+		if (page == cur_page) {
+			DeselPage();
+			return;
+		}
+
+		cur_page = page;
+	}
+
+	void DeselPage()
+	{
+		cur_page = Model::SeqPages;
+	}
+
+	uint8_t GetSelPage()
+	{
+		return cur_page;
+	}
+
+	bool IsPageSelected()
+	{
+		return cur_page < Model::SeqPages;
+	}
+
+	bool GetClock() const
 	{
 		return clock_;
 	}
 
-	void step()
+	void Step()
 	{
 		clock_ = !clock_;
 
-		for (auto &s : sequence) {
-			s.counter += 1;
-			if (s.counter >= s.length + 1)
-				s.counter = 0;
-			s.step = s.counter + s.start_offset;
-			s.step &= 7;
+		for (auto [i, s, p] : countzip(sequence, player)) {
+			p.clockdivider.Update();
+			if (!p.clockdivider.Step())
+				continue;
+
+			p.counter += 1;
+			const auto l = p.playmode == PlayMode::PingPong ? s.length - 1 : s.length;
+			if (p.counter >= l) {
+				p.counter = 0;
+				p.pingpong = !p.pingpong;
+			}
+
+			auto step = p.counter + s.start_offset;
+			step %= Model::MaxSeqSteps;
+
+			switch (p.playmode) {
+				case PlayMode::Sequential:
+					p.step = step;
+					break;
+				case PlayMode::PingPong: {
+					if (!p.pingpong)
+						p.step = step;
+					else
+						p.step = (s.length + s.start_offset - 1) - p.counter;
+					break;
+				}
+				case PlayMode::Random:
+					p.step = (RandomPool::GetRandomVal(i, step) % s.length) + s.start_offset;
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
-	void reset()
+	void Reset()
 	{
-		for (auto &s : sequence) {
-			s.counter = 0;
+		for (auto [i, s, p] : countzip(sequence, player)) {
+			p.counter = 0;
+			p.clockdivider.Reset();
+			p.pingpong = false;
+			p.step = s.start_offset;
 		}
 	}
 
-	void adj_length(SequenceId chan, int dir)
+	void AdjLength(int32_t dir)
 	{
-		int temp = sequence[chan].length;
-
-		temp = adjust(temp, dir);
-
-		sequence[chan].length = temp;
+		int temp = sequence[cur_chan].length;
+		temp += dir;
+		temp = std::clamp<int32_t>(temp, 1, Model::MaxSeqSteps);
+		sequence[cur_chan].length = temp;
 	}
 
-	void adj_start_offset(SequenceId chan, int dir)
+	void AdjStartOffset(int32_t dir)
 	{
-		int temp = sequence[chan].start_offset;
-
-		temp = adjust(temp, dir);
-
-		sequence[chan].start_offset = temp;
+		int temp = sequence[cur_chan].start_offset;
+		temp += dir;
+		temp = std::clamp<int32_t>(temp, 0, Model::MaxSeqSteps - 1);
+		sequence[cur_chan].start_offset = temp;
 	}
 
-	void reset_length(SequenceId seq)
+	void AdjPlayMode(int32_t dir)
 	{
-		sequence[seq].length = 7;
+		auto t = static_cast<int32_t>(player[cur_chan].playmode);
+		t += dir;
+		t = std::clamp<int32_t>(t, 0, static_cast<int32_t>(PlayMode::NumPlayModes) - 1);
+		player[cur_chan].playmode = static_cast<PlayMode>(t);
 	}
 
-	void reset_start_offset(SequenceId seq)
+	PlayMode GetPlayMode()
+	{
+		return player[cur_chan].playmode;
+	}
+
+	void ResetLength(SequenceId seq)
+	{
+		sequence[seq].length = Model::SeqStepsPerPage;
+	}
+
+	void ResetStartOffset(SequenceId seq)
 	{
 		sequence[seq].start_offset = 0;
 	}
 
-	uint8_t get_length(SequenceId seq)
+	uint8_t GetLength()
 	{
-		return sequence[seq].length + 1;
+		return sequence[cur_chan].length;
 	}
 
-	uint8_t get_start_offset(SequenceId seq)
+	uint8_t GetStartOffset()
 	{
-		return sequence[seq].start_offset;
+		return sequence[cur_chan].start_offset;
 	}
 
-	uint8_t get_step(SequenceId seq)
+	uint8_t GetStep(SequenceId seq)
 	{
-		return sequence[seq].step;
+		return player[seq].step;
+	}
+
+	uint8_t GetStepPage(SequenceId seq)
+	{
+		return GetStep(seq) / Model::SeqPages;
+	}
+
+	ChannelValue::type GetStepValue(SequenceId seq, uint8_t step)
+	{
+		return sequence[seq].data[step].val;
+	}
+
+	ChannelMode GetChanMode(SequenceId seq)
+	{
+		return sequence[seq].channelmode;
+	}
+
+	void SetChanMode(SequenceId seq, ChannelMode mode)
+	{
+		sequence[seq].channelmode = mode;
+	}
+
+	void IncChanMode(SequenceId seq, int32_t dir)
+	{
+		sequence[seq].channelmode.Inc(dir);
 	}
 
 private:
 	bool clock_ = false;
-
-	int adjust(int val, int dir)
-	{
-		val += dir;
-
-		if (val < 0)
-			val = 0;
-		else if (val >= 8)
-			val = 7;
-
-		return val;
-	}
 };
 
 } // namespace Catalyst2
