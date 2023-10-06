@@ -77,12 +77,33 @@ public:
 		update_scene_width();
 	}
 
-	void remove_scene()
+	void remove_scene_nearest()
 	{
 		if (size() <= 2)
 			return;
 
 		path.erase(index_nearest);
+		update_scene_width();
+	}
+
+	void remove_scene_left()
+	{
+		if (size() <= 2)
+			return;
+
+		path.erase(index_left);
+		update_scene_width();
+	}
+
+	void remove_scene_right()
+	{
+		if (size() <= 2)
+			return;
+
+		auto idxr = index_left + 1;
+		idxr = path.size() ? 0 : idxr;
+
+		path.erase(idxr);
 		update_scene_width();
 	}
 
