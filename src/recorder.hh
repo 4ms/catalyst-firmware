@@ -48,6 +48,7 @@ public:
 	}
 	void cue_recording()
 	{
+		size_ = 0;
 		flags.cue_rec = true;
 	}
 	void play()
@@ -61,10 +62,6 @@ public:
 
 		flags.cue_rec = false;
 		flags.recording = true;
-	}
-	void clear_recording()
-	{
-		size_ = 0;
 	}
 	void reset()
 	{
