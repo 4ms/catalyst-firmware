@@ -4,130 +4,129 @@
 #include <array>
 #include <cstdint>
 
-namespace Catalyst2
+namespace Catalyst2::Pathway
 {
+using SceneId = uint8_t;
+static constexpr auto MaxPoints = 64u;
+using Data = FixedVector<SceneId, MaxPoints>;
 
-struct Pathway {
-	using SceneId = unsigned;				// could be a Scene ptr?
-	static constexpr size_t MaxPoints = 64; //???how many? is this model-specific?
-
-private:
+class Interface {
 	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
 
-	FixedVector<SceneId, MaxPoints> path;
+	Data *p;
 	float scene_width;
-	unsigned index_left;
-	unsigned index_nearest;
-	bool on_a_scene_;
-	unsigned prev_index = 0;
+	SceneId scene_left;
+	SceneId scene_nearest;
+	SceneId prev_index = 0;
+	bool on_a_scene;
 
 public:
-	Pathway()
+	void Load(Data &d)
 	{
-		path.insert(0, 0);
-		path.insert(1, 7);
-		update_scene_width();
-	}
-	void refresh()
-	{
-		update_scene_width();
-	}
-	void update(float point)
-	{
-		on_a_scene_ = scene_is_near(point);
-		index_left = phase_to_index(point);
-		auto n = phase_to_index(point + (scene_width * .5f));
-		index_nearest = n >= size() ? 0 : n;
+		p = &d;
+		if (size() < 2) {
+			p->insert(0, 0);
+			p->insert(1, 7);
+		}
+		UpdateSceneWidth();
 	}
 
-	SceneId scene_left()
+	void Update(float point)
 	{
-		return path[index_left];
+		on_a_scene = SceneIsNear(point);
+		scene_left = PhaseToIndex(point);
+		auto n = PhaseToIndex(point + (scene_width * .5f));
+		scene_nearest = n >= size() ? 0 : n;
 	}
-	SceneId scene_right()
+
+	SceneId SceneLeft()
 	{
-		auto idx = index_left + 1;
+		return (*p)[scene_left];
+	}
+	SceneId SceneRight()
+	{
+		auto idx = scene_left + 1;
 		idx = idx >= size() ? 0 : idx;
-		return path[idx];
+		return (*p)[idx];
 	}
-	SceneId scene_nearest()
+	SceneId SceneNearest()
 	{
-		return path[index_nearest];
+		return (*p)[scene_nearest];
 	}
-	bool on_a_scene()
+	bool OnAScene()
 	{
-		return on_a_scene_;
+		return on_a_scene;
 	}
-	void replace_scene(SceneId scene)
+	void ReplaceScene(SceneId scene)
 	{
-		path[index_nearest] = scene;
-		prev_index = index_nearest;
+		(*p)[scene_nearest] = scene;
+		prev_index = scene_nearest;
 	}
 
-	void insert_scene(SceneId scene, bool after_last = false)
+	void InsertScene(SceneId scene, bool after_last)
 	{
-		auto index = index_left;
+		auto index = scene_left;
 
 		if (after_last)
 			index = prev_index++;
 		else
 			prev_index = index + 1;
 
-		path.insert(index, scene);
-		update_scene_width();
+		p->insert(index, scene);
+		UpdateSceneWidth();
 	}
 
-	void remove_scene_nearest()
+	void RemoveSceneNearest()
 	{
 		if (size() <= 2)
 			return;
 
-		path.erase(index_nearest);
-		update_scene_width();
+		p->erase(scene_nearest);
+		UpdateSceneWidth();
 	}
 
-	void remove_scene_left()
+	void RemoveSceneLeft()
 	{
 		if (size() <= 2)
 			return;
 
-		path.erase(index_left);
-		update_scene_width();
+		p->erase(scene_left);
+		UpdateSceneWidth();
 	}
 
-	void remove_scene_right()
+	void RemoveSceneRight()
 	{
 		if (size() <= 2)
 			return;
 
-		auto idxr = index_left + 1;
-		idxr = path.size() ? 0 : idxr;
+		auto idxr = scene_left + 1;
+		idxr = size() ? 0 : idxr;
 
-		path.erase(idxr);
-		update_scene_width();
+		p->erase(idxr);
+		UpdateSceneWidth();
 	}
 
-	void clear_scenes()
+	void ClearScenes()
 	{
 		// erase all scenes in between first and last one.
 		while (size() > 2)
-			path.erase(1);
+			p->erase(1);
 
-		update_scene_width();
+		UpdateSceneWidth();
 	}
 
-	std::size_t size() const
-	{
-		return path.size();
-	}
-
-	float get_scene_width() const
+	float GetSceneWidth() const
 	{
 		return scene_width;
 	}
 
+	uint8_t size()
+	{
+		return p->size();
+	}
+
 private:
-	bool scene_is_near(float point)
+	bool SceneIsNear(float point)
 	{
 		while (point >= scene_width)
 			point -= scene_width;
@@ -143,15 +142,14 @@ private:
 
 		return false;
 	}
-	unsigned phase_to_index(float phase)
+	unsigned PhaseToIndex(float phase)
 	{
 		auto out = static_cast<unsigned>(phase * (size() - 1));
 		return out % size();
 	}
-	void update_scene_width()
+	void UpdateSceneWidth()
 	{
 		scene_width = 1.f / (size() - 1);
 	}
 };
-
-} // namespace Catalyst2
+} // namespace Catalyst2::Pathway
