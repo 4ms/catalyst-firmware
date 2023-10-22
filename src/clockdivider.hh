@@ -9,15 +9,17 @@ namespace Catalyst2
 
 class ClockDivider {
 	static constexpr std::array<uint8_t, 12> divideroptions = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 24, 32};
-	uint8_t div_idx = 0;
+	static_assert(divideroptions.size() <= 128,
+				  "If you need more than 128 clock divider options, change the type from int8_t");
 	uint8_t counter = 0;
 	bool step = false;
 
 public:
-	void Update()
+	using type = int8_t;
+	void Update(type idx)
 	{
 		counter += 1;
-		if (counter >= divideroptions[div_idx]) {
+		if (counter >= divideroptions[idx]) {
 			step = true;
 			counter = 0;
 		}
@@ -36,15 +38,15 @@ public:
 		counter = 0;
 		step = false;
 	}
-	void IncDiv(int32_t inc)
+	static type IncDivIdx(type idx, int32_t inc)
 	{
-		int32_t t = div_idx;
+		int32_t t = idx;
 		t += inc;
-		div_idx = std::clamp<int32_t>(t, 0, divideroptions.size() - 1);
+		return std::clamp<int32_t>(t, 0, divideroptions.size() - 1);
 	}
-	uint8_t GetDiv()
+	static uint8_t GetDivFromIdx(type idx)
 	{
-		return divideroptions[div_idx];
+		return divideroptions[idx];
 	}
 };
 } // namespace Catalyst2
