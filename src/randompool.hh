@@ -1,6 +1,7 @@
 #pragma once
 
 #include "conf/model.hh"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 
@@ -8,81 +9,64 @@ namespace Catalyst2
 {
 class RandomPool {
 	// same pool of random values can be shared with the sequencer and the macro mode
-	static constexpr auto size_macro = Model::NumBanks * Model::NumScenes * Model::NumChans;
+	static constexpr auto size_macro = Model::NumScenes * Model::NumChans;
 	static constexpr auto size_seq = Model::MaxSeqSteps * Model::NumChans;
 	static constexpr auto size_ = size_macro > size_seq ? size_macro : size_seq;
-	static inline std::array<int8_t, size_> val{};
-
-	static constexpr auto bank_offset = Model::NumScenes * Model::NumChans;
+	std::array<int8_t, size_> val;
 
 public:
-	static void Init(uint16_t seed)
-	{
-		std::srand(seed);
-	}
 	// not really the seed but works well enough as such
-	static int8_t GetSeed(uint8_t bank)
+	uint8_t GetSeed()
 	{
-		if (bank >= Model::NumBanks)
-			return 0;
-
-		return val[bank_offset * bank];
+		return val[0] + 128;
 	}
-	static void ClearBank(uint8_t bank)
+	uint8_t GetSeedSequence(uint8_t sequence)
 	{
-		if (bank >= Model::NumBanks)
-			return;
-		const auto offset = bank * bank_offset;
-
-		for (auto i = 0u; i < bank_offset; i++)
-			val[i + offset] = 0;
+		return val[sequence * Model::MaxSeqSteps] + 128;
 	}
-	static void RandomizeBank(uint8_t bank)
+	void ClearScene()
 	{
-		if (bank >= Model::NumBanks)
-			return;
-		const auto offset = bank * bank_offset;
-
-		for (auto i = 0u; i < bank_offset; i++)
-			Randomize(i + offset);
+		std::fill(val.begin(), val.data() + size_macro, 0);
 	}
-	static void ClearSequenceChannel(uint8_t chan)
+	void RandomizeScene()
 	{
-		if (chan >= Model::NumChans)
-			return;
-
-		const auto offset = chan * Model::MaxSeqSteps;
-
-		for (auto i = 0u; i < Model::MaxSeqSteps; i++)
-			val[i + offset] = 0;
+		for (auto i = 0u; i < size_macro; i++)
+			Randomize(i);
 	}
-	static void RandomizeSequenceChannel(uint8_t chan)
+	void ClearSequence(uint8_t sequence)
 	{
-		if (chan >= Model::NumChans)
-			return;
+		const auto offset = sequence * Model::MaxSeqSteps;
 
-		const auto offset = chan * Model::MaxSeqSteps;
+		std::fill(val.begin() + offset, val.data() + offset + Model::MaxSeqSteps, 0);
+	}
+	void ClearSequence()
+	{
+		std::fill(val.begin(), val.end(), 0);
+	}
+	void RandomizeSequence(uint8_t sequence)
+	{
+		const auto offset = sequence * Model::MaxSeqSteps;
 
 		for (auto i = 0u; i < Model::MaxSeqSteps; i++)
 			Randomize(i + offset);
 	}
-	static float GetRandomVal(uint8_t bank, uint8_t scene, uint8_t chan)
+	void RandomizeSequence()
 	{
-		if (bank >= Model::NumBanks || scene >= Model::NumScenes || chan >= Model::NumChans)
-			return 0;
-		return val[bank * bank_offset + scene * Model::NumScenes + chan] / 128.f;
+		for (auto &v : val)
+			v = std::rand();
 	}
-	static uint8_t GetRandomVal(uint8_t seqchan, uint8_t step)
+	float GetSceneVal(uint8_t scene, uint8_t chan)
 	{
-		if (step >= Model::MaxSeqSteps || seqchan >= Model::NumChans)
-			return 0;
-
-		const auto offset = seqchan * Model::MaxSeqSteps;
-		return val[offset + step];
+		return val[(scene * Model::NumScenes) + chan] / 128.f;
+	}
+	float GetSequenceVal(uint8_t sequence, uint8_t step)
+	{
+		const auto offset = sequence * Model::MaxSeqSteps;
+		return val[offset + step] / 128.f;
 	}
 
 private:
-	static void Randomize(uint8_t idx)
+	void Randomize(uint8_t idx)
 	{
 		val[idx] = std::rand();
 	}
