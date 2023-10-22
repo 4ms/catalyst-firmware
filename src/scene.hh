@@ -10,112 +10,85 @@
 #include <bitset>
 #include <cstdint>
 
-namespace Catalyst2
+namespace Catalyst2::Bank
 {
-
-class Banks {
-	using ChannelArray = std::array<Channel, Model::NumChans>;
+struct Data {
 	struct Scene {
-		ChannelArray channel;
-		float random_amount = 0.f;
+		std::array<Channel, Model::NumChans> channel;
+		float random_amount = 1.f / 15.f;
 	};
-	using SceneArray = std::array<Scene, Model::NumScenes>;
-	struct Bank {
-		SceneArray scene;
-		Pathway path;
-		std::array<ChannelMode, Model::NumChans> channelmode;
-	};
-	using BankArray = std::array<Bank, Model::NumBanks>;
-	struct Clipboard {
-		uint8_t scene : 3;
-		uint8_t bank : 3;
-	};
+	std::array<Scene, Model::NumScenes> scene;
+	std::array<ChannelMode, Model::NumChans> channelmode;
+};
 
-	// member variables
-	BankArray bank;
-	Clipboard clipboard = {.scene = 0, .bank = 0};
-	uint8_t cur_bank = 0;
+class Interface {
+	Data::Scene clipboard;
+	RandomPool &randompool;
+	Data *b;
 
 public:
-	Pathway &Path()
+	Interface(RandomPool &r)
+		: randompool{r}
+	{}
+
+	void Load(Data &d)
 	{
-		return bank[cur_bank].path;
+		b = &d;
 	}
 
-	void CopySceneToClipboard(uint8_t scene)
+	void Copy(uint8_t scene)
 	{
-		clipboard.bank = cur_bank;
-		clipboard.scene = scene;
+		clipboard = b->scene[scene];
 	}
 
-	void PasteToScene(uint8_t scene)
+	void Paste(uint8_t scene)
 	{
-		bank[cur_bank].scene[scene] = bank[clipboard.bank].scene[clipboard.scene];
+		b->scene[scene] = clipboard;
+	}
+
+	void IncChannelMode(uint8_t channel, int32_t inc)
+	{
+		b->channelmode[channel].Inc(inc);
+	}
+
+	ChannelMode GetChannelMode(uint8_t channel)
+	{
+		return b->channelmode[channel];
+	}
+
+	void SetChanMode(uint8_t channel, ChannelMode mode)
+	{
+		b->channelmode[channel] = mode;
 	}
 
 	float GetRandomAmount(uint8_t scene)
 	{
-		if (scene >= Model::NumScenes)
-			return 0.f;
-
-		return bank[cur_bank].scene[scene].random_amount;
+		return b->scene[scene].random_amount;
 	}
 
 	void SetRandomAmount(uint8_t scene, float amount)
 	{
-		bank[cur_bank].scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
+		b->scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
 	}
 
-	void IncChanMode(uint8_t chan, int32_t dir)
+	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine)
 	{
-		bank[cur_bank].channelmode[chan].Inc(dir);
-	}
-
-	ChannelMode GetChanMode(uint8_t chan)
-	{
-		return bank[cur_bank].channelmode[chan];
-	}
-
-	void SetChanMode(uint8_t chan, ChannelMode mode)
-	{
-		bank[cur_bank].channelmode[chan] = mode;
+		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate());
 	}
 
 	ChannelValue::type GetChannel(uint8_t scene, uint8_t channel)
 	{
-		if (channel >= Model::NumChans || scene >= Model::NumScenes)
-			return 0;
 
-		auto rand = static_cast<int32_t>(RandomPool::GetRandomVal(cur_bank, scene, channel) *
-										 bank[cur_bank].scene[scene].random_amount * ChannelValue::Range);
+		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random_amount *
+										 ChannelValue::Range);
 
-		if (GetChanMode(channel).IsGate()) {
+		if (GetChannelMode(channel).IsGate()) {
 			// gates not affected by randomness?
 			rand = 0;
 		}
-		auto temp = bank[cur_bank].scene[scene].channel[channel].val + rand;
+		auto temp = b->scene[scene].channel[channel].val + rand;
 		return std::clamp<int32_t>(temp, ChannelValue::Min, ChannelValue::Max);
-	}
-
-	void IncChan(uint8_t scene, uint8_t channel, int32_t dir, bool fine)
-	{
-		if (channel >= Model::NumChans || scene >= Model::NumScenes)
-			return;
-		bank[cur_bank].scene[scene].channel[channel].Inc(dir, fine, GetChanMode(channel).IsGate());
-	}
-
-	uint8_t GetSelBank()
-	{
-		return cur_bank;
-	}
-
-	void SelBank(uint8_t bank)
-	{
-		if (bank >= Model::NumBanks)
-			return;
-
-		cur_bank = bank;
 	}
 };
 
-} // namespace Catalyst2
+} // namespace Catalyst2::Bank
