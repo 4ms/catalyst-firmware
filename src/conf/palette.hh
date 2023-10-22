@@ -36,29 +36,21 @@ struct Palette {
 
 	// the color that each channel mode is represented by
 	static constexpr std::array<Color, Model::ChannelModeCount> ChannelMode = {
-		off,	 // off
-		magenta, // chromatic
-		blue,	 // major
-		red,	 // minor
-		cyan,	 // major pent
-		yellow,	 // minor pent
-		pink,	 // wholetone
-		green,	 // gate
-	};
-
-	// cant use red or blue or green because they are used to indicate voltages and we dont want it to be confusing
-	static constexpr std::array<Color, Model::SeqPages> SeqPage{
-		magenta,
-		orange,
-		grey,
-		pink,
-		cyan,
-		purple,
-		yellow,
-		tangerine,
+		Color{2, 2, 0}, // off
+		magenta,		// chromatic
+		blue,			// major
+		red,			// minor
+		cyan,			// major pent
+		yellow,			// minor pent
+		pink,			// wholetone
+		green,			// gate
 	};
 
 	static constexpr auto seqhead = magenta;
+
+	static constexpr auto globalsetting = red;
+
+	static constexpr auto bpm = yellow;
 
 	static Color from_raw(int8_t val)
 	{

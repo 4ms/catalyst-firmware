@@ -14,9 +14,10 @@ static constexpr uint32_t NumChans = 8;
 static constexpr uint32_t NumScenes = 8;
 static constexpr uint32_t NumBanks = 8;
 
-static constexpr uint32_t SeqPages = 8;
-static constexpr uint32_t SeqStepsPerPage = 8;
-static constexpr uint32_t MaxSeqSteps = SeqPages * SeqStepsPerPage;
+static constexpr auto SeqPages = 8;
+static constexpr auto SeqStepsPerPage = 8;
+static constexpr auto MaxSeqSteps = SeqPages * SeqStepsPerPage;
+static constexpr auto MinSeqSteps = 1;
 
 using OutputBuffer = std::array<uint16_t, NumChans>;
 
@@ -52,6 +53,7 @@ struct EncoderAlts {
 	static constexpr auto StartOffset = 0;
 	static constexpr auto PlayMode = 1;
 	static constexpr auto SeqLength = 2;
+	static constexpr auto PhaseOffset = 3;
 	static constexpr auto ClockDiv = 5;
 	static constexpr auto Random = 7;
 };
