@@ -101,6 +101,26 @@ turning on and defaulting to sequencer mode and having it act the way it current
 way that this module could possibly work
 */
 
+/* october 9th
+when looking at sequencer outputs, pressing a scene button should select that channel.
+channel settings button should be disabled
+
+channel settings (shift + scene button)
+global settings (shift)
+dim color for channel mode off.
+move random seq path to seq dir knob
+random amount && random seed per channel value
+
+macro:
+shift == random should randomize nearest scened
+shift + scene == per bank channel random amount
+
+both: play button stops when playing and restarts when stopped
+transpose: post quantizer
+
+seq add button tap tempo?
+*/
+
 volatile uint32_t time;
 
 void main()
@@ -112,7 +132,7 @@ void main()
 	// run_hardware_test();
 
 	Params params;
-	Ui::UserInterface ui{params};
+	Ui::Interface ui{params};
 	// UI ui{params};
 	MacroSeq macroseq{params};
 
