@@ -29,7 +29,8 @@ class ChannelData {
 	std::optional<int8_t> start_offset = std::nullopt;
 	std::optional<PlayMode> playmode = std::nullopt;
 	std::optional<ClockDivider::type> clockdiv = std::nullopt;
-	float randomamount = 1.f / 15.f;
+	float randomamount = 0;
+	// 1.f / 15.f;
 
 public:
 	ChannelData()
@@ -46,6 +47,14 @@ public:
 	{
 		auto temp = morph[step] + inc;
 		morph[step] = std::clamp<int32_t>(temp, 0, 100);
+	}
+	void SetStep(uint8_t step, Channel t)
+	{
+		this->step[step] = t;
+	}
+	void SetMorph(uint8_t step, float m)
+	{
+		morph[step] = m * 100.f;
 	}
 	Channel GetStep(uint8_t step)
 	{
@@ -344,7 +353,14 @@ class Interface {
 	std::array<PlayerInterface, Model::NumChans> player;
 	Data &data;
 	RandomPool &randompool;
-	Sequencer::ChannelData clipboard;
+
+	struct Clipboard {
+		struct Page {
+			std::array<Channel, Model::SeqStepsPerPage> step;
+			std::array<float, Model::SeqStepsPerPage> morph;
+		} page;
+		Sequencer::ChannelData sequence;
+	} clipboard;
 
 public:
 	Interface(Data &data, RandomPool &r)
@@ -374,14 +390,31 @@ public:
 			p.Reset(data, d);
 	}
 
-	void Copy(uint8_t sequence)
+	void CopySequence(uint8_t sequence)
 	{
-		clipboard = data.channel[sequence];
+		clipboard.sequence = data.channel[sequence];
 	}
 
-	void Paste(uint8_t sequence)
+	void PasteSequence(uint8_t sequence)
 	{
-		data.channel[sequence] = clipboard;
+		data.channel[sequence] = clipboard.sequence;
+	}
+
+	void CopyPage(uint8_t sequence, uint8_t page)
+	{
+		for (auto [i, p, m] : countzip(clipboard.page.step, clipboard.page.morph)) {
+			const auto offset = (page * Model::SeqStepsPerPage) + i;
+			p = data.channel[sequence].GetStep(offset);
+			m = data.channel[sequence].GetMorph(offset);
+		}
+	}
+	void PastePage(uint8_t sequence, uint8_t page)
+	{
+		for (auto [i, p, m] : countzip(clipboard.page.step, clipboard.page.morph)) {
+			const auto offset = (page * Model::SeqStepsPerPage) + i;
+			data.channel[sequence].SetStep(offset, p);
+			data.channel[sequence].SetMorph(offset, m);
+		}
 	}
 
 	void RandomizeStepPattern(uint8_t sequence)

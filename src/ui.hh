@@ -369,6 +369,8 @@ public:
 	{}
 	virtual void Init() override
 	{
+		c.button.fine.clear_events();
+		c.button.bank.clear_events();
 		return;
 		// scratch pad
 		// p.IncLength()
@@ -376,6 +378,16 @@ public:
 	virtual bool Update() override
 	{
 		Common();
+
+		if (p.IsSequenceSelected()) {
+			const auto curseq = p.GetSelectedSequence();
+			if (c.button.fine.just_went_high() && c.YoungestSceneButton().has_value())
+				p.seq.CopyPage(curseq, c.YoungestSceneButton().value());
+
+			if (c.button.bank.just_went_high() && c.button.fine.is_high())
+				p.seq.PasteSequence(curseq);
+		}
+
 		return RequestModeUpdate();
 	}
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
@@ -391,10 +403,16 @@ public:
 		if (!p.IsSequenceSelected()) {
 			p.SelectSequence(button);
 		} else {
-			if (p.IsPageSelected() && button == p.GetSelectedPage())
-				p.DeselectPage();
-			else
-				p.SelectPage(button);
+			if (c.button.fine.is_high()) {
+				p.seq.PastePage(p.GetSelectedSequence(), button);
+			} else {
+				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
+					if (p.IsPageSelected() && button == p.GetSelectedPage())
+						p.DeselectPage();
+					else
+						p.SelectPage(button);
+				}
+			}
 		}
 	}
 	virtual void PaintLeds(const Model::OutputBuffer &outs) override
@@ -483,6 +501,10 @@ private:
 class SeqBank : public Seq {
 public:
 	using Seq::Seq;
+	void Init() override
+	{
+		c.button.fine.clear_events();
+	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) override
 	{
 		if (c.button.shift.is_high()) {
@@ -512,6 +534,10 @@ public:
 	bool Update() override
 	{
 		Common();
+
+		if (c.button.fine.just_went_high() && p.IsSequenceSelected())
+			p.seq.CopySequence(p.GetSelectedSequence());
+
 		return RequestModeUpdate();
 	}
 
