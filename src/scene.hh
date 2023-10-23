@@ -15,7 +15,7 @@ namespace Catalyst2::Bank
 struct Data {
 	struct Scene {
 		std::array<Channel, Model::NumChans> channel;
-		float random_amount = 1.f / 15.f;
+		float random_amount = 0; // 1.f / 15.f;
 	};
 	std::array<Scene, Model::NumScenes> scene;
 	std::array<ChannelMode, Model::NumChans> channelmode;

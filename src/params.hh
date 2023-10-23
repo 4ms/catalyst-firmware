@@ -46,7 +46,7 @@ public:
 	QuantizerArray quantizer;
 	ClockDivider clockdivider;
 	RandomPool randompool;
-	std::optional<uint8_t> override_output;
+	std::optional<uint8_t> override_output; // this doesnt need to be shared.
 	DisplayHanger hang;
 
 	void SetPos(float pos)

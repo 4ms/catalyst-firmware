@@ -33,7 +33,7 @@ class Controls {
 			Board::Buttons::SceneMap[7],
 		};
 		MuxedButton shift{Board::Buttons::Shift};
-		MuxedButton copy{Board::Buttons::Copy};
+		MuxedButton morph{Board::Buttons::Morph};
 		MuxedButton bank{Board::Buttons::Bank};
 		MuxedButton fine{Board::Buttons::Fine};
 		MuxedButton add{Board::Buttons::Add};
@@ -245,7 +245,7 @@ private:
 			but.update(raw_mux_read);
 
 		button.shift.update(raw_mux_read);
-		button.copy.update(raw_mux_read);
+		button.morph.update(raw_mux_read);
 		button.bank.update(raw_mux_read);
 		button.fine.update(raw_mux_read);
 		button.add.update(raw_mux_read);

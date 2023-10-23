@@ -40,13 +40,13 @@ public:
 	{}
 	virtual void Init() override
 	{
-		c.button.copy.clear_events();
+		c.button.fine.clear_events();
 	}
 	virtual bool Update() override
 	{
 		Common();
 
-		if (p.shared.override_output.has_value() && c.button.copy.just_went_high())
+		if (c.button.fine.just_went_high() && p.shared.override_output.has_value())
 			p.bank.Copy(p.shared.override_output.value());
 
 		if (c.button.play.just_went_high()) {
@@ -61,7 +61,11 @@ public:
 	}
 
 	virtual void OnSceneButtonRelease(uint8_t button) override
-	{}
+	{
+		if (c.button.fine.is_high()) {
+			p.bank.Paste(button);
+		}
+	}
 
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
 	{
@@ -139,7 +143,7 @@ private:
 		if (c.button.bank.is_high())
 			return true;
 
-		if (c.button.copy.is_high())
+		if (c.button.morph.is_high())
 			return true;
 
 		if (c.button.shift.is_high())
@@ -332,9 +336,7 @@ public:
 	}
 
 	virtual void OnSceneButtonRelease(uint8_t button) override
-	{
-		p.bank.Paste(button);
-	}
+	{}
 
 	virtual void PaintLeds(const Model::OutputBuffer &outs) override
 	{
@@ -351,7 +353,7 @@ public:
 private:
 	bool RequestModeUpdate()
 	{
-		if (!c.button.copy.is_high())
+		if (!c.button.morph.is_high())
 			return true;
 
 		return false;
@@ -471,7 +473,7 @@ private:
 		if (c.button.bank.is_high())
 			return true;
 
-		if (c.button.copy.is_high())
+		if (c.button.morph.is_high())
 			return true;
 
 		return false;
@@ -586,7 +588,7 @@ public:
 private:
 	bool RequestModeUpdate()
 	{
-		if (!c.button.copy.is_high())
+		if (!c.button.morph.is_high())
 			return true;
 
 		return false;
@@ -933,7 +935,7 @@ private:
 			;
 		else if (controls.button.add.is_high())
 			ui = &macroadd;
-		else if (controls.button.copy.is_high())
+		else if (controls.button.morph.is_high())
 			ui = &macromorph;
 		else
 			ui = &macro;
@@ -946,7 +948,7 @@ private:
 			ui = &seqbank;
 		else if (controls.button.shift.is_high())
 			ui = &seqsettings;
-		else if (controls.button.copy.is_high())
+		else if (controls.button.morph.is_high())
 			ui = &seqmorph;
 		else
 			ui = &sequencer;

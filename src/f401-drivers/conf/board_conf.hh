@@ -41,7 +41,7 @@ struct Buttons {
 	};
 
 	static constexpr uint8_t Shift = 1;
-	static constexpr uint8_t Copy = 12;
+	static constexpr uint8_t Morph = 12;
 	static constexpr uint8_t Bank = 2;
 	static constexpr uint8_t Fine = 14;
 	static constexpr uint8_t Add = 0;
