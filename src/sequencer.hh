@@ -353,6 +353,7 @@ class Interface {
 	std::array<PlayerInterface, Model::NumChans> player;
 	Data &data;
 	RandomPool &randompool;
+	bool pause = false;
 
 	struct Clipboard {
 		struct Page {
@@ -380,6 +381,9 @@ public:
 
 	void Step()
 	{
+		if (pause)
+			return;
+
 		for (auto [d, p] : countzip(player))
 			p.Step(data, d);
 	}
@@ -388,6 +392,13 @@ public:
 	{
 		for (auto [d, p] : countzip(player))
 			p.Reset(data, d);
+	}
+
+	void TogglePause()
+	{
+		pause = !pause;
+		if (pause)
+			Reset();
 	}
 
 	void CopySequence(uint8_t sequence)

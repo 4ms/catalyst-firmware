@@ -73,8 +73,8 @@ public:
 
 	void IncRandomAmount(uint8_t scene, int32_t inc)
 	{
-		inc /= 50.f;
-		SetRandomAmount(scene, b->scene[scene].random_amount + inc);
+		auto i = inc / 50.f;
+		SetRandomAmount(scene, b->scene[scene].random_amount + i);
 	}
 
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine)
