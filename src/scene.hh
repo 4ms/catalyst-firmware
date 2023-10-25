@@ -71,6 +71,12 @@ public:
 		b->scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
 	}
 
+	void IncRandomAmount(uint8_t scene, int32_t inc)
+	{
+		inc /= 50.f;
+		SetRandomAmount(scene, b->scene[scene].random_amount + inc);
+	}
+
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine)
 	{
 		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate());

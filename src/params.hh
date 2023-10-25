@@ -66,7 +66,7 @@ public:
 
 	ClockDivider::type GetClockDiv()
 	{
-		return ClockDivider::GetDivFromIdx(clockdiv);
+		return clockdiv;
 	}
 };
 

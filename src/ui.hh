@@ -17,6 +17,8 @@ namespace Catalyst2::Ui
 
 Color EncoderBlend(uint16_t level, bool chan_type_gate);
 
+void GlobalClockDiv(SharedInterface &p, int32_t inc);
+
 class Abstract {
 public:
 	Controls &c;
@@ -485,7 +487,7 @@ private:
 		if (!c.toggle.mode.is_high())
 			return true;
 
-		if (c.button.shift.is_high() && p.IsSequenceSelected())
+		if (c.button.shift.is_high())
 			return true;
 
 		if (c.button.bank.is_high())
@@ -632,71 +634,92 @@ public:
 	virtual bool Update() override
 	{
 		Common();
-		p.shared.override_output = c.YoungestSceneButton();
 		return RequestModeUpdate();
 	}
 	virtual void OnSceneButtonRelease(uint8_t button) override
 	{}
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
 	{
-		auto is_channel = c.YoungestSceneButton().has_value();
-		auto chan = c.YoungestSceneButton().value_or(0);
-		if (encoder == Model::EncoderAlts::Random) {
-			if (is_channel) {
-				p.seq.Channel(chan).IncRandomAmount(inc);
-			} else {
-				if (inc > 0)
-					p.shared.randompool.RandomizeSequence();
-				else
-					p.shared.randompool.ClearSequence();
-			}
-			p.shared.hang.Cancel();
-			return;
-		} else if (encoder == Model::EncoderAlts::PlayMode) {
-			if (is_channel)
-				p.seq.Channel(chan).IncPlayMode(inc);
-			else
-				p.seq.Global().IncPlayMode(inc);
-			p.shared.hang.Cancel();
-			return;
-		} else if (encoder == Model::EncoderAlts::ClockDiv) {
-			if (!is_channel && c.toggle.trig_sense.is_high()) {
-				p.internalclock.bpm_inc(inc, false);
-				p.seq.Global().IncClockDiv(-100); // reset global clock div
-				return;
-			}
-		}
-		// this makes it so the value isnt affected on the first encoder click
 		const auto time_now = HAL_GetTick();
 		const auto hang = p.shared.hang.Check(time_now);
-		inc = hang.has_value() ? inc : 0;
-		p.shared.hang.Set(encoder, time_now);
 
-		if (encoder == Model::EncoderAlts::StartOffset) {
-			if (is_channel)
-				p.seq.Channel(chan).IncStartOffset(inc);
-			else
-				p.seq.Global().IncStartOffset(inc);
-		} else if (encoder == Model::EncoderAlts::PhaseOffset) {
-			if (is_channel) {
-				const auto len = p.seq.Channel(chan).GetLength().value_or(p.seq.Global().GetLength());
-				const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
-				p.seq.Channel(chan).IncPhaseOffset(i);
-			} else {
-				const auto len = p.seq.Global().GetLength();
-				const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
-				p.seq.Global().IncPhaseOffset(i);
+		if (!p.IsSequenceSelected()) {
+			if (encoder == Model::EncoderAlts::ClockDiv) {
+				inc = hang.has_value() ? inc : 0;
+				p.shared.IncClockDiv(inc);
+				p.shared.hang.Set(encoder, time_now);
 			}
-		} else if (encoder == Model::EncoderAlts::SeqLength) {
-			if (is_channel)
-				p.seq.Channel(chan).IncLength(inc);
-			else
-				p.seq.Global().IncLength(inc);
-		} else if (encoder == Model::EncoderAlts::ClockDiv) {
-			if (is_channel)
-				p.seq.Channel(chan).IncClockDiv(inc);
-			else
-				p.seq.Global().IncClockDiv(inc);
+			return;
+		}
+
+		auto is_channel = c.YoungestSceneButton().has_value();
+		auto chan = c.YoungestSceneButton().value_or(0);
+
+		switch (encoder) {
+			case Model::EncoderAlts::Random:
+				if (is_channel) {
+					p.seq.Channel(chan).IncRandomAmount(inc);
+				} else {
+					if (inc > 0)
+						p.shared.randompool.RandomizeSequence();
+					else
+						p.shared.randompool.ClearSequence();
+				}
+				p.shared.hang.Cancel();
+				break;
+			case Model::EncoderAlts::PlayMode:
+				if (is_channel)
+					p.seq.Channel(chan).IncPlayMode(inc);
+				else
+					p.seq.Global().IncPlayMode(inc);
+				p.shared.hang.Cancel();
+				break;
+			case Model::EncoderAlts::StartOffset:
+				inc = hang.has_value() ? inc : 0;
+				if (is_channel)
+					p.seq.Channel(chan).IncStartOffset(inc);
+				else
+					p.seq.Global().IncStartOffset(inc);
+				p.shared.hang.Set(encoder, time_now);
+				break;
+			case Model::EncoderAlts::PhaseOffset:
+				inc = hang.has_value() ? inc : 0;
+				if (is_channel) {
+					const auto len = p.seq.Channel(chan).GetLength().value_or(p.seq.Global().GetLength());
+					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
+					p.seq.Channel(chan).IncPhaseOffset(i);
+				} else {
+					const auto len = p.seq.Global().GetLength();
+					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
+					p.seq.Global().IncPhaseOffset(i);
+				}
+				p.shared.hang.Set(encoder, time_now);
+				break;
+			case Model::EncoderAlts::SeqLength:
+				inc = hang.has_value() ? inc : 0;
+				if (is_channel)
+					p.seq.Channel(chan).IncLength(inc);
+				else
+					p.seq.Global().IncLength(inc);
+				p.shared.hang.Set(encoder, time_now);
+				break;
+			case Model::EncoderAlts::ClockDiv:
+				if (is_channel) {
+					inc = hang.has_value() ? inc : 0;
+					p.seq.Channel(chan).IncClockDiv(inc);
+					p.shared.hang.Set(encoder, time_now);
+				} else {
+					if (c.toggle.trig_sense.is_high()) {
+						p.internalclock.bpm_inc(inc, false);
+						p.seq.Global().IncClockDiv(-100); // reset global clock div
+						p.shared.hang.Cancel();
+					} else {
+						inc = hang.has_value() ? inc : 0;
+						p.seq.Global().IncClockDiv(inc);
+						p.shared.hang.Set(encoder, time_now);
+					}
+				}
+				break;
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override
@@ -707,12 +730,26 @@ public:
 		const auto time_now = HAL_GetTick();
 		auto hang = p.shared.hang.Check(time_now);
 
+		auto clockdiv = std::make_optional(p.seq.Global().GetClockDiv());
+
+		if (!p.IsSequenceSelected()) {
+			clockdiv = p.shared.GetClockDiv();
+			if (hang.has_value()) {
+				if (hang.value() != Model::EncoderAlts::ClockDiv)
+					return;
+				if (clockdiv.has_value())
+					c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv.value()), Palette::blue);
+				else
+					c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::globalsetting);
+			} else
+				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
+			return;
+		}
+
 		auto length = std::make_optional(p.seq.Global().GetLength());
 		auto phaseoffset = std::make_optional(p.seq.Global().GetPhaseOffset());
 		auto startoffset = std::make_optional(p.seq.Global().GetStartOffset());
 		auto playmode = std::make_optional(p.seq.Global().GetPlayMode());
-		auto clockdiv = std::make_optional(p.seq.Global().GetClockDiv());
-
 		auto random = 1.f;
 
 		if (c.YoungestSceneButton().has_value()) {
@@ -857,6 +894,32 @@ public:
 		Common();
 		return RequestModeUpdate();
 	}
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
+	{
+		auto is_channel = c.YoungestSceneButton().has_value();
+		auto chan = c.YoungestSceneButton().value_or(0);
+		if (encoder == Model::EncoderAlts::Random) {
+			if (is_channel) {
+				p.bank.IncRandomAmount(chan, inc);
+			} else {
+				if (inc > 0)
+					p.shared.randompool.RandomizeScene();
+				else
+					p.shared.randompool.ClearScene();
+			}
+			p.shared.hang.Cancel();
+			return;
+		}
+		// this makes it so the value isnt affected on the first encoder click
+		const auto time_now = HAL_GetTick();
+		const auto hang = p.shared.hang.Check(time_now);
+		inc = hang.has_value() ? inc : 0;
+		p.shared.hang.Set(encoder, time_now);
+
+		if (encoder == Model::EncoderAlts::ClockDiv) {
+			p.shared.IncClockDiv(inc);
+		}
+	}
 
 private:
 	bool RequestModeUpdate()
@@ -953,12 +1016,10 @@ private:
 	}
 	void UpdateInterfaceMacro()
 	{
-		if (controls.button.bank.is_high() && controls.button.shift.is_high())
-			; // ui = &globalsettings;
-		else if (controls.button.bank.is_high())
+		if (controls.button.bank.is_high())
 			ui = &macrobank;
 		else if (controls.button.shift.is_high())
-			;
+			ui = &macrosettings;
 		else if (controls.button.add.is_high())
 			ui = &macroadd;
 		else if (controls.button.morph.is_high())
@@ -968,9 +1029,7 @@ private:
 	}
 	void UpdateInterfaceSeq()
 	{
-		if (controls.button.bank.is_high() && controls.button.shift.is_high())
-			; // ui = &globalsettings;
-		else if (controls.button.bank.is_high())
+		if (controls.button.bank.is_high())
 			ui = &seqbank;
 		else if (controls.button.shift.is_high())
 			ui = &seqsettings;

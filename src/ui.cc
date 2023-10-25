@@ -2,6 +2,12 @@
 
 namespace Catalyst2::Ui
 {
+
+void GlobalClockDiv(SharedInterface &p, int32_t inc)
+{
+	p.IncClockDiv(inc);
+}
+
 static Color encoder_cv_blend(uint16_t level)
 {
 	constexpr auto neg = ChannelValue::from_volts(0.f);
