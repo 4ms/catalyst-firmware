@@ -327,7 +327,7 @@ private:
 	void EncoderDisplayScene(Pathway::SceneId scene) {
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
 			const auto temp = p.bank.GetChannel(scene, chan);
-			const Color col = EncoderBlend(temp, p.bank.GetChannelMode(chan).IsGate());
+			const Color col = Palette::EncoderBlend(temp, p.bank.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);
 		}
 	}
@@ -340,7 +340,7 @@ private:
 
 	void EncoderDisplayOutput(const Model::OutputBuffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
-			const Color col = EncoderBlend(val, p.bank.GetChannelMode(chan).IsGate());
+			const Color col = Palette::EncoderBlend(val, p.bank.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);
 		}
 	}

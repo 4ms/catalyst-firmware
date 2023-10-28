@@ -458,7 +458,7 @@ public:
 				if (i == led && page == playheadpage)
 					c.SetEncoderLed(led, Palette::seqhead);
 				else
-					c.SetEncoderLed(i, EncoderBlend(pvals[i], p.seq.Channel(chan).mode.IsGate()));
+					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], p.seq.Channel(chan).mode.IsGate()));
 			}
 			if (p.IsPageSelected())
 				c.SetButtonLed(page, ((HAL_GetTick() >> 8) & 1) > 0);
@@ -472,7 +472,7 @@ public:
 
 	void EncoderDisplayOutput(const Model::OutputBuffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
-			Color col = EncoderBlend(val, p.seq.Channel(chan).mode.IsGate());
+			Color col = Palette::EncoderBlend(val, p.seq.Channel(chan).mode.IsGate());
 			c.SetEncoderLed(chan, col);
 		}
 	}

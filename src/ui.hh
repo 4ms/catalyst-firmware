@@ -60,9 +60,11 @@ public:
 		}
 
 		if (controls.toggle.mode.just_went_high()) {
-			params.mode = Params::Mode::Macro;
-		} else if (controls.toggle.mode.just_went_low()) {
+			ui = &sequencer;
 			params.mode = Params::Mode::Sequencer;
+		} else if (controls.toggle.mode.just_went_low()) {
+			ui = &macro;
+			params.mode = Params::Mode::Macro;
 		}
 
 		for (auto [i, sb] : countzip(controls.button.scene)) {
