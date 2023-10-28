@@ -160,7 +160,8 @@ private:
 	void seq(SeqMode::Interface &p, Model::OutputBuffer &in)
 	{
 		static auto prev_ = false;
-		auto cur = true; // params.seq.GetClock();
+		auto cur = p.internalclock.Peek();
+
 		bool do_trigs = false;
 		if (prev_ != cur) {
 			prev_ = cur;

@@ -8,16 +8,16 @@ namespace Catalyst2
 template<unsigned update_freq_hz, unsigned ppqn = 1>
 class InternalClock {
 	static constexpr float updates_per_minute = (60.f * update_freq_hz) / ppqn;
-	bool peak = false;
+	bool peek = false;
 
 public:
 	InternalClock()
 	{
 		set_bpm(120);
 	}
-	bool Peak()
+	bool Peek()
 	{
-		return peak;
+		return peek;
 	}
 	void update()
 	{
@@ -25,7 +25,7 @@ public:
 		if (tick >= ticks_per_pulse) {
 			tick = 0;
 			step_ = true;
-			peak = !peak;
+			peek = !peek;
 		}
 	}
 	bool step()

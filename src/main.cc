@@ -10,6 +10,8 @@ namespace
 Catalyst2::System _init;
 } // namespace
 
+// lazygit
+
 // DG: general opeations/thoughts
 
 // Fine/coarse??
@@ -119,6 +121,34 @@ both: play button stops when playing and restarts when stopped
 transpose: post quantizer
 
 seq add button tap tempo?
+
+
+pausing keeps fireing gate
+also, divided gates keep firing.
+gates not firing on external clock.
+
+//transpose and range.
+
+changing channels while locked on a page shouldnt reset the page
+have pause stop where sequence is at and not reset.
+maybe clipboards should reset eachother?
+
+have holding multiple seq settings buttons change all pressed buttons together
+
+make bpm "fine" work.
+
+shift + add should delete along with normal add + shift
+
+get rid of default clock divider and just have per channel ones.
+
+have gates be activate above 50% instead of 1/65535!!!!!
+
+quantize prior to morph??
+
+per channel morph! work same as channel mode
+
+internal clock class fix, add tap tempo
+
 */
 
 volatile uint32_t time;

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "channelmode.hh"
 #include "channelvalue.hh"
 #include "clockdivider.hh"
@@ -496,5 +497,7 @@ public:
 		return out;
 	}
 };
+
+static constexpr auto seqsize = sizeof(Interface);
 
 } // namespace Catalyst2::Sequencer
