@@ -11,10 +11,9 @@ public:
 	MacroMode::Interface &p;
 	Usual(MacroMode::Interface &p, Controls &c)
 		: Abstract{c}
-		, p{p}
-	{}
-	virtual void Common() override
-	{
+		, p{p} {
+	}
+	virtual void Common() override {
 		if (c.jack.trig.just_went_high()) {
 			if (p.recorder.is_cued()) {
 				p.shared.clockdivider.Reset();
@@ -37,13 +36,11 @@ class Add : public Usual {
 
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		first = true;
 		c.button.shift.clear_events();
 	}
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (c.button.shift.just_went_high()) {
 			if (p.pathway.OnAScene() || p.pathway.SceneLeft() == p.pathway.SceneRight())
 				p.pathway.RemoveSceneNearest();
@@ -53,8 +50,7 @@ public:
 
 		interface = this;
 	}
-	void OnSceneButtonRelease(uint8_t button) override
-	{
+	void OnSceneButtonRelease(uint8_t button) override {
 		auto &path = p.pathway;
 
 		if (c.button.shift.is_high()) {
@@ -82,8 +78,7 @@ public:
 		else
 			path.InsertScene(button, false);
 	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 
 		auto count = p.pathway.size();
@@ -105,8 +100,7 @@ public:
 class Bank : public Usual {
 public:
 	using Usual::Usual;
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (!c.button.bank.is_high())
 			return;
 
@@ -115,8 +109,7 @@ public:
 
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		if (c.button.shift.is_high()) {
 			// change all channgels.
 			auto cm = p.bank.GetChannelMode(encoder);
@@ -131,13 +124,11 @@ public:
 		}
 	}
 
-	virtual void OnSceneButtonRelease(uint8_t button) override
-	{
+	virtual void OnSceneButtonRelease(uint8_t button) override {
 		p.SelectBank(button);
 	}
 
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 		c.SetButtonLed(p.GetSelectedBank(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
@@ -149,22 +140,19 @@ public:
 class Morph : public Usual {
 public:
 	using Usual::Usual;
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (!c.button.morph.is_high())
 			return;
 
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		if (encoder != 6)
 			return;
 
 		p.IncMorph(inc);
 	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearEncoderLeds();
 
 		const auto morph = p.GetMorph();
@@ -178,19 +166,16 @@ public:
 class Settings : public Usual {
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		p.shared.hang.Cancel();
 	}
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (!c.button.shift.is_high())
 			return;
 
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		const auto time_now = HAL_GetTick();
 		const auto hang = p.shared.hang.Check(time_now);
 		const auto is_scene = c.YoungestSceneButton().has_value();
@@ -219,8 +204,7 @@ public:
 				break;
 		}
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 		c.ClearEncoderLeds();
 
@@ -256,12 +240,10 @@ class Main : public Usual {
 
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		c.button.fine.clear_events();
 	}
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (c.button.fine.just_went_high() && p.shared.override_output.has_value())
 			p.bank.Copy(p.shared.override_output.value());
 
@@ -291,14 +273,12 @@ public:
 		}
 		interface = this;
 	}
-	virtual void OnSceneButtonRelease(uint8_t button) override
-	{
+	virtual void OnSceneButtonRelease(uint8_t button) override {
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
 		}
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		const auto scenebdown = c.YoungestSceneButton().has_value();
 		const auto fine = c.button.fine.is_high();
 
@@ -316,8 +296,7 @@ public:
 			}
 		}
 	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 		if (c.YoungestSceneButton().has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {
@@ -345,8 +324,7 @@ public:
 	}
 
 private:
-	void EncoderDisplayScene(Pathway::SceneId scene)
-	{
+	void EncoderDisplayScene(Pathway::SceneId scene) {
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
 			const auto temp = p.bank.GetChannel(scene, chan);
 			const Color col = EncoderBlend(temp, p.bank.GetChannelMode(chan).IsGate());
@@ -354,15 +332,13 @@ private:
 		}
 	}
 
-	void SceneButtonDisplayRecording()
-	{
+	void SceneButtonDisplayRecording() {
 		const auto led = static_cast<unsigned>(p.recorder.capacity_filled() * 8u);
 		const auto level = (p.recorder.size() & 0x10) > 0;
 		c.SetButtonLed(led, level);
 	}
 
-	void EncoderDisplayOutput(const Model::OutputBuffer &buf)
-	{
+	void EncoderDisplayOutput(const Model::OutputBuffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
 			const Color col = EncoderBlend(val, p.bank.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);

@@ -11,9 +11,6 @@
 
 namespace Catalyst2::Ui
 {
-
-Color EncoderBlend(uint16_t level, bool chan_type_gate);
-
 class Interface {
 	Outputs outputs;
 	Params &params;
@@ -30,16 +27,14 @@ class Interface {
 
 public:
 	Interface(Params &params)
-		: params{params}
-	{
+		: params{params} {
 		encoder_led_update_task.init(Board::encoder_led_task, [this]() {
 			controls.WriteToEncoderLeds();
 			leds_ready_flag = true;
 		});
 		muxio_update_task.init(Board::muxio_conf, [this]() { controls.UpdateMuxio(); });
 	}
-	void Start()
-	{
+	void Start() {
 		encoder_led_update_task.start();
 		muxio_update_task.start();
 		controls.Start();
@@ -47,8 +42,7 @@ public:
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		ui = &macro;
 	}
-	void Update()
-	{
+	void Update() {
 		controls.Update();
 
 		ui->Common();
@@ -79,8 +73,7 @@ public:
 		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
 	}
 
-	void SetOutputs(const Model::OutputBuffer &outs)
-	{
+	void SetOutputs(const Model::OutputBuffer &outs) {
 		outputs.write(outs);
 
 		if (!leds_ready_flag)

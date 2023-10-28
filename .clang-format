@@ -20,7 +20,7 @@ BraceWrapping:
   AfterClass: false
   AfterControlStatement: MultiLine
   AfterEnum: false
-  AfterFunction: true
+  AfterFunction: false
   AfterNamespace: true
   AfterStruct: false
   AfterUnion: false

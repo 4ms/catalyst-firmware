@@ -28,62 +28,51 @@ class Interface {
 
 public:
 	Interface(RandomPool &r)
-		: randompool{r}
-	{}
+		: randompool{r} {
+	}
 
-	void Load(Data &d)
-	{
+	void Load(Data &d) {
 		b = &d;
 	}
 
-	void Copy(uint8_t scene)
-	{
+	void Copy(uint8_t scene) {
 		clipboard = b->scene[scene];
 	}
 
-	void Paste(uint8_t scene)
-	{
+	void Paste(uint8_t scene) {
 		b->scene[scene] = clipboard;
 	}
 
-	void IncChannelMode(uint8_t channel, int32_t inc)
-	{
+	void IncChannelMode(uint8_t channel, int32_t inc) {
 		b->channelmode[channel].Inc(inc);
 	}
 
-	ChannelMode GetChannelMode(uint8_t channel)
-	{
+	ChannelMode GetChannelMode(uint8_t channel) {
 		return b->channelmode[channel];
 	}
 
-	void SetChanMode(uint8_t channel, ChannelMode mode)
-	{
+	void SetChanMode(uint8_t channel, ChannelMode mode) {
 		b->channelmode[channel] = mode;
 	}
 
-	float GetRandomAmount(uint8_t scene)
-	{
+	float GetRandomAmount(uint8_t scene) {
 		return b->scene[scene].random_amount;
 	}
 
-	void SetRandomAmount(uint8_t scene, float amount)
-	{
+	void SetRandomAmount(uint8_t scene, float amount) {
 		b->scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
 	}
 
-	void IncRandomAmount(uint8_t scene, int32_t inc)
-	{
+	void IncRandomAmount(uint8_t scene, int32_t inc) {
 		auto i = inc / 50.f;
 		SetRandomAmount(scene, b->scene[scene].random_amount + i);
 	}
 
-	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine)
-	{
+	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
 		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate());
 	}
 
-	ChannelValue::type GetChannel(uint8_t scene, uint8_t channel)
-	{
+	ChannelValue::type GetChannel(uint8_t scene, uint8_t channel) {
 
 		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random_amount *
 										 ChannelValue::Range);

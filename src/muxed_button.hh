@@ -10,11 +10,10 @@ struct MuxedButton : Toggler {
 	unsigned time_high;
 
 	MuxedButton(uint8_t bit_num)
-		: bit{bit_num}
-	{}
+		: bit{bit_num} {
+	}
 
-	void update(uint32_t raw_mux_read)
-	{
+	void update(uint32_t raw_mux_read) {
 		auto was_low = !this->is_high();
 		register_state(raw_mux_read & (1 << bit));
 		auto high = this->is_high();

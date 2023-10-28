@@ -12,29 +12,24 @@ class ChannelMode {
 	uint8_t val = 0;
 
 public:
-	void Inc(int32_t dir)
-	{
+	void Inc(int32_t dir) {
 		auto temp = val + dir;
 		val = std::clamp<int32_t>(temp, 0, Model::ChannelModeCount - 1);
 	}
 
-	bool IsGate()
-	{
+	bool IsGate() {
 		return val == Model::ChannelModeCount - 1;
 	}
 
-	bool IsQuantized()
-	{
+	bool IsQuantized() {
 		return !IsGate();
 	}
 
-	QuantizerScale GetScale()
-	{
+	QuantizerScale GetScale() {
 		return Model::Scale[IsGate() ? 0 : val];
 	}
 
-	Color GetColor()
-	{
+	Color GetColor() {
 		return Palette::ChannelMode[val];
 	}
 };

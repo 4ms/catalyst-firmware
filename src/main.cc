@@ -153,8 +153,7 @@ internal clock class fix, add tap tempo
 
 volatile uint32_t time;
 
-void main()
-{
+void main() {
 	using namespace Catalyst2;
 
 	// Force hardware test for now

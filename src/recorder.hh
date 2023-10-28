@@ -25,8 +25,7 @@ class Recorder {
 	unsigned accum{0};
 
 public:
-	uint16_t update(uint16_t sample)
-	{
+	uint16_t update(uint16_t sample) {
 		if (!flags.playing && !flags.recording)
 			return sample;
 
@@ -39,32 +38,27 @@ public:
 
 		return read();
 	}
-	void stop()
-	{
+	void stop() {
 		flags.playing = flags.recording = false;
 		scaler = 0;
 		accum = 0;
 		pos_ = 0;
 	}
-	void cue_recording()
-	{
+	void cue_recording() {
 		size_ = 0;
 		flags.cue_rec = true;
 	}
-	void play()
-	{
+	void play() {
 		flags.playing = true;
 	}
-	void record()
-	{
+	void record() {
 		if (!flags.cue_rec)
 			return;
 
 		flags.cue_rec = false;
 		flags.recording = true;
 	}
-	void reset()
-	{
+	void reset() {
 		stop();
 		if (flags.cue_rec) {
 			flags.cue_rec = false;
@@ -75,30 +69,24 @@ public:
 		if (size_ >= 2)
 			flags.playing = true;
 	}
-	void toggle_loop()
-	{
+	void toggle_loop() {
 		flags.loop_playback ^= 1;
 	}
-	auto capacity_filled()
-	{
+	auto capacity_filled() {
 		return static_cast<float>(size_) / buff_size;
 	}
-	auto size()
-	{
+	auto size() {
 		return size_;
 	}
-	bool is_recordering()
-	{
+	bool is_recordering() {
 		return flags.recording;
 	}
-	bool is_cued()
-	{
+	bool is_cued() {
 		return flags.cue_rec;
 	}
 
 private:
-	uint16_t read()
-	{
+	uint16_t read() {
 		const auto coef = scaler / 16.f;
 		const auto out = MathTools::interpolate(buffer[pos_], buffer[pos_ + 1], coef);
 
@@ -115,8 +103,7 @@ private:
 		scaler &= prescaler - 1;
 		return out;
 	}
-	bool insert(uint16_t sample)
-	{
+	bool insert(uint16_t sample) {
 		if (is_full())
 			return false;
 
@@ -129,12 +116,10 @@ private:
 		}
 		return true;
 	}
-	bool is_full()
-	{
+	bool is_full() {
 		return size_ == buff_size;
 	}
-	bool has_space()
-	{
+	bool has_space() {
 		return !is_full();
 	}
 };

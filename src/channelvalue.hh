@@ -15,8 +15,7 @@ static constexpr type Max = UINT16_MAX;
 static constexpr type Min = 0;
 static constexpr type Range = Max - Min;
 
-static constexpr type from_volts(const float volts)
-{
+static constexpr type from_volts(const float volts) {
 	auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
 	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
 }
@@ -31,8 +30,7 @@ static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f
 
 struct Channel {
 	ChannelValue::type val = ChannelValue::from_volts(0.f);
-	void Inc(int32_t dir, bool fine, bool is_gate)
-	{
+	void Inc(int32_t dir, bool fine, bool is_gate) {
 		if (is_gate) {
 			if (dir > 0)
 				val = ChannelValue::GateSetFlag;

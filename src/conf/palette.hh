@@ -52,8 +52,7 @@ struct Palette {
 
 	static constexpr auto bpm = yellow;
 
-	static Color from_raw(int8_t val)
-	{
+	static Color from_raw(int8_t val) {
 		return Color(val & 0xC0, (val << 2) & 0xC0, (val << 4) & 0xC0);
 	}
 };

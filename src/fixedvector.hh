@@ -10,21 +10,17 @@ namespace Catalyst2
 template<typename T, unsigned max_size>
 class FixedVector {
 public:
-	const T &operator[](std::size_t idx) const
-	{
+	const T &operator[](std::size_t idx) const {
 		return data[idx];
 	}
-	T &operator[](std::size_t idx)
-	{
+	T &operator[](std::size_t idx) {
 		return data[idx];
 	}
-	std::size_t size() const
-	{
+	std::size_t size() const {
 		return count;
 	}
 
-	bool insert(unsigned index, const T d)
-	{
+	bool insert(unsigned index, const T d) {
 		if (count >= max_size || index > count)
 			return false;
 
@@ -46,8 +42,7 @@ public:
 		return true;
 	}
 
-	bool erase(const unsigned index)
-	{
+	bool erase(const unsigned index) {
 		if (count == 0 || index >= count)
 			return false;
 

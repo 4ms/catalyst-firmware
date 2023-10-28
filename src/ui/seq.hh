@@ -10,10 +10,9 @@ public:
 	SeqMode::Interface &p;
 	Usual(SeqMode::Interface &p, Controls &c)
 		: Abstract{c}
-		, p{p}
-	{}
-	virtual void Common() override
-	{
+		, p{p} {
+	}
+	virtual void Common() override {
 		if (c.jack.trig.just_went_high()) {
 			p.shared.clockdivider.Update(p.shared.GetClockDiv());
 		}
@@ -48,12 +47,10 @@ public:
 class Bank : public Usual {
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		c.button.fine.clear_events();
 	}
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (c.button.fine.just_went_high() && p.IsSequenceSelected())
 			p.seq.CopySequence(p.GetSelectedSequence());
 
@@ -65,8 +62,7 @@ public:
 
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t dir) override
-	{
+	void OnEncoderInc(uint8_t encoder, int32_t dir) override {
 		if (c.button.shift.is_high()) {
 			// change all channgels.
 			auto &cm = p.seq.Channel(encoder).mode;
@@ -80,8 +76,7 @@ public:
 			p.shared.quantizer[encoder].load_scale(p.seq.Channel(encoder).mode.GetScale());
 		}
 	}
-	void OnSceneButtonRelease(uint8_t scene) override
-	{
+	void OnSceneButtonRelease(uint8_t scene) override {
 		p.DeselectPage();
 
 		if (scene == p.GetSelectedSequence())
@@ -89,8 +84,7 @@ public:
 		else
 			p.SelectSequence(scene);
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 		c.SetButtonLed(p.GetSelectedSequence(), true);
 
@@ -102,25 +96,21 @@ public:
 class Morph : public Usual {
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		if (!p.IsSequenceSelected())
 			p.SelectSequence(0);
 	}
-	virtual void Update(Abstract *&interface)
-	{
+	virtual void Update(Abstract *&interface) {
 		if (!c.button.morph.is_high())
 			return;
 
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		p.IncStepMorph(encoder, inc);
 	}
 
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearEncoderLeds();
 		c.ClearButtonLeds();
 
@@ -150,19 +140,16 @@ public:
 class Settings : public Usual {
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		p.shared.hang.Cancel();
 	}
-	virtual void Update(Abstract *&interface)
-	{
+	virtual void Update(Abstract *&interface) {
 		if (!c.button.shift.is_high())
 			return;
 
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		const auto time_now = HAL_GetTick();
 		const auto hang = p.shared.hang.Check(time_now);
 
@@ -250,8 +237,7 @@ public:
 				break;
 		}
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 		c.ClearEncoderLeds();
 
@@ -364,8 +350,7 @@ public:
 	}
 
 private:
-	void PlayModeLedAnnimation(Sequencer::PlayMode pm, uint32_t time_now)
-	{
+	void PlayModeLedAnnimation(Sequencer::PlayMode pm, uint32_t time_now) {
 		auto phase = (time_now & 1023) / 1023.f;
 		Color col;
 
@@ -388,8 +373,7 @@ private:
 		c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
 	}
 
-	void PhaseOffsetDisplay(float phase)
-	{
+	void PhaseOffsetDisplay(float phase) {
 		const auto l = (phase * 7);
 		phase = l - static_cast<uint8_t>(l);
 		const uint8_t mainled = static_cast<uint8_t>(l);
@@ -409,13 +393,11 @@ class Main : public Usual {
 
 public:
 	using Usual::Usual;
-	virtual void Init() override
-	{
+	virtual void Init() override {
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
 	}
-	virtual void Update(Abstract *&interface) override
-	{
+	virtual void Update(Abstract *&interface) override {
 		if (p.IsSequenceSelected()) {
 			const auto curseq = p.GetSelectedSequence();
 			if (c.button.fine.just_went_high() && c.YoungestSceneButton().has_value())
@@ -439,16 +421,14 @@ public:
 		}
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override
-	{
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		if (!p.IsSequenceSelected())
 			return;
 
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
-	virtual void OnSceneButtonRelease(uint8_t button) override
-	{
+	virtual void OnSceneButtonRelease(uint8_t button) override {
 		if (!p.IsSequenceSelected()) {
 			p.SelectSequence(button);
 		} else {
@@ -464,8 +444,7 @@ public:
 			}
 		}
 	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override
-	{
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 
 		if (p.IsSequenceSelected()) {
@@ -491,8 +470,7 @@ public:
 		}
 	}
 
-	void EncoderDisplayOutput(const Model::OutputBuffer &buf)
-	{
+	void EncoderDisplayOutput(const Model::OutputBuffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
 			Color col = EncoderBlend(val, p.seq.Channel(chan).mode.IsGate());
 			c.SetEncoderLed(chan, col);

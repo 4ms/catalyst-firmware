@@ -21,8 +21,7 @@ class Interface {
 	bool on_a_scene;
 
 public:
-	void Load(Data &d)
-	{
+	void Load(Data &d) {
 		p = &d;
 		if (size() < 2) {
 			p->insert(0, 0);
@@ -31,40 +30,33 @@ public:
 		UpdateSceneWidth();
 	}
 
-	void Update(float point)
-	{
+	void Update(float point) {
 		on_a_scene = SceneIsNear(point);
 		scene_left = PhaseToIndex(point);
 		auto n = PhaseToIndex(point + (scene_width * .5f));
 		scene_nearest = n >= size() ? 0 : n;
 	}
 
-	SceneId SceneLeft()
-	{
+	SceneId SceneLeft() {
 		return (*p)[scene_left];
 	}
-	SceneId SceneRight()
-	{
+	SceneId SceneRight() {
 		auto idx = scene_left + 1;
 		idx = idx >= size() ? 0 : idx;
 		return (*p)[idx];
 	}
-	SceneId SceneNearest()
-	{
+	SceneId SceneNearest() {
 		return (*p)[scene_nearest];
 	}
-	bool OnAScene()
-	{
+	bool OnAScene() {
 		return on_a_scene;
 	}
-	void ReplaceScene(SceneId scene)
-	{
+	void ReplaceScene(SceneId scene) {
 		(*p)[scene_nearest] = scene;
 		prev_index = scene_nearest;
 	}
 
-	void InsertScene(SceneId scene, bool after_last)
-	{
+	void InsertScene(SceneId scene, bool after_last) {
 		auto index = scene_left;
 
 		if (after_last)
@@ -76,8 +68,7 @@ public:
 		UpdateSceneWidth();
 	}
 
-	void RemoveSceneNearest()
-	{
+	void RemoveSceneNearest() {
 		if (size() <= 2)
 			return;
 
@@ -85,8 +76,7 @@ public:
 		UpdateSceneWidth();
 	}
 
-	void RemoveSceneLeft()
-	{
+	void RemoveSceneLeft() {
 		if (size() <= 2)
 			return;
 
@@ -94,8 +84,7 @@ public:
 		UpdateSceneWidth();
 	}
 
-	void RemoveSceneRight()
-	{
+	void RemoveSceneRight() {
 		if (size() <= 2)
 			return;
 
@@ -106,8 +95,7 @@ public:
 		UpdateSceneWidth();
 	}
 
-	void ClearScenes()
-	{
+	void ClearScenes() {
 		// erase all scenes in between first and last one.
 		while (size() > 2)
 			p->erase(1);
@@ -115,19 +103,16 @@ public:
 		UpdateSceneWidth();
 	}
 
-	float GetSceneWidth() const
-	{
+	float GetSceneWidth() const {
 		return scene_width;
 	}
 
-	uint8_t size()
-	{
+	uint8_t size() {
 		return p->size();
 	}
 
 private:
-	bool SceneIsNear(float point)
-	{
+	bool SceneIsNear(float point) {
 		while (point >= scene_width)
 			point -= scene_width;
 
@@ -142,13 +127,11 @@ private:
 
 		return false;
 	}
-	unsigned PhaseToIndex(float phase)
-	{
+	unsigned PhaseToIndex(float phase) {
 		auto out = static_cast<unsigned>(phase * (size() - 1));
 		return out % size();
 	}
-	void UpdateSceneWidth()
-	{
+	void UpdateSceneWidth() {
 		scene_width = 1.f / (size() - 1);
 	}
 };

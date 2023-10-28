@@ -13,22 +13,18 @@ struct QuantizerScale {
 	template<typename... T>
 	constexpr QuantizerScale(T... ts)
 		: scl{ts...}
-		, size_(sizeof...(T))
-	{}
-	constexpr const float &operator[](const std::size_t idx) const
-	{
+		, size_(sizeof...(T)) {
+	}
+	constexpr const float &operator[](const std::size_t idx) const {
 		return scl[idx];
 	}
-	constexpr std::size_t size() const
-	{
+	constexpr std::size_t size() const {
 		return size_;
 	}
-	constexpr auto begin() const
-	{
+	constexpr auto begin() const {
 		return scl.begin();
 	}
-	constexpr auto end() const
-	{
+	constexpr auto end() const {
 		return begin() + size_;
 	}
 
@@ -42,8 +38,7 @@ struct Quantizer {
 	static constexpr float oct_size = (65536.f / range_octaves) + .5f;
 	static constexpr float note_size = (65536.f / (range_octaves * 12)) + .5f;
 
-	uint16_t process(const uint16_t input)
-	{
+	uint16_t process(const uint16_t input) {
 		if (!scale.size())
 			return input;
 
@@ -65,8 +60,7 @@ struct Quantizer {
 
 		return (value * note_size) + (octave * oct_size);
 	}
-	void load_scale(const QuantizerScale &scl)
-	{
+	void load_scale(const QuantizerScale &scl) {
 		scale = scl;
 	}
 

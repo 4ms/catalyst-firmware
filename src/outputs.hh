@@ -13,8 +13,7 @@ namespace Catalyst2
 class Outputs {
 
 public:
-	Outputs()
-	{
+	Outputs() {
 		// sets up peripheral using pins/config from board_conf.hh
 		// use Board::DacConf
 		spi.configure();
@@ -28,8 +27,7 @@ public:
 		send_data(startup);
 	}
 
-	void write(const Model::OutputBuffer &out)
-	{
+	void write(const Model::OutputBuffer &out) {
 		// write to the DAC
 		uint8_t data_buffer[3];
 
@@ -42,8 +40,7 @@ public:
 	}
 
 private:
-	void send_data(std::span<uint8_t> dbuf)
-	{
+	void send_data(std::span<uint8_t> dbuf) {
 		spi.select<0>();
 
 		for (auto dbyte : dbuf) {

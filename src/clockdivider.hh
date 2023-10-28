@@ -16,16 +16,14 @@ class ClockDivider {
 
 public:
 	using type = int8_t;
-	void Update(type idx)
-	{
+	void Update(type idx) {
 		counter += 1;
 		if (counter >= divideroptions[idx]) {
 			step = true;
 			counter = 0;
 		}
 	}
-	bool Step()
-	{
+	bool Step() {
 		bool ret = false;
 		if (step) {
 			ret = true;
@@ -33,19 +31,16 @@ public:
 		}
 		return ret;
 	}
-	void Reset()
-	{
+	void Reset() {
 		counter = 0;
 		step = false;
 	}
-	static type IncDivIdx(type idx, int32_t inc)
-	{
+	static type IncDivIdx(type idx, int32_t inc) {
 		int32_t t = idx;
 		t += inc;
 		return std::clamp<int32_t>(t, 0, divideroptions.size() - 1);
 	}
-	static uint8_t GetDivFromIdx(type idx)
-	{
+	static uint8_t GetDivFromIdx(type idx) {
 		return divideroptions[idx];
 	}
 };

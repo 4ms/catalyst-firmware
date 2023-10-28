@@ -3,13 +3,11 @@
 namespace Catalyst2::Ui
 {
 
-void GlobalClockDiv(SharedInterface &p, int32_t inc)
-{
+void GlobalClockDiv(SharedInterface &p, int32_t inc) {
 	p.IncClockDiv(inc);
 }
 
-static Color encoder_cv_blend(uint16_t level)
-{
+static Color encoder_cv_blend(uint16_t level) {
 	constexpr auto neg = ChannelValue::from_volts(0.f);
 	auto temp = level - neg;
 	auto c = Palette::Voltage::Positive;
@@ -21,8 +19,7 @@ static Color encoder_cv_blend(uint16_t level)
 	return Palette::off.blend(c, phase);
 }
 
-static Color encoder_gate_blend(uint16_t level)
-{
+static Color encoder_gate_blend(uint16_t level) {
 	if (level == ChannelValue::GateSetFlag)
 		return Palette::Gate::Primed;
 	if (level == ChannelValue::GateHigh)
@@ -30,8 +27,7 @@ static Color encoder_gate_blend(uint16_t level)
 	return Palette::off;
 }
 
-Color EncoderBlend(uint16_t level, bool chan_type_gate)
-{
+Color EncoderBlend(uint16_t level, bool chan_type_gate) {
 	if (chan_type_gate)
 		return encoder_gate_blend(level);
 	else

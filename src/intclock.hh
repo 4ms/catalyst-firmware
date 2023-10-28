@@ -11,16 +11,13 @@ class InternalClock {
 	bool peek = false;
 
 public:
-	InternalClock()
-	{
+	InternalClock() {
 		set_bpm(120);
 	}
-	bool Peek()
-	{
+	bool Peek() {
 		return peek;
 	}
-	void update()
-	{
+	void update() {
 		tick++;
 		if (tick >= ticks_per_pulse) {
 			tick = 0;
@@ -28,27 +25,23 @@ public:
 			peek = !peek;
 		}
 	}
-	bool step()
-	{
+	bool step() {
 		bool ret = step_;
 		step_ = false;
 		return ret;
 	}
-	void set_bpm(unsigned bpm)
-	{
+	void set_bpm(unsigned bpm) {
 		this->bpm = std::clamp(bpm, 30u, 1200u);
 		ticks_per_pulse = static_cast<unsigned>(updates_per_minute / this->bpm);
 	}
-	void bpm_inc(int by, bool fine = false)
-	{
+	void bpm_inc(int by, bool fine = false) {
 		auto inc = fine ? 1 : 10;
 		if (by > 0)
 			set_bpm(bpm + inc);
 		else if (by < 0)
 			set_bpm(bpm - inc);
 	}
-	void Reset()
-	{
+	void Reset() {
 		tick = 0;
 	}
 

@@ -68,8 +68,7 @@ public:
 
 	Controls() = default;
 
-	std::optional<uint8_t> YoungestSceneButton()
-	{
+	std::optional<uint8_t> YoungestSceneButton() {
 		auto age = 0xffffffffu;
 		uint8_t youngest = 0xff;
 
@@ -90,13 +89,11 @@ public:
 	}
 
 	// unused
-	int32_t GetEncoder(uint8_t idx)
-	{
+	int32_t GetEncoder(uint8_t idx) {
 		return encoders[idx].read();
 	}
 
-	void ForEachEncoderInc(auto func)
-	{
+	void ForEachEncoderInc(auto func) {
 		for (auto [i, enc] : countzip(encoders)) {
 			auto inc = enc.read();
 			if (inc)
@@ -104,20 +101,17 @@ public:
 		}
 	}
 
-	uint16_t ReadSlider()
-	{
+	uint16_t ReadSlider() {
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::Slider);
 		return (1ul << 12) - 1 - analog[adc_chan_num].val();
 	}
 
-	uint16_t ReadCv()
-	{
+	uint16_t ReadCv() {
 		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::CVJack);
 		return analog[adc_chan_num].val();
 	}
 
-	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color c)
-	{
+	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color c) {
 		for (auto i = 0u; i < count; i++)
 			SetEncoderLed((i + offset) & 7, c);
 
@@ -125,8 +119,7 @@ public:
 			SetEncoderLed((count + i + offset) & 7, Colors::off);
 	}
 
-	void SetEncoderLedsAddition(uint8_t num, Color c)
-	{
+	void SetEncoderLedsAddition(uint8_t num, Color c) {
 		static constexpr auto max_val = [] {
 			uint8_t out = 0;
 			for (auto i = 1u; i <= Model::NumChans; i++)
@@ -147,8 +140,7 @@ public:
 		SetEncoderLed(num - 1, c);
 	}
 
-	void SetEncoderLed(unsigned led, Color color)
-	{
+	void SetEncoderLed(unsigned led, Color color) {
 		if (led >= Board::EncLedMap.size())
 			return;
 
@@ -156,39 +148,33 @@ public:
 		rgb_leds[idx] = color;
 	}
 
-	void SetButtonLedsCount(uint8_t count, bool on)
-	{
+	void SetButtonLedsCount(uint8_t count, bool on) {
 		for (auto i = 0u; i < count; i++)
 			SetButtonLed(i, on);
 	}
 
-	void SetButtonLed(unsigned led, float intensity)
-	{
+	void SetButtonLed(unsigned led, float intensity) {
 		static constexpr std::array<uint8_t, 32> lut = {0, 0, 1, 1, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
 														5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32};
 		intensity = std::clamp<float>(0, .99, intensity);
 		button_led_duty[led] = lut[intensity * lut.size()];
 	}
 
-	void SetButtonLed(unsigned led, bool on)
-	{
+	void SetButtonLed(unsigned led, bool on) {
 		button_led_duty[led] = on ? 32 : 0;
 	}
 
-	void ClearButtonLeds()
-	{
+	void ClearButtonLeds() {
 		for (auto &a : button_led_duty)
 			a = 0;
 	}
 
-	void ClearEncoderLeds()
-	{
+	void ClearEncoderLeds() {
 		for (auto &led : rgb_leds)
 			led = Colors::off;
 	}
 
-	void Update()
-	{
+	void Update() {
 		// TODO: double-check if this is concurrency-safe:
 		// - update() might interrupt the read-modify-write that happens in set_button_led()
 		// - update_buttons() might interrupt a button being read
@@ -199,8 +185,7 @@ public:
 		}
 	}
 
-	void UpdateMuxio()
-	{
+	void UpdateMuxio() {
 		static uint8_t cnt = 0;
 		auto button_leds = 0u;
 		for (auto x = 0u; x < Model::NumChans; x++) {
@@ -220,8 +205,7 @@ public:
 		}
 	}
 
-	void Start()
-	{
+	void Start() {
 		adc_dma.register_callback([this] {
 			for (unsigned i = 0; auto &a : analog)
 				a.add_val(adc_buffer[i++]);
@@ -231,16 +215,14 @@ public:
 			__BKPT();
 	}
 
-	void WriteToEncoderLeds()
-	{
+	void WriteToEncoderLeds() {
 		// Takes about 620us to write all LEDs
 		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
 		led_driver.set_all_leds(raw_led_data);
 	}
 
 private:
-	void UpdateButtons(uint32_t raw_mux_read)
-	{
+	void UpdateButtons(uint32_t raw_mux_read) {
 		for (auto &but : button.scene)
 			but.update(raw_mux_read);
 

@@ -19,17 +19,14 @@ class SharedInterface {
 		uint32_t start_time;
 
 	public:
-		void Cancel()
-		{
+		void Cancel() {
 			onto = 0xff;
 		}
-		void Set(uint8_t encoder, uint32_t time_now)
-		{
+		void Set(uint8_t encoder, uint32_t time_now) {
 			start_time = time_now;
 			onto = encoder;
 		}
-		std::optional<uint8_t> Check(uint32_t time_now)
-		{
+		std::optional<uint8_t> Check(uint32_t time_now) {
 			if (time_now - start_time >= 2000)
 				onto = 0xff;
 
@@ -49,23 +46,19 @@ public:
 	std::optional<uint8_t> override_output; // this doesnt need to be shared.
 	DisplayHanger hang;
 
-	void SetPos(float pos)
-	{
+	void SetPos(float pos) {
 		this->pos = pos;
 	}
 
-	float GetPos()
-	{
+	float GetPos() {
 		return pos;
 	}
 
-	void IncClockDiv(int32_t inc)
-	{
+	void IncClockDiv(int32_t inc) {
 		clockdiv = ClockDivider::IncDivIdx(clockdiv, inc);
 	}
 
-	ClockDivider::type GetClockDiv()
-	{
+	ClockDivider::type GetClockDiv() {
 		return clockdiv;
 	}
 };
@@ -91,12 +84,10 @@ public:
 	Interface(Data &data, SharedInterface &shared)
 		: data{data}
 		, shared{shared}
-		, bank{shared.randompool}
-	{
+		, bank{shared.randompool} {
 		SelectBank(0);
 	}
-	void SelectBank(uint8_t bank)
-	{
+	void SelectBank(uint8_t bank) {
 		if (bank >= Model::NumBanks)
 			return;
 
@@ -108,17 +99,14 @@ public:
 
 		cur_bank = bank;
 	}
-	uint8_t GetSelectedBank()
-	{
+	uint8_t GetSelectedBank() {
 		return cur_bank;
 	}
-	void IncMorph(int32_t inc)
-	{
+	void IncMorph(int32_t inc) {
 		morph += (1.f / 100.f) * inc;
 		morph = std::clamp(morph, 0.f, 1.f);
 	}
-	float GetMorph()
-	{
+	float GetMorph() {
 		return morph;
 	}
 };
@@ -139,55 +127,45 @@ public:
 
 	Interface(Data &data, SharedInterface &shared)
 		: shared{shared}
-		, seq{data, shared.randompool}
-	{}
+		, seq{data, shared.randompool} {
+	}
 
-	void SelectSequence(uint8_t sequence)
-	{
+	void SelectSequence(uint8_t sequence) {
 		if (sequence >= Model::NumChans)
 			return;
 		else
 			cur_sequence = sequence;
 	}
-	uint8_t GetSelectedSequence()
-	{
+	uint8_t GetSelectedSequence() {
 		return cur_sequence;
 	}
-	void DeselectSequence()
-	{
+	void DeselectSequence() {
 		cur_sequence = Model::NumChans;
 	}
-	bool IsSequenceSelected()
-	{
+	bool IsSequenceSelected() {
 		return cur_sequence != Model::NumChans;
 	}
-	void SelectPage(uint8_t page)
-	{
+	void SelectPage(uint8_t page) {
 		if (page >= Model::SeqPages)
 			return;
 		else
 			cur_page = page;
 	}
-	uint8_t GetSelectedPage()
-	{
+	uint8_t GetSelectedPage() {
 		return cur_page;
 	}
-	void DeselectPage()
-	{
+	void DeselectPage() {
 		cur_page = Model::SeqPages;
 	}
-	bool IsPageSelected()
-	{
+	bool IsPageSelected() {
 		return cur_page != Model::SeqPages;
 	}
-	void IncStep(uint8_t step, int32_t inc, bool fine)
-	{
+	void IncStep(uint8_t step, int32_t inc, bool fine) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : seq.GetPlayheadPage(cur_sequence);
 		step += (page * Model::SeqStepsPerPage);
 		seq.Channel(cur_sequence).IncStep(step, inc, fine);
 	}
-	void IncStepMorph(uint8_t step, int32_t inc)
-	{
+	void IncStepMorph(uint8_t step, int32_t inc) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : seq.GetPlayheadPage(cur_sequence);
 		step += (page * Model::SeqStepsPerPage);
 		seq.Channel(cur_sequence).IncMorph(step, inc);

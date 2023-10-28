@@ -10,8 +10,7 @@ namespace MathTools
 // if slope == 0 actual slope == 1
 // if slope is >= (max - min) actual slope == inf
 // if slope is negative than actual slope is less than 1
-constexpr float slope_adj(float in, float slope, float min, float max)
-{
+constexpr float slope_adj(float in, float slope, float min, float max) {
 	const auto range = max - min;
 	const auto b = range / 2.f;
 
@@ -35,16 +34,14 @@ class Trigger {
 	bool is_trigged = false;
 
 public:
-	void trig(uint8_t time_now)
-	{
+	void trig(uint8_t time_now) {
 		if (is_trigged)
 			return;
 
 		trig_time = time_now;
 		is_trigged = true;
 	}
-	bool get(uint8_t time_now)
-	{
+	bool get(uint8_t time_now) {
 		if (!is_trigged)
 			return false;
 		uint8_t elapsed = time_now - trig_time;
@@ -61,12 +58,10 @@ class Tick {
 	uint8_t c = 0;
 
 public:
-	void Update()
-	{
+	void Update() {
 		c++; // haha
 	}
-	uint8_t get()
-	{
+	uint8_t get() {
 		return c;
 	}
 };
@@ -78,11 +73,10 @@ class MacroSeq {
 
 public:
 	MacroSeq(Params &params)
-		: params{params}
-	{}
+		: params{params} {
+	}
 
-	auto update()
-	{
+	auto update() {
 		tick.Update();
 
 		Model::OutputBuffer buf;
@@ -96,8 +90,7 @@ public:
 	}
 
 private:
-	void macro(MacroMode::Interface &p, Model::OutputBuffer &in)
-	{
+	void macro(MacroMode::Interface &p, Model::OutputBuffer &in) {
 		static auto do_trigs = false;
 
 		const auto time_now = tick.get();
@@ -157,8 +150,7 @@ private:
 				out = p.shared.quantizer[i].process(out);
 		}
 	}
-	void seq(SeqMode::Interface &p, Model::OutputBuffer &in)
-	{
+	void seq(SeqMode::Interface &p, Model::OutputBuffer &in) {
 		static auto prev_ = false;
 		auto cur = p.internalclock.Peek();
 
