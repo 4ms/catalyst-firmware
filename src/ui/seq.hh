@@ -149,15 +149,6 @@ public:
 		const auto time_now = HAL_GetTick();
 		const auto hang = p.shared.hang.Check(time_now);
 
-		if (!p.IsSequenceSelected()) {
-			if (encoder == Model::EncoderAlts::ClockDiv) {
-				inc = hang.has_value() ? inc : 0;
-				p.shared.IncClockDiv(inc);
-				p.shared.hang.Set(encoder, time_now);
-			}
-			return;
-		}
-
 		auto is_channel = c.YoungestSceneButton().has_value();
 		auto chan = c.YoungestSceneButton().value_or(0);
 
@@ -226,6 +217,7 @@ public:
 					} else {
 						inc = hang.has_value() ? inc : 0;
 						p.shared.hang.Set(encoder, time_now);
+						p.shared.IncClockDiv(inc);
 					}
 				}
 				break;
@@ -239,17 +231,6 @@ public:
 		auto hang = p.shared.hang.Check(time_now);
 
 		auto clockdiv = p.shared.GetClockDiv();
-
-		if (!p.IsSequenceSelected()) {
-			clockdiv = p.shared.GetClockDiv();
-			if (hang.has_value()) {
-				if (hang.value() != Model::EncoderAlts::ClockDiv)
-					return;
-				c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv), Palette::blue);
-			} else
-				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
-			return;
-		}
 
 		auto length = std::make_optional(p.seq.Global().GetLength());
 		auto phaseoffset = std::make_optional(p.seq.Global().GetPhaseOffset());
