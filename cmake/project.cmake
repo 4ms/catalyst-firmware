@@ -117,7 +117,6 @@ function(create_target target driver_arch)
     ${root}/src/libc_stub.c
     ${root}/src/libcpp_stub.cc
     ${root}/src/main.cc
-    ${root}/src/ui.cc
     ${root}/src/hardware_tests/hardware_tests.cc
     ${TARGET_SOURCES}
     ${HAL_SOURCES}
@@ -126,7 +125,6 @@ function(create_target target driver_arch)
   target_include_directories(
     ${target}.elf
     PRIVATE ${root}/src
-            ${root}/lib/brainboard
             ${root}/lib/mdrivlib
             ${root}/lib/CMSIS/Include
             ${root}/lib/cpputil
@@ -154,7 +152,7 @@ function(create_target target driver_arch)
   # FIXME: this only works for F4 chips:
   add_custom_target(
     ${target}-oflash-app
-    DEPENDS ${target}.bin
+    DEPENDS ${target}.elf
     COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.hex verify reset exit"
     USES_TERMINAL
   )
@@ -192,7 +190,6 @@ function(create_bootloader_target target driver_arch)
             ${root}/src/bootloader
             ${root}/src/bootloader/stmlib
             ${root}/src
-            ${root}/lib/brainboard
             ${root}/lib/mdrivlib
             ${root}/lib/cpputil
             ${TARGET_BOOTLOADER_INCLUDES}
