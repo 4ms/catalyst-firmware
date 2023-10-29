@@ -60,20 +60,20 @@ struct Palette {
 	static Color EncoderBlend(uint16_t level, bool is_gate) {
 		if (is_gate) {
 			if (level == ChannelValue::GateSetFlag)
-				return Palette::Gate::Primed;
+				return Gate::Primed;
 			if (level == ChannelValue::GateHigh)
-				return Palette::Gate::High;
-			return Palette::off;
+				return Gate::High;
+			return off;
 		} else {
 			constexpr auto neg = ChannelValue::from_volts(0.f);
 			auto temp = level - neg;
-			auto c = Palette::Voltage::Positive;
+			auto c = Voltage::Positive;
 			if (temp < 0) {
 				temp *= -2;
-				c = Palette::Voltage::Negative;
+				c = Voltage::Negative;
 			}
 			const auto phase = (temp / (neg * 2.f));
-			return Palette::off.blend(c, phase);
+			return off.blend(c, phase);
 		}
 	}
 };

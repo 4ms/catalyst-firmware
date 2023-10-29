@@ -29,7 +29,7 @@ class ChannelData {
 	std::optional<int8_t> length = std::nullopt;
 	std::optional<int8_t> start_offset = std::nullopt;
 	std::optional<PlayMode> playmode = std::nullopt;
-	std::optional<ClockDivider::type> clockdiv = std::nullopt;
+	ClockDivider::type clockdiv = 0;
 	float randomamount = 0;
 	// 1.f / 15.f;
 
@@ -139,20 +139,9 @@ public:
 	}
 
 	void IncClockDiv(int32_t inc) {
-		if (!clockdiv.has_value()) {
-			if (inc > 0)
-				clockdiv = 0;
-			return;
-		}
-
-		if (inc < 0 && clockdiv.value() == 0) {
-			clockdiv = std::nullopt;
-			return;
-		}
-
-		clockdiv = ClockDivider::IncDivIdx(clockdiv.value(), inc);
+		clockdiv = ClockDivider::IncDivIdx(clockdiv, inc);
 	}
-	std::optional<ClockDivider::type> GetClockDiv() {
+	ClockDivider::type GetClockDiv() {
 		return clockdiv;
 	}
 
@@ -171,7 +160,6 @@ class GlobalData {
 	int8_t length = Model::SeqStepsPerPage;
 	int8_t start_offset = 0;
 	PlayMode playmode = PlayMode::Forward;
-	ClockDivider::type clockdiv = 0;
 
 public:
 	void IncLength(int32_t inc) {
@@ -205,12 +193,6 @@ public:
 	PlayMode GetPlayMode() {
 		return playmode;
 	}
-	void IncClockDiv(int32_t inc) {
-		clockdiv = ClockDivider::IncDivIdx(clockdiv, inc);
-	}
-	ClockDivider::type GetClockDiv() {
-		return clockdiv;
-	}
 };
 
 struct Data {
@@ -239,7 +221,7 @@ public:
 	}
 
 	void Step(Data &d, const uint8_t channel) {
-		clockdivider.Update(d.channel[channel].GetClockDiv().value_or(d.global.GetClockDiv()));
+		clockdivider.Update(d.channel[channel].GetClockDiv());
 		if (!clockdivider.Step())
 			return;
 

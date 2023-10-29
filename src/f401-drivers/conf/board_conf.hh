@@ -155,10 +155,9 @@ struct DacSpiConf : mdrivlib::DefaultSpiConf {
 };
 
 ////////////////// Stream "thread" configuration
-constexpr unsigned cv_stream_hz = 1000;
 const TimekeeperConfig cv_stream_conf{
 	.TIMx = TIM3,
-	.period_ns = TimekeeperConfig::Hz(cv_stream_hz),
+	.period_ns = TimekeeperConfig::Hz(Model::SampleRateHz),
 	.priority1 = 1,
 	.priority2 = 2,
 };

@@ -2,54 +2,106 @@
 #include "conf/model.hh"
 #include <algorithm>
 
-namespace Catalyst2
+namespace Catalyst2::Clock
 {
 
-template<unsigned update_freq_hz, unsigned ppqn = 1>
-class InternalClock {
-	static constexpr float updates_per_minute = (60.f * update_freq_hz) / ppqn;
+class Internal {
+	static constexpr auto sample_rate = Model::SampleRateHz;
+	static constexpr float updates_per_minute = (60.f * Model::SampleRateHz);
+
+	uint32_t cnt = 0;
+	uint32_t ptaptime = 0;
+	uint32_t pulsewidth = 0;
+	uint32_t ticks_per_pulse;
+	uint32_t timenow = 0;
+	uint16_t bpm;
+	uint8_t tap_cnt = 0;
 	bool peek = false;
+	bool external = false;
+	bool step = false;
 
 public:
-	InternalClock() {
-		set_bpm(120);
+	Internal() {
+		Set(120);
+	}
+	void Update() {
+		timenow++;
+
+		if (!IsInternal())
+			return;
+
+		cnt++;
+		if (cnt >= ticks_per_pulse) {
+			cnt = 0;
+			step = true;
+			peek = !peek;
+		}
+	}
+	bool Output() {
+		bool ret = step;
+		step = false;
+		return ret;
+	}
+	void Input() {
+		if (IsInternal())
+			return;
+
+		step = true;
+		Tap();
+	}
+	void Tap() {
+		const auto pw = timenow - ptaptime;
+		ptaptime = timenow;
+
+		if (pw >= ToTicks(20)) {
+			tap_cnt = 0;
+			pulsewidth = 0;
+			return;
+		}
+
+		pulsewidth += pw;
+
+		tap_cnt += 1;
+		if (tap_cnt == 4) {
+			tap_cnt = 0;
+			Set(ToBpm(pulsewidth / 4));
+			pulsewidth = 0;
+		}
+	}
+	bool IsInternal() {
+		return external == false;
+	}
+	void SetExternal(bool on) {
+		external = on;
 	}
 	bool Peek() {
 		return peek;
 	}
-	void update() {
-		tick++;
-		if (tick >= ticks_per_pulse) {
-			tick = 0;
-			step_ = true;
-			peek = !peek;
-		}
+	void Set(unsigned bpm) {
+		this->bpm = std::clamp(bpm, 20u, 1200u);
+		ticks_per_pulse = ToTicks(this->bpm);
 	}
-	bool step() {
-		bool ret = step_;
-		step_ = false;
-		return ret;
-	}
-	void set_bpm(unsigned bpm) {
-		this->bpm = std::clamp(bpm, 30u, 1200u);
-		ticks_per_pulse = static_cast<unsigned>(updates_per_minute / this->bpm);
-	}
-	void bpm_inc(int by, bool fine = false) {
+	void Inc(int by, bool fine) {
 		auto inc = fine ? 1 : 10;
 		if (by > 0)
-			set_bpm(bpm + inc);
+			Set(bpm + inc);
 		else if (by < 0)
-			set_bpm(bpm - inc);
+			Set(bpm - inc);
 	}
 	void Reset() {
-		tick = 0;
+		cnt = 0;
+		peek = false;
+		tap_cnt = 0;
+		pulsewidth = 0;
 	}
 
 private:
-	uint16_t bpm;
-	unsigned ticks_per_pulse;
-	unsigned tick{0};
-	bool step_{false};
+	static constexpr uint32_t ToTicks(uint16_t bpm) {
+		return static_cast<unsigned>(updates_per_minute / bpm);
+	}
+	static constexpr uint16_t ToBpm(uint32_t tick) {
+		return static_cast<unsigned>(updates_per_minute / tick);
+	}
 };
 
-} // namespace Catalyst2
+} // namespace Catalyst2::Clock

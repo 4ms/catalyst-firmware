@@ -40,6 +40,7 @@ class SharedInterface {
 	ClockDivider::type clockdiv = 0;
 
 public:
+	Clock::Internal internalclock;
 	QuantizerArray quantizer;
 	ClockDivider clockdivider;
 	RandomPool randompool;
@@ -123,7 +124,6 @@ class Interface {
 public:
 	SharedInterface &shared;
 	Sequencer::Interface seq;
-	InternalClock<1000> internalclock;
 
 	Interface(Data &data, SharedInterface &shared)
 		: shared{shared}

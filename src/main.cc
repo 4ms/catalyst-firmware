@@ -168,7 +168,7 @@ void main() {
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
 		auto time_now = HAL_GetTick();
 		ui.Update();
-		auto out = macroseq.update();
+		auto out = macroseq.Update();
 		ui.SetOutputs(out);
 		time = HAL_GetTick() - time_now;
 	});

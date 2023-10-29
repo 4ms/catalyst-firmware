@@ -242,6 +242,7 @@ public:
 	using Usual::Usual;
 	virtual void Init() override {
 		c.button.fine.clear_events();
+		p.shared.internalclock.SetExternal(true);
 	}
 	virtual void Update(Abstract *&interface) override {
 		if (c.button.fine.just_went_high() && p.shared.override_output.has_value())

@@ -9,6 +9,8 @@
 // Configuration for everything that might change if we make a version with more or less user-facing features
 namespace Catalyst2::Model
 {
+static constexpr auto SampleRateHz = 1000u;
+
 static constexpr uint32_t NumChans = 8;
 
 static constexpr uint32_t NumScenes = 8;

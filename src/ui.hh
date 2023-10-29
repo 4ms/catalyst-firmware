@@ -45,6 +45,14 @@ public:
 	void Update() {
 		controls.Update();
 
+		if (controls.jack.trig.just_went_high()) {
+			params.shared.clockdivider.Update(params.shared.GetClockDiv());
+			if (params.shared.clockdivider.Step())
+				params.shared.internalclock.Input();
+		}
+
+		params.shared.internalclock.Update();
+
 		ui->Common();
 
 		Abstract *next;
@@ -52,6 +60,7 @@ public:
 			next = &macro;
 		else
 			next = &sequencer;
+
 		ui->Update(next);
 
 		if (next != ui) {

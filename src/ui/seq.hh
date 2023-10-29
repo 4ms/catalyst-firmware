@@ -13,13 +13,15 @@ public:
 		, p{p} {
 	}
 	virtual void Common() override {
-		if (c.jack.trig.just_went_high()) {
-			p.shared.clockdivider.Update(p.shared.GetClockDiv());
-		}
+
+		if (c.toggle.trig_sense.just_went_high())
+			p.shared.internalclock.SetExternal(false);
+		else if (c.toggle.trig_sense.just_went_low())
+			p.shared.internalclock.SetExternal(true);
 
 		if (c.jack.reset.is_high()) {
 			if (c.toggle.trig_sense.is_high())
-				p.internalclock.Reset();
+				p.shared.internalclock.Reset();
 			else
 				p.shared.clockdivider.Reset();
 
@@ -30,17 +32,11 @@ public:
 		if (c.button.play.just_went_high())
 			p.seq.TogglePause();
 
-		bool step;
-
-		if (c.toggle.trig_sense.is_high()) {
-			p.internalclock.update();
-			step = p.internalclock.step();
-		} else {
-			step = p.shared.clockdivider.Step();
-		}
-
-		if (step)
+		if (p.shared.internalclock.Output())
 			p.seq.Step();
+
+		if (c.button.add.just_went_high())
+			p.shared.internalclock.Tap();
 	}
 };
 
@@ -225,12 +221,10 @@ public:
 					p.shared.hang.Set(encoder, time_now);
 				} else {
 					if (c.toggle.trig_sense.is_high()) {
-						p.internalclock.bpm_inc(inc, false);
-						p.seq.Global().IncClockDiv(-100); // reset global clock div
+						p.shared.internalclock.Inc(inc, c.button.fine.is_high());
 						p.shared.hang.Cancel();
 					} else {
 						inc = hang.has_value() ? inc : 0;
-						p.seq.Global().IncClockDiv(inc);
 						p.shared.hang.Set(encoder, time_now);
 					}
 				}
@@ -244,17 +238,14 @@ public:
 		const auto time_now = HAL_GetTick();
 		auto hang = p.shared.hang.Check(time_now);
 
-		auto clockdiv = std::make_optional(p.seq.Global().GetClockDiv());
+		auto clockdiv = p.shared.GetClockDiv();
 
 		if (!p.IsSequenceSelected()) {
 			clockdiv = p.shared.GetClockDiv();
 			if (hang.has_value()) {
 				if (hang.value() != Model::EncoderAlts::ClockDiv)
 					return;
-				if (clockdiv.has_value())
-					c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv.value()), Palette::blue);
-				else
-					c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::globalsetting);
+				c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv), Palette::blue);
 			} else
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
 			return;
@@ -297,12 +288,7 @@ public:
 					c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
 				}
 			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
-				if (clockdiv.has_value()) {
-					const auto div = clockdiv.value();
-					c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(div), Palette::blue);
-				} else {
-					c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::globalsetting);
-				}
+				c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv), Palette::blue);
 			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
 				if (phaseoffset.has_value()) {
 					PhaseOffsetDisplay(phaseoffset.value());
@@ -328,13 +314,12 @@ public:
 
 			col = Palette::globalsetting;
 			if (c.toggle.trig_sense.is_high() && !c.YoungestSceneButton().has_value()) {
-				if (p.internalclock.Peek())
+				if (p.shared.internalclock.Peek())
 					col = Palette::bpm;
 				else
 					col = Palette::off;
 			} else {
-				if (clockdiv.has_value())
-					col = Palette::seqhead;
+				col = Palette::seqhead;
 			}
 			c.SetEncoderLed(Model::EncoderAlts::ClockDiv, col);
 
