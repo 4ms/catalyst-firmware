@@ -53,9 +53,6 @@ public:
 		if (!c.button.bank.is_high())
 			return;
 
-		if (c.button.shift.is_high())
-			return;
-
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) override {
@@ -73,8 +70,6 @@ public:
 		}
 	}
 	void OnSceneButtonRelease(uint8_t scene) override {
-		p.DeselectPage();
-
 		if (scene == p.GetSelectedSequence())
 			p.DeselectSequence();
 		else

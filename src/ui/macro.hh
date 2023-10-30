@@ -104,9 +104,6 @@ public:
 		if (!c.button.bank.is_high())
 			return;
 
-		if (c.button.shift.is_high())
-			return;
-
 		interface = this;
 	}
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
@@ -171,6 +168,9 @@ public:
 	}
 	virtual void Update(Abstract *&interface) override {
 		if (!c.button.shift.is_high())
+			return;
+
+		if (c.button.add.is_high())
 			return;
 
 		interface = this;
