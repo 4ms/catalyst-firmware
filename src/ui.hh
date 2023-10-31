@@ -73,6 +73,7 @@ public:
 			params.mode = Params::Mode::Sequencer;
 		} else if (controls.toggle.mode.just_went_low()) {
 			ui = &macro;
+			params.macro.SelectBank(params.macro.GetSelectedBank());
 			params.mode = Params::Mode::Macro;
 		}
 

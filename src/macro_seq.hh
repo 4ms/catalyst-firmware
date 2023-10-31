@@ -88,7 +88,6 @@ private:
 
 			auto phase = p.shared.GetPos() / p.pathway.GetSceneWidth();
 			phase -= static_cast<unsigned>(phase);
-			phase = MathTools::slope_adj(phase, 1.f - p.GetMorph(), 0.f, 1.f);
 			p.shared.SetPos(phase); // TODO: is it weird that this is the only time the app changes something in params?
 
 			static Pathway::SceneId last_scene_on = Model::NumScenes;
@@ -111,9 +110,10 @@ private:
 
 					out = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : is_primed;
 				} else {
+					const auto phs = MathTools::slope_adj(phase, 1.f - p.GetMorph(chan), 0.f, 1.f);
 					const auto a = p.bank.GetChannel(left, chan);
 					const auto b = p.bank.GetChannel(right, chan);
-					out = MathTools::interpolate(a, b, phase);
+					out = MathTools::interpolate(a, b, phs);
 				}
 			}
 

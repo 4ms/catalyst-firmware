@@ -73,7 +73,7 @@ struct Data {
 
 class Interface {
 	Data &data;
-	float morph = 1.f;
+	std::array<float, Model::NumChans> morph;
 	uint8_t cur_bank = 0;
 
 public:
@@ -87,6 +87,8 @@ public:
 		, shared{shared}
 		, bank{shared.randompool} {
 		SelectBank(0);
+		for (auto &m : morph)
+			m = 1.f;
 	}
 	void SelectBank(uint8_t bank) {
 		if (bank >= Model::NumBanks)
@@ -103,12 +105,15 @@ public:
 	uint8_t GetSelectedBank() {
 		return cur_bank;
 	}
-	void IncMorph(int32_t inc) {
-		morph += (1.f / 100.f) * inc;
-		morph = std::clamp(morph, 0.f, 1.f);
+	void SetMorph(uint8_t bank, float m) {
+		morph[bank] = std::clamp(m, 0.f, 1.f);
 	}
-	float GetMorph() {
-		return morph;
+	float GetMorph(uint8_t bank) {
+		return morph[bank];
+	}
+	void IncMorph(uint8_t bank, int32_t inc) {
+		const auto i = (1.f / 100.f) * inc;
+		SetMorph(bank, GetMorph(bank) + i);
 	}
 };
 } // namespace MacroMode

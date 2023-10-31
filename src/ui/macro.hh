@@ -144,20 +144,26 @@ public:
 		interface = this;
 	}
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		if (encoder != 6)
-			return;
+		p.IncMorph(encoder, inc);
 
-		p.IncMorph(inc);
+		if (c.button.shift.is_high()) {
+			const auto m = p.GetMorph(encoder);
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				p.SetMorph(i, m);
+			}
+		}
 	}
 	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearEncoderLeds();
 
-		const auto morph = p.GetMorph();
-		auto col = Palette::grey.blend(Palette::red, morph);
-		if (morph == 0.f)
-			col = Palette::green;
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			const auto morph = p.GetMorph(i);
+			auto col = Palette::grey.blend(Palette::red, morph);
+			if (morph == 0.f)
+				col = Palette::green;
 
-		c.SetEncoderLed(6, col);
+			c.SetEncoderLed(i, col);
+		}
 	}
 };
 class Settings : public Usual {

@@ -98,11 +98,6 @@ Catalyst2::System _init;
 // rotate is probably too weird
 // have slider be more similar to macro mode...
 
-/*
-turning on and defaulting to sequencer mode and having it act the way it currently does seems like the most intuitive
-way that this module could possibly work
-*/
-
 /* october 9th
 when looking at sequencer outputs, pressing a scene button should select that channel.
 channel settings button should be disabled
@@ -120,22 +115,16 @@ shift + scene == per bank channel random amount
 both: play button stops when playing and restarts when stopped
 transpose: post quantizer
 
-seq add button tap tempo?
-
-
 pausing keeps fireing gate
 also, divided gates keep firing.
 gates not firing on external clock.
 
 //transpose and range.
 
-changing channels while locked on a page shouldnt reset the page
 have pause stop where sequence is at and not reset.
 maybe clipboards should reset eachother?
 
 have holding multiple seq settings buttons change all pressed buttons together
-
-make bpm "fine" work.
 
 shift + add should delete along with normal add + shift
 
