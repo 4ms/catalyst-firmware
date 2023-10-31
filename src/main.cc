@@ -84,8 +84,6 @@ quantize prior to morph??
 
 */
 
-volatile uint32_t time;
-
 void main() {
 	using namespace Catalyst2;
 
