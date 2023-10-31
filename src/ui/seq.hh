@@ -300,11 +300,12 @@ public:
 			c.SetEncoderLed(Model::EncoderAlts::ClockDiv, col);
 
 			if (random == 0.f)
-				col = Palette::green;
-			else
+				col = Palette::red;
+			else {
 				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeedSequence(
 											 p.shared.override_output.value_or(p.GetSelectedSequence()))),
 										 random);
+			}
 
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		}

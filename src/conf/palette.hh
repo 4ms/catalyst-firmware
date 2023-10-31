@@ -53,13 +53,21 @@ struct Palette {
 
 	static constexpr auto bpm = yellow;
 
+	// filter out red colors
 	static Color from_raw(int8_t val) {
-		return Color(val & 0xC0, (val << 2) & 0xC0, (val << 4) & 0xC0);
+		const uint8_t r = val & 0xc0;
+		uint8_t b = (val << 2) & 0xc0;
+		uint8_t g = (val << 4) & 0xc0;
+		if (!b && !g) {
+			b = r;
+			g = ~r;
+		}
+		return Color(r, b, g);
 	}
 
 	static Color EncoderBlend(uint16_t level, bool is_gate) {
 		if (is_gate) {
-			if (level == ChannelValue::GateSetFlag)
+			if (level >= ChannelValue::GateSetThreshold)
 				return Gate::Primed;
 			if (level == ChannelValue::GateHigh)
 				return Gate::High;

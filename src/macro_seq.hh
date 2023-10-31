@@ -10,7 +10,7 @@ namespace MathTools
 {
 // if slope == 0 actual slope == 1
 // if slope is >= (max - min) actual slope == inf
-// if slope is negative than actual slope is less than 1
+// if slope is negative then actual slope is less than 1
 constexpr float slope_adj(float in, float slope, float min, float max) {
 	const auto range = max - min;
 	const auto b = range / 2.f;
@@ -54,27 +54,25 @@ public:
 	auto Update() {
 		tick.Update();
 
-		Model::OutputBuffer buf;
-
 		if (params.mode == Params::Mode::Macro)
-			Macro(params.macro, buf);
+			return Macro(params.macro);
 		else
-			Seq(params.sequencer, buf);
-
-		return buf;
+			return Seq(params.sequencer);
 	}
 
 private:
-	void Macro(MacroMode::Interface &p, Model::OutputBuffer &in) {
+	Model::OutputBuffer Macro(MacroMode::Interface &p) {
 		static auto do_trigs = false;
+
+		Model::OutputBuffer buf;
 
 		const auto time_now = tick.get();
 
 		if (p.shared.override_output.has_value()) {
-			for (auto [chan, out] : countzip(in)) {
+			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = p.bank.GetChannel(p.shared.override_output.value(), chan);
-					if (do_trigs && is_primed == ChannelValue::GateSetFlag)
+					if (do_trigs && is_primed >= ChannelValue::GateSetThreshold)
 						trigger[chan].Trig(time_now);
 					out = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : ChannelValue::from_volts(0.f);
 				} else {
@@ -99,12 +97,12 @@ private:
 					do_trigs = true;
 			}
 
-			for (auto [chan, out] : countzip(in)) {
+			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = ChannelValue::from_volts(0.f);
 					if (current_scene < Model::NumScenes)
 						is_primed = p.bank.GetChannel(current_scene, chan);
-					if (do_trigs && is_primed == ChannelValue::GateSetFlag) {
+					if (do_trigs && is_primed >= ChannelValue::GateSetThreshold) {
 						trigger[chan].Trig(time_now);
 					}
 
@@ -120,13 +118,18 @@ private:
 			do_trigs = true;
 		}
 
-		for (auto [i, out] : countzip(in)) {
+		for (auto [i, out] : countzip(buf)) {
 			if (p.bank.GetChannelMode(i).IsQuantized())
 				out = p.shared.quantizer[i].process(out);
 		}
+
+		return buf;
 	}
-	void Seq(SeqMode::Interface &p, Model::OutputBuffer &in) {
+	Model::OutputBuffer Seq(SeqMode::Interface &p) {
 		static auto prev_ = false;
+
+		Model::OutputBuffer buf;
+
 		auto cur = p.shared.internalclock.Peek();
 
 		bool do_trigs = false;
@@ -136,16 +139,17 @@ private:
 		}
 		const auto time_now = tick.get();
 
-		for (auto [chan, o] : countzip(in)) {
+		for (auto [chan, o] : countzip(buf)) {
 			const auto stepvalue = p.seq.GetPlayheadValue(chan);
 			if (p.seq.Channel(chan).mode.IsGate()) {
-				if (do_trigs && stepvalue == ChannelValue::GateSetFlag)
+				if (do_trigs && stepvalue >= ChannelValue::GateSetThreshold)
 					trigger[chan].Trig(time_now);
 				o = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : stepvalue;
 			} else {
 				o = p.shared.quantizer[chan].process(stepvalue);
 			}
 		}
+		return buf;
 	}
 };
 

@@ -21,8 +21,7 @@ static constexpr type from_volts(const float volts) {
 }
 
 static constexpr type GateHigh = from_volts(5.f);
-static constexpr type GateSetFlag = from_volts(.1f);
-static constexpr type GateOffFlag = from_volts(.0f);
+static constexpr type GateSetThreshold = from_volts(2.5f);
 
 static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
 static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
@@ -30,19 +29,19 @@ static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f
 
 struct Channel {
 	ChannelValue::type val = ChannelValue::from_volts(0.f);
-	void Inc(int32_t dir, bool fine, bool is_gate) {
+	void Inc(int32_t inc, bool fine, bool is_gate) {
 		if (is_gate) {
-			if (dir > 0)
-				val = ChannelValue::GateSetFlag;
-			else if (dir < 0)
-				val = ChannelValue::GateOffFlag;
+			if (inc > 0)
+				val = ChannelValue::GateSetThreshold;
+			else if (inc < 0)
+				val = ChannelValue::GateSetThreshold - 1;
 		} else {
-			int32_t inc = fine ? ChannelValue::inc_step_fine : ChannelValue::inc_step;
+			int32_t i = fine ? ChannelValue::inc_step_fine : ChannelValue::inc_step;
 
-			if (dir < 0)
-				inc *= -1;
+			if (inc < 0)
+				i *= -1;
 
-			val = std::clamp<int32_t>(val + inc, ChannelValue::Min, ChannelValue::Max);
+			val = std::clamp<int32_t>(val + i, ChannelValue::Min, ChannelValue::Max);
 		}
 	}
 };

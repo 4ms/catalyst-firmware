@@ -217,12 +217,12 @@ public:
 		const auto is_scene = c.YoungestSceneButton().has_value();
 		const auto scene = c.YoungestSceneButton().value_or(0);
 
-		float random = 1.f;
-
 		if (is_scene) {
-			random = p.bank.GetRandomAmount(scene);
-			c.SetEncoderLed(Model::EncoderAlts::Random,
-							Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeed()), random));
+			const auto random = p.bank.GetRandomAmount(scene);
+			auto col = Palette::red;
+			if (random > 0.f)
+				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeed()), random);
+			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		} else {
 			const auto time_now = HAL_GetTick();
 			const auto hang = p.shared.hang.Check(time_now);
