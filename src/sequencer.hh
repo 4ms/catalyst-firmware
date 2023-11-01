@@ -343,6 +343,10 @@ public:
 			Reset();
 	}
 
+	bool IsPaused() {
+		return pause;
+	}
+
 	void CopySequence(uint8_t sequence) {
 		clipboard.sequence = data.channel[sequence];
 	}

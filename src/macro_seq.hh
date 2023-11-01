@@ -127,17 +127,15 @@ private:
 	}
 	Model::OutputBuffer Seq(SeqMode::Interface &p) {
 		static auto prev_ = false;
-		static uint32_t morphcnt = 0;
 		Model::OutputBuffer buf;
 
-		morphcnt += 1;
+		auto morphamount = std::clamp(p.shared.internalclock.GetPhase(), 0.f, 1.f);
+		if (p.seq.IsPaused())
+			morphamount = 0;
 		if (p.shared.internalclock.Output()) {
 			// new step
-			morphcnt = 0;
 			p.seq.Step();
 		}
-
-		const auto morphamount = static_cast<float>(morphcnt) / p.shared.internalclock.BpmInTicks();
 
 		auto cur = p.shared.internalclock.Peek();
 

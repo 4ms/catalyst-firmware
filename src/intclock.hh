@@ -32,11 +32,9 @@ public:
 	}
 	void Update() {
 		timenow++;
-
+		cnt++;
 		if (!IsInternal())
 			return;
-
-		cnt++;
 		if (cnt >= ticks_per_pulse) {
 			cnt = 0;
 			step = true;
@@ -53,13 +51,14 @@ public:
 			return;
 
 		step = true;
+		cnt = 0;
 		Tap();
 	}
 	void Tap() {
 		const auto pw = timenow - ptaptime;
 		ptaptime = timenow;
 
-		if (pw >= ToTicks(20)) {
+		if (pw >= ToTicks(1)) {
 			tap_cnt = 0;
 			pulsewidth = 0;
 			return;
@@ -68,9 +67,9 @@ public:
 		pulsewidth += pw;
 
 		tap_cnt += 1;
-		if (tap_cnt == 4) {
+		if (tap_cnt == 2) {
 			tap_cnt = 0;
-			Set(ToBpm(pulsewidth / 4));
+			Set(ToBpm(pulsewidth / 2));
 			pulsewidth = 0;
 		}
 	}
@@ -84,7 +83,7 @@ public:
 		return peek;
 	}
 	void Set(unsigned bpm) {
-		this->bpm = std::clamp(bpm, 20u, 1200u);
+		this->bpm = std::clamp(bpm, 1u, 1200u);
 		ticks_per_pulse = ToTicks(this->bpm);
 	}
 	void Inc(int by, bool fine) {
@@ -94,11 +93,8 @@ public:
 		else if (by < 0)
 			Set(bpm - inc);
 	}
-	uint16_t Bpm() {
-		return bpm;
-	}
-	uint32_t BpmInTicks() {
-		return ticks_per_pulse;
+	float GetPhase() {
+		return static_cast<float>(cnt) / ticks_per_pulse;
 	}
 
 	void Reset() {
