@@ -38,7 +38,7 @@ struct Quantizer {
 	static constexpr float oct_size = (65536.f / range_octaves) + .5f;
 	static constexpr float note_size = (65536.f / (range_octaves * 12)) + .5f;
 
-	uint16_t process(const uint16_t input) {
+	uint16_t Process(const uint16_t input) {
 		if (!scale.size())
 			return input;
 
@@ -60,7 +60,7 @@ struct Quantizer {
 
 		return (value * note_size) + (octave * oct_size);
 	}
-	void load_scale(const QuantizerScale &scl) {
+	void LoadScale(const QuantizerScale &scl) {
 		scale = scl;
 	}
 

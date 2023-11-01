@@ -404,6 +404,10 @@ public:
 		return GetStepValue(sequence, GetPlayheadStep(sequence));
 	}
 
+	float GetPlayheadMorph(uint8_t sequence) {
+		return data.channel[sequence].GetMorph(GetPlayheadStep(sequence));
+	}
+
 	ChannelValue::type GetNextStepValue(uint8_t sequence) {
 		return GetStepValue(sequence, player[sequence].GetNextStep());
 	}

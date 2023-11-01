@@ -44,7 +44,6 @@ public:
 	QuantizerArray quantizer;
 	ClockDivider clockdivider;
 	RandomPool randompool;
-	std::optional<uint8_t> override_output; // this doesnt need to be shared.
 	DisplayHanger hang;
 
 	void SetPos(float pos) {
@@ -81,6 +80,7 @@ public:
 	Pathway::Interface pathway;
 	Bank::Interface bank;
 	Recorder recorder;
+	std::optional<uint8_t> override_output; // this doesnt need to be shared.
 
 	Interface(Data &data, SharedInterface &shared)
 		: data{data}
@@ -98,7 +98,7 @@ public:
 		this->pathway.Load(data.pathway[bank]);
 
 		for (auto [i, q] : countzip(shared.quantizer))
-			q.load_scale(this->bank.GetChannelMode(i).GetScale());
+			q.LoadScale(this->bank.GetChannelMode(i).GetScale());
 
 		cur_bank = bank;
 	}

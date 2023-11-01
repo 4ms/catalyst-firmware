@@ -68,15 +68,15 @@ private:
 
 		const auto time_now = tick.get();
 
-		if (p.shared.override_output.has_value()) {
+		if (p.override_output.has_value()) {
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					auto is_primed = p.bank.GetChannel(p.shared.override_output.value(), chan);
+					auto is_primed = p.bank.GetChannel(p.override_output.value(), chan);
 					if (do_trigs && is_primed >= ChannelValue::GateSetThreshold)
 						trigger[chan].Trig(time_now);
 					out = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : ChannelValue::from_volts(0.f);
 				} else {
-					out = p.bank.GetChannel(p.shared.override_output.value(), chan);
+					out = p.bank.GetChannel(p.override_output.value(), chan);
 				}
 			}
 			do_trigs = false;
@@ -120,15 +120,24 @@ private:
 
 		for (auto [i, out] : countzip(buf)) {
 			if (p.bank.GetChannelMode(i).IsQuantized())
-				out = p.shared.quantizer[i].process(out);
+				out = p.shared.quantizer[i].Process(out);
 		}
 
 		return buf;
 	}
 	Model::OutputBuffer Seq(SeqMode::Interface &p) {
 		static auto prev_ = false;
-
+		static uint32_t morphcnt = 0;
 		Model::OutputBuffer buf;
+
+		morphcnt += 1;
+		if (p.shared.internalclock.Output()) {
+			// new step
+			morphcnt = 0;
+			p.seq.Step();
+		}
+
+		const auto morphamount = static_cast<float>(morphcnt) / p.shared.internalclock.BpmInTicks();
 
 		auto cur = p.shared.internalclock.Peek();
 
@@ -141,12 +150,17 @@ private:
 
 		for (auto [chan, o] : countzip(buf)) {
 			const auto stepvalue = p.seq.GetPlayheadValue(chan);
+
 			if (p.seq.Channel(chan).mode.IsGate()) {
 				if (do_trigs && stepvalue >= ChannelValue::GateSetThreshold)
 					trigger[chan].Trig(time_now);
 				o = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : stepvalue;
 			} else {
-				o = p.shared.quantizer[chan].process(stepvalue);
+				const auto nextstepvalue = p.seq.GetNextStepValue(chan);
+				const auto distance = nextstepvalue - stepvalue;
+				const auto val = stepvalue + (distance * morphamount * p.seq.GetPlayheadMorph(chan));
+
+				o = p.shared.quantizer[chan].Process(val);
 			}
 		}
 		return buf;

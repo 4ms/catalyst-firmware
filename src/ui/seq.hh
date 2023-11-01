@@ -12,6 +12,10 @@ public:
 		: Abstract{c}
 		, p{p} {
 	}
+	virtual void Init() override {
+	}
+	virtual void Update(Abstract *&interface) override {
+	}
 	virtual void Common() override {
 
 		if (c.toggle.trig_sense.just_went_high())
@@ -32,11 +36,14 @@ public:
 		if (c.button.play.just_went_high())
 			p.seq.TogglePause();
 
-		if (p.shared.internalclock.Output())
-			p.seq.Step();
-
 		if (c.button.add.just_went_high())
 			p.shared.internalclock.Tap();
+	}
+	virtual void OnSceneButtonRelease(uint8_t button) override {
+	}
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	}
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 	}
 };
 
@@ -62,11 +69,11 @@ public:
 			cm.Inc(dir);
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				p.seq.Channel(i).mode = cm;
-				p.shared.quantizer[i].load_scale(cm.GetScale());
+				p.shared.quantizer[i].LoadScale(cm.GetScale());
 			}
 		} else {
 			p.seq.Channel(encoder).mode.Inc(dir);
-			p.shared.quantizer[encoder].load_scale(p.seq.Channel(encoder).mode.GetScale());
+			p.shared.quantizer[encoder].LoadScale(p.seq.Channel(encoder).mode.GetScale());
 		}
 	}
 	void OnSceneButtonRelease(uint8_t scene) override {
@@ -266,11 +273,10 @@ public:
 			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
 				c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv), Palette::blue);
 			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
-				if (phaseoffset.has_value()) {
+				if (phaseoffset.has_value())
 					PhaseOffsetDisplay(phaseoffset.value());
-				} else {
+				else
 					c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, Palette::globalsetting);
-				}
 			}
 		} else {
 			auto col = Palette::globalsetting;
@@ -301,11 +307,10 @@ public:
 
 			if (random == 0.f)
 				col = Palette::red;
-			else {
+			else
 				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeedSequence(
-											 p.shared.override_output.value_or(p.GetSelectedSequence()))),
+											 c.YoungestSceneButton().value_or(p.GetSelectedSequence()))),
 										 random);
-			}
 
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		}

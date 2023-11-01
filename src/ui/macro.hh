@@ -13,6 +13,10 @@ public:
 		: Abstract{c}
 		, p{p} {
 	}
+	virtual void Init() override {
+	}
+	virtual void Update(Abstract *&interface) override {
+	}
 	virtual void Common() override {
 		if (c.jack.trig.just_went_high()) {
 			if (p.recorder.is_cued()) {
@@ -27,7 +31,13 @@ public:
 		const auto pos = p.recorder.update(c.ReadSlider() + c.ReadCv()) / 4096.f;
 		p.shared.SetPos(pos);
 		p.pathway.Update(pos);
-		p.shared.override_output = c.YoungestSceneButton();
+		p.override_output = c.YoungestSceneButton();
+	}
+	virtual void OnSceneButtonRelease(uint8_t button) override {
+	}
+	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	}
+	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
 	}
 };
 
@@ -113,11 +123,11 @@ public:
 			cm.Inc(inc);
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				p.bank.SetChanMode(i, cm);
-				p.shared.quantizer[i].load_scale(cm.GetScale());
+				p.shared.quantizer[i].LoadScale(cm.GetScale());
 			}
 		} else {
 			p.bank.IncChannelMode(encoder, inc);
-			p.shared.quantizer[encoder].load_scale(p.bank.GetChannelMode(encoder).GetScale());
+			p.shared.quantizer[encoder].LoadScale(p.bank.GetChannelMode(encoder).GetScale());
 		}
 	}
 
@@ -251,8 +261,8 @@ public:
 		p.shared.internalclock.SetExternal(true);
 	}
 	virtual void Update(Abstract *&interface) override {
-		if (c.button.fine.just_went_high() && p.shared.override_output.has_value())
-			p.bank.Copy(p.shared.override_output.value());
+		if (c.button.fine.just_went_high() && p.override_output.has_value())
+			p.bank.Copy(p.override_output.value());
 
 		if (c.button.play.just_went_high()) {
 			if (c.button.shift.is_high())

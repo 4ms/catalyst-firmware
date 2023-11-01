@@ -56,7 +56,9 @@ struct EncoderAlts {
 	static constexpr auto PlayMode = 1;
 	static constexpr auto SeqLength = 2;
 	static constexpr auto PhaseOffset = 3;
+	static constexpr auto Range = 4;
 	static constexpr auto ClockDiv = 5;
+	static constexpr auto Transpose = 6;
 	static constexpr auto Random = 7;
 };
 } // namespace Catalyst2::Model

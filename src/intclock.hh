@@ -5,9 +5,15 @@
 namespace Catalyst2::Clock
 {
 
+static constexpr uint32_t ToTicks(uint16_t bpm) {
+	return static_cast<unsigned>((60.f * Model::SampleRateHz) / bpm);
+}
+static constexpr uint16_t ToBpm(uint32_t tick) {
+	return static_cast<unsigned>((60.f * Model::SampleRateHz) / tick);
+}
+
 class Internal {
 	static constexpr auto sample_rate = Model::SampleRateHz;
-	static constexpr float updates_per_minute = (60.f * Model::SampleRateHz);
 
 	uint32_t cnt = 0;
 	uint32_t ptaptime = 0;
@@ -88,19 +94,18 @@ public:
 		else if (by < 0)
 			Set(bpm - inc);
 	}
+	uint16_t Bpm() {
+		return bpm;
+	}
+	uint32_t BpmInTicks() {
+		return ticks_per_pulse;
+	}
+
 	void Reset() {
 		cnt = 0;
 		peek = false;
 		tap_cnt = 0;
 		pulsewidth = 0;
-	}
-
-private:
-	static constexpr uint32_t ToTicks(uint16_t bpm) {
-		return static_cast<unsigned>(updates_per_minute / bpm);
-	}
-	static constexpr uint16_t ToBpm(uint32_t tick) {
-		return static_cast<unsigned>(updates_per_minute / tick);
 	}
 };
 
