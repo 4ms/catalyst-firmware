@@ -39,8 +39,6 @@ public:
 	}
 
 	auto Update() {
-		params.shared.internalclock.Update();
-
 		if (params.mode == Params::Mode::Macro)
 			return Macro(params.macro);
 		else
