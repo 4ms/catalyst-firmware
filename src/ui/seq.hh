@@ -129,7 +129,7 @@ public:
 			}
 		}
 		if (p.IsPageSelected())
-			c.SetButtonLed(page, ((HAL_GetTick() >> 8) & 1) > 0);
+			c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
 		else
 			c.SetButtonLed(page, true);
 	}
@@ -148,7 +148,7 @@ public:
 		interface = this;
 	}
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		const auto time_now = HAL_GetTick();
+		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
 		auto is_channel = c.YoungestSceneButton().has_value();
@@ -229,7 +229,7 @@ public:
 		c.ClearButtonLeds();
 		c.ClearEncoderLeds();
 
-		const auto time_now = HAL_GetTick();
+		const auto time_now = p.shared.internalclock.TimeNow();
 		auto hang = p.shared.hang.Check(time_now);
 
 		auto clockdiv = p.shared.GetClockDiv();
@@ -304,6 +304,11 @@ public:
 				col = Palette::seqhead;
 			}
 			c.SetEncoderLed(Model::EncoderAlts::ClockDiv, col);
+
+			col = Palette::globalsetting;
+			if (!p.shared.internalclock.Times4())
+				col = Palette::off;
+			c.SetEncoderLed(Model::EncoderAlts::Transpose, col);
 
 			if (random == 0.f)
 				col = Palette::red;
@@ -428,7 +433,7 @@ public:
 					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], p.seq.Channel(chan).mode.IsGate()));
 			}
 			if (p.IsPageSelected())
-				c.SetButtonLed(page, ((HAL_GetTick() >> 8) & 1) > 0);
+				c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
 			else
 				c.SetButtonLed(page, true);
 

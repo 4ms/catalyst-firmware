@@ -29,21 +29,8 @@ constexpr float slope_adj(float in, float slope, float min, float max) {
 namespace Catalyst2
 {
 
-class Tick {
-	uint8_t c = 0;
-
-public:
-	void Update() {
-		c++; // haha
-	}
-	uint8_t get() {
-		return c;
-	}
-};
-
 class MacroSeq {
 	Params &params;
-	Tick tick;
 	std::array<Trigger, Model::NumChans> trigger;
 
 public:
@@ -52,7 +39,7 @@ public:
 	}
 
 	auto Update() {
-		tick.Update();
+		params.shared.internalclock.Update();
 
 		if (params.mode == Params::Mode::Macro)
 			return Macro(params.macro);
@@ -66,7 +53,7 @@ private:
 
 		Model::OutputBuffer buf;
 
-		const auto time_now = tick.get();
+		const auto time_now = p.shared.internalclock.TimeNow();
 
 		if (p.override_output.has_value()) {
 			for (auto [chan, out] : countzip(buf)) {
@@ -144,7 +131,7 @@ private:
 			prev_ = cur;
 			do_trigs = true;
 		}
-		const auto time_now = tick.get();
+		const auto time_now = p.shared.internalclock.TimeNow();
 
 		for (auto [chan, o] : countzip(buf)) {
 			const auto stepvalue = p.seq.GetPlayheadValue(chan);

@@ -51,9 +51,9 @@ public:
 				params.shared.internalclock.Input();
 		}
 
-		params.shared.internalclock.Update();
-
 		ui->Common();
+
+		params.shared.internalclock.Update();
 
 		Abstract *next;
 		if (params.mode == Params::Mode::Macro)

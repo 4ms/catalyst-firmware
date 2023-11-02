@@ -13,34 +13,56 @@ static constexpr uint16_t ToBpm(uint32_t tick) {
 }
 
 class Internal {
+	uint32_t timenow = 0;
+
+public:
+	uint32_t TimeNow() {
+		return timenow;
+	}
+
+protected:
+	void Update() {
+		timenow++;
+	}
+};
+
+class Bpm : public Internal {
 	static constexpr auto sample_rate = Model::SampleRateHz;
 
 	uint32_t cnt = 0;
+
+	uint8_t tap_cnt = 0;
 	uint32_t ptaptime = 0;
 	uint32_t pulsewidth = 0;
+
 	uint32_t ticks_per_pulse;
-	uint32_t timenow = 0;
 	uint16_t bpm;
-	uint8_t tap_cnt = 0;
 	bool peek = false;
 	bool external = false;
 	bool step = false;
 
+	bool multout = false;
+
 public:
-	Internal() {
+	Bpm() {
 		Set(120);
 	}
 	void Update() {
-		timenow++;
+		Internal::Update();
+		const auto cntt4 = (cnt % (ticks_per_pulse / 4)) + 1;
 		cnt++;
-		if (!IsInternal())
-			return;
+
 		if (cnt >= ticks_per_pulse) {
-			cnt = 0;
-			step = true;
+			if (IsInternal()) {
+				cnt = 0;
+				step = true;
+			}
 			peek = !peek;
 		}
+		if (cntt4 >= (ticks_per_pulse / 4) || step == true)
+			multout = true;
 	}
+
 	bool Output() {
 		bool ret = step;
 		step = false;
@@ -52,26 +74,29 @@ public:
 
 		step = true;
 		cnt = 0;
-		Tap();
+
+		const auto pw = TimeNow() - ptaptime;
+		ptaptime = TimeNow();
+		Set(ToBpm(pw));
 	}
 	void Tap() {
-		const auto pw = timenow - ptaptime;
-		ptaptime = timenow;
+		// if this is the first tap in a long time
+		// the time between the last tap and this tap is not useful
+		if (!IsInternal())
+			return;
 
-		if (pw >= ToTicks(1)) {
+		if (TimeNow() - ptaptime >= ToTicks(8)) {
 			tap_cnt = 0;
 			pulsewidth = 0;
+			ptaptime = TimeNow();
 			return;
 		}
 
+		const auto pw = TimeNow() - ptaptime;
+		ptaptime = TimeNow();
 		pulsewidth += pw;
-
 		tap_cnt += 1;
-		if (tap_cnt == 2) {
-			tap_cnt = 0;
-			Set(ToBpm(pulsewidth / 2));
-			pulsewidth = 0;
-		}
+		Set(ToBpm(pulsewidth / tap_cnt));
 	}
 	bool IsInternal() {
 		return external == false;
@@ -82,8 +107,8 @@ public:
 	bool Peek() {
 		return peek;
 	}
-	void Set(unsigned bpm) {
-		this->bpm = std::clamp(bpm, 1u, 1200u);
+	void Set(int32_t bpm) {
+		this->bpm = std::clamp<int32_t>(bpm, 1, 1200);
 		ticks_per_pulse = ToTicks(this->bpm);
 	}
 	void Inc(int by, bool fine) {
@@ -96,12 +121,16 @@ public:
 	float GetPhase() {
 		return static_cast<float>(cnt) / ticks_per_pulse;
 	}
-
 	void Reset() {
 		cnt = 0;
 		peek = false;
 		tap_cnt = 0;
 		pulsewidth = 0;
+	}
+	bool Times4() {
+		const auto out = multout;
+		multout = false;
+		return out;
 	}
 };
 

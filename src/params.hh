@@ -40,7 +40,7 @@ class SharedInterface {
 	ClockDivider::type clockdiv = 0;
 
 public:
-	Clock::Internal internalclock;
+	Clock::Bpm internalclock;
 	QuantizerArray quantizer;
 	ClockDivider clockdivider;
 	RandomPool randompool;
