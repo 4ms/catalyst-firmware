@@ -198,6 +198,7 @@ public:
 struct Data {
 	std::array<ChannelData, Model::NumChans> channel;
 	GlobalData global;
+	float master_phase;
 };
 
 class PlayerInterface {
@@ -237,8 +238,8 @@ public:
 		}
 
 		const auto start_offset = d.channel[channel].GetStartOffset().value_or(d.global.GetStartOffset());
-		const auto phase_offset =
-			static_cast<int8_t>(d.channel[channel].GetPhaseOffset().value_or(d.global.GetPhaseOffset()) * (length - 1));
+		const auto phase_offset = static_cast<int8_t>(
+			(d.channel[channel].GetPhaseOffset().value_or(d.global.GetPhaseOffset()) + d.master_phase) * (length - 1));
 
 		next_step = CounterToStep(playmode, counter, start_offset, phase_offset, length);
 	}
@@ -322,6 +323,10 @@ public:
 
 	ChannelData &Channel(uint8_t c) {
 		return data.channel[c];
+	}
+
+	void SetMasterPhaseOffset(float o) {
+		data.master_phase = o;
 	}
 
 	void Step() {

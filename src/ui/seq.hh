@@ -38,6 +38,9 @@ public:
 
 		if (c.button.add.just_went_high())
 			p.shared.internalclock.Tap();
+
+		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4096.f;
+		p.seq.SetMasterPhaseOffset(pos);
 	}
 	virtual void OnSceneButtonRelease(uint8_t button) override {
 	}
