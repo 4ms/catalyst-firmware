@@ -22,6 +22,7 @@ enum class PlayMode : int8_t {
 	NumPlayModes,
 };
 
+<<<<<<< ours
 class StepModifier {
 	int8_t m = 0;
 
@@ -37,6 +38,50 @@ public:
 	}
 };
 
+=======
+enum class OptionalConfig : bool { CanBeNull, Normal };
+
+template<typename T, OptionalConfig Config>
+struct OptionalSetting {
+
+	OptionalSetting(T min, T max)
+		: val{Config == OptionalConfig::CanBeNull ? std::nullopt : std::make_optional(min)}
+		, min{min}
+		, max{max}
+	{}
+
+	template<typename U>
+	void inc(U amt)
+	// TODO: make this work for non-enum and enum types
+	//  requires(std::is_convertible_v<T, U>)
+	{
+		if constexpr (Config == OptionalConfig::CanBeNull) {
+			if (!val.has_value()) {
+				if (amt > 0)
+					val = min;
+				return;
+			}
+
+			if (amt < 0 && val == min) {
+				val = std::nullopt;
+				return;
+			}
+		}
+		auto int_val = std::clamp<U>(static_cast<U>(val.value()) + amt, static_cast<U>(min), static_cast<U>(max));
+		val = T(int_val);
+	}
+
+	std::optional<T> read()
+	{
+		return val;
+	}
+
+private:
+	std::optional<T> val;
+	T min;
+	T max;
+};
+>>>>>>> theirs
 class ChannelData {
 	std::array<Channel, Model::MaxSeqSteps> step;
 	std::array<StepModifier, Model::MaxSeqSteps> modifier;
