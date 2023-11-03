@@ -59,7 +59,7 @@ public:
 			}
 			peek = !peek;
 		}
-		if (cntt4 >= (ticks_per_pulse / 4) || step == true)
+		if (cntt4 >= (ticks_per_pulse / 4) || cnt == 0)
 			multout = true;
 	}
 
