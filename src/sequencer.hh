@@ -37,18 +37,61 @@ public:
 	}
 };
 
+enum class OptionalConfig : bool { CanBeNull, Normal };
+
+template<typename T, OptionalConfig Config>
+struct OptionalSetting {
+
+	OptionalSetting(T min, T max, T init = T{})
+		: val{Config == OptionalConfig::CanBeNull ? std::nullopt : std::make_optional(init)}
+		, min{min}
+		, max{max} {
+	}
+
+	template<typename U>
+	void inc(U amt)
+	// TODO: make this work for non-enum and enum types
+	//  requires(std::is_convertible_v<T, U>)
+	{
+		if constexpr (Config == OptionalConfig::CanBeNull) {
+			if (!val.has_value()) {
+				if (amt > 0)
+					val = min;
+				return;
+			}
+
+			if (amt < 0 && val == min) {
+				val = std::nullopt;
+				return;
+			}
+		}
+		auto int_val = std::clamp<U>(static_cast<U>(val.value()) + amt, static_cast<U>(min), static_cast<U>(max));
+		val = T(int_val);
+	}
+
+	std::optional<T> read() {
+		return val;
+	}
+
+private:
+	std::optional<T> val;
+	T min;
+	T max;
+};
+
 class ChannelData {
 	std::array<Channel, Model::MaxSeqSteps> step;
 	std::array<StepModifier, Model::MaxSeqSteps> modifier;
-	std::optional<float> phase_offset = std::nullopt;
-	std::optional<int8_t> length = std::nullopt;
-	std::optional<int8_t> start_offset = std::nullopt;
-	std::optional<PlayMode> playmode = std::nullopt;
 	Clock::Divider::type clockdiv = 0;
 	float randomamount = 0;
 	// 1.f / 15.f;
 
 public:
+	OptionalSetting<float, OptionalConfig::CanBeNull> phase_offset{0.f, 1.f};
+	OptionalSetting<int8_t, OptionalConfig::CanBeNull> length{Model::MinSeqSteps, Model::MaxSeqSteps};
+	OptionalSetting<int8_t, OptionalConfig::CanBeNull> start_offset{0, Model::MaxSeqSteps - 1};
+	OptionalSetting<PlayMode, OptionalConfig::CanBeNull> playmode{PlayMode::Forward, PlayMode::Random};
+
 	ChannelData() {
 	}
 	ChannelMode mode;
@@ -70,93 +113,12 @@ public:
 	StepModifier GetModifier(uint8_t step) {
 		return modifier[step];
 	}
-	void IncLength(int32_t inc) {
-		if (!length.has_value()) {
-			if (inc > 0)
-				length = Model::MinSeqSteps;
-			return;
-		}
-
-		if (inc < 0 && length.value() == Model::MinSeqSteps) {
-			length = std::nullopt;
-			return;
-		}
-
-		auto t = length.value();
-		t += inc;
-		length = std::clamp<int8_t>(t, Model::MinSeqSteps, Model::MaxSeqSteps);
-	}
-	std::optional<int8_t> GetLength() {
-		return length;
-	}
-
-	void IncStartOffset(int32_t inc) {
-		if (!start_offset.has_value()) {
-			if (inc > 0)
-				start_offset = 0;
-			return;
-		}
-
-		if (inc < 0 && start_offset.value() == 0) {
-			start_offset = std::nullopt;
-			return;
-		}
-
-		auto t = start_offset.value();
-		t += inc;
-		start_offset = std::clamp<int8_t>(t, 0, Model::MaxSeqSteps - 1);
-	}
-	std::optional<int8_t> GetStartOffset() {
-		return start_offset;
-	}
-
-	void IncPhaseOffset(float inc) {
-		if (!phase_offset.has_value()) {
-			if (inc > 0)
-				phase_offset = 0.f;
-			return;
-		}
-
-		if (inc < 0 && phase_offset.value() == 0.f) {
-			phase_offset = std::nullopt;
-			return;
-		}
-
-		auto temp = phase_offset.value();
-		phase_offset = std::clamp(temp + inc, 0.f, 1.f);
-	}
-	std::optional<float> GetPhaseOffset() {
-		return phase_offset;
-	}
-
-	void IncPlayMode(int32_t inc) {
-		if (!playmode.has_value()) {
-			if (inc > 0)
-				playmode = static_cast<PlayMode>(0);
-			return;
-		}
-
-		if (inc < 0 && playmode.value() == static_cast<PlayMode>(0)) {
-			playmode = std::nullopt;
-			return;
-		}
-
-		auto t = static_cast<int8_t>(playmode.value());
-		t += inc;
-		t = std::clamp<int8_t>(t, 0, static_cast<int32_t>(PlayMode::NumPlayModes) - 1);
-		playmode = static_cast<PlayMode>(t);
-	}
-	std::optional<PlayMode> GetPlayMode() {
-		return playmode;
-	}
-
 	void IncClockDiv(int32_t inc) {
 		clockdiv = Clock::Divider::IncDivIdx(clockdiv, inc);
 	}
 	Clock::Divider::type GetClockDiv() {
 		return clockdiv;
 	}
-
 	void IncRandomAmount(int32_t inc) {
 		auto i = (inc / 15.f / 12.f);
 		randomamount += i;
@@ -168,49 +130,32 @@ public:
 };
 
 class GlobalData {
-	float phase_offset = 0;
-	int8_t length = Model::SeqStepsPerPage;
-	int8_t start_offset = 0;
-	PlayMode playmode = PlayMode::Forward;
-
 public:
-	void IncLength(int32_t inc) {
-		auto temp = length;
-		temp += inc;
-		length = std::clamp<int8_t>(temp, Model::MinSeqSteps, Model::MaxSeqSteps);
-	}
-	int8_t GetLength() {
-		return length;
-	}
-	void IncStartOffset(int32_t inc) {
-		auto temp = start_offset;
-		temp += inc;
-		start_offset = std::clamp<int8_t>(temp, 0, Model::MaxSeqSteps - 1);
-	}
-	int8_t GetStartOffset() {
-		return start_offset;
-	}
-	void IncPhaseOffset(float inc) {
-		phase_offset = std::clamp(phase_offset + inc, 0.f, 1.f);
-	}
-	float GetPhaseOffset() {
-		return phase_offset;
-	}
-	void IncPlayMode(int32_t inc) {
-		auto temp = static_cast<int8_t>(playmode);
-		temp += inc;
-		temp = std::clamp<int8_t>(temp, 0, static_cast<int8_t>(Sequencer::PlayMode::NumPlayModes) - 1);
-		playmode = static_cast<Sequencer::PlayMode>(temp);
-	}
-	PlayMode GetPlayMode() {
-		return playmode;
-	}
+	OptionalSetting<float, OptionalConfig::Normal> phase_offset{0.f, 1.f, 0.f};
+	OptionalSetting<int8_t, OptionalConfig::Normal> length{
+		Model::MinSeqSteps, Model::MaxSeqSteps, Model::SeqStepsPerPage};
+	OptionalSetting<int8_t, OptionalConfig::Normal> start_offset{0, Model::MaxSeqSteps - 1, 0};
+	OptionalSetting<PlayMode, OptionalConfig::Normal> playmode{PlayMode::Forward, PlayMode::Random, PlayMode::Forward};
 };
 
 struct Data {
 	std::array<ChannelData, Model::NumChans> channel;
 	GlobalData global;
 	float master_phase;
+
+	// return the global value if there is no channel value
+	float GetPhaseOffset(uint8_t chan) {
+		return channel[chan].phase_offset.read().value_or(global.phase_offset.read().value());
+	}
+	int8_t GetLength(uint8_t chan) {
+		return channel[chan].length.read().value_or(global.length.read().value());
+	}
+	int8_t GetStartOffset(uint8_t chan) {
+		return channel[chan].start_offset.read().value_or(global.start_offset.read().value());
+	}
+	PlayMode GetPlaymode(uint8_t chan) {
+		return channel[chan].playmode.read().value_or(global.playmode.read().value());
+	}
 };
 
 class PlayerInterface {
@@ -239,9 +184,8 @@ public:
 			return;
 
 		step = next_step;
-
-		const auto playmode = d.channel[channel].GetPlayMode().value_or(d.global.GetPlayMode());
-		auto length = d.channel[channel].GetLength().value_or(d.global.GetLength());
+		const auto playmode = d.GetPlaymode(channel);
+		auto length = d.GetLength(channel);
 		length += playmode == PlayMode::PingPong ? length - 2 : 0;
 
 		counter += 1;
@@ -249,19 +193,17 @@ public:
 			counter = 0;
 		}
 
-		const auto start_offset = d.channel[channel].GetStartOffset().value_or(d.global.GetStartOffset());
-		const auto phase_offset = static_cast<int8_t>(
-			(d.channel[channel].GetPhaseOffset().value_or(d.global.GetPhaseOffset()) + d.master_phase) * (length - 1));
+		const auto start_offset = d.GetStartOffset(channel);
+		const auto phase_offset = static_cast<int8_t>((d.GetPhaseOffset(channel) + d.master_phase) * (length - 1));
 
 		next_step = CounterToStep(playmode, counter, start_offset, phase_offset, length);
 	}
 
 	void Reset(Data &d, const uint8_t channel) {
-		const auto length = d.channel[channel].GetLength().value_or(d.global.GetLength());
-		const auto start_offset = d.channel[channel].GetStartOffset().value_or(d.global.GetStartOffset());
-		const auto phase_offset =
-			static_cast<int8_t>(d.channel[channel].GetPhaseOffset().value_or(d.global.GetPhaseOffset()) * (length - 1));
-		auto playmode = d.channel[channel].GetPlayMode().value_or(d.global.GetPlayMode());
+		const auto length = d.GetLength(channel);
+		const auto start_offset = d.GetStartOffset(channel);
+		const auto phase_offset = static_cast<int8_t>(d.GetPhaseOffset(channel) * (length - 1));
+		auto playmode = d.GetPlaymode(channel);
 		playmode = playmode == PlayMode::PingPong ? PlayMode::Forward : playmode;
 
 		counter = 0;

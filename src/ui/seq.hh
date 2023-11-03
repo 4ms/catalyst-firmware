@@ -171,12 +171,12 @@ public:
 				break;
 			case Model::EncoderAlts::PlayMode:
 				if (is_channel) {
-					p.seq.Channel(chan).IncPlayMode(inc);
-					if (p.seq.Channel(chan).GetPlayMode() == Sequencer::PlayMode::Random)
+					p.seq.Channel(chan).playmode.inc(inc);
+					if (p.seq.Channel(chan).playmode.read() == Sequencer::PlayMode::Random)
 						p.seq.RandomizeStepPattern(chan);
 				} else {
-					p.seq.Global().IncPlayMode(inc);
-					if (p.seq.Global().GetPlayMode() == Sequencer::PlayMode::Random)
+					p.seq.Global().playmode.inc(inc);
+					if (p.seq.Global().playmode.read() == Sequencer::PlayMode::Random)
 						p.seq.RandomizeStepPattern();
 				}
 				p.shared.hang.Cancel();
@@ -184,30 +184,30 @@ public:
 			case Model::EncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
 				if (is_channel)
-					p.seq.Channel(chan).IncStartOffset(inc);
+					p.seq.Channel(chan).start_offset.inc(inc);
 				else
-					p.seq.Global().IncStartOffset(inc);
+					p.seq.Global().start_offset.inc(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::EncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
 				if (is_channel) {
-					const auto len = p.seq.Channel(chan).GetLength().value_or(p.seq.Global().GetLength());
+					const auto len = p.seq.Channel(chan).length.read().value_or(p.seq.Global().length.read().value());
 					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
-					p.seq.Channel(chan).IncPhaseOffset(i);
+					p.seq.Channel(chan).phase_offset.inc(i);
 				} else {
-					const auto len = p.seq.Global().GetLength();
+					const auto len = p.seq.Global().length.read().value();
 					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
-					p.seq.Global().IncPhaseOffset(i);
+					p.seq.Global().phase_offset.inc(i);
 				}
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::EncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
 				if (is_channel)
-					p.seq.Channel(chan).IncLength(inc);
+					p.seq.Channel(chan).length.inc(inc);
 				else
-					p.seq.Global().IncLength(inc);
+					p.seq.Global().length.inc(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::EncoderAlts::ClockDiv:
@@ -237,18 +237,18 @@ public:
 
 		auto clockdiv = p.shared.GetClockDiv();
 
-		auto length = std::make_optional(p.seq.Global().GetLength());
-		auto phaseoffset = std::make_optional(p.seq.Global().GetPhaseOffset());
-		auto startoffset = std::make_optional(p.seq.Global().GetStartOffset());
-		auto playmode = std::make_optional(p.seq.Global().GetPlayMode());
+		auto length = p.seq.Global().length.read();
+		auto phaseoffset = p.seq.Global().phase_offset.read();
+		auto startoffset = p.seq.Global().start_offset.read();
+		auto playmode = p.seq.Global().playmode.read();
 		auto random = 1.f;
 
 		if (c.YoungestSceneButton().has_value()) {
 			auto &chan = p.seq.Channel(c.YoungestSceneButton().value());
-			length = chan.GetLength();
-			phaseoffset = chan.GetPhaseOffset();
-			startoffset = chan.GetStartOffset();
-			playmode = chan.GetPlayMode();
+			length = chan.length.read();
+			phaseoffset = chan.phase_offset.read();
+			startoffset = chan.start_offset.read();
+			playmode = chan.playmode.read();
 			clockdiv = chan.GetClockDiv();
 			random = chan.GetRandomAmount();
 		}
