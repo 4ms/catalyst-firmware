@@ -119,7 +119,7 @@ public:
 		const uint8_t led = p.seq.GetPlayheadStepOnPage(chan);
 		const auto playheadpage = p.seq.GetPlayheadPage(chan);
 		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-		const auto mvals = p.seq.GetPageValuesMorph(chan, page);
+		const auto mvals = p.seq.GetPageValuesModifier(chan, page);
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			if (i == led && page == playheadpage)
@@ -274,7 +274,7 @@ public:
 					c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
 				}
 			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
-				c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(clockdiv), Palette::blue);
+				c.SetEncoderLedsAddition(Clock::Divider::GetDivFromIdx(clockdiv), Palette::blue);
 			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
 				if (phaseoffset.has_value())
 					PhaseOffsetDisplay(phaseoffset.value());

@@ -133,6 +133,7 @@ private:
 
 		for (auto [chan, o] : countzip(buf)) {
 			const auto stepvalue = p.seq.GetPlayheadValue(chan);
+			auto modifier = p.seq.GetPlayheadModifier(chan);
 
 			if (p.seq.Channel(chan).mode.IsGate()) {
 				if (do_trigs && stepvalue >= ChannelValue::GateSetThreshold)
@@ -141,7 +142,7 @@ private:
 			} else {
 				const auto nextstepvalue = p.seq.GetNextStepValue(chan);
 				const auto distance = nextstepvalue - stepvalue;
-				const auto val = stepvalue + (distance * morphamount * p.seq.GetPlayheadMorph(chan));
+				const auto val = stepvalue + (distance * morphamount * modifier.AsMorph());
 
 				o = p.shared.quantizer[chan].Process(val);
 			}

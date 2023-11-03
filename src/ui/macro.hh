@@ -238,7 +238,7 @@ public:
 			const auto hang = p.shared.hang.Check(time_now);
 			if (hang.has_value()) {
 				if (hang.value() == Model::EncoderAlts::ClockDiv) {
-					c.SetEncoderLedsAddition(ClockDivider::GetDivFromIdx(p.shared.GetClockDiv()), Palette::blue);
+					c.SetEncoderLedsAddition(Clock::Divider::GetDivFromIdx(p.shared.GetClockDiv()), Palette::blue);
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);

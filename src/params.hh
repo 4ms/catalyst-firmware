@@ -1,5 +1,5 @@
 #pragma once
-#include "intclock.hh"
+#include "clock.hh"
 #include "pathway.hh"
 #include "quantizer.hh"
 #include "recorder.hh"
@@ -37,12 +37,12 @@ class SharedInterface {
 		}
 	};
 	float pos;
-	ClockDivider::type clockdiv = 0;
+	Clock::Divider::type clockdiv = 0;
 
 public:
 	Clock::Bpm internalclock;
 	QuantizerArray quantizer;
-	ClockDivider clockdivider;
+	Clock::Divider clockdivider;
 	RandomPool randompool;
 	DisplayHanger hang;
 
@@ -55,10 +55,10 @@ public:
 	}
 
 	void IncClockDiv(int32_t inc) {
-		clockdiv = ClockDivider::IncDivIdx(clockdiv, inc);
+		clockdiv = Clock::Divider::IncDivIdx(clockdiv, inc);
 	}
 
-	ClockDivider::type GetClockDiv() {
+	Clock::Divider::type GetClockDiv() {
 		return clockdiv;
 	}
 };
@@ -173,7 +173,7 @@ public:
 	void IncStepMorph(uint8_t step, int32_t inc) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : seq.GetPlayheadPage(cur_sequence);
 		step += (page * Model::SeqStepsPerPage);
-		seq.Channel(cur_sequence).IncMorph(step, inc);
+		seq.Channel(cur_sequence).IncModifier(step, inc);
 	}
 };
 } // namespace SeqMode

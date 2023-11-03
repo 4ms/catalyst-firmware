@@ -2,7 +2,7 @@
 
 #include "channelmode.hh"
 #include "channelvalue.hh"
-#include "clockdivider.hh"
+#include "clock.hh"
 #include "conf/model.hh"
 #include "randompool.hh"
 #include "util/countzip.hh"
@@ -22,41 +22,53 @@ enum class PlayMode : int8_t {
 	NumPlayModes,
 };
 
+class StepModifier {
+	int8_t m = 0;
+
+public:
+	float AsMorph() {
+		return m / 8.f;
+	}
+	uint8_t AsRetrig() {
+		return m;
+	}
+	void Inc(int32_t inc) {
+		m = std::clamp<int32_t>(m + inc, 0, 8);
+	}
+};
+
 class ChannelData {
 	std::array<Channel, Model::MaxSeqSteps> step;
-	std::array<uint8_t, Model::MaxSeqSteps> morph;
+	std::array<StepModifier, Model::MaxSeqSteps> modifier;
 	std::optional<float> phase_offset = std::nullopt;
 	std::optional<int8_t> length = std::nullopt;
 	std::optional<int8_t> start_offset = std::nullopt;
 	std::optional<PlayMode> playmode = std::nullopt;
-	ClockDivider::type clockdiv = 0;
+	Clock::Divider::type clockdiv = 0;
 	float randomamount = 0;
 	// 1.f / 15.f;
 
 public:
 	ChannelData() {
-		for (auto &m : morph)
-			m = 0;
 	}
 	ChannelMode mode;
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
 		this->step[step].Inc(inc, fine, mode.IsGate());
 	}
-	void IncMorph(uint8_t step, int32_t inc) {
-		auto temp = morph[step] + inc;
-		morph[step] = std::clamp<int32_t>(temp, 0, 100);
+	void IncModifier(uint8_t step, int32_t inc) {
+		modifier[step].Inc(inc);
 	}
 	void SetStep(uint8_t step, Channel t) {
 		this->step[step] = t;
 	}
-	void SetMorph(uint8_t step, float m) {
-		morph[step] = m * 100.f;
+	void SetMorph(uint8_t step, StepModifier m) {
+		modifier[step] = m;
 	}
 	Channel GetStep(uint8_t step) {
 		return this->step[step];
 	}
-	float GetMorph(uint8_t step) {
-		return morph[step] / 100.f;
+	StepModifier GetModifier(uint8_t step) {
+		return modifier[step];
 	}
 	void IncLength(int32_t inc) {
 		if (!length.has_value()) {
@@ -139,9 +151,9 @@ public:
 	}
 
 	void IncClockDiv(int32_t inc) {
-		clockdiv = ClockDivider::IncDivIdx(clockdiv, inc);
+		clockdiv = Clock::Divider::IncDivIdx(clockdiv, inc);
 	}
-	ClockDivider::type GetClockDiv() {
+	Clock::Divider::type GetClockDiv() {
 		return clockdiv;
 	}
 
@@ -203,7 +215,7 @@ struct Data {
 
 class PlayerInterface {
 	std::array<uint8_t, Model::MaxSeqSteps> randomstep;
-	ClockDivider clockdivider;
+	Clock::Divider clockdivider;
 	uint8_t counter = 0;
 	uint8_t step = 0;
 	uint8_t next_step = 1;
@@ -282,7 +294,7 @@ private:
 				o = (randomstep[c] + po) % l;
 				break;
 			case PlayMode::PingPong: {
-				auto ol = (l / 2) + 1;
+				const auto ol = (l / 2) + 1;
 				if (c < ol)
 					o = (c + po) % ol;
 				else
@@ -306,7 +318,7 @@ class Interface {
 	struct Clipboard {
 		struct Page {
 			std::array<Channel, Model::SeqStepsPerPage> step;
-			std::array<float, Model::SeqStepsPerPage> morph;
+			std::array<StepModifier, Model::SeqStepsPerPage> morph;
 		} page;
 		Sequencer::ChannelData sequence;
 	} clipboard;
@@ -364,7 +376,7 @@ public:
 		for (auto [i, p, m] : countzip(clipboard.page.step, clipboard.page.morph)) {
 			const auto offset = (page * Model::SeqStepsPerPage) + i;
 			p = data.channel[sequence].GetStep(offset);
-			m = data.channel[sequence].GetMorph(offset);
+			m = data.channel[sequence].GetModifier(offset);
 		}
 	}
 	void PastePage(uint8_t sequence, uint8_t page) {
@@ -413,8 +425,8 @@ public:
 		return GetStepValue(sequence, GetPlayheadStep(sequence));
 	}
 
-	float GetPlayheadMorph(uint8_t sequence) {
-		return data.channel[sequence].GetMorph(GetPlayheadStep(sequence));
+	StepModifier GetPlayheadModifier(uint8_t sequence) {
+		return data.channel[sequence].GetModifier(GetPlayheadStep(sequence));
 	}
 
 	ChannelValue::type GetNextStepValue(uint8_t sequence) {
@@ -430,10 +442,10 @@ public:
 		return out;
 	}
 
-	std::array<float, Model::NumChans> GetPageValuesMorph(uint8_t sequence, uint8_t page) {
+	std::array<float, Model::NumChans> GetPageValuesModifier(uint8_t sequence, uint8_t page) {
 		std::array<float, Model::NumChans> out;
 		for (auto [i, o] : countzip(out))
-			o = data.channel[sequence].GetMorph((page * Model::SeqStepsPerPage) + i);
+			o = data.channel[sequence].GetModifier((page * Model::SeqStepsPerPage) + i).AsMorph();
 		return out;
 	}
 };
