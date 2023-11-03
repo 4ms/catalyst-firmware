@@ -35,18 +35,6 @@ struct Palette {
 		static constexpr auto High = green;
 	};
 
-	// the color that each channel mode is represented by
-	static constexpr std::array<Color, Model::ChannelModeCount> ChannelMode = {
-		Color{2, 2, 0}, // off
-		magenta,		// chromatic
-		blue,			// major
-		red,			// minor
-		cyan,			// major pent
-		yellow,			// minor pent
-		pink,			// wholetone
-		green,			// gate
-	};
-
 	static constexpr auto seqhead = magenta;
 
 	static constexpr auto globalsetting = red;

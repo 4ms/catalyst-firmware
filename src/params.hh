@@ -12,7 +12,7 @@ namespace Catalyst2
 {
 
 class SharedInterface {
-	using QuantizerArray = std::array<Quantizer<static_cast<uint32_t>(Model::output_octave_range)>, Model::NumChans>;
+	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 	class DisplayHanger {
 		static constexpr uint32_t time_ms = 2000;
 		uint8_t onto;
@@ -98,7 +98,7 @@ public:
 		this->pathway.Load(data.pathway[bank]);
 
 		for (auto [i, q] : countzip(shared.quantizer))
-			q.LoadScale(this->bank.GetChannelMode(i).GetScale());
+			q.Load(this->bank.GetChannelMode(i).GetScale());
 
 		cur_bank = bank;
 	}

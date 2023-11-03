@@ -1,17 +1,18 @@
 #pragma once
 
+#include "channelvalue.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
 
-namespace Catalyst2
+namespace Catalyst2::Quantizer
 {
 
-struct QuantizerScale {
+struct Scale {
 	static constexpr auto MaxScaleNotes = 12;
 
 	template<typename... T>
-	constexpr QuantizerScale(T... ts)
+	constexpr Scale(T... ts)
 		: scl{ts...}
 		, size_(sizeof...(T)) {
 	}
@@ -33,39 +34,35 @@ private:
 	std::size_t size_;
 };
 
-template<std::size_t range_octaves>
-struct Quantizer {
-	static constexpr float oct_size = (65536.f / range_octaves) + .5f;
-	static constexpr float note_size = (65536.f / (range_octaves * 12)) + .5f;
+class Interface {
+	Scale scale{};
 
+public:
 	uint16_t Process(const uint16_t input) {
 		if (!scale.size())
 			return input;
 
 		auto value = static_cast<float>(input);
 		uint8_t octave = 0;
-		while (value >= oct_size) {
-			value -= oct_size;
+		while (value >= ChannelValue::octave) {
+			value -= ChannelValue::octave;
 			octave += 1;
 		}
 		uint8_t note = 0;
-		while (value >= note_size) {
-			value -= note_size;
+		while (value >= ChannelValue::note) {
+			value -= ChannelValue::note;
 			note += 1;
 		}
 
-		value = note + (value / note_size);
+		value = note + (value / ChannelValue::note);
 
 		value = *(std::upper_bound(scale.begin(), scale.end(), value) - 1);
 
-		return (value * note_size) + (octave * oct_size);
+		return (value * ChannelValue::note) + (octave * ChannelValue::octave);
 	}
-	void LoadScale(const QuantizerScale &scl) {
+	void Load(const Scale &scl) {
 		scale = scl;
 	}
-
-private:
-	QuantizerScale scale{};
 };
 
-} // namespace Catalyst2
+} // namespace Catalyst2::Quantizer

@@ -23,8 +23,10 @@ static constexpr type from_volts(const float volts) {
 static constexpr type GateHigh = from_volts(5.f);
 static constexpr type GateSetThreshold = from_volts(2.5f);
 
-static constexpr type inc_step = (Range / Model::output_octave_range / 12.f) + .5f;
-static constexpr type inc_step_fine = (Range / Model::output_octave_range / 12.f / 25.f) + .5f;
+static constexpr float octave = (Range / Model::output_octave_range);
+static constexpr float note = octave / 12;
+static constexpr type inc_step = note + .5f;
+static constexpr type inc_step_fine = (note / 25.f) + .5f;
 } // namespace ChannelValue
 
 struct Channel {

@@ -1,5 +1,4 @@
 #pragma once
-#include "../quantizer.hh"
 #include "util/math.hh"
 #include <algorithm>
 #include <array>
@@ -36,20 +35,6 @@ static constexpr unsigned fader_width_mm = 60;
 
 static constexpr unsigned rec_buffer_size = 2048;
 static constexpr unsigned rec_buffer_prescaler = 16;
-
-static constexpr std::array Scale = {
-	QuantizerScale{},															  // none
-	QuantizerScale{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f}, // chromatic
-	QuantizerScale{0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 11.f},							  // major
-	QuantizerScale{0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 10.f},							  // minor
-	QuantizerScale{0.f, 2.f, 4.f, 7.f, 9.f},									  // major pentatonic
-	QuantizerScale{0.f, 3.f, 5.f, 7.f, 10.f},									  // minor pentatonic
-	QuantizerScale{0.f, 2.f, 4.f, 8.f, 10.f},									  // wholetone
-};
-
-// one is added for gate mode.
-// unquantized is implicit (see the first scale in the array)
-static constexpr uint8_t ChannelModeCount = Scale.size() + 1;
 
 struct EncoderAlts {
 	static constexpr auto StartOffset = 0;

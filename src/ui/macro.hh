@@ -123,11 +123,11 @@ public:
 			cm.Inc(inc);
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				p.bank.SetChanMode(i, cm);
-				p.shared.quantizer[i].LoadScale(cm.GetScale());
+				p.shared.quantizer[i].Load(cm.GetScale());
 			}
 		} else {
 			p.bank.IncChannelMode(encoder, inc);
-			p.shared.quantizer[encoder].LoadScale(p.bank.GetChannelMode(encoder).GetScale());
+			p.shared.quantizer[encoder].Load(p.bank.GetChannelMode(encoder).GetScale());
 		}
 	}
 

@@ -49,27 +49,27 @@ struct OptionalSetting {
 	}
 
 	template<typename U>
-	void inc(U amt)
+	void Inc(U inc)
 	// TODO: make this work for non-enum and enum types
 	//  requires(std::is_convertible_v<T, U>)
 	{
 		if constexpr (Config == OptionalConfig::CanBeNull) {
 			if (!val.has_value()) {
-				if (amt > 0)
+				if (inc > 0)
 					val = min;
 				return;
 			}
 
-			if (amt < 0 && val == min) {
+			if (inc < 0 && val == min) {
 				val = std::nullopt;
 				return;
 			}
 		}
-		auto int_val = std::clamp<U>(static_cast<U>(val.value()) + amt, static_cast<U>(min), static_cast<U>(max));
+		auto int_val = std::clamp<U>(static_cast<U>(val.value()) + inc, static_cast<U>(min), static_cast<U>(max));
 		val = T(int_val);
 	}
 
-	std::optional<T> read() {
+	std::optional<T> Read() {
 		return val;
 	}
 
@@ -145,16 +145,16 @@ struct Data {
 
 	// return the global value if there is no channel value
 	float GetPhaseOffset(uint8_t chan) {
-		return channel[chan].phase_offset.read().value_or(global.phase_offset.read().value());
+		return channel[chan].phase_offset.Read().value_or(global.phase_offset.Read().value());
 	}
 	int8_t GetLength(uint8_t chan) {
-		return channel[chan].length.read().value_or(global.length.read().value());
+		return channel[chan].length.Read().value_or(global.length.Read().value());
 	}
 	int8_t GetStartOffset(uint8_t chan) {
-		return channel[chan].start_offset.read().value_or(global.start_offset.read().value());
+		return channel[chan].start_offset.Read().value_or(global.start_offset.Read().value());
 	}
 	PlayMode GetPlaymode(uint8_t chan) {
-		return channel[chan].playmode.read().value_or(global.playmode.read().value());
+		return channel[chan].playmode.Read().value_or(global.playmode.Read().value());
 	}
 };
 
