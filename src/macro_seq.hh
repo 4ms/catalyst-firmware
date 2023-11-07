@@ -110,16 +110,17 @@ private:
 
 		return buf;
 	}
+
 	Model::OutputBuffer Seq(SeqMode::Interface &p) {
 		static auto prev_ = false;
 		Model::OutputBuffer buf;
 
 		auto morphamount = std::clamp(p.shared.internalclock.GetPhase(), 0.f, 1.f);
-		if (p.seq.IsPaused())
+		if (p.seq.player.IsPaused())
 			morphamount = 0;
 		if (p.shared.internalclock.Output()) {
 			// new step
-			p.seq.Step();
+			p.seq.player.Step();
 		}
 
 		auto cur = p.shared.internalclock.Peek();
@@ -144,7 +145,8 @@ private:
 				const auto distance = nextstepvalue - stepvalue;
 				const auto val = stepvalue + (distance * morphamount * modifier.AsMorph());
 
-				o = p.shared.quantizer[chan].Process(val);
+				auto t = p.shared.quantizer[chan].Process(val);
+				o = Transposer::Process(t, p.seq.GetTranspose(chan));
 			}
 		}
 		return buf;

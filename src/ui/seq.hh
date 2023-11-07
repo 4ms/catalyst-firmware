@@ -29,12 +29,12 @@ public:
 			else
 				p.shared.clockdivider.Reset();
 
-			p.seq.Reset();
+			p.seq.player.Reset();
 			return;
 		}
 
 		if (c.button.play.just_went_high())
-			p.seq.TogglePause();
+			p.seq.player.TogglePause();
 
 		if (c.button.add.just_went_high())
 			p.shared.internalclock.Tap();
@@ -158,6 +158,13 @@ public:
 		auto chan = c.YoungestSceneButton().value_or(0);
 
 		switch (encoder) {
+			case Model::EncoderAlts::Transpose:
+				if (is_channel)
+					p.seq.Channel(chan).transposer.Inc(inc);
+				else
+					p.seq.Global().transposer.Inc(inc);
+				p.shared.hang.Cancel();
+				break;
 			case Model::EncoderAlts::Random:
 				if (is_channel) {
 					p.seq.Channel(chan).IncRandomAmount(inc);
@@ -173,11 +180,11 @@ public:
 				if (is_channel) {
 					p.seq.Channel(chan).playmode.Inc(inc);
 					if (p.seq.Channel(chan).playmode.Read() == Sequencer::PlayMode::Random)
-						p.seq.RandomizeStepPattern(chan);
+						p.seq.player.RandomizeSteps(chan);
 				} else {
 					p.seq.Global().playmode.Inc(inc);
 					if (p.seq.Global().playmode.Read() == Sequencer::PlayMode::Random)
-						p.seq.RandomizeStepPattern();
+						p.seq.player.RandomizeSteps();
 				}
 				p.shared.hang.Cancel();
 				break;
@@ -241,7 +248,8 @@ public:
 		auto phaseoffset = p.seq.Global().phase_offset.Read();
 		auto startoffset = p.seq.Global().start_offset.Read();
 		auto playmode = p.seq.Global().playmode.Read();
-		auto random = 1.f;
+		auto tpose = p.seq.Global().transposer.Read();
+		auto random = p.shared.randompool.IsRandomized() ? 1.f : 0.f;
 
 		if (c.YoungestSceneButton().has_value()) {
 			auto &chan = p.seq.Channel(c.YoungestSceneButton().value());
@@ -250,6 +258,7 @@ public:
 			startoffset = chan.start_offset.Read();
 			playmode = chan.playmode.Read();
 			clockdiv = chan.GetClockDiv();
+			tpose = chan.transposer.Read();
 			random = chan.GetRandomAmount();
 		}
 
@@ -288,6 +297,11 @@ public:
 			c.SetEncoderLed(Model::EncoderAlts::StartOffset, col);
 
 			col = Palette::globalsetting;
+			if (tpose.has_value())
+				col = Palette::off.blend(Palette::green, tpose.value() / 12.f);
+			c.SetEncoderLed(Model::EncoderAlts::Transpose, col);
+
+			col = Palette::globalsetting;
 			if (playmode.has_value())
 				PlayModeLedAnnimation(playmode.value(), time_now);
 			else
@@ -296,6 +310,11 @@ public:
 			if (length.has_value())
 				col = Palette::seqhead;
 			c.SetEncoderLed(Model::EncoderAlts::SeqLength, col);
+
+			col = Palette::globalsetting;
+			if (phaseoffset.has_value())
+				col = Palette::seqhead;
+			c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, col);
 
 			col = Palette::globalsetting;
 			if (c.toggle.trig_sense.is_high() && !c.YoungestSceneButton().has_value()) {
@@ -308,12 +327,7 @@ public:
 			}
 			c.SetEncoderLed(Model::EncoderAlts::ClockDiv, col);
 
-			col = Palette::globalsetting;
-			if (!p.shared.internalclock.Times4())
-				col = Palette::off;
-			c.SetEncoderLed(Model::EncoderAlts::Transpose, col);
-
-			if (random == 0.f)
+			if (!p.shared.randompool.IsRandomized() || random == 0.f)
 				col = Palette::red;
 			else
 				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeedSequence(

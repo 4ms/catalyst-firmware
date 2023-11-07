@@ -218,6 +218,8 @@ public:
 				p.shared.IncClockDiv(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
+				// case Model::EncoderAlts::Transpose:
+				//	if ()
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
@@ -230,7 +232,7 @@ public:
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
 			auto col = Palette::red;
-			if (random > 0.f)
+			if (p.shared.randompool.IsRandomized() && random > 0.f)
 				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeed()), random);
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		} else {
@@ -242,7 +244,9 @@ public:
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
-				c.SetEncoderLed(Model::EncoderAlts::Random, Palette::from_raw(p.shared.randompool.GetSeed()));
+				const auto col = p.shared.randompool.IsRandomized() ? Palette::from_raw(p.shared.randompool.GetSeed()) :
+																	  Palette::globalsetting;
+				c.SetEncoderLed(Model::EncoderAlts::Random, col);
 			}
 		}
 	}

@@ -28,6 +28,11 @@ public:
 	void RandomizeScene() {
 		for (auto i = 0u; i < size_macro; i++)
 			Randomize(i);
+		if (val[0] == 0)
+			val[0] = 1;
+	}
+	bool IsRandomized() {
+		return val[0] != 0;
 	}
 	void ClearSequence(uint8_t sequence) {
 		const auto offset = sequence * Model::MaxSeqSteps;
@@ -46,6 +51,8 @@ public:
 	void RandomizeSequence() {
 		for (auto &v : val)
 			v = std::rand();
+		if (val[0] == 0)
+			val[0] = 1;
 	}
 	float GetSceneVal(uint8_t scene, uint8_t chan) {
 		return val[(scene * Model::NumScenes) + chan] / 128.f;
