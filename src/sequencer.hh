@@ -201,11 +201,11 @@ public:
 		}
 	}
 	uint8_t GetPlayheadStep(uint8_t chan) {
-		return channel[chan].step;
+		return ToStep(chan, channel[chan].step);
 	}
 
 	uint8_t GetNextStep(uint8_t chan) {
-		return channel[chan].next_step;
+		return ToStep(chan, channel[chan].next_step);
 	}
 	void TogglePause() {
 		pause = !pause;
@@ -237,11 +237,7 @@ private:
 			channel.counter = 0;
 		}
 
-		const auto start_offset = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
-		auto phase_offset = cd.phase_offset.Read().value_or(gd.phase_offset.Read().value());
-		phase_offset = static_cast<int8_t>((phase_offset + d.master_phase) * (length - 1));
-
-		channel.next_step = ToStep(chan, channel.counter, playmode, start_offset, phase_offset, length);
+		channel.next_step = channel.counter;
 	}
 	void Reset(uint8_t chan) {
 		auto &cd = d.channel[chan];
@@ -251,36 +247,44 @@ private:
 		const auto playmode = cd.playmode.Read().value_or(gd.playmode.Read().value());
 		auto length = cd.length.Read().value_or(gd.length.Read().value());
 		length += playmode == PlayMode::PingPong ? length - 2 : 0;
-		const auto start_offset = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
-		auto phase_offset = cd.phase_offset.Read().value_or(gd.phase_offset.Read().value());
-		phase_offset = static_cast<int8_t>((phase_offset + d.master_phase) * (length - 1));
 
 		c.counter = 0;
 		c.clockdivider.Reset();
-		c.step = ToStep(chan, c.counter, playmode, start_offset, phase_offset, length);
+		c.step = c.counter;
 		c.counter += 1;
 		c.counter = c.counter >= length ? 0 : c.counter;
-		c.next_step = ToStep(chan, c.counter, playmode, start_offset, phase_offset, length);
+		c.next_step = c.counter;
 	}
 
-	uint8_t ToStep(uint8_t chan, int8_t c, PlayMode pm, int8_t so, int8_t po, int8_t l) {
+	uint8_t ToStep(uint8_t chan, uint8_t step) {
+		auto &cd = d.channel[chan];
+		auto &gd = d.global;
+		auto &c = channel[chan];
+
+		const auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
+		auto l = cd.length.Read().value_or(gd.length.Read().value());
+		l += pm == PlayMode::PingPong ? l - 2 : 0;
+		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
+		const auto po = static_cast<int8_t>(
+			(cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + d.master_phase) * (l - 1));
+
 		uint8_t o;
 		switch (pm) {
 			case PlayMode::Forward:
-				o = (c + po) % l;
+				o = (step + po) % l;
 				break;
 			case PlayMode::Backward:
-				o = (l - 1 - c + po) % l;
+				o = (l - 1 - step + po) % l;
 				break;
 			case PlayMode::Random:
-				o = (channel[chan].randomstep[c] + po) % l;
+				o = (c.randomstep[step] + po) % l;
 				break;
 			case PlayMode::PingPong: {
 				const auto ol = (l / 2) + 1;
-				if (c < ol)
-					o = (c + po) % ol;
+				if (step < ol)
+					o = (step + po) % ol;
 				else
-					o = (l - c + po) % ol;
+					o = (l - step + po) % ol;
 				break;
 			}
 			default:
