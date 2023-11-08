@@ -28,15 +28,17 @@ protected:
 	}
 };
 
+// Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
+// Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm : public Internal {
 	uint32_t cnt = 0;
 
-	uint8_t tap_cnt = 0;
+	uint32_t tap_cnt = 0;
 	uint32_t ptaptime = 0;
 	uint32_t pulsewidth = 0;
 
 	uint32_t ticks_per_pulse;
-	uint16_t bpm;
+	uint32_t bpm;
 	bool peek = false;
 	bool external = false;
 	bool step = false;

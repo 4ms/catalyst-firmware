@@ -69,6 +69,7 @@ public:
 
 	Controls() = default;
 
+	// TODO:move to shared file
 	std::optional<uint8_t> YoungestSceneButton() {
 		auto age = 0xffffffffu;
 		uint8_t youngest = 0xff;
@@ -112,6 +113,7 @@ public:
 		return analog[adc_chan_num].val();
 	}
 
+	// TODO: move to a file shared by all projects
 	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color c) {
 		for (auto i = 0u; i < count; i++)
 			SetEncoderLed((i + offset) & 7, c);
@@ -120,6 +122,7 @@ public:
 			SetEncoderLed((count + i + offset) & 7, Colors::off);
 	}
 
+	// TODO: move to a file shared by all projects
 	void SetEncoderLedsAddition(uint8_t num, Color c) {
 		static constexpr auto max_val = [] {
 			uint8_t out = 0;
@@ -149,6 +152,7 @@ public:
 		rgb_leds[idx] = color;
 	}
 
+	// TODO: move to a file shared by all projects
 	void SetButtonLedsCount(uint8_t count, bool on) {
 		for (auto i = 0u; i < count; i++)
 			SetButtonLed(i, on);

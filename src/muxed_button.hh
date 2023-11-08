@@ -1,12 +1,10 @@
 #pragma once
 #include "util/debouncer.hh"
-// TODO: consider putting this in mdrivlib
 
 namespace Catalyst2
 {
 
 struct MuxedButton : Toggler {
-	uint8_t bit;
 	unsigned time_high;
 
 	MuxedButton(uint8_t bit_num)
@@ -24,6 +22,9 @@ struct MuxedButton : Toggler {
 			time_high++;
 		}
 	}
+
+private:
+	const uint8_t bit;
 };
 
 } // namespace Catalyst2

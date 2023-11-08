@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../controls.hh"
+#include "controls.hh"
 
 namespace Catalyst2::Ui
 {

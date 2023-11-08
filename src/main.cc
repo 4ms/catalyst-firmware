@@ -93,6 +93,7 @@ void main() {
 	Ui::Interface ui{params};
 	MacroSeq macroseq{params};
 
+	// 7% at 1kHz, 21% at 3kHz
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
 		ui.Update();
 		auto out = macroseq.Update();

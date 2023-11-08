@@ -28,16 +28,19 @@ class Interface {
 public:
 	Interface(Params &params)
 		: params{params} {
+		// 3.8%: 60Hz
 		encoder_led_update_task.init(Board::encoder_led_task, [this]() {
 			controls.WriteToEncoderLeds();
 			leds_ready_flag = true;
 		});
+		// 4.6%: 16kHz
 		muxio_update_task.init(Board::muxio_conf, [this]() { controls.UpdateMuxio(); });
 	}
 	void Start() {
 		encoder_led_update_task.start();
 		muxio_update_task.start();
 		controls.Start();
+		// TODO: delay(2), and define delay in src/f401-drivers/delay.hh, also tests/drivers/delay.hh
 		HAL_Delay(2);
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		ui = &macro;
