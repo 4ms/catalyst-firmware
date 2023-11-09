@@ -119,7 +119,7 @@ public:
 	void IncModifier(uint8_t step, int32_t inc) {
 		GetStep(step).modifier.Inc(inc);
 	}
-	void IncModifier(uint8_t page, uint8_t step, int32_t inc, bool fine) {
+	void IncModifier(uint8_t page, uint8_t step, int32_t inc) {
 		GetStep(page, step).modifier.Inc(inc);
 	}
 	void IncClockDiv(int32_t inc) {

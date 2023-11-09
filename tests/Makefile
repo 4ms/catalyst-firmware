@@ -16,14 +16,16 @@ BUILDDIR = $(TEST_DIR)/build
 CXXFLAGS = 	-Wall \
 			-Wextra \
 		 	-std=c++2b \
+			-I$(TEST_DIR) \
+			-I$(TEST_DIR)/drivers \
 			-I. \
 			-I.. \
 			-Isrc \
-			-Ilib/cpputil \
 			-I../src \
-			-I$(TEST_DIR) \
+			-Ilib/cpputil \
 			-Wno-unused-const-variable \
 			-DTESTPROJECT \
+			-Wno-unused-parameter \
 
 ### Boilerplate below here:
 

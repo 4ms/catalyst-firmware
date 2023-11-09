@@ -8,21 +8,18 @@
 
 namespace MathTools
 {
-// if slope == 0 actual slope == 1
-// if slope is >= (max - min) actual slope == inf
-// if slope is negative then actual slope is less than 1
-constexpr float slope_adj(float in, float slope, float min, float max) {
-	const auto range = max - min;
-	const auto b = range / 2.f;
-
-	if (slope >= range) {
-		return in < b ? min : max;
+// Given a phase (0..1), return a crossfade amount (0..1)
+// ratio is amount of time spent in the crossfade (0..1)
+// If ratio is < 0, result is valid but unspecified
+constexpr float crossfade_ratio(float phase, float ratio) {
+	if (ratio >= 1.0f) {
+		return phase < 0.5f ? 0.f : 1.f;
 	}
 
-	const auto m = range / (range - slope);
-	const auto x = in - b;
-	const auto y = (m * x) + b;
-	return constrain(y, min, max);
+	const auto m = 1.f / (1.f - ratio);
+	const auto x = phase - 0.5f;
+	const auto y = (m * x) + 0.5f;
+	return constrain(y, 0.f, 1.f);
 }
 } // namespace MathTools
 
@@ -93,7 +90,7 @@ private:
 
 					out = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : is_primed;
 				} else {
-					const auto phs = MathTools::slope_adj(phase, 1.f - p.GetMorph(chan), 0.f, 1.f);
+					const auto phs = MathTools::crossfade_ratio(phase, 1.f - p.GetMorph(chan));
 					const auto a = p.bank.GetChannel(left, chan);
 					const auto b = p.bank.GetChannel(right, chan);
 					out = MathTools::interpolate(a, b, phs);

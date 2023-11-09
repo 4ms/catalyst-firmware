@@ -13,11 +13,11 @@ public:
 		: Abstract{c}
 		, p{p} {
 	}
-	virtual void Init() override {
+	void Init() override {
 	}
-	virtual void Update(Abstract *&interface) override {
+	void Update(Abstract *&interface) override {
 	}
-	virtual void Common() override {
+	void Common() final {
 		if (c.jack.trig.just_went_high()) {
 			if (p.recorder.is_cued()) {
 				p.shared.clockdivider.Reset();
