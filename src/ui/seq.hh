@@ -1,380 +1,14 @@
 #pragma once
 
-#include "../params.hh"
-#include "abstract.hh"
+#include "controls.hh"
+#include "params.hh"
+#include "seq_bank.hh"
+#include "seq_common.hh"
+#include "seq_morph.hh"
+#include "seq_settings.hh"
 
 namespace Catalyst2::Sequencer::Ui
 {
-class Usual : public Catalyst2::Ui::Abstract {
-public:
-	SeqMode::Interface &p;
-	Usual(SeqMode::Interface &p, Controls &c)
-		: Abstract{c}
-		, p{p} {
-	}
-	virtual void Init() override {
-	}
-	virtual void Update(Abstract *&interface) override {
-	}
-	virtual void Common() override {
-
-		if (c.toggle.trig_sense.just_went_high())
-			p.shared.internalclock.SetExternal(false);
-		else if (c.toggle.trig_sense.just_went_low())
-			p.shared.internalclock.SetExternal(true);
-
-		if (c.jack.reset.is_high()) {
-			if (c.toggle.trig_sense.is_high())
-				p.shared.internalclock.Reset();
-			else
-				p.shared.clockdivider.Reset();
-
-			p.seq.player.Reset();
-			return;
-		}
-
-		if (c.button.play.just_went_high())
-			p.seq.player.TogglePause();
-
-		if (c.button.add.just_went_high())
-			p.shared.internalclock.Tap();
-
-		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4096.f;
-		p.seq.SetMasterPhaseOffset(pos);
-	}
-	virtual void OnSceneButtonRelease(uint8_t button) override {
-	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
-	}
-};
-
-class Bank : public Usual {
-public:
-	using Usual::Usual;
-	virtual void Init() override {
-		c.button.fine.clear_events();
-	}
-	virtual void Update(Abstract *&interface) override {
-		if (c.button.fine.just_went_high() && p.IsSequenceSelected())
-			p.seq.CopySequence(p.GetSelectedSequence());
-
-		if (!c.button.bank.is_high())
-			return;
-
-		interface = this;
-	}
-	void OnEncoderInc(uint8_t encoder, int32_t dir) override {
-		if (c.button.shift.is_high()) {
-			// change all channgels.
-			auto &cm = p.seq.Channel(encoder).mode;
-			cm.Inc(dir);
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.seq.Channel(i).mode = cm;
-				p.shared.quantizer[i].Load(cm.GetScale());
-			}
-		} else {
-			p.seq.Channel(encoder).mode.Inc(dir);
-			p.shared.quantizer[encoder].Load(p.seq.Channel(encoder).mode.GetScale());
-		}
-	}
-	void OnSceneButtonRelease(uint8_t scene) override {
-		if (scene == p.GetSelectedSequence())
-			p.DeselectSequence();
-		else
-			p.SelectSequence(scene);
-	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
-		c.SetButtonLed(p.GetSelectedSequence(), true);
-
-		for (auto i = 0u; i < Model::NumChans; i++)
-			c.SetEncoderLed(i, p.seq.Channel(i).mode.GetColor());
-	}
-};
-
-class Morph : public Usual {
-public:
-	using Usual::Usual;
-	virtual void Init() override {
-		if (!p.IsSequenceSelected())
-			p.SelectSequence(0);
-	}
-	virtual void Update(Abstract *&interface) {
-		if (!c.button.morph.is_high())
-			return;
-
-		interface = this;
-	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		p.IncStepMorph(encoder, inc);
-	}
-
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearEncoderLeds();
-		c.ClearButtonLeds();
-
-		const auto chan = p.GetSelectedSequence();
-		const uint8_t led = p.seq.GetPlayheadStepOnPage(chan);
-		const auto playheadpage = p.seq.GetPlayheadPage(chan);
-		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-		const auto mvals = p.seq.GetPageValuesModifier(chan, page);
-
-		for (auto i = 0u; i < Model::NumChans; i++) {
-			if (i == led && page == playheadpage)
-				c.SetEncoderLed(led, Palette::seqhead);
-			else {
-				auto col = Palette::grey.blend(Palette::red, mvals[i]);
-				if (mvals[i] == 0.f)
-					col = Palette::green;
-				c.SetEncoderLed(i, col);
-			}
-		}
-		if (p.IsPageSelected())
-			c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
-		else
-			c.SetButtonLed(page, true);
-	}
-};
-
-class Settings : public Usual {
-public:
-	using Usual::Usual;
-	virtual void Init() override {
-		p.shared.hang.Cancel();
-	}
-	virtual void Update(Abstract *&interface) {
-		if (!c.button.shift.is_high())
-			return;
-
-		interface = this;
-	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
-
-		auto is_channel = c.YoungestSceneButton().has_value();
-		auto chan = c.YoungestSceneButton().value_or(0);
-
-		switch (encoder) {
-			case Model::EncoderAlts::Transpose:
-				if (is_channel)
-					p.seq.Channel(chan).transposer.Inc(inc);
-				else
-					p.seq.Global().transposer.Inc(inc);
-				p.shared.hang.Cancel();
-				break;
-			case Model::EncoderAlts::Random:
-				if (is_channel) {
-					p.seq.Channel(chan).IncRandomAmount(inc);
-				} else {
-					if (inc > 0)
-						p.shared.randompool.RandomizeSequence();
-					else
-						p.shared.randompool.ClearSequence();
-				}
-				p.shared.hang.Cancel();
-				break;
-			case Model::EncoderAlts::PlayMode:
-				if (is_channel) {
-					p.seq.Channel(chan).playmode.Inc(inc);
-					if (p.seq.Channel(chan).playmode.Read() == Sequencer::PlayMode::Random)
-						p.seq.player.RandomizeSteps(chan);
-				} else {
-					p.seq.Global().playmode.Inc(inc);
-					if (p.seq.Global().playmode.Read() == Sequencer::PlayMode::Random)
-						p.seq.player.RandomizeSteps();
-				}
-				p.shared.hang.Cancel();
-				break;
-			case Model::EncoderAlts::StartOffset:
-				inc = hang.has_value() ? inc : 0;
-				if (is_channel)
-					p.seq.Channel(chan).start_offset.Inc(inc);
-				else
-					p.seq.Global().start_offset.Inc(inc);
-				p.shared.hang.Set(encoder, time_now);
-				break;
-			case Model::EncoderAlts::PhaseOffset:
-				inc = hang.has_value() ? inc : 0;
-				if (is_channel) {
-					const auto len = p.seq.Channel(chan).length.Read().value_or(p.seq.Global().length.Read().value());
-					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
-					p.seq.Channel(chan).phase_offset.Inc(i);
-				} else {
-					const auto len = p.seq.Global().length.Read().value();
-					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
-					p.seq.Global().phase_offset.Inc(i);
-				}
-				p.shared.hang.Set(encoder, time_now);
-				break;
-			case Model::EncoderAlts::SeqLength:
-				inc = hang.has_value() ? inc : 0;
-				if (is_channel)
-					p.seq.Channel(chan).length.Inc(inc);
-				else
-					p.seq.Global().length.Inc(inc);
-				p.shared.hang.Set(encoder, time_now);
-				break;
-			case Model::EncoderAlts::ClockDiv:
-				if (is_channel) {
-					inc = hang.has_value() ? inc : 0;
-					p.seq.Channel(chan).IncClockDiv(inc);
-					p.shared.hang.Set(encoder, time_now);
-				} else {
-					if (c.toggle.trig_sense.is_high()) {
-						p.shared.internalclock.Inc(inc, c.button.fine.is_high());
-						p.shared.hang.Cancel();
-					} else {
-						inc = hang.has_value() ? inc : 0;
-						p.shared.hang.Set(encoder, time_now);
-						p.shared.IncClockDiv(inc);
-					}
-				}
-				break;
-		}
-	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
-		c.ClearEncoderLeds();
-
-		const auto time_now = p.shared.internalclock.TimeNow();
-		auto hang = p.shared.hang.Check(time_now);
-
-		auto clockdiv = p.shared.GetClockDiv();
-
-		auto length = p.seq.Global().length.Read();
-		auto phaseoffset = p.seq.Global().phase_offset.Read();
-		auto startoffset = p.seq.Global().start_offset.Read();
-		auto playmode = p.seq.Global().playmode.Read();
-		auto tpose = p.seq.Global().transposer.Read();
-		auto random = p.shared.randompool.IsRandomized() ? 1.f : 0.f;
-
-		if (c.YoungestSceneButton().has_value()) {
-			auto &chan = p.seq.Channel(c.YoungestSceneButton().value());
-			length = chan.length.Read();
-			phaseoffset = chan.phase_offset.Read();
-			startoffset = chan.start_offset.Read();
-			playmode = chan.playmode.Read();
-			clockdiv = chan.GetClockDiv();
-			tpose = chan.transposer.Read();
-			random = chan.GetRandomAmount();
-		}
-
-		if (hang.has_value()) {
-			if (hang.value() == Model::EncoderAlts::StartOffset) {
-				if (startoffset.has_value()) {
-					auto l = startoffset.value() % Model::SeqStepsPerPage;
-					c.SetEncoderLed(l, Palette::magenta);
-					l = startoffset.value() / Model::SeqStepsPerPage;
-					c.SetButtonLed(l, true);
-				} else {
-					c.SetEncoderLed(Model::EncoderAlts::StartOffset, Palette::globalsetting);
-				}
-			} else if (hang.value() == Model::EncoderAlts::SeqLength) {
-				if (length.has_value()) {
-					auto l = length.value() % Model::SeqStepsPerPage;
-					l = l == 0 ? Model::SeqStepsPerPage : l;
-					c.SetEncoderLedsCount(l, 0, Palette::magenta);
-					l = (length.value() - 1) / Model::SeqStepsPerPage;
-					c.SetButtonLedsCount(l + 1, true);
-				} else {
-					c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
-				}
-			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
-				c.SetEncoderLedsAddition(Clock::Divider::GetDivFromIdx(clockdiv), Palette::blue);
-			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
-				if (phaseoffset.has_value())
-					PhaseOffsetDisplay(phaseoffset.value());
-				else
-					c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, Palette::globalsetting);
-			}
-		} else {
-			auto col = Palette::globalsetting;
-			if (phaseoffset.has_value())
-				col = Palette::seqhead;
-			c.SetEncoderLed(Model::EncoderAlts::StartOffset, col);
-
-			col = Palette::globalsetting;
-			if (tpose.has_value())
-				col = Palette::off.blend(Palette::green, tpose.value() / 12.f);
-			c.SetEncoderLed(Model::EncoderAlts::Transpose, col);
-
-			col = Palette::globalsetting;
-			if (playmode.has_value())
-				PlayModeLedAnnimation(playmode.value(), time_now);
-			else
-				c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
-
-			if (length.has_value())
-				col = Palette::seqhead;
-			c.SetEncoderLed(Model::EncoderAlts::SeqLength, col);
-
-			col = Palette::globalsetting;
-			if (phaseoffset.has_value())
-				col = Palette::seqhead;
-			c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, col);
-
-			col = Palette::globalsetting;
-			if (c.toggle.trig_sense.is_high() && !c.YoungestSceneButton().has_value()) {
-				if (p.shared.internalclock.Peek())
-					col = Palette::bpm;
-				else
-					col = Palette::off;
-			} else {
-				col = Palette::seqhead;
-			}
-			c.SetEncoderLed(Model::EncoderAlts::ClockDiv, col);
-
-			if (!p.shared.randompool.IsRandomized() || random == 0.f)
-				col = Palette::red;
-			else
-				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeedSequence(
-											 c.YoungestSceneButton().value_or(p.GetSelectedSequence()))),
-										 random);
-
-			c.SetEncoderLed(Model::EncoderAlts::Random, col);
-		}
-	}
-
-private:
-	void PlayModeLedAnnimation(Sequencer::PlayMode pm, uint32_t time_now) {
-		auto phase = (time_now & 1023) / 1023.f;
-		Color col;
-
-		if (pm == Sequencer::PlayMode::Forward) {
-			col = Palette::off.blend(Palette::blue, phase);
-		} else if (pm == Sequencer::PlayMode::Backward) {
-			col = Palette::red.blend(Palette::off, phase);
-		} else if (pm == Sequencer::PlayMode::PingPong) {
-			if (phase < .5f) {
-				phase *= 2.f;
-				col = Palette::red.blend(Palette::blue, phase);
-			} else {
-				phase -= .5f;
-				phase *= 2.f;
-				col = Palette::blue.blend(Palette::red, phase);
-			}
-		} else {
-			col = Palette::from_raw(time_now >> 6);
-		}
-		c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
-	}
-
-	void PhaseOffsetDisplay(float phase) {
-		const auto l = (phase * 7);
-		phase = l - static_cast<uint8_t>(l);
-		const uint8_t mainled = static_cast<uint8_t>(l);
-		uint8_t ledR = mainled + 1;
-
-		if (mainled != 7)
-			c.SetEncoderLed(ledR, Palette::off.blend(Palette::seqhead, phase));
-
-		c.SetEncoderLed(mainled, Palette::seqhead.blend(Palette::off, phase));
-	}
-};
-
 class Main : public Usual {
 	Bank bank{p, c};
 	Morph morph{p, c};
@@ -382,11 +16,11 @@ class Main : public Usual {
 
 public:
 	using Usual::Usual;
-	virtual void Init() override {
+	void Init() override {
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
 	}
-	virtual void Update(Abstract *&interface) override {
+	void Update(Abstract *&interface) override {
 		if (p.IsSequenceSelected()) {
 			const auto curseq = p.GetSelectedSequence();
 			if (c.button.fine.just_went_high() && c.YoungestSceneButton().has_value())
@@ -410,14 +44,14 @@ public:
 		}
 		interface = this;
 	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		if (!p.IsSequenceSelected())
 			return;
 
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
-	virtual void OnSceneButtonRelease(uint8_t button) override {
+	void OnSceneButtonRelease(uint8_t button) override {
 		if (!p.IsSequenceSelected()) {
 			p.SelectSequence(button);
 		} else {
@@ -433,7 +67,7 @@ public:
 			}
 		}
 	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
 
 		if (p.IsSequenceSelected()) {
