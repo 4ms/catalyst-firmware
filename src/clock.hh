@@ -34,14 +34,18 @@ protected:
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm : public Internal {
+	static constexpr auto multfactor = 12u;
 	uint32_t cnt = 0;
 	uint32_t period;
 	uint32_t bpm;
 	uint32_t prevtaptime;
+	uint32_t mcnt;
 	bool peek = false;
 	bool external = false;
 	bool step = false;
-	bool multout = false;
+	bool times2step = false;
+	bool times3step = false;
+	bool times4step = false;
 
 public:
 	Bpm() {
@@ -49,18 +53,27 @@ public:
 	}
 	void Update() {
 		Internal::Update();
-		const auto cntt12 = (cnt % (period / 12)) + 1;
+		const auto cntt12 = (cnt % (period / multfactor)) + 1;
 		cnt++;
 
 		if (cnt >= period) {
 			if (IsInternal()) {
 				cnt = 0;
+				mcnt = 0;
 				step = true;
 			}
 			peek = !peek;
 		}
-		if (cntt12 >= (period / 12) || cnt == 0)
-			multout = true;
+		if (cntt12 >= period / multfactor) {
+			if (mcnt == multfactor / 4 || mcnt == (multfactor / 4) * 3)
+				times4step = true;
+			else if (mcnt == multfactor / 2)
+				times2step = times4step = true;
+			else if (mcnt == (multfactor / 3) || mcnt == ((multfactor / 3) * 2))
+				times3step = true;
+
+			mcnt += 1;
+		}
 	}
 
 	bool Output() {
@@ -74,6 +87,7 @@ public:
 
 		step = true;
 		cnt = 0;
+		mcnt = 0;
 
 		Tap();
 	}
@@ -107,11 +121,22 @@ public:
 	}
 	void Reset() {
 		cnt = 0;
+		mcnt = 0;
 		peek = false;
 	}
-	bool Times12() {
-		const auto out = multout;
-		multout = false;
+	bool Times2() {
+		const auto out = times2step;
+		times2step = false;
+		return out;
+	}
+	bool Times3() {
+		const auto out = times3step;
+		times3step = false;
+		return out;
+	}
+	bool Times4() {
+		const auto out = times4step;
+		times4step = false;
 		return out;
 	}
 };
