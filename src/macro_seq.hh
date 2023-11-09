@@ -23,6 +23,18 @@ constexpr float crossfade_ratio(float phase, float ratio) {
 }
 } // namespace MathTools
 
+constexpr float seqmorph(float phase, float ratio) {
+	const auto lm = .5f + (.5f * ratio);
+	if (ratio >= 1.0f) {
+		return phase < lm ? 0.f : 1.f;
+	}
+
+	const auto m = 1.f / (1.f - ratio);
+	const auto x = phase - lm;
+	const auto y = (m * x) + 0.5f;
+	return MathTools::constrain(y, 0.f, 1.f);
+}
+
 namespace Catalyst2
 {
 
@@ -108,24 +120,19 @@ private:
 	}
 
 	Model::OutputBuffer Seq(SeqMode::Interface &p) {
-		static auto prev_ = false;
 		Model::OutputBuffer buf;
 
-		auto morphamount = std::clamp(p.shared.internalclock.GetPhase(), 0.f, 1.f);
+		auto morphamount = (std::clamp(p.shared.internalclock.GetPhase(), 0.f, 1.f));
 		if (p.seq.player.IsPaused())
 			morphamount = 0;
+
+		bool do_trigs = false;
 		if (p.shared.internalclock.Output()) {
 			// new step
 			p.seq.player.Step();
-		}
-
-		auto cur = p.shared.internalclock.Peek();
-
-		bool do_trigs = false;
-		if (prev_ != cur) {
-			prev_ = cur;
 			do_trigs = true;
 		}
+
 		const auto time_now = p.shared.internalclock.TimeNow();
 
 		for (auto [chan, o] : countzip(buf)) {
@@ -139,7 +146,8 @@ private:
 			} else {
 				const auto nextstepvalue = p.seq.GetNextStepValue(chan);
 				const auto distance = nextstepvalue - stepvalue;
-				const auto val = stepvalue + (distance * morphamount * modifier.AsMorph());
+				const auto temp = seqmorph(morphamount, 1.f - modifier.AsMorph());
+				const auto val = stepvalue + (distance * temp);
 
 				auto t = p.shared.quantizer[chan].Process(val);
 				o = Transposer::Process(t, p.seq.GetTranspose(chan));
