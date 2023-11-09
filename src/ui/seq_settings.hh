@@ -97,7 +97,7 @@ public:
 					} else {
 						inc = hang.has_value() ? inc : 0;
 						p.shared.hang.Set(encoder, time_now);
-						p.shared.IncClockDiv(inc);
+						p.shared.clockdiv.Inc(inc);
 					}
 				}
 				break;
@@ -110,7 +110,7 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		auto hang = p.shared.hang.Check(time_now);
 
-		auto clockdiv = p.shared.GetClockDiv();
+		auto clockdiv = p.shared.clockdiv;
 
 		auto length = p.seq.Global().length.Read();
 		auto phaseoffset = p.seq.Global().phase_offset.Read();
@@ -151,7 +151,7 @@ public:
 					c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
 				}
 			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
-				c.SetEncoderLedsAddition(Clock::Divider::GetDivFromIdx(clockdiv), Palette::blue);
+				c.SetEncoderLedsAddition(clockdiv.Read(), Palette::blue);
 			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
 				if (phaseoffset.has_value())
 					PhaseOffsetDisplay(phaseoffset.value());

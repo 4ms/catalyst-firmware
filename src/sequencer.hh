@@ -88,7 +88,7 @@ struct Step {
 
 class ChannelData {
 	std::array<Step, Model::MaxSeqSteps> step;
-	Clock::Divider::type clockdiv = 0;
+	Clock::Divider::type clockdiv;
 	float randomamount = 0;
 	// 1.f / 15.f;
 
@@ -123,7 +123,7 @@ public:
 		GetStep(page, step).modifier.Inc(inc);
 	}
 	void IncClockDiv(int32_t inc) {
-		clockdiv = Clock::Divider::IncDivIdx(clockdiv, inc);
+		clockdiv.Inc(inc);
 	}
 	Clock::Divider::type GetClockDiv() {
 		return clockdiv;

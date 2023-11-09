@@ -79,9 +79,8 @@ public:
 	}
 	void Tap() {
 		const auto tn = TimeNow();
-		const auto p = tn - prevtaptime;
+		Set(TicksToBpm(tn - prevtaptime));
 		prevtaptime = tn;
-		Set(TicksToBpm(p));
 	}
 	bool IsInternal() {
 		return external == false;
@@ -118,17 +117,25 @@ public:
 };
 
 class Divider {
-	static constexpr std::array<uint8_t, 12> divideroptions = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 24, 32};
-	static_assert(divideroptions.size() <= 128,
-				  "If you need more than 128 clock divider options, change the type from int8_t");
-	uint8_t counter = 0;
+	uint32_t counter = 0;
 	bool step = false;
 
 public:
-	using type = int8_t;
-	void Update(type idx) {
+	class type {
+		static constexpr std::array<uint8_t, 12> divideroptions = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 24, 32};
+		int32_t v = 0;
+
+	public:
+		void Inc(int32_t inc) {
+			v = std::clamp<int32_t>(v + inc, 0, divideroptions.size() - 1);
+		}
+		uint8_t Read() {
+			return divideroptions[v];
+		}
+	};
+	void Update(type div) {
 		counter += 1;
-		if (counter >= divideroptions[idx]) {
+		if (counter >= div.Read()) {
 			step = true;
 			counter = 0;
 		}
@@ -144,14 +151,6 @@ public:
 	void Reset() {
 		counter = 0;
 		step = false;
-	}
-	static type IncDivIdx(type idx, int32_t inc) {
-		int32_t t = idx;
-		t += inc;
-		return std::clamp<int32_t>(t, 0, divideroptions.size() - 1);
-	}
-	static uint8_t GetDivFromIdx(type idx) {
-		return divideroptions[idx];
 	}
 };
 

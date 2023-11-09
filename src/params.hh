@@ -37,12 +37,12 @@ class SharedInterface {
 		}
 	};
 	float pos;
-	Clock::Divider::type clockdiv = 0;
 
 public:
 	Clock::Bpm internalclock;
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
+	Clock::Divider::type clockdiv;
 	RandomPool randompool;
 	DisplayHanger hang;
 
@@ -52,14 +52,6 @@ public:
 
 	float GetPos() {
 		return pos;
-	}
-
-	void IncClockDiv(int32_t inc) {
-		clockdiv = Clock::Divider::IncDivIdx(clockdiv, inc);
-	}
-
-	Clock::Divider::type GetClockDiv() {
-		return clockdiv;
 	}
 };
 

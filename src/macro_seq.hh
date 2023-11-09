@@ -68,7 +68,6 @@ private:
 
 			auto phase = p.shared.GetPos() / p.pathway.GetSceneWidth();
 			phase -= static_cast<unsigned>(phase);
-			p.shared.SetPos(phase); // TODO: is it weird that this is the only time the app changes something in params?
 
 			static Pathway::SceneId last_scene_on = Model::NumScenes;
 			const Pathway::SceneId current_scene = p.pathway.OnAScene() ? p.pathway.SceneNearest() : Model::NumScenes;

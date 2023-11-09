@@ -1,13 +1,12 @@
 #pragma once
+
 #include "conf/model.hh"
-#include "conf/palette.hh"
 #include "controls.hh"
 #include "outputs.hh"
 #include "params.hh"
-#include "util/countzip.hh"
-
 #include "ui/macro.hh"
 #include "ui/seq.hh"
+#include "util/countzip.hh"
 
 namespace Catalyst2::Ui
 {
@@ -49,7 +48,7 @@ public:
 		controls.Update();
 
 		if (controls.jack.trig.just_went_high()) {
-			params.shared.clockdivider.Update(params.shared.GetClockDiv());
+			params.shared.clockdivider.Update(params.shared.clockdiv);
 			if (params.shared.clockdivider.Step())
 				params.shared.internalclock.Input();
 		}

@@ -46,7 +46,7 @@ public:
 				if (is_scene)
 					break;
 				inc = hang.has_value() ? inc : 0;
-				p.shared.IncClockDiv(inc);
+				p.shared.clockdiv.Inc(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 				// case Model::EncoderAlts::Transpose:
@@ -71,7 +71,7 @@ public:
 			const auto hang = p.shared.hang.Check(time_now);
 			if (hang.has_value()) {
 				if (hang.value() == Model::EncoderAlts::ClockDiv) {
-					c.SetEncoderLedsAddition(Clock::Divider::GetDivFromIdx(p.shared.GetClockDiv()), Palette::blue);
+					c.SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::blue);
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
