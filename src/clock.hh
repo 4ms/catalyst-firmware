@@ -7,11 +7,14 @@
 namespace Catalyst2::Clock
 {
 
-constexpr uint32_t ToTicks(uint16_t bpm) {
-	return static_cast<unsigned>((60.f * Model::SampleRateHz) / bpm);
+constexpr uint32_t BpmToTicks(uint32_t bpm) {
+	return (60.f * Model::SampleRateHz) / bpm;
 }
-constexpr uint16_t ToBpm(uint32_t tick) {
-	return static_cast<unsigned>((60.f * Model::SampleRateHz) / tick);
+constexpr uint32_t TicksToBpm(uint32_t tick) {
+	return (60.f * Model::SampleRateHz) / tick;
+}
+constexpr uint32_t MsToTicks(uint32_t ms) {
+	return (Model::SampleRateHz / 1000.f) * ms;
 }
 
 class Internal {
@@ -32,17 +35,12 @@ protected:
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm : public Internal {
 	uint32_t cnt = 0;
-
-	uint32_t tap_cnt = 0;
-	uint32_t ptaptime = 0;
-	uint32_t pulsewidth = 0;
-
-	uint32_t ticks_per_pulse;
+	uint32_t period;
 	uint32_t bpm;
+	uint32_t prevtaptime;
 	bool peek = false;
 	bool external = false;
 	bool step = false;
-
 	bool multout = false;
 
 public:
@@ -51,17 +49,17 @@ public:
 	}
 	void Update() {
 		Internal::Update();
-		const auto cntt4 = (cnt % (ticks_per_pulse / 4)) + 1;
+		const auto cntt12 = (cnt % (period / 12)) + 1;
 		cnt++;
 
-		if (cnt >= ticks_per_pulse) {
+		if (cnt >= period) {
 			if (IsInternal()) {
 				cnt = 0;
 				step = true;
 			}
 			peek = !peek;
 		}
-		if (cntt4 >= (ticks_per_pulse / 4) || cnt == 0)
+		if (cntt12 >= (period / 12) || cnt == 0)
 			multout = true;
 	}
 
@@ -77,28 +75,13 @@ public:
 		step = true;
 		cnt = 0;
 
-		const auto pw = TimeNow() - ptaptime;
-		ptaptime = TimeNow();
-		Set(ToBpm(pw));
+		Tap();
 	}
 	void Tap() {
-		// if this is the first tap in a long time
-		// the time between the last tap and this tap is not useful
-		if (!IsInternal())
-			return;
-
-		if (TimeNow() - ptaptime >= ToTicks(8)) {
-			tap_cnt = 0;
-			pulsewidth = 0;
-			ptaptime = TimeNow();
-			return;
-		}
-
-		const auto pw = TimeNow() - ptaptime;
-		ptaptime = TimeNow();
-		pulsewidth += pw;
-		tap_cnt += 1;
-		Set(ToBpm(pulsewidth / tap_cnt));
+		const auto tn = TimeNow();
+		const auto p = tn - prevtaptime;
+		prevtaptime = tn;
+		Set(TicksToBpm(p));
 	}
 	bool IsInternal() {
 		return external == false;
@@ -111,7 +94,7 @@ public:
 	}
 	void Set(int32_t bpm) {
 		this->bpm = std::clamp<int32_t>(bpm, 1, 1200);
-		ticks_per_pulse = ToTicks(this->bpm);
+		period = BpmToTicks(this->bpm);
 	}
 	void Inc(int by, bool fine) {
 		auto inc = fine ? 1 : 10;
@@ -121,15 +104,13 @@ public:
 			Set(bpm - inc);
 	}
 	float GetPhase() {
-		return static_cast<float>(cnt) / ticks_per_pulse;
+		return static_cast<float>(cnt) / period;
 	}
 	void Reset() {
 		cnt = 0;
 		peek = false;
-		tap_cnt = 0;
-		pulsewidth = 0;
 	}
-	bool Times4() {
+	bool Times12() {
 		const auto out = multout;
 		multout = false;
 		return out;
