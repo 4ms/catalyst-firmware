@@ -1,72 +1,70 @@
-//#include "../src/fixed_list.hh"
+#include "../src/fixedvector.hh"
 #include "doctest.h"
 
 // using namespace Catalyst2;
 
-TEST_CASE("Fixed Linked list")
-{
-	// FixedVector<uint8_t, 5> test;
-	// test.insert(0, 0);
-	// test.insert(0, 1);
+TEST_CASE("Fixed Linked list") {
 
-	// CHECK(test.read(0) == 0);
-	// CHECK(test.read(1) == 1);
+	constexpr auto vsize = 4;
+	Catalyst2::FixedVector<int, vsize> fv;
 
-	// // insert after head
-	// CHECK(test.insert(0, 1));
+	// make sure size is 0 on init
+	CHECK(fv.size() == 0);
 
-	// // replace the third element to keep this count going
-	// test.replace(2, 2);
+	// try erasing
+	fv.erase(0);
+	fv.erase(10);
+	CHECK(fv.size() == 0);
 
-	// // insert antoher after
-	// CHECK(test.insert(2, 3));
+	constexpr auto tbyte0 = 16;
+	constexpr auto tbyte1 = 31;
 
-	// // insert after previous insert
-	// CHECK(test.insert(4));
+	fv.insert(1, tbyte0);
+	fv.insert(13, tbyte0);
+	CHECK(fv.size() == 0);
 
-	// // try to overfill
-	// CHECK(test.insert(1, 2) == false);
+	fv.insert(0, tbyte0);
+	CHECK(fv.size() == 1);
+	CHECK(fv[0] == tbyte0);
 
-	// // check all the values are correct.
-	// for (unsigned i = 0; i < test.size(); i++)
-	// 	CHECK(test.read(i) == i);
+	fv.erase(1);
+	CHECK(fv.size() == 1);
+	fv.erase(0);
+	CHECK(fv.size() == 0);
 
-	// // try erasing head and tail
-	// CHECK(test.erase(4));
-	// CHECK(test.erase(0));
-	// CHECK(test.erase(0));
-	// CHECK(test.erase(0));
-	// CHECK(test.erase(0));
+	fv.insert(0, tbyte0);
+	fv.insert(1, tbyte1);
+	CHECK(fv[0] == tbyte0);
+	CHECK(fv[1] == tbyte1);
+	CHECK(fv.size() == 2);
 
-	// // cant erase too many
-	// CHECK(test.erase(0) == false);
+	fv.erase(1);
+	CHECK(fv[0] == tbyte0);
+	CHECK(fv.size() == 1);
+	fv.insert(0, tbyte1);
+	CHECK(fv.size() == 2);
+	CHECK(fv[0] == tbyte1);
+	CHECK(fv[1] == tbyte0);
 
-	// test.insert(0, 2);
-	// test.insert(3);
+	fv.insert(fv.size(), 0);
+	fv.insert(fv.size(), 1);
 
-	// CHECK(test.read(0) == 2);
-	// CHECK(test.read(1) == 3);
-	// test.replace(0, 0);
-	// test.replace(1, 4);
-	// test.insert(0, 1);
-	// test.insert(2);
-	// CHECK(test.insert(3));
+	CHECK(fv.size() == 4);
+	CHECK(fv[0] == tbyte1);
+	CHECK(fv[1] == tbyte0);
+	CHECK(fv[2] == 0);
+	CHECK(fv[3] == 1);
 
-	// // dont overfill!
-	// CHECK(test.insert(4) == false);
+	// try to overflow
+	fv.insert(fv.size(), -1);
+	CHECK(fv.size() == 4);
 
-	// // check all the values are correct.
-	// for (unsigned i = 0; i < test.size(); i++)
-	// 	CHECK(test.read(i) == i);
+	fv.erase(3);
+	CHECK(fv.size() == 3);
+	fv.erase(0);
+	CHECK(fv.size() == 2);
+	fv.erase(1);
+	CHECK(fv.size() == 1);
 
-	// // erase non head and tail
-	// CHECK(test.erase(1));
-	// CHECK(test.erase(1));
-	// CHECK(test.erase(1));
-
-	// check wrapping index
-	// for (unsigned i = 0; i < 10; i += 2) {
-	// 	CHECK(test.read(i) == 0);
-	// 	CHECK(test.read(i + 1) == 4);
-	// }
+	CHECK(fv[0] == tbyte0);
 }

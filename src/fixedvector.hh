@@ -20,14 +20,21 @@ public:
 		return count;
 	}
 
-	bool insert(unsigned index, const T d) {
+	void insert(unsigned index, T d) {
 		if (count >= max_size || index > count)
-			return false;
+			return;
 
-		if (count == 0 || count == 1) {
+		if (index == count - 1) {
+			data[count] = data[index];
+			data[index] = d;
+			count += 1;
+			return;
+		}
+
+		if (index == count) {
 			data[count] = d;
 			count += 1;
-			return true;
+			return;
 		}
 
 		index += 1;
@@ -39,26 +46,26 @@ public:
 		data[index] = d;
 		count += 1;
 
-		return true;
+		return;
 	}
 
-	bool erase(const unsigned index) {
+	void erase(const unsigned index) {
 		if (count == 0 || index >= count)
-			return false;
+			return;
 
 		if (count == 1) {
 			count = 0;
-			return true;
+			return;
 		}
 
 		if (index == count - 1) {
 			count -= 1;
-			return true;
+			return;
 		}
 
 		std::move(&data[index + 1], &data[count], &data[index]);
 		count -= 1;
-		return true;
+		return;
 	}
 
 private:
