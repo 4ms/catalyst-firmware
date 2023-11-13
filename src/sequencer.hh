@@ -162,6 +162,7 @@ class PlayerInterface {
 		uint8_t counter = 0;
 		uint8_t step = 0;
 		uint8_t next_step = 1;
+		bool new_step = false;
 	};
 	std::array<State, Model::NumChans> channel;
 	bool pause = false;
@@ -207,6 +208,11 @@ public:
 	uint8_t GetNextStep(uint8_t chan) {
 		return ToStep(chan, channel[chan].next_step);
 	}
+	bool IsCurrentStepNew(uint8_t chan) {
+		const auto out = channel[chan].new_step;
+		channel[chan].new_step = false;
+		return out;
+	}
 	void TogglePause() {
 		pause = !pause;
 		if (pause)
@@ -226,6 +232,8 @@ private:
 		channel.clockdivider.Update(cd.GetClockDiv());
 		if (!channel.clockdivider.Step())
 			return;
+
+		channel.new_step = true;
 
 		channel.step = channel.next_step;
 		const auto playmode = cd.playmode.Read().value_or(gd.playmode.Read().value());

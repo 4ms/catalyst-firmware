@@ -122,9 +122,9 @@ private:
 	Model::OutputBuffer Seq(SeqMode::Interface &p) {
 		Model::OutputBuffer buf;
 
-		auto morphamount = (std::clamp(p.shared.internalclock.GetPhase(), 0.f, 1.f));
+		auto morph_phase = std::clamp(p.shared.internalclock.GetPhase(), 0.f, 1.f);
 		if (p.seq.player.IsPaused())
-			morphamount = 0;
+			morph_phase = 0;
 
 		bool do_trigs = false;
 		if (p.shared.internalclock.Output()) {
@@ -136,24 +136,37 @@ private:
 		const auto time_now = p.shared.internalclock.TimeNow();
 
 		for (auto [chan, o] : countzip(buf)) {
-			const auto stepvalue = p.seq.GetPlayheadValue(chan);
-			auto modifier = p.seq.GetPlayheadModifier(chan);
-
 			if (p.seq.Channel(chan).mode.IsGate()) {
-				if (do_trigs && stepvalue >= ChannelValue::GateSetThreshold)
-					trigger[chan].Trig(time_now);
-				o = trigger[chan].Read(time_now) ? ChannelValue::GateHigh : stepvalue;
+				o = SeqTrig(p, chan, time_now, do_trigs);
 			} else {
-				const auto nextstepvalue = p.seq.GetNextStepValue(chan);
-				const auto distance = nextstepvalue - stepvalue;
-				const auto temp = seqmorph(morphamount, 1.f - modifier.AsMorph());
-				const auto val = stepvalue + (distance * temp);
-
-				auto t = p.shared.quantizer[chan].Process(val);
-				o = Transposer::Process(t, p.seq.GetTranspose(chan));
+				o = SeqCv(p, chan, morph_phase);
 			}
 		}
 		return buf;
+	}
+
+	ChannelValue::type SeqTrig(SeqMode::Interface &p, uint8_t chan, uint32_t time_now, bool do_trigs) {
+		const auto stepval = p.seq.GetPlayheadValue(chan);
+		const auto armed = stepval >= ChannelValue::GateSetThreshold;
+		if (armed && do_trigs) {
+			if (p.seq.player.IsCurrentStepNew(chan))
+				trigger[chan].Trig(time_now);
+			else {
+                // figure out retrig! need to account for per channel clock div.
+			}
+		}
+		return trigger[chan].Read(time_now) ? ChannelValue::GateHigh :
+			   armed						? ChannelValue::GateArmed :
+											  ChannelValue::GateOff;
+	}
+
+	ChannelValue::type SeqCv(SeqMode::Interface &p, uint8_t chan, float morph_phase) {
+		auto stepval = p.seq.GetPlayheadValue(chan);
+		const auto distance = p.seq.GetNextStepValue(chan) - stepval;
+		const auto stepmorph = seqmorph(morph_phase, 1.f - p.seq.GetPlayheadModifier(chan).AsMorph());
+		const auto temp = stepval + (distance * stepmorph);
+		stepval = p.shared.quantizer[chan].Process(temp);
+		return Transposer::Process(stepval, p.seq.GetTranspose(chan));
 	}
 };
 

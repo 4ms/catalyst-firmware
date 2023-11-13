@@ -55,7 +55,7 @@ struct Palette {
 
 	static Color EncoderBlend(uint16_t level, bool is_gate) {
 		if (is_gate) {
-			if (level >= ChannelValue::GateSetThreshold)
+			if (level == ChannelValue::GateArmed)
 				return Gate::Primed;
 			if (level == ChannelValue::GateHigh)
 				return Gate::High;

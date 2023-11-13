@@ -1,12 +1,14 @@
 #pragma once
 
+#include "clock.hh"
+#include "conf/model.hh"
 #include "controls.hh"
 #include <cstdint>
 
 namespace Catalyst2
 {
 class Trigger {
-	static constexpr uint8_t trig_length = 20;
+	static constexpr auto trig_length = Clock::MsToTicks(Model::triglengthms);
 	uint8_t trig_time;
 	bool is_trigged = false;
 

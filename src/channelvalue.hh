@@ -21,7 +21,9 @@ static constexpr type from_volts(const float volts) {
 }
 
 static constexpr type GateHigh = from_volts(5.f);
-static constexpr type GateSetThreshold = from_volts(2.5f);
+static constexpr type GateSetThreshold = from_volts(0.f);
+static constexpr type GateArmed = GateSetThreshold;
+static constexpr type GateOff = from_volts(-.1f);
 
 static constexpr float octave = (Range / Model::output_octave_range);
 static constexpr float note = octave / 12;

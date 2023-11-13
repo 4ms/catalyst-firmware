@@ -10,6 +10,8 @@ namespace Catalyst2::Model
 {
 static constexpr auto SampleRateHz = 3000u;
 
+static constexpr auto triglengthms = 5u;
+
 static constexpr uint32_t NumChans = 8;
 
 static constexpr uint32_t NumScenes = 8;
