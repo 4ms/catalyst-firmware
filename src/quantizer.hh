@@ -38,7 +38,7 @@ class Interface {
 	Scale scale{};
 
 public:
-	uint16_t Process(const uint16_t input) {
+	ChannelValue::type Process(const ChannelValue::type input) {
 		if (!scale.size())
 			return input;
 
