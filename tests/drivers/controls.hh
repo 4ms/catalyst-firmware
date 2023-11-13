@@ -63,26 +63,6 @@ public:
 
 	Controls() = default;
 
-	// TODO:move to shared file
-	std::optional<uint8_t> YoungestSceneButton() {
-		uint8_t youngest = 0xff;
-
-		// 		for (auto [i, b] : countzip(button.scene)) {
-		// 			if (!b.is_high())
-		// 				continue;
-
-		// 			if (b.time_high > age)
-		// 				continue;
-
-		// 			age = b.time_high;
-		// 			youngest = i;
-		// 		}
-		if (youngest == 0xff)
-			return std::nullopt;
-
-		return youngest;
-	}
-
 	void ForEachEncoderInc(auto func) {
 		// for (auto [i, enc] : countzip(encoders)) {
 		// 	auto inc = enc.read();
@@ -103,26 +83,12 @@ public:
 		// return analog[adc_chan_num].val();
 	}
 
-	// TODO: move to a file shared by all projects
-	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color c) {
-	}
-
-	// TODO: move to a file shared by all projects
-	void SetEncoderLedsAddition(uint8_t num, Color c) {
-	}
-
 	void SetEncoderLed(unsigned led, Color color) {
 		// if (led >= Board::EncLedMap.size())
 		// 	return;
 
 		// auto idx = Board::EncLedMap[led];
 		// rgb_leds[idx] = color;
-	}
-
-	// TODO: move to a file shared by all projects
-	void SetButtonLedsCount(uint8_t count, bool on) {
-		// for (auto i = 0u; i < count; i++)
-		// 	SetButtonLed(i, on);
 	}
 
 	void SetButtonLed(unsigned led, float intensity) {

@@ -81,8 +81,7 @@ private:
 	T max;
 };
 
-struct Step {
-	Channel val;
+struct Step : Channel {
 	StepModifier modifier;
 };
 
@@ -111,10 +110,10 @@ public:
 		return this->step[(page * Model::SeqStepsPerPage) + step];
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		GetStep(step).val.Inc(inc, fine, mode.IsGate());
+		GetStep(step).Inc(inc, fine, mode.IsGate());
 	}
 	void IncStep(uint8_t page, uint8_t step, int32_t inc, bool fine) {
-		GetStep(page, step).val.Inc(inc, fine, mode.IsGate());
+		GetStep(page, step).Inc(inc, fine, mode.IsGate());
 	}
 	void IncModifier(uint8_t step, int32_t inc) {
 		GetStep(step).modifier.Inc(inc);
@@ -376,7 +375,7 @@ public:
 			rand = 0;
 		}
 
-		auto temp = data.channel[sequence].GetStep(step).val.val + rand;
+		auto temp = data.channel[sequence].GetStep(step).val + rand;
 		return std::clamp<int32_t>(temp, ChannelValue::Min, ChannelValue::Max);
 	}
 

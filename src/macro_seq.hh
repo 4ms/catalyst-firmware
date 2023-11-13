@@ -152,7 +152,7 @@ private:
 			if (p.seq.player.IsCurrentStepNew(chan))
 				trigger[chan].Trig(time_now);
 			else {
-                // figure out retrig! need to account for per channel clock div.
+				// figure out retrig! need to account for per channel clock div.
 			}
 		}
 		return trigger[chan].Read(time_now) ? ChannelValue::GateHigh :

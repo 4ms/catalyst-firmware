@@ -23,8 +23,9 @@ public:
 	void Update(Abstract *&interface) override {
 		if (p.IsSequenceSelected()) {
 			const auto curseq = p.GetSelectedSequence();
-			if (c.button.fine.just_went_high() && c.YoungestSceneButton().has_value())
-				p.seq.CopyPage(curseq, c.YoungestSceneButton().value());
+			auto ysb = YoungestSceneButton();
+			if (c.button.fine.just_went_high() && ysb.has_value())
+				p.seq.CopyPage(curseq, ysb.value());
 
 			if (c.button.bank.just_went_high() && c.button.fine.is_high())
 				p.seq.PasteSequence(curseq);

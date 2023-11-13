@@ -25,7 +25,7 @@ public:
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		const auto time_now = HAL_GetTick();
 		const auto hang = p.shared.hang.Check(time_now);
-		const auto is_scene = c.YoungestSceneButton().has_value();
+		const auto is_scene = YoungestSceneButton().has_value();
 
 		switch (encoder) {
 			case Model::EncoderAlts::Random:
@@ -57,8 +57,9 @@ public:
 		c.ClearButtonLeds();
 		c.ClearEncoderLeds();
 
-		const auto is_scene = c.YoungestSceneButton().has_value();
-		const auto scene = c.YoungestSceneButton().value_or(0);
+		auto ysb = YoungestSceneButton();
+		const auto is_scene = ysb.has_value();
+		const auto scene = ysb.value_or(0);
 
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
@@ -71,7 +72,7 @@ public:
 			const auto hang = p.shared.hang.Check(time_now);
 			if (hang.has_value()) {
 				if (hang.value() == Model::EncoderAlts::ClockDiv) {
-					c.SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::blue);
+					SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::blue);
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);

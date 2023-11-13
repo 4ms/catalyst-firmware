@@ -11,17 +11,14 @@ struct TestEncoders {
 	std::array<uint8_t, 8> rotvals{0};
 
 	TestEncoders(Controls &controls)
-		: controls{controls}
-	{}
+		: controls{controls} {
+	}
 
-	void run_test()
-	{
+	void run_test() {
 		while (true) {
-			for (unsigned i = 0; auto &r : rotvals) {
-				r += controls.GetEncoder(i) * 8;
-				controls.SetEncoderLed(i, Palette::orange.blend(Palette::blue, r));
-				i++;
-			}
+			controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) {
+				controls.SetEncoderLed(encoder, dir > 0 ? Palette::blue : Palette::red);
+			});
 
 			HAL_Delay(10);
 

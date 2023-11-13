@@ -59,7 +59,7 @@ public:
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		const auto scenebdown = c.YoungestSceneButton().has_value();
+		const auto scenebdown = YoungestSceneButton().has_value();
 		const auto fine = c.button.fine.is_high();
 
 		if (scenebdown) {
@@ -78,12 +78,13 @@ public:
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
 		c.ClearButtonLeds();
-		if (c.YoungestSceneButton().has_value()) {
+		auto ysb = YoungestSceneButton();
+		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high())
 					c.SetButtonLed(i, true);
 			}
-			const auto scene_to_display = c.YoungestSceneButton().value();
+			const auto scene_to_display = ysb.value();
 			EncoderDisplayScene(scene_to_display);
 		} else {
 			EncoderDisplayOutput(outs);

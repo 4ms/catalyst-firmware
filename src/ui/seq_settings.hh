@@ -22,8 +22,9 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
-		auto is_channel = c.YoungestSceneButton().has_value();
-		auto chan = c.YoungestSceneButton().value_or(0);
+		auto ysb = YoungestSceneButton();
+		auto is_channel = ysb.has_value();
+		auto chan = ysb.value_or(0);
 
 		switch (encoder) {
 			case Model::EncoderAlts::Transpose:
@@ -119,8 +120,9 @@ public:
 		auto tpose = p.seq.Global().transposer.Read();
 		auto random = p.shared.randompool.IsRandomized() ? 1.f : 0.f;
 
-		if (c.YoungestSceneButton().has_value()) {
-			auto &chan = p.seq.Channel(c.YoungestSceneButton().value());
+		auto ysb = YoungestSceneButton();
+		if (ysb.has_value()) {
+			auto &chan = p.seq.Channel(ysb.value());
 			length = chan.length.Read();
 			phaseoffset = chan.phase_offset.Read();
 			startoffset = chan.start_offset.Read();
@@ -144,14 +146,14 @@ public:
 				if (length.has_value()) {
 					auto l = length.value() % Model::SeqStepsPerPage;
 					l = l == 0 ? Model::SeqStepsPerPage : l;
-					c.SetEncoderLedsCount(l, 0, Palette::magenta);
+					SetEncoderLedsCount(l, 0, Palette::magenta);
 					l = (length.value() - 1) / Model::SeqStepsPerPage;
-					c.SetButtonLedsCount(l + 1, true);
+					SetButtonLedsCount(l + 1, true);
 				} else {
 					c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
 				}
 			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
-				c.SetEncoderLedsAddition(clockdiv.Read(), Palette::blue);
+				SetEncoderLedsAddition(clockdiv.Read(), Palette::blue);
 			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
 				if (phaseoffset.has_value())
 					PhaseOffsetDisplay(phaseoffset.value());
@@ -185,7 +187,7 @@ public:
 			c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, col);
 
 			col = Palette::globalsetting;
-			if (c.toggle.trig_sense.is_high() && !c.YoungestSceneButton().has_value()) {
+			if (c.toggle.trig_sense.is_high() && !ysb.has_value()) {
 				if (p.shared.internalclock.Peek())
 					col = Palette::bpm;
 				else
@@ -198,9 +200,9 @@ public:
 			if (!p.shared.randompool.IsRandomized() || random == 0.f)
 				col = Palette::red;
 			else
-				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeedSequence(
-											 c.YoungestSceneButton().value_or(p.GetSelectedSequence()))),
-										 random);
+				col = Palette::off.blend(
+					Palette::from_raw(p.shared.randompool.GetSeedSequence(ysb.value_or(p.GetSelectedSequence()))),
+					random);
 
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		}

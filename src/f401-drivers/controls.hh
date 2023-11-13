@@ -62,37 +62,36 @@ class Controls {
 		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
 	}};
 
+	mdrivlib::Timekeeper encoder_led_update_task;
+	mdrivlib::Timekeeper muxio_update_task;
+	bool leds_ready_flag = false;
+
 public:
 	Buttons button;
 	Toggles toggle;
 	Jacks jack;
 
-	Controls() = default;
-
-	// TODO:move to shared file
-	std::optional<uint8_t> YoungestSceneButton() {
-		auto age = 0xffffffffu;
-		uint8_t youngest = 0xff;
-
-		for (auto [i, b] : countzip(button.scene)) {
-			if (!b.is_high())
-				continue;
-
-			if (b.time_high > age)
-				continue;
-
-			age = b.time_high;
-			youngest = i;
-		}
-		if (youngest == 0xff)
-			return std::nullopt;
-
-		return youngest;
+	Controls() {
+		// 3.8%: 60Hz
+		encoder_led_update_task.init(Board::encoder_led_task, [this]() {
+			WriteToEncoderLeds();
+			leds_ready_flag = true;
+		});
+		// 4.6%: 16kHz
+		muxio_update_task.init(Board::muxio_conf, [this]() { UpdateMuxio(); });
 	}
 
-	// unused
-	int32_t GetEncoder(uint8_t idx) {
-		return encoders[idx].read();
+	void Start() {
+		encoder_led_update_task.start();
+		muxio_update_task.start();
+
+		adc_dma.register_callback([this] {
+			for (unsigned i = 0; auto &a : analog)
+				a.add_val(adc_buffer[i++]);
+		});
+		adc_dma.start();
+		if (!led_driver.init())
+			__BKPT();
 	}
 
 	void ForEachEncoderInc(auto func) {
@@ -113,49 +112,12 @@ public:
 		return analog[adc_chan_num].val();
 	}
 
-	// TODO: move to a file shared by all projects
-	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color c) {
-		for (auto i = 0u; i < count; i++)
-			SetEncoderLed((i + offset) & 7, c);
-
-		for (auto i = 0u; i < Model::NumChans - count; i++)
-			SetEncoderLed((count + i + offset) & 7, Colors::off);
-	}
-
-	// TODO: move to a file shared by all projects
-	void SetEncoderLedsAddition(uint8_t num, Color c) {
-		static constexpr auto max_val = [] {
-			uint8_t out = 0;
-			for (auto i = 1u; i <= Model::NumChans; i++)
-				out += i;
-			return out;
-		}();
-
-		if (num > max_val)
-			return;
-
-		uint8_t t = Model::NumChans;
-
-		while (num >= t) {
-			num -= t;
-			t -= 1;
-			SetEncoderLed(t, c);
-		}
-		SetEncoderLed(num - 1, c);
-	}
-
 	void SetEncoderLed(unsigned led, Color color) {
 		if (led >= Board::EncLedMap.size())
 			return;
 
 		auto idx = Board::EncLedMap[led];
 		rgb_leds[idx] = color;
-	}
-
-	// TODO: move to a file shared by all projects
-	void SetButtonLedsCount(uint8_t count, bool on) {
-		for (auto i = 0u; i < count; i++)
-			SetButtonLed(i, on);
 	}
 
 	void SetButtonLed(unsigned led, float intensity) {
@@ -190,6 +152,19 @@ public:
 		}
 	}
 
+	bool LedsReady() {
+		if (!leds_ready_flag)
+			return false;
+		leds_ready_flag = false;
+		return true;
+	}
+
+private:
+	void WriteToEncoderLeds() {
+		// Takes about 620us to write all LEDs
+		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
+		led_driver.set_all_leds(raw_led_data);
+	}
 	void UpdateMuxio() {
 		static uint8_t cnt = 0;
 		auto button_leds = 0u;
@@ -209,24 +184,6 @@ public:
 			}
 		}
 	}
-
-	void Start() {
-		adc_dma.register_callback([this] {
-			for (unsigned i = 0; auto &a : analog)
-				a.add_val(adc_buffer[i++]);
-		});
-		adc_dma.start();
-		if (!led_driver.init())
-			__BKPT();
-	}
-
-	void WriteToEncoderLeds() {
-		// Takes about 620us to write all LEDs
-		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
-		led_driver.set_all_leds(raw_led_data);
-	}
-
-private:
 	void UpdateButtons(uint32_t raw_mux_read) {
 		for (auto &but : button.scene)
 			but.update(raw_mux_read);
