@@ -55,7 +55,7 @@ public:
 			path.InsertScene(button, false);
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
+		ClearButtonLeds();
 
 		auto count = p.pathway.size();
 		const auto phase = 1.f / (Pathway::MaxPoints / static_cast<float>(count));

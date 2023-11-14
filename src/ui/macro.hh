@@ -77,7 +77,7 @@ public:
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
+		ClearButtonLeds();
 		auto ysb = YoungestSceneButton();
 		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {

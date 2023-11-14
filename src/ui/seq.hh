@@ -69,7 +69,7 @@ public:
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
+		ClearButtonLeds();
 
 		if (p.IsSequenceSelected()) {
 			const auto chan = p.GetSelectedSequence();

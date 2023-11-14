@@ -54,8 +54,8 @@ public:
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
-		c.ClearEncoderLeds();
+		ClearButtonLeds();
+		ClearEncoderLeds();
 
 		auto ysb = YoungestSceneButton();
 		const auto is_scene = ysb.has_value();

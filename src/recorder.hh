@@ -1,4 +1,6 @@
 #pragma once
+
+#include "conf/model.hh"
 #include "util/math.hh"
 #include <array>
 
@@ -8,7 +10,8 @@ namespace Catalyst2
 class Recorder {
 	static constexpr auto prescaler = Model::rec_buffer_prescaler;
 	static constexpr auto buff_size = Model::rec_buffer_size;
-	static constexpr auto max_record_lenth_seconds = (1.f / (1000.f / prescaler)) * buff_size;
+	static constexpr auto max_record_lenth_seconds =
+		(1.f / (static_cast<float>(Model::SampleRateHz) / prescaler)) * buff_size;
 	static_assert(MathTools::is_power_of_2(prescaler));
 
 	struct {

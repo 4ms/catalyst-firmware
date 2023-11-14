@@ -123,22 +123,12 @@ public:
 	void SetButtonLed(unsigned led, float intensity) {
 		static constexpr std::array<uint8_t, 32> lut = {0, 0, 1, 1, 1, 1,  1,  1,  1,  2,  2,  2,  3,  3,  4,  4,
 														5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32};
-		intensity = std::clamp<float>(0, .99, intensity);
+		intensity = std::clamp(0.f, .99f, intensity);
 		button_led_duty[led] = lut[intensity * lut.size()];
 	}
 
 	void SetButtonLed(unsigned led, bool on) {
 		button_led_duty[led] = on ? 32 : 0;
-	}
-
-	void ClearButtonLeds() {
-		for (auto &a : button_led_duty)
-			a = 0;
-	}
-
-	void ClearEncoderLeds() {
-		for (auto &led : rgb_leds)
-			led = Colors::off;
 	}
 
 	void Update() {
@@ -206,7 +196,6 @@ private:
 	mdrivlib::I2CPeriph led_driver_i2c{Board::LedDriverConf};
 	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
-	uint32_t button_leds = 0;
 	std::array<uint8_t, Model::NumChans> button_led_duty;
 	std::array<Color, Model::NumChans> rgb_leds;
 };

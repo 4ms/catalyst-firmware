@@ -24,8 +24,8 @@ public:
 	}
 
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearEncoderLeds();
-		c.ClearButtonLeds();
+		ClearEncoderLeds();
+		ClearButtonLeds();
 
 		const auto chan = p.GetSelectedSequence();
 		const uint8_t led = p.seq.GetPlayheadStepOnPage(chan);

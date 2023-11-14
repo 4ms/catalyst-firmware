@@ -63,6 +63,16 @@ public:
 
 	Controls() = default;
 
+	void Start() {
+		// adc_dma.register_callback([this] {
+		// 	for (unsigned i = 0; auto &a : analog)
+		// 		a.add_val(adc_buffer[i++]);
+		// });
+		// adc_dma.start();
+		// if (!led_driver.init())
+		// 	__BKPT();
+	}
+
 	void ForEachEncoderInc(auto func) {
 		// for (auto [i, enc] : countzip(encoders)) {
 		// 	auto inc = enc.read();
@@ -102,22 +112,22 @@ public:
 		// button_led_duty[led] = on ? 32 : 0;
 	}
 
-	void ClearButtonLeds() {
-		for (auto &a : button_led_duty)
-			a = 0;
-	}
-
-	void ClearEncoderLeds() {
-		for (auto &led : rgb_leds)
-			led = Colors::off;
-	}
-
 	void Update() {
 		// jack.trig.update();
 		// jack.reset.update();
 		// for (auto &enc : encoders) {
 		// 	enc.update();
 		// }
+	}
+
+	bool LedsReady() {
+		return true;
+	}
+
+private:
+	void WriteToEncoderLeds() {
+		// const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
+		// led_driver.set_all_leds(raw_led_data);
 	}
 
 	void UpdateMuxio() {
@@ -140,22 +150,6 @@ public:
 		// }
 	}
 
-	void Start() {
-		// adc_dma.register_callback([this] {
-		// 	for (unsigned i = 0; auto &a : analog)
-		// 		a.add_val(adc_buffer[i++]);
-		// });
-		// adc_dma.start();
-		// if (!led_driver.init())
-		// 	__BKPT();
-	}
-
-	void WriteToEncoderLeds() {
-		// const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
-		// led_driver.set_all_leds(raw_led_data);
-	}
-
-private:
 	void UpdateButtons(uint32_t raw_mux_read) {
 		// for (auto &but : button.scene)
 		// 	but.update(raw_mux_read);

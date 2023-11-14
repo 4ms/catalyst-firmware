@@ -27,7 +27,7 @@ public:
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearEncoderLeds();
+		ClearEncoderLeds();
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			const auto morph = p.GetMorph(i);

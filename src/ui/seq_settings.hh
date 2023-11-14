@@ -105,8 +105,8 @@ public:
 		}
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
-		c.ClearEncoderLeds();
+		ClearButtonLeds();
+		ClearEncoderLeds();
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 		auto hang = p.shared.hang.Check(time_now);

@@ -42,7 +42,7 @@ public:
 			p.SelectSequence(scene);
 	}
 	void PaintLeds(const Model::OutputBuffer &outs) override {
-		c.ClearButtonLeds();
+		ClearButtonLeds();
 		c.SetButtonLed(p.GetSelectedSequence(), true);
 
 		for (auto i = 0u; i < Model::NumChans; i++)

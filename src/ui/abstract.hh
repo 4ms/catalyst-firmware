@@ -24,6 +24,17 @@ public:
 	}
 
 protected:
+	void ClearButtonLeds() {
+		for (auto i = 0u; i < Model::NumChans; i++)
+			c.SetButtonLed(i, false);
+	}
+
+	void ClearEncoderLeds() {
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			c.SetEncoderLed(i, Color{0, 0, 0});
+		}
+	}
+
 	void SetButtonLedsCount(uint8_t count, bool on) {
 		for (auto i = 0u; i < count; i++)
 			c.SetButtonLed(i, on);
