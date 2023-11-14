@@ -272,8 +272,11 @@ private:
 		auto l = cd.length.Read().value_or(gd.length.Read().value());
 		l += pm == PlayMode::PingPong ? l - 2 : 0;
 		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
-		const auto po = static_cast<int8_t>(
-			(cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + d.master_phase) * (l - 1));
+		/* need to convert the master phase offset (0 => 1) so that the last step will be selected when
+		 * the slider is pinned with no cv */
+		const auto mpo = d.master_phase * ((l + 1.f) / l);
+		const auto po =
+			static_cast<int8_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) * (l - 1));
 
 		uint8_t o;
 		switch (pm) {
