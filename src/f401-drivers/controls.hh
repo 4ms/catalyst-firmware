@@ -62,6 +62,16 @@ class Controls {
 		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
 	}};
 
+	// Mux
+	MuxedIO<Board::MuxConf> muxio;
+
+	// LEDs (needs work)
+	mdrivlib::I2CPeriph led_driver_i2c{Board::LedDriverConf};
+	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
+
+	std::array<uint8_t, Model::NumChans> button_led_duty;
+	std::array<Color, Model::NumChans> rgb_leds;
+
 	mdrivlib::Timekeeper encoder_led_update_task;
 	mdrivlib::Timekeeper muxio_update_task;
 	bool leds_ready_flag = false;
@@ -188,15 +198,5 @@ private:
 		toggle.mode.update(raw_mux_read);
 		toggle.trig_sense.update(raw_mux_read);
 	}
-
-	// Mux
-	MuxedIO<Board::MuxConf> muxio;
-
-	// LEDs (needs work)
-	mdrivlib::I2CPeriph led_driver_i2c{Board::LedDriverConf};
-	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
-
-	std::array<uint8_t, Model::NumChans> button_led_duty;
-	std::array<Color, Model::NumChans> rgb_leds;
 };
 } // namespace Catalyst2
