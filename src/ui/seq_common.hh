@@ -35,7 +35,7 @@ public:
 		if (c.button.add.just_went_high())
 			p.shared.internalclock.Tap();
 
-		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4096.f;
+		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.seq.SetMasterPhaseOffset(pos);
 	}
 };
