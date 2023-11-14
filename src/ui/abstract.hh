@@ -50,7 +50,7 @@ protected:
 
 	void SetEncoderLedsAddition(uint8_t num, Color col) {
 		static constexpr auto max_val = [] {
-			uint8_t out = 0;
+			auto out = 0u;
 			for (auto i = 1u; i <= Model::NumChans; i++)
 				out += i;
 			return out;
@@ -59,7 +59,7 @@ protected:
 		if (num > max_val)
 			return;
 
-		uint8_t t = Model::NumChans;
+		auto t = Model::NumChans;
 
 		while (num >= t) {
 			num -= t;
@@ -71,7 +71,7 @@ protected:
 
 	std::optional<uint8_t> YoungestSceneButton() {
 		auto age = 0xffffffffu;
-		uint8_t youngest = 0xff;
+		uint8_t youngest = 0xffu;
 
 		for (auto [i, b] : countzip(c.button.scene)) {
 			if (!b.is_high())
