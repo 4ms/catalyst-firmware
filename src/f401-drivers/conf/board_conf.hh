@@ -1,4 +1,5 @@
 #pragma once
+
 #include "conf/model.hh"
 #include "drivers/adc_builtin_conf.hh"
 #include "drivers/debounced_switch.hh"
@@ -157,7 +158,7 @@ struct DacSpiConf : mdrivlib::DefaultSpiConf {
 ////////////////// Stream "thread" configuration
 const TimekeeperConfig cv_stream_conf{
 	.TIMx = TIM3,
-	.period_ns = TimekeeperConfig::Hz(Model::SampleRateHz),
+	.period_ns = TimekeeperConfig::Hz(Model::sample_rate_hz),
 	.priority1 = 1,
 	.priority2 = 2,
 };
@@ -177,10 +178,6 @@ const TimekeeperConfig muxio_conf{
 	.priority1 = 0,
 	.priority2 = 2,
 };
-
-///////////////// SRAM size
-// is there somewhere this is already defined?
-constexpr unsigned sram_capacity = 96 * 1024;
 
 ///////////////// Debug pin
 
