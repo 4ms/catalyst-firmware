@@ -11,7 +11,7 @@ class Recorder {
 	static constexpr auto prescaler = Model::rec_buffer_prescaler;
 	static constexpr auto buff_size = Model::rec_buffer_size;
 	static constexpr auto max_record_lenth_seconds =
-		(1.f / (static_cast<float>(Model::SampleRateHz) / prescaler)) * buff_size;
+		(1.f / (static_cast<float>(Model::sample_rate_hz) / prescaler)) * buff_size;
 	static_assert(MathTools::is_power_of_2(prescaler));
 
 	struct {
