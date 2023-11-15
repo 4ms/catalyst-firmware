@@ -28,4 +28,33 @@ public:
 		return true;
 	}
 };
+
+class Retrigger {
+	uint16_t period;
+	uint16_t cnt;
+	uint8_t remaining = 0;
+	bool out = false;
+
+public:
+	void Trig(uint8_t retrig_cnt, uint8_t clock_div) {
+		remaining = retrig_cnt;
+		period = (Model::clock_mult_factor * clock_div) / (retrig_cnt + 1);
+		cnt = 0;
+		out = true;
+	}
+	void Update() {
+		cnt++;
+		if (remaining && cnt >= period) {
+			cnt = 0;
+			remaining -= 1;
+			out = true;
+		}
+	}
+	bool Read() {
+		const auto o = out;
+		out = false;
+		return o;
+	}
+};
+
 } // namespace Catalyst2
