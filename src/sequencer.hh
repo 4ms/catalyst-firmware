@@ -5,12 +5,12 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "randompool.hh"
+#include "transposer.hh"
 #include "util/countzip.hh"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <optional>
-
-#include "transposer.hh"
 
 namespace Catalyst2::Sequencer
 {
@@ -32,7 +32,8 @@ public:
 		return m / 8.f;
 	}
 	uint8_t AsRetrig() {
-		return m;
+		auto out = (m + 1) >> 1;
+		return std::clamp(out, 0, 3);
 	}
 	void Inc(int32_t inc) {
 		m = std::clamp<int32_t>(m + inc, 0, 8);
@@ -89,7 +90,6 @@ class ChannelData {
 	std::array<Step, Model::MaxSeqSteps> step;
 	Clock::Divider::type clockdiv;
 	float randomamount = 0;
-	// 1.f / 15.f;
 
 public:
 	OptionalSetting<float, OptionalConfig::CanBeNull> phase_offset{0.f, 1.f};
@@ -128,7 +128,7 @@ public:
 		return clockdiv;
 	}
 	void IncRandomAmount(int32_t inc) {
-		auto i = (inc / 15.f / 12.f);
+		auto i = (inc / Model::output_octave_range / 12.f);
 		randomamount += i;
 		randomamount = std::clamp(randomamount, 0.f, 1.f);
 	}
@@ -217,7 +217,6 @@ public:
 		if (pause)
 			Reset();
 	}
-
 	bool IsPaused() {
 		return pause;
 	}
