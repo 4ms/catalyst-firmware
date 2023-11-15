@@ -11,24 +11,25 @@ namespace ChannelValue
 using type = uint16_t;
 static_assert(std::same_as<type, uint16_t>, "ChannelValue::type only tested with uint16_t");
 
-static constexpr type Max = UINT16_MAX;
-static constexpr type Min = 0;
-static constexpr type Range = Max - Min;
+constexpr type Max = UINT16_MAX;
+constexpr type Min = 0;
+constexpr type Range = Max - Min;
 
-static constexpr type from_volts(const float volts) {
+constexpr type from_volts(const float volts) {
 	auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
 	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, Min, Max);
 }
 
-static constexpr type GateHigh = from_volts(5.f);
-static constexpr type GateSetThreshold = from_volts(0.f);
-static constexpr type GateArmed = GateSetThreshold;
-static constexpr type GateOff = from_volts(-.1f);
+constexpr auto GateHigh = from_volts(5.f);
+constexpr auto GateSetThreshold = from_volts(0.f);
+constexpr auto GateArmed = GateSetThreshold;
+constexpr auto GateOff = from_volts(-.1f);
 
-static constexpr float octave = (Range / Model::output_octave_range);
-static constexpr float note = octave / 12;
-static constexpr type inc_step = note + .5f;
-static constexpr type inc_step_fine = (note / 25.f) + .5f;
+constexpr auto octave = (Range / Model::output_octave_range);
+constexpr auto note = octave / 12;
+
+constexpr type inc_step = note + .5f;
+constexpr type inc_step_fine = (note / 25.f) + .5f;
 } // namespace ChannelValue
 
 struct Channel {
