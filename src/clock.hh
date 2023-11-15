@@ -8,13 +8,13 @@ namespace Catalyst2::Clock
 {
 
 constexpr uint32_t BpmToTicks(uint32_t bpm) {
-	return (60.f * Model::SampleRateHz) / bpm;
+	return (60.f * Model::sample_rate_hz) / bpm;
 }
 constexpr uint32_t TicksToBpm(uint32_t tick) {
-	return (60.f * Model::SampleRateHz) / tick;
+	return (60.f * Model::sample_rate_hz) / tick;
 }
 constexpr uint32_t MsToTicks(uint32_t ms) {
-	return (Model::SampleRateHz / 1000.f) * ms;
+	return (Model::sample_rate_hz / 1000.f) * ms;
 }
 
 class Internal {
@@ -34,45 +34,32 @@ protected:
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm : public Internal {
-	static constexpr auto multfactor = 12u;
+	static constexpr auto multfactor = Model::clock_mult_factor;
 	uint32_t cnt = 0;
-	uint32_t period;
-	uint32_t bpm;
+	uint32_t bpm = 120;
+	uint32_t period = BpmToTicks(120);
 	uint32_t prevtaptime;
-	uint32_t mcnt;
 	bool peek = false;
 	bool external = false;
 	bool step = false;
-	bool times2step = false;
-	bool times3step = false;
-	bool times4step = false;
+	bool multout = false;
 
 public:
-	Bpm() {
-		Set(120);
-	}
 	void Update() {
 		Internal::Update();
-		const auto cntt12 = (cnt % (period / multfactor)) + 1;
+		const auto cntmult = (cnt % (period / multfactor)) + 1;
 		cnt++;
 
 		if (cnt >= period) {
 			if (IsInternal()) {
 				cnt = 0;
-				mcnt = 0;
 				step = true;
 			}
 			peek = !peek;
+			multout = true;
 		}
-		if (cntt12 >= period / multfactor) {
-			if (mcnt == multfactor / 4 || mcnt == (multfactor / 4) * 3)
-				times4step = true;
-			else if (mcnt == multfactor / 2)
-				times2step = times4step = true;
-			else if (mcnt == (multfactor / 3) || mcnt == ((multfactor / 3) * 2))
-				times3step = true;
-
-			mcnt += 1;
+		if (cntmult >= period / multfactor) {
+			multout = true;
 		}
 	}
 
@@ -81,13 +68,17 @@ public:
 		step = false;
 		return ret;
 	}
+	bool MultOutput() {
+		const auto out = multout;
+		multout = false;
+		return out;
+	}
 	void Input() {
 		if (IsInternal())
 			return;
 
 		step = true;
 		cnt = 0;
-		mcnt = 0;
 
 		Tap();
 	}
@@ -117,27 +108,12 @@ public:
 			Set(bpm - inc);
 	}
 	float GetPhase() {
-		return static_cast<float>(cnt) / period;
+		auto out = static_cast<float>(cnt) / period;
+		return std::clamp(out, 0.f, 1.f);
 	}
 	void Reset() {
 		cnt = 0;
-		mcnt = 0;
 		peek = false;
-	}
-	bool Times2() {
-		const auto out = times2step;
-		times2step = false;
-		return out;
-	}
-	bool Times3() {
-		const auto out = times3step;
-		times3step = false;
-		return out;
-	}
-	bool Times4() {
-		const auto out = times4step;
-		times4step = false;
-		return out;
 	}
 };
 
