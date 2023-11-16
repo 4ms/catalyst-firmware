@@ -92,7 +92,7 @@ class ChannelData {
 	float randomamount = 0;
 
 public:
-	OptionalSetting<float, OptionalConfig::CanBeNull> phase_offset{0.f, 1.f};
+	OptionalSetting<float, OptionalConfig::CanBeNull> phase_offset{0.f, .999f};
 	OptionalSetting<int8_t, OptionalConfig::CanBeNull> length{Model::MinSeqSteps, Model::MaxSeqSteps};
 	OptionalSetting<int8_t, OptionalConfig::CanBeNull> start_offset{0, Model::MaxSeqSteps - 1};
 	OptionalSetting<PlayMode, OptionalConfig::CanBeNull> playmode{PlayMode::Forward, PlayMode::Random};
@@ -139,7 +139,7 @@ public:
 
 class GlobalData {
 public:
-	OptionalSetting<float, OptionalConfig::Normal> phase_offset{0.f, 1.f, 0.f};
+	OptionalSetting<float, OptionalConfig::Normal> phase_offset{0.f, .999f, 0.f};
 	OptionalSetting<int8_t, OptionalConfig::Normal> length{
 		Model::MinSeqSteps, Model::MaxSeqSteps, Model::SeqStepsPerPage};
 	OptionalSetting<int8_t, OptionalConfig::Normal> start_offset{0, Model::MaxSeqSteps - 1, 0};

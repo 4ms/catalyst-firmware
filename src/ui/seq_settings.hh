@@ -155,9 +155,13 @@ public:
 			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
 				SetEncoderLedsAddition(clockdiv.Read(), Palette::blue);
 			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
-				if (phaseoffset.has_value())
-					PhaseOffsetDisplay(phaseoffset.value());
-				else
+				if (phaseoffset.has_value()) {
+					auto o = static_cast<uint32_t>(phaseoffset.value() *
+												   length.value_or(p.seq.Global().length.Read().value()));
+					o += startoffset.value_or(p.seq.Global().start_offset.Read().value());
+					c.SetEncoderLed(o % Model::SeqStepsPerPage, Palette::magenta);
+					c.SetButtonLed((o / Model::SeqStepsPerPage) % Model::SeqPages, true);
+				} else
 					c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, Palette::globalsetting);
 			}
 		} else {
@@ -230,18 +234,6 @@ private:
 			col = Palette::from_raw(time_now >> 6);
 		}
 		c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
-	}
-
-	void PhaseOffsetDisplay(float phase) {
-		const auto l = (phase * 7);
-		phase = l - static_cast<uint8_t>(l);
-		const uint8_t mainled = static_cast<uint8_t>(l);
-		uint8_t ledR = mainled + 1;
-
-		if (mainled != 7)
-			c.SetEncoderLed(ledR, Palette::off.blend(Palette::seqhead, phase));
-
-		c.SetEncoderLed(mainled, Palette::seqhead.blend(Palette::off, phase));
 	}
 };
 
