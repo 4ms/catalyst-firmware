@@ -141,6 +141,9 @@ public:
 			counter = 0;
 		}
 	}
+	float GetPhase(type div) {
+		return static_cast<float>(counter) / div.Read();
+	}
 	bool Step() {
 		bool ret = false;
 		if (step) {
