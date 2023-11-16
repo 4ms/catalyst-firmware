@@ -35,8 +35,6 @@ quantize prior to morph??
 
 Transpose into range. t -> t+r
 
-have the way phase offset is displayed be actual step instead of percentage
-
 */
 
 void main() {
