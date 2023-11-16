@@ -214,7 +214,7 @@ public:
 	}
 	void TogglePause() {
 		pause = !pause;
-		if (pause)
+		if (!pause)
 			Reset();
 	}
 	bool IsPaused() {
@@ -266,6 +266,8 @@ private:
 		c.counter += 1;
 		c.counter = c.counter >= length ? 0 : c.counter;
 		c.next_step = c.counter;
+
+		c.new_step = true;
 	}
 
 	uint8_t ToStep(uint8_t chan, uint8_t step) {
@@ -277,8 +279,6 @@ private:
 		auto l = cd.length.Read().value_or(gd.length.Read().value());
 		l += pm == PlayMode::PingPong ? l - 2 : 0;
 		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
-		/* need to convert the master phase offset (0 => 1) so that the last step will be selected when
-		 * the slider is pinned with no cv */
 		const auto mpo = d.master_phase * ((l + 1.f) / l);
 		const auto po =
 			static_cast<int8_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) * (l - 1));
