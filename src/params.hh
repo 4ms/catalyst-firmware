@@ -1,4 +1,5 @@
 #pragma once
+
 #include "clock.hh"
 #include "pathway.hh"
 #include "quantizer.hh"
@@ -14,7 +15,7 @@ namespace Catalyst2
 class SharedInterface {
 	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 	class DisplayHanger {
-		static constexpr uint32_t time_ms = 2000;
+		static constexpr uint32_t duration = Clock::MsToTicks(2000);
 		uint8_t onto;
 		uint32_t start_time;
 
@@ -27,7 +28,7 @@ class SharedInterface {
 			onto = encoder;
 		}
 		std::optional<uint8_t> Check(uint32_t time_now) {
-			if (time_now - start_time >= 2000)
+			if (time_now - start_time >= duration)
 				onto = 0xff;
 
 			if (onto == 0xff)
