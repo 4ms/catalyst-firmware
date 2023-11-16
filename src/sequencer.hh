@@ -285,21 +285,22 @@ private:
 
 		uint8_t o;
 		switch (pm) {
-			case PlayMode::Forward:
+			using enum PlayMode;
+			case Forward:
 				o = (step + po) % l;
 				break;
-			case PlayMode::Backward:
-				o = (l - 1 - step + po) % l;
+			case Backward:
+				o = (l - 1 - step - po) % l;
 				break;
-			case PlayMode::Random:
+			case Random:
 				o = (c.randomstep[step] + po) % l;
 				break;
-			case PlayMode::PingPong: {
+			case PingPong: {
 				const auto ol = (l / 2) + 1;
-				if (step < ol)
+				if (step + po < ol)
 					o = (step + po) % ol;
 				else
-					o = (l - step + po) % ol;
+					o = (l - step - po) % ol;
 				break;
 			}
 			default:
