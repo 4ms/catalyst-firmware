@@ -17,10 +17,6 @@ Catalyst2::System _init;
 
 // better way to delete banks
 
-// skip or mute steps in seq
-
-// have slider be more similar to macro mode...
-
 /* october 9th
 
 macro:
@@ -28,7 +24,6 @@ shift == random should randomize nearest scened
 shift + scene == per bank channel random amount
 
 both: play button stops when playing and restarts when stopped
-transpose: post quantizer
 
 //transpose and range.
 
@@ -36,20 +31,11 @@ maybe clipboards should reset eachother?
 
 have holding multiple seq settings buttons change all pressed buttons together
 
-have gates be activate above 50% instead of 1/65535!!!!!
-
 quantize prior to morph??
-
-ratchet options 1,2,3,4...
-tap tempo should reset based on the tempo being tapped in.
-
-have pause stop where sequence is at and not reset.
 
 Transpose into range. t -> t+r
 
 have the way phase offset is displayed be actual step instead of percentage
-
-seq morph no jump. adjust slope to start at current max and end higher.
 
 */
 
