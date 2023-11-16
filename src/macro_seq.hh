@@ -158,10 +158,10 @@ private:
 	ChannelValue::type SeqCv(SeqMode::Interface &p, uint8_t chan, float morph_phase) {
 		morph_phase = p.seq.player.GetPhase(chan, morph_phase);
 		const auto stepmorph = seqmorph(morph_phase, p.seq.GetPlayheadModifier(chan).AsMorph());
-		auto stepval = p.seq.GetPlayheadValue(chan);
-		const auto distance = p.seq.GetNextStepValue(chan) - stepval;
+		auto stepval = p.shared.quantizer[chan].Process(p.seq.GetPlayheadValue(chan));
+		const auto distance = p.shared.quantizer[chan].Process(p.seq.GetNextStepValue(chan)) - stepval;
 		stepval += (distance * stepmorph);
-		stepval = p.shared.quantizer[chan].Process(stepval);
+		// stepval = p.shared.quantizer[chan].Process(stepval);
 		return Transposer::Process(stepval, p.seq.GetTranspose(chan));
 	}
 };
