@@ -220,6 +220,12 @@ public:
 	bool IsPaused() {
 		return pause;
 	}
+	float GetPhase(uint8_t chan, float phase) {
+		auto cdiv = d.channel[chan].GetClockDiv();
+		phase = phase / cdiv.Read();
+		auto cdivphase = channel[chan].clockdivider.GetPhase(cdiv);
+		return phase + cdivphase;
+	}
 
 private:
 	void Step(uint8_t chan) {
