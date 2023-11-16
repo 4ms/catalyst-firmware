@@ -24,8 +24,8 @@ constexpr float crossfade_ratio(float phase, float ratio) {
 } // namespace MathTools
 
 constexpr float seqmorph(float phase, float ratio) {
-	const auto lm = .5f + (.5f * ratio);
 	ratio = 1.f - ratio;
+	const auto lm = .5f + (.5f * ratio);
 	if (ratio >= 1.0f) {
 		return phase < lm ? 0.f : 1.f;
 	}
@@ -124,8 +124,6 @@ private:
 	Model::OutputBuffer Seq(SeqMode::Interface &p) {
 		Model::OutputBuffer buf;
 
-		const auto morph_phase = p.seq.player.IsPaused() ? 0.f : p.shared.internalclock.GetPhase();
-
 		if (p.shared.internalclock.Output())
 			p.seq.player.Step();
 
@@ -133,6 +131,8 @@ private:
 			for (auto &rt : retrigger)
 				rt.Update();
 		}
+
+		const auto morph_phase = p.seq.player.IsPaused() ? 0.f : p.shared.internalclock.GetPhase();
 
 		for (auto [chan, o] : countzip(buf))
 			o = p.seq.Channel(chan).mode.IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan, morph_phase);
@@ -156,9 +156,10 @@ private:
 	}
 
 	ChannelValue::type SeqCv(SeqMode::Interface &p, uint8_t chan, float morph_phase) {
+		morph_phase = p.seq.player.GetPhase(chan, morph_phase);
+		const auto stepmorph = seqmorph(morph_phase, p.seq.GetPlayheadModifier(chan).AsMorph());
 		auto stepval = p.seq.GetPlayheadValue(chan);
 		const auto distance = p.seq.GetNextStepValue(chan) - stepval;
-		const auto stepmorph = seqmorph(morph_phase, p.seq.GetPlayheadModifier(chan).AsMorph());
 		stepval += (distance * stepmorph);
 		stepval = p.shared.quantizer[chan].Process(stepval);
 		return Transposer::Process(stepval, p.seq.GetTranspose(chan));
