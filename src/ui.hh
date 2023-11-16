@@ -31,6 +31,8 @@ public:
 		HAL_Delay(2);
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		ui = &macro;
+
+		params.shared.internalclock.SetExternal(!controls.toggle.trig_sense.is_high());
 	}
 	void Update() {
 		controls.Update();

@@ -35,6 +35,8 @@ quantize prior to morph??
 
 Transpose into range. t -> t+r
 
+TODO: phase offset doesnt display correctly in backwards and pingpong mode
+
 */
 
 void main() {
