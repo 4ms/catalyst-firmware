@@ -214,7 +214,9 @@ public:
 
 private:
 	void PlayModeLedAnnimation(Sequencer::PlayMode pm, uint32_t time_now) {
-		auto phase = (time_now & 1023) / 1023.f;
+		static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
+		auto phase = (time_now / animation_duration);
+		phase -= static_cast<uint32_t>(phase);
 		Color col;
 
 		if (pm == Sequencer::PlayMode::Forward) {
@@ -224,14 +226,14 @@ private:
 		} else if (pm == Sequencer::PlayMode::PingPong) {
 			if (phase < .5f) {
 				phase *= 2.f;
-				col = Palette::red.blend(Palette::blue, phase);
+				col = Palette::red.blend(Palette::off, phase);
 			} else {
 				phase -= .5f;
 				phase *= 2.f;
-				col = Palette::blue.blend(Palette::red, phase);
+				col = Palette::blue.blend(Palette::off, phase);
 			}
 		} else {
-			col = Palette::from_raw(time_now >> 6);
+			col = Palette::from_raw(time_now >> 8);
 		}
 		c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
 	}
