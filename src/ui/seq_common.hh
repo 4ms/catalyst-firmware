@@ -29,8 +29,12 @@ public:
 			return;
 		}
 
-		if (c.button.play.just_went_high())
-			p.seq.player.TogglePause();
+		if (c.button.play.just_went_high()) {
+			if (c.button.shift.is_high())
+				p.seq.player.ToggleStop();
+			else
+				p.seq.player.TogglePause();
+		}
 
 		if (c.button.add.just_went_high())
 			p.shared.internalclock.Tap();
