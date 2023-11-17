@@ -161,7 +161,6 @@ private:
 		auto stepval = p.shared.quantizer[chan].Process(p.seq.GetPlayheadValue(chan));
 		const auto distance = p.shared.quantizer[chan].Process(p.seq.GetNextStepValue(chan)) - stepval;
 		stepval += (distance * stepmorph);
-		// stepval = p.shared.quantizer[chan].Process(stepval);
 		return Transposer::Process(stepval, p.seq.GetTranspose(chan));
 	}
 };
