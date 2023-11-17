@@ -137,8 +137,7 @@ public:
 	}
 };
 
-class GlobalData {
-public:
+struct GlobalData {
 	OptionalSetting<float, OptionalConfig::Normal> phase_offset{0.f, .999f, 0.f};
 	OptionalSetting<int8_t, OptionalConfig::Normal> length{
 		Model::MinSeqSteps, Model::MaxSeqSteps, Model::SeqStepsPerPage};
@@ -200,6 +199,10 @@ public:
 			Reset(i);
 		}
 	}
+	uint8_t GetFirstStep(uint8_t chan) {
+		return ToStep(chan, 0);
+	}
+
 	uint8_t GetPlayheadStep(uint8_t chan) {
 		return ToStep(chan, channel[chan].step);
 	}
@@ -214,8 +217,10 @@ public:
 	}
 	void TogglePause() {
 		pause = !pause;
-		if (!pause)
-			Reset();
+	}
+	void ToggleStop() {
+		pause = !pause;
+		Reset();
 	}
 	bool IsPaused() {
 		return pause;
@@ -275,39 +280,49 @@ private:
 		auto &gd = d.global;
 		auto &c = channel[chan];
 
-		const auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
-		auto l = cd.length.Read().value_or(gd.length.Read().value());
-		l += pm == PlayMode::PingPong ? l - 2 : 0;
+		const auto l = cd.length.Read().value_or(gd.length.Read().value());
+		auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
+		const auto actuallength = pm == PlayMode::PingPong ? l + l - 2 : l;
+
 		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
-		const auto mpo = d.master_phase * ((l + 1.f) / l);
-		const auto po =
-			static_cast<int8_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) * (l - 1));
+		const auto mpo = d.master_phase * ((actuallength + 1.f) / actuallength);
+		auto po = static_cast<int32_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) *
+									   (actuallength - 1)) %
+				  actuallength;
 
 		uint8_t o;
 		switch (pm) {
 			using enum PlayMode;
 			case Forward:
-				o = (step + po) % l;
+				o = step + po;
 				break;
 			case Backward:
-				o = (l - 1 - step - po) % l;
+				o = (l - 1 - step - po);
 				break;
 			case Random:
-				o = (c.randomstep[step] + po) % l;
+				o = c.randomstep[(step + po) % l];
 				break;
 			case PingPong: {
-				const auto ol = (l / 2) + 1;
-				if (step + po < ol)
-					o = (step + po) % ol;
+				auto s = step + po;
+				bool ping = true;
+
+				while (s < 0 || s >= l - 1) {
+					s -= l - 1;
+					ping = !ping;
+				}
+
+				if (ping)
+					o = s;
 				else
-					o = (l - step - po) % ol;
+					o = l - 1 - s;
+
 				break;
 			}
 			default:
 				o = 0;
 				break;
 		}
-		return (o + so) % Model::MaxSeqSteps;
+		return ((o % l) + so) % Model::MaxSeqSteps;
 	}
 };
 
