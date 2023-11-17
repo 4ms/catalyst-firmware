@@ -68,11 +68,16 @@ public:
 			case Model::EncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
 				if (is_channel) {
-					const auto len = p.seq.Channel(chan).length.Read().value_or(p.seq.Global().length.Read().value());
+					auto len = p.seq.Channel(chan).length.Read().value_or(p.seq.Global().length.Read().value());
+					len += p.seq.Channel(chan).playmode.Read().value_or(p.seq.Global().playmode.Read().value()) ==
+								   PlayMode::PingPong ?
+							   len - 2 :
+							   0;
 					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
 					p.seq.Channel(chan).phase_offset.Inc(i);
 				} else {
-					const auto len = p.seq.Global().length.Read().value();
+					auto len = p.seq.Global().length.Read().value();
+					len += p.seq.Global().playmode.Read().value() == PlayMode::PingPong ? len - 2 : 0;
 					const auto i = static_cast<float>(inc) / (len == 1 ? 1 : len - 1);
 					p.seq.Global().phase_offset.Inc(i);
 				}
@@ -133,36 +138,25 @@ public:
 		}
 
 		if (hang.has_value()) {
-			if (hang.value() == Model::EncoderAlts::StartOffset) {
-				if (startoffset.has_value()) {
-					auto l = startoffset.value() % Model::SeqStepsPerPage;
-					c.SetEncoderLed(l, Palette::magenta);
-					l = startoffset.value() / Model::SeqStepsPerPage;
-					c.SetButtonLed(l, true);
-				} else {
-					c.SetEncoderLed(Model::EncoderAlts::StartOffset, Palette::globalsetting);
-				}
-			} else if (hang.value() == Model::EncoderAlts::SeqLength) {
-				if (length.has_value()) {
-					auto l = length.value() % Model::SeqStepsPerPage;
-					l = l == 0 ? Model::SeqStepsPerPage : l;
-					SetEncoderLedsCount(l, 0, Palette::magenta);
-					l = (length.value() - 1) / Model::SeqStepsPerPage;
-					SetButtonLedsCount(l + 1, true);
-				} else {
-					c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
-				}
-			} else if (hang.value() == Model::EncoderAlts::ClockDiv) {
-				SetEncoderLedsAddition(clockdiv.Read(), Palette::blue);
-			} else if (hang.value() == Model::EncoderAlts::PhaseOffset) {
-				if (phaseoffset.has_value()) {
-					auto o = static_cast<uint32_t>(phaseoffset.value() *
-												   length.value_or(p.seq.Global().length.Read().value()));
-					o += startoffset.value_or(p.seq.Global().start_offset.Read().value());
-					c.SetEncoderLed(o % Model::SeqStepsPerPage, Palette::magenta);
-					c.SetButtonLed((o / Model::SeqStepsPerPage) % Model::SeqPages, true);
-				} else
-					c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, Palette::globalsetting);
+			switch (hang.value()) {
+				using namespace Model;
+				case EncoderAlts::StartOffset:
+					DisplayStartOffset(startoffset);
+					break;
+				case EncoderAlts::SeqLength:
+					DisplaySeqLength(length);
+					break;
+				case EncoderAlts::ClockDiv:
+					SetEncoderLedsAddition(clockdiv.Read(), Palette::blue);
+					break;
+				case EncoderAlts::PhaseOffset:
+					if (phaseoffset.has_value()) {
+						const auto o = p.seq.player.GetFirstStep(ysb.value_or(p.GetSelectedSequence()));
+						c.SetEncoderLed(o % Model::SeqStepsPerPage, Palette::magenta);
+						c.SetButtonLed((o / Model::SeqStepsPerPage) % Model::SeqPages, true);
+					} else
+						c.SetEncoderLed(Model::EncoderAlts::PhaseOffset, Palette::globalsetting);
+					break;
 			}
 		} else {
 			auto col = Palette::globalsetting;
@@ -213,6 +207,29 @@ public:
 	}
 
 private:
+	void DisplayStartOffset(std::optional<int8_t> &startoffset) {
+		if (startoffset.has_value()) {
+			auto l = startoffset.value() % Model::SeqStepsPerPage;
+			c.SetEncoderLed(l, Palette::magenta);
+			l = startoffset.value() / Model::SeqStepsPerPage;
+			c.SetButtonLed(l, true);
+		} else {
+			c.SetEncoderLed(Model::EncoderAlts::StartOffset, Palette::globalsetting);
+		}
+	}
+
+	void DisplaySeqLength(std::optional<int8_t> &length) {
+		if (length.has_value()) {
+			auto l = length.value() % Model::SeqStepsPerPage;
+			l = l == 0 ? Model::SeqStepsPerPage : l;
+			SetEncoderLedsCount(l, 0, Palette::magenta);
+			l = (length.value() - 1) / Model::SeqStepsPerPage;
+			SetButtonLedsCount(l + 1, true);
+		} else {
+			c.SetEncoderLed(Model::EncoderAlts::SeqLength, Palette::globalsetting);
+		}
+	}
+
 	void PlayModeLedAnnimation(Sequencer::PlayMode pm, uint32_t time_now) {
 		static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
 		auto phase = (time_now / animation_duration);
