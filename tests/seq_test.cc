@@ -10,7 +10,7 @@ floating point error test. sequencer crashes if (mode == ping pong && length == 
 
 // bug: e8296861a9850b32b98ac56c21036c35b36c2f3a
 // unit test passes: b3e5aacc1990699af8339e83406d95f9228d49a6
-// need to test hw
+// hardware doesn't crash anymore ^^
 
 */
 
