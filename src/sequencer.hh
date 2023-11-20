@@ -281,30 +281,29 @@ private:
 		auto &c = channel[chan];
 
 		const auto l = cd.length.Read().value_or(gd.length.Read().value());
-		auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
+		const auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
 		const auto actuallength = pm == PlayMode::PingPong ? l + l - 2 : l;
 
-		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
 		const auto mpo = d.master_phase * ((actuallength + 1.f) / actuallength);
-		auto po = static_cast<int32_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) *
-									   (actuallength - 1)) %
-				  actuallength;
+		const auto po = static_cast<int32_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) *
+											 (actuallength - 1)) %
+						actuallength;
 
-		uint8_t o;
+		auto o = 0;
 		switch (pm) {
 			using enum PlayMode;
 			case Forward:
 				o = step + po;
 				break;
 			case Backward:
-				o = (l - 1 - step - po);
+				o = l - 1 - step - po;
 				break;
 			case Random:
 				o = c.randomstep[(step + po) % l];
 				break;
 			case PingPong: {
 				auto s = step + po;
-				bool ping = true;
+				auto ping = true;
 
 				while (s < 0 || s >= l - 1) {
 					s -= l - 1;
@@ -315,13 +314,12 @@ private:
 					o = s;
 				else
 					o = l - 1 - s;
-
 				break;
 			}
 			default:
-				o = 0;
 				break;
 		}
+		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
 		return ((o % l) + so) % Model::MaxSeqSteps;
 	}
 };
