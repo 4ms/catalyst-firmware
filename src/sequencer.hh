@@ -246,11 +246,10 @@ private:
 
 		channel.step = channel.next_step;
 		const auto playmode = cd.playmode.Read().value_or(gd.playmode.Read().value());
-		auto length = cd.length.Read().value_or(gd.length.Read().value());
-		length += playmode == PlayMode::PingPong ? length - 2 : 0;
+		const auto length = cd.length.Read().value_or(gd.length.Read().value());
 
 		channel.counter += 1;
-		if (channel.counter >= length) {
+		if (channel.counter >= ActualLength(chan, length, playmode)) {
 			channel.counter = 0;
 		}
 
@@ -282,12 +281,10 @@ private:
 
 		const auto l = cd.length.Read().value_or(gd.length.Read().value());
 		const auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
-		const auto actuallength = pm == PlayMode::PingPong ? l + l - 2 : l;
-
+		const auto actuallength = ActualLength(chan, l, pm);
 		const auto mpo = d.master_phase * ((actuallength + 1.f) / actuallength);
 		const auto po = static_cast<int32_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) *
-											 (actuallength - 1)) %
-						actuallength;
+											 (actuallength - 1));
 
 		auto o = 0;
 		switch (pm) {
@@ -304,9 +301,10 @@ private:
 			case PingPong: {
 				auto s = step + po;
 				auto ping = true;
+				const auto cmp = l == 1 ? 1 : l - 1;
 
-				while (s < 0 || s >= l - 1) {
-					s -= l - 1;
+				while (s < 0 || s >= cmp) {
+					s -= cmp;
 					ping = !ping;
 				}
 
@@ -321,6 +319,17 @@ private:
 		}
 		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
 		return ((o % l) + so) % Model::MaxSeqSteps;
+	}
+
+	uint32_t ActualLength(uint8_t chan, int8_t length, PlayMode pm) {
+		if (pm == PlayMode::PingPong) {
+			auto out = length + length - 2;
+			if (out < 2)
+				out = 2;
+
+			return out;
+		}
+		return length;
 	}
 };
 
