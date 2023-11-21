@@ -293,7 +293,7 @@ private:
 				o = step + po;
 				break;
 			case Backward:
-				o = l - 1 - step - po;
+				o = l - 1 - step + po;
 				break;
 			case Random:
 				o = c.randomstep[(step + po) % l];
