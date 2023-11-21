@@ -25,7 +25,7 @@ constexpr float crossfade_ratio(float phase, float ratio) {
 
 constexpr float seqmorph(float phase, float ratio) {
 	ratio = 1.f - ratio;
-	const auto lm = .5f + (.5f * ratio);
+	const auto lm = .5f - (.5f * ratio);
 	if (ratio >= 1.0f) {
 		return phase < lm ? 0.f : 1.f;
 	}
