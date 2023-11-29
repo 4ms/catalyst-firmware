@@ -102,6 +102,7 @@ public:
 		adc_dma.start();
 		if (!led_driver.init())
 			__BKPT();
+		HAL_Delay(2);
 	}
 
 	void ForEachEncoderInc(auto func) {
@@ -123,9 +124,9 @@ public:
 	}
 
 	void SetEncoderLed(unsigned led, Color color) {
-		if (led >= Board::EncLedMap.size())
+		if (led >= Board::EncLedMap.size()) {
 			return;
-
+		}
 		auto idx = Board::EncLedMap[led];
 		rgb_leds[idx] = color;
 	}
