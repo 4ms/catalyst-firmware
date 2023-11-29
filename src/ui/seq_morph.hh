@@ -10,28 +10,29 @@ class Morph : public Usual {
 public:
 	using Usual::Usual;
 	void Init() override {
-		if (!p.IsSequenceSelected())
-			p.SelectSequence(0);
+		if (!p.IsSequenceSelected()) {
+			p.SelectChannel(0);
+		}
 	}
 	void Update(Abstract *&interface) {
-		if (!c.button.morph.is_high())
+		if (!c.button.morph.is_high()) {
 			return;
-
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		p.IncStepMorph(encoder, inc);
+		p.IncStepModifier(encoder, inc);
 	}
 
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
 		ClearButtonLeds();
 
-		const auto chan = p.GetSelectedSequence();
-		const uint8_t led = p.seq.GetPlayheadStepOnPage(chan);
-		const auto playheadpage = p.seq.GetPlayheadPage(chan);
+		const auto chan = p.GetSelectedChannel();
+		const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.GetPos());
+		const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.GetPos());
 		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-		const auto mvals = p.seq.GetPageValuesModifier(chan, page);
+		const auto mvals = p.GetPageValuesModifier(page);
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			if (i == led && page == playheadpage)

@@ -22,13 +22,12 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		if (p.IsSequenceSelected()) {
-			const auto curseq = p.GetSelectedSequence();
 			auto ysb = YoungestSceneButton();
 			if (c.button.fine.just_went_high() && ysb.has_value())
-				p.seq.CopyPage(curseq, ysb.value());
+				p.CopyPage(ysb.value());
 
 			if (c.button.bank.just_went_high() && c.button.fine.is_high())
-				p.seq.PasteSequence(curseq);
+				p.PasteSequence();
 		}
 
 		if (c.button.shift.is_high()) {
@@ -54,10 +53,10 @@ public:
 	}
 	void OnSceneButtonRelease(uint8_t button) override {
 		if (!p.IsSequenceSelected()) {
-			p.SelectSequence(button);
+			p.SelectChannel(button);
 		} else {
 			if (c.button.fine.is_high()) {
-				p.seq.PastePage(p.GetSelectedSequence(), button);
+				p.PastePage(button);
 			} else {
 				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
 					if (p.IsPageSelected() && button == p.GetSelectedPage())
@@ -68,35 +67,36 @@ public:
 			}
 		}
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 
 		if (p.IsSequenceSelected()) {
-			const auto chan = p.GetSelectedSequence();
-			const uint8_t led = p.seq.GetPlayheadStepOnPage(chan);
-			const auto playheadpage = p.seq.GetPlayheadPage(chan);
+			const auto chan = p.GetSelectedChannel();
+			const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.GetPos());
+			const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.GetPos());
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-			const auto pvals = p.seq.GetPageValues(chan, page);
+			const auto pvals = p.GetPageValues(page);
 
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				if (i == led && page == playheadpage)
+			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+				if (i == led && page == playheadpage) {
 					c.SetEncoderLed(led, Palette::seqhead);
-				else
-					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], p.seq.Channel(chan).mode.IsGate()));
+				} else {
+					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], p.data.settings.GetChannelMode(chan).IsGate()));
+				}
 			}
-			if (p.IsPageSelected())
+			if (p.IsPageSelected()) {
 				c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
-			else
+			} else {
 				c.SetButtonLed(page, true);
-
+			}
 		} else {
 			EncoderDisplayOutput(outs);
 		}
 	}
 
-	void EncoderDisplayOutput(const Model::OutputBuffer &buf) {
+	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
-			Color col = Palette::EncoderBlend(val, p.seq.Channel(chan).mode.IsGate());
+			Color col = Palette::EncoderBlend(val, p.data.settings.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);
 		}
 	}

@@ -25,22 +25,22 @@ public:
 			else
 				p.shared.clockdivider.Reset();
 
-			p.seq.player.Reset();
+			p.player.Reset();
 			return;
 		}
 
 		if (c.button.play.just_went_high()) {
 			if (c.button.shift.is_high())
-				p.seq.player.ToggleStop();
+				p.player.ToggleStop();
 			else
-				p.seq.player.TogglePause();
+				p.player.TogglePause();
 		}
 
 		if (c.button.add.just_went_high())
 			p.shared.internalclock.Tap();
 
 		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.seq.SetMasterPhaseOffset(pos);
+		p.shared.SetPos(pos);
 	}
 };
 } // namespace Catalyst2::Sequencer::Ui
