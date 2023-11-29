@@ -113,41 +113,45 @@ public:
 
 namespace SeqMode
 {
-using Data = Sequencer::Data;
+struct Data {
+	std::array<Sequencer::ChannelData, Model::NumChans> channel;
+	Sequencer::Settings::Data settings;
+};
 
 class Interface {
-	uint8_t cur_sequence = 0;
+	uint8_t cur_channel = 0;
 	uint8_t cur_page = Model::SeqPages;
+	struct Clipboard {
+		Sequencer::ChannelData cd;
+		Sequencer::Settings::Channel cs;
+		std::array<Sequencer::Step, Model::SeqStepsPerPage> page;
+	} clipboard;
 
 public:
+	Data &data;
 	SharedInterface &shared;
-	Sequencer::Interface seq;
+	Sequencer::PlayerInterface player;
 
 	Interface(Data &data, SharedInterface &shared)
-		: shared{shared}
-		, seq{data, shared.randompool} {
+		: data{data}
+		, shared{shared}
+		, player{data.settings} {
 	}
 
-	void SelectSequence(uint8_t sequence) {
-		if (sequence >= Model::NumChans)
-			return;
-		else
-			cur_sequence = sequence;
+	void SelectChannel(uint8_t chan) {
+		cur_channel = chan;
 	}
-	uint8_t GetSelectedSequence() {
-		return cur_sequence;
+	uint8_t GetSelectedChannel() {
+		return cur_channel;
 	}
 	void DeselectSequence() {
-		cur_sequence = Model::NumChans;
+		cur_channel = Model::NumChans;
 	}
 	bool IsSequenceSelected() {
-		return cur_sequence != Model::NumChans;
+		return cur_channel < Model::NumChans;
 	}
 	void SelectPage(uint8_t page) {
-		if (page >= Model::SeqPages)
-			return;
-		else
-			cur_page = page;
+		cur_page = page;
 	}
 	uint8_t GetSelectedPage() {
 		return cur_page;
@@ -156,17 +160,75 @@ public:
 		cur_page = Model::SeqPages;
 	}
 	bool IsPageSelected() {
-		return cur_page != Model::SeqPages;
+		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : seq.GetPlayheadPage(cur_sequence);
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.GetPos());
 		step += (page * Model::SeqStepsPerPage);
-		seq.Channel(cur_sequence).IncStep(step, inc, fine);
+		data.channel[cur_channel][step].Inc(
+			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel));
 	}
-	void IncStepMorph(uint8_t step, int32_t inc) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : seq.GetPlayheadPage(cur_sequence);
+	void IncStepModifier(uint8_t step, int32_t inc) {
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.GetPos());
 		step += (page * Model::SeqStepsPerPage);
-		seq.Channel(cur_sequence).IncModifier(step, inc);
+		data.channel[cur_channel][step].modifier.Inc(inc);
+	}
+	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
+		auto rand = static_cast<int32_t>(shared.randompool.GetSequenceVal(chan, step) *
+										 data.settings.GetRandomAmount(chan) * Channel::range);
+		if (data.settings.GetChannelMode(chan).IsGate()) {
+			// gates not affected by randomness?
+			rand = 0;
+		}
+
+		const auto temp = data.channel[chan][step].val + rand;
+		return std::clamp<int32_t>(temp, Channel::min, Channel::max);
+	}
+	Model::Output::type GetPlayheadValue(uint8_t chan, float phase) {
+		return GetStepValue(chan, player.GetPlayheadStep(chan, phase));
+	}
+	Sequencer::StepModifier GetPlayheadModifier(uint8_t chan, float phase) {
+		return data.channel[chan][player.GetPlayheadStep(chan, phase)].modifier;
+	}
+	Model::Output::type GetNextStepValue(uint8_t chan, float phase) {
+		return GetStepValue(chan, player.GetNextStep(chan, phase));
+	}
+	Model::Output::Buffer GetPageValues(uint8_t page) {
+		Model::Output::Buffer out;
+		for (auto [i, o] : countzip(out)) {
+			o = GetStepValue(cur_channel, (page * Model::SeqStepsPerPage) + i);
+		}
+		return out;
+	}
+	std::array<float, Model::NumChans> GetPageValuesModifier(uint8_t page) {
+		std::array<float, Model::NumChans> out;
+		for (auto [i, o] : countzip(out)) {
+			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].modifier.AsMorph();
+		}
+		return out;
+	}
+	void UpdateRange(uint8_t chan) {
+		for (auto &i : data.channel[chan]) {
+			i.Update(data.settings.GetChannelMode(chan).IsGate(), data.settings.GetRange(chan));
+		}
+	}
+	void CopySequence() {
+		clipboard.cd = data.channel[cur_channel];
+		clipboard.cs = data.settings.Copy(cur_channel);
+	}
+	void PasteSequence() {
+		data.channel[cur_channel] = clipboard.cd;
+		data.settings.Paste(cur_channel, clipboard.cs);
+	}
+	void CopyPage(uint8_t page) {
+		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+			clipboard.page[i] = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i];
+		}
+	}
+	void PastePage(uint8_t page) {
+		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
+		}
 	}
 };
 } // namespace SeqMode
