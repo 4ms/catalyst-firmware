@@ -35,7 +35,7 @@ public:
 		p.SelectBank(button);
 	}
 
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 		c.SetButtonLed(p.GetSelectedBank(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {

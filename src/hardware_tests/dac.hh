@@ -12,14 +12,13 @@ struct TestDac {
 	Controls &controls;
 	Outputs outputs;
 	std::array<uint8_t, Model::NumChans> rotvals{0};
-	Model::OutputBuffer outs;
+	Model::Output::Buffer outs;
 
 	TestDac(Controls &controls)
-		: controls{controls}
-	{}
+		: controls{controls} {
+	}
 
-	void run_test()
-	{
+	void run_test() {
 		while (true) {
 
 			for (auto [i, r] : countzip(rotvals)) {

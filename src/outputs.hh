@@ -28,7 +28,7 @@ public:
 		send_data(startup);
 	}
 
-	void write(const Model::OutputBuffer &out) {
+	void write(const Model::Output::Buffer &out) {
 		// write to the DAC
 		uint8_t data_buffer[3];
 

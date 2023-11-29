@@ -20,7 +20,7 @@ public:
 	}
 	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) {
 	}
-	virtual void PaintLeds(const Model::OutputBuffer &outs) {
+	virtual void PaintLeds(const Model::Output::Buffer &outs) {
 	}
 
 protected:

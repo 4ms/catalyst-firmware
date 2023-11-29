@@ -76,7 +76,7 @@ public:
 			}
 		}
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 		auto ysb = YoungestSceneButton();
 		if (ysb.has_value()) {
@@ -119,7 +119,7 @@ private:
 		c.SetButtonLed(led, level);
 	}
 
-	void EncoderDisplayOutput(const Model::OutputBuffer &buf) {
+	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
 			const Color col = Palette::EncoderBlend(val, p.bank.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);

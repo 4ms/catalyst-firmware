@@ -54,7 +54,7 @@ public:
 		else
 			path.InsertScene(button, false);
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 
 		auto count = p.pathway.size();

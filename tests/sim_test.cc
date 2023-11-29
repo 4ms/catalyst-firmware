@@ -1,3 +1,4 @@
+#include "../src/conf/model.hh"
 #include "macro_seq.hh"
 #include "params.hh"
 
@@ -14,7 +15,7 @@ struct SimUI {
 		// read inputs, and store into params
 	}
 
-	void set_outputs(Catalyst2::Model::OutputBuffer &outs) {
+	void set_outputs(Catalyst2::Model::Output::Buffer &outs) {
 		// display the outputs
 		(void)outs;
 	}

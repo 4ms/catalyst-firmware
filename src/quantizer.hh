@@ -1,6 +1,6 @@
 #pragma once
 
-#include "channelvalue.hh"
+#include "channel.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -38,27 +38,25 @@ class Interface {
 	Scale scale{};
 
 public:
-	ChannelValue::type Process(const ChannelValue::type input) {
-		if (!scale.size())
+	Model::Output::type Process(const Model::Output::type input) {
+		if (!scale.size()) {
 			return input;
-
+		}
 		auto value = static_cast<float>(input);
 		uint8_t octave = 0;
-		while (value >= ChannelValue::octave) {
-			value -= ChannelValue::octave;
+		while (value >= Channel::octave) {
+			value -= Channel::octave;
 			octave += 1;
 		}
 		uint8_t note = 0;
-		while (value >= ChannelValue::note) {
-			value -= ChannelValue::note;
+		while (value >= Channel::note) {
+			value -= Channel::note;
 			note += 1;
 		}
 
-		value = note + (value / ChannelValue::note);
-
+		value = note + (value / Channel::note);
 		value = *(std::upper_bound(scale.begin(), scale.end(), value) - 1);
-
-		return (value * ChannelValue::note) + (octave * ChannelValue::octave);
+		return (value * Channel::note) + (octave * Channel::octave);
 	}
 	void Load(const Scale &scl) {
 		scale = scl;

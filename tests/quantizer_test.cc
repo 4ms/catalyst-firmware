@@ -9,7 +9,7 @@ TEST_CASE("Quantizer") {
 	Quantizer::Interface quan;
 
 	// on init no scale will be loaded. check to make sure the quantizer doesnt affect the input value
-	for (auto i = ChannelValue::Min; i < ChannelValue::Max; i++) {
+	for (auto i = Channel::min; i < Channel::max; i++) {
 		CHECK(i == quan.Process(i));
 	}
 
@@ -19,7 +19,7 @@ TEST_CASE("Quantizer") {
 	// this scale will be octaves only.
 	auto output_values = 0u;
 	auto prev_out_value = -1;
-	for (auto i = ChannelValue::Min; i < ChannelValue::Max; i++) {
+	for (auto i = Channel::min; i < Channel::max; i++) {
 		const auto temp = quan.Process(i);
 		if (temp == prev_out_value)
 			continue;
@@ -37,7 +37,7 @@ TEST_CASE("Quantizer") {
 
 	output_values = 0u;
 	prev_out_value = -1;
-	for (auto i = ChannelValue::Min; i < ChannelValue::Max; i++) {
+	for (auto i = Channel::min; i < Channel::max; i++) {
 		const auto temp = quan.Process(i);
 		if (temp == prev_out_value)
 			continue;

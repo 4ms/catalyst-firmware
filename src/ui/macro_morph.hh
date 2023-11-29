@@ -26,7 +26,7 @@ public:
 			}
 		}
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
 
 		for (auto i = 0u; i < Model::NumChans; i++) {

@@ -1,4 +1,3 @@
-#include "../src/randompool.hh"
 #include "../src/sequencer.hh"
 
 #include "doctest.h"
@@ -16,22 +15,21 @@ floating point error test. sequencer crashes if (mode == ping pong && length == 
 
 TEST_CASE("Pingpong length bug") {
 
-	Sequencer::Data data;
-	RandomPool dummy;
-	Sequencer::Interface seq{data, dummy};
+	Sequencer::Settings::Data settings;
+	Sequencer::PlayerInterface player{settings};
 
-	while (data.global.playmode.Read().value() != Sequencer::PlayMode::PingPong)
-		data.global.playmode.Inc(1);
+	while (settings.GetPlayMode() != Sequencer::PlayMode::PingPong)
+		settings.IncPlayMode(1);
 
-	CHECK(data.global.playmode.Read().value() == Sequencer::PlayMode::PingPong);
+	CHECK(settings.GetPlayMode() == Sequencer::PlayMode::PingPong);
 
-	while (data.global.length.Read().value() != Model::MinSeqSteps)
-		data.global.length.Inc(-1);
+	while (settings.GetLength() != Model::MinSeqSteps)
+		settings.IncLength(-1);
 
-	CHECK(data.global.length.Read().value() == Model::MinSeqSteps);
+	CHECK(settings.GetLength() == Model::MinSeqSteps);
 
 	for (auto i = 0u; i < 1000u; i++) {
-		seq.player.Step();
-		seq.player.GetPlayheadStep(0);
+		player.Step();
+		player.GetPlayheadStep(0, 0.f);
 	}
 }

@@ -53,7 +53,7 @@ public:
 				//	if ()
 		}
 	}
-	void PaintLeds(const Model::OutputBuffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 		ClearEncoderLeds();
 
@@ -72,12 +72,12 @@ public:
 			const auto hang = p.shared.hang.Check(time_now);
 			if (hang.has_value()) {
 				if (hang.value() == Model::EncoderAlts::ClockDiv) {
-					SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::blue);
+					SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::Setting::active);
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
 				const auto col = p.shared.randompool.IsRandomized() ? Palette::from_raw(p.shared.randompool.GetSeed()) :
-																	  Palette::globalsetting;
+																	  Palette::Setting::null;
 				c.SetEncoderLed(Model::EncoderAlts::Random, col);
 			}
 		}
