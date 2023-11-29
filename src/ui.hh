@@ -27,8 +27,6 @@ public:
 	}
 	void Start() {
 		controls.Start();
-		// TODO: delay(2), and define delay in src/f401-drivers/delay.hh, also tests/drivers/delay.hh
-		HAL_Delay(2);
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		ui = &macro;
 
@@ -77,7 +75,7 @@ public:
 		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
 	}
 
-	void SetOutputs(const Model::OutputBuffer &outs) {
+	void SetOutputs(const Model::Output::Buffer &outs) {
 		outputs.write(outs);
 
 		if (controls.LedsReady())
