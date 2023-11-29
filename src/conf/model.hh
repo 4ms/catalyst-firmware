@@ -23,7 +23,12 @@ constexpr auto SeqPages = NumScenes;
 constexpr auto MaxSeqSteps = SeqPages * SeqStepsPerPage;
 constexpr auto MinSeqSteps = 1;
 
-using OutputBuffer = std::array<uint16_t, NumChans>;
+namespace Output
+{
+using type = uint16_t;
+static_assert(std::same_as<type, uint16_t>, "type on tested with uint16_t");
+using Buffer = std::array<type, NumChans>;
+} // namespace Output
 
 enum class ModeSwitch { Sequence, Macro };
 
