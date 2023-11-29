@@ -130,7 +130,7 @@ public:
 		void Inc(int32_t inc) {
 			v = std::clamp<int32_t>(v + inc, 0, divideroptions.size() - 1);
 		}
-		uint8_t Read() {
+		uint8_t Read() const {
 			return divideroptions[v];
 		}
 	};
