@@ -1,7 +1,7 @@
 #pragma once
 
+#include "channel.hh"
 #include "channelmode.hh"
-#include "channelvalue.hh"
 #include "clock.hh"
 #include "conf/model.hh"
 #include "randompool.hh"
@@ -9,8 +9,11 @@
 #include "util/countzip.hh"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <optional>
+#include <stdint-gcc.h>
+#include <type_traits>
 
 namespace Catalyst2::Sequencer
 {
@@ -40,118 +43,265 @@ public:
 	}
 };
 
-enum class OptionalConfig : bool { CanBeNull, Normal };
+namespace Settings
+{
+class Global {
+	template<typename T>
+	struct Setting {
 
-template<typename T, OptionalConfig Config>
-struct OptionalSetting {
-
-	OptionalSetting(T min, T max, T init = T{})
-		: val{Config == OptionalConfig::CanBeNull ? std::nullopt : std::make_optional(init)}
-		, min{min}
-		, max{max} {
-	}
-
-	template<typename U>
-	void Inc(U inc)
-	// TODO: make this work for non-enum and enum types
-	//  requires(std::is_convertible_v<T, U>)
-	{
-		if constexpr (Config == OptionalConfig::CanBeNull) {
-			if (!val.has_value()) {
-				if (inc > 0)
-					val = min;
-				return;
-			}
-
-			if (inc < 0 && val == min) {
-				val = std::nullopt;
-				return;
-			}
+		Setting(T min, T max, T init = T{})
+			: val{init}
+			, min{min}
+			, max{max} {
 		}
-		auto int_val = std::clamp<U>(static_cast<U>(val.value()) + inc, static_cast<U>(min), static_cast<U>(max));
-		val = T(int_val);
-	}
 
-	std::optional<T> Read() {
-		return val;
-	}
+		template<typename U>
+		void Inc(U inc)
+		// TODO: make this work for non-enum and enum types
+		//  requires(std::is_convertible_v<T, U>)
+		{
+			auto int_val = std::clamp<U>(static_cast<U>(val) + inc, static_cast<U>(min), static_cast<U>(max));
+			val = T(int_val);
+		}
 
-private:
-	std::optional<T> val;
-	T min;
-	T max;
+		T Read() {
+			return val;
+		}
+
+	private:
+		T val;
+		const T min;
+		const T max;
+	};
+
+public:
+	Setting<float> phaseoffset{0.f, 1.f, 0.f};
+	Setting<int8_t> length{Model::MinSeqSteps, Model::MaxSeqSteps, Model::SeqStepsPerPage};
+	Setting<int8_t> startoffset{Model::MinSeqSteps - 1, Model::MaxSeqSteps - 1, 0};
+	Setting<PlayMode> playmode{PlayMode::Forward, PlayMode::Random, PlayMode::Forward};
+	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, 0};
 };
 
-struct Step : Channel {
+class Channel {
+	template<typename T>
+	struct Setting {
+		Setting(T min, T max)
+			: min{min}
+			, max{max} {
+		}
+
+		template<typename U>
+		void Inc(U inc, T pivot)
+		// TODO: make this work for non-enum and enum types
+		//  requires(std::is_convertible_v<T, U>)
+		{
+			if (!inc)
+				return;
+
+			if (!val.has_value()) {
+				auto minmax = min;
+				if (inc > 0) {
+					above_pivot = true;
+					minmax = max;
+				} else if (inc < 0)
+					above_pivot = false;
+				if (pivot == minmax)
+					return;
+				val = pivot;
+				return;
+			}
+			if (above_pivot) {
+				if (static_cast<U>(val.value()) + inc < static_cast<U>(pivot) && val.value() <= pivot) {
+					val = std::nullopt;
+					return;
+				}
+			} else {
+				if (static_cast<U>(val.value()) + inc > static_cast<U>(pivot) && val.value() <= pivot) {
+					val = std::nullopt;
+					return;
+				}
+			}
+
+			auto int_val = std::clamp<U>(static_cast<U>(val.value()) + inc, static_cast<U>(min), static_cast<U>(max));
+			val = T(int_val);
+		}
+		void UpdatePivot(T pivot) {
+			if (!val.has_value())
+				return;
+
+			if (val.value() > pivot || pivot == min)
+				above_pivot = true;
+			else if (val.value() < pivot || pivot == max)
+				above_pivot = false;
+		}
+
+		std::optional<T> Read() {
+			return val;
+		}
+
+	private:
+		std::optional<T> val = std::nullopt;
+		bool above_pivot = false;
+		T min;
+		T max;
+	};
+
+public:
+	Setting<float> phaseoffset{0.f, 1.f};
+	Setting<int8_t> length{Model::MinSeqSteps, Model::MaxSeqSteps};
+	Setting<int8_t> startoffset{Model::MinSeqSteps - 1, Model::MaxSeqSteps - 1};
+	Setting<PlayMode> playmode{PlayMode::Forward, PlayMode::Random};
+	Setting<Transposer::type> transpose{Transposer::min, Transposer::max};
+	Catalyst2::Channel::Range range;
+	Clock::Divider::type clockdiv;
+	float randomamount = 0.f;
+	Catalyst2::Channel::Mode mode;
+};
+
+class Data {
+	std::array<Channel, Model::NumChans> channel;
+	Global global;
+
+public:
+	const Channel &Copy(uint8_t chan) const {
+		return channel[chan];
+	}
+	void Paste(uint8_t chan, const Channel &d) {
+		channel[chan] = d;
+	}
+	float GetPhaseOffsetOrGlobal(std::optional<uint8_t> chan) {
+		return chan.has_value() ? GetPhaseOffset(chan.value()).value_or(GetPhaseOffset()) : GetPhaseOffset();
+	}
+	int8_t GetLengthOrGlobal(std::optional<uint8_t> chan) {
+		return chan.has_value() ? GetLength(chan.value()).value_or(GetLength()) : GetLength();
+	}
+	int8_t GetStartOffsetOrGlobal(std::optional<uint8_t> chan) {
+		return chan.has_value() ? GetStartOffset(chan.value()).value_or(GetStartOffset()) : GetStartOffset();
+	}
+	PlayMode GetPlayModeOrGlobal(std::optional<uint8_t> chan) {
+		return chan.has_value() ? GetPlayMode(chan.value()).value_or(GetPlayMode()) : GetPlayMode();
+	}
+	Transposer::type GetTransposeOrGlobal(std::optional<uint8_t> chan) {
+		return chan.has_value() ? GetTranspose(chan.value()).value_or(GetTranspose()) : GetTranspose();
+	}
+	std::optional<float> GetPhaseOffset(uint8_t chan) {
+		return channel[chan].phaseoffset.Read();
+	}
+	float GetPhaseOffset() {
+		return global.phaseoffset.Read();
+	}
+	std::optional<int8_t> GetLength(uint8_t chan) {
+		return channel[chan].length.Read();
+	}
+	int8_t GetLength() {
+		return global.length.Read();
+	}
+	std::optional<int8_t> GetStartOffset(uint8_t chan) {
+		return channel[chan].startoffset.Read();
+	}
+	int8_t GetStartOffset() {
+		return global.startoffset.Read();
+	}
+	std::optional<PlayMode> GetPlayMode(uint8_t chan) {
+		return channel[chan].playmode.Read();
+	}
+	PlayMode GetPlayMode() {
+		return global.playmode.Read();
+	}
+	std::optional<Transposer::type> GetTranspose(uint8_t chan) {
+		return channel[chan].transpose.Read();
+	}
+	Transposer::type GetTranspose() {
+		return global.transpose.Read();
+	}
+	Catalyst2::Channel::Range GetRange(uint8_t chan) {
+		return channel[chan].range;
+	}
+	Clock::Divider::type GetClockDiv(uint8_t chan) {
+		return channel[chan].clockdiv;
+	}
+	float GetRandomAmount(uint8_t chan) {
+		return channel[chan].randomamount;
+	}
+	Catalyst2::Channel::Mode GetChannelMode(uint8_t chan) {
+		return channel[chan].mode;
+	}
+	void IncPhaseOffset(uint8_t chan, int32_t inc) {
+		auto len = GetLengthOrGlobal(chan);
+		len += GetPlayModeOrGlobal(chan) == PlayMode::PingPong ? len - 2 : 0;
+		const auto i = static_cast<float>(inc) / len;
+		channel[chan].phaseoffset.Inc(i, global.phaseoffset.Read());
+	}
+	void IncPhaseOffset(int32_t inc) {
+		auto len = GetLength();
+		len += GetPlayMode() == PlayMode::PingPong ? len - 2 : 0;
+		const auto i = static_cast<float>(inc) / len;
+		global.phaseoffset.Inc(i);
+		for (auto &c : channel) {
+			c.phaseoffset.UpdatePivot(global.phaseoffset.Read());
+		}
+	}
+	void IncLength(uint8_t chan, int32_t inc) {
+		channel[chan].length.Inc(inc, global.length.Read());
+	}
+	void IncLength(int32_t inc) {
+		global.length.Inc(inc);
+		for (auto &c : channel) {
+			c.length.UpdatePivot(global.length.Read());
+		}
+	}
+	void IncStartOffset(uint8_t chan, int32_t inc) {
+		channel[chan].startoffset.Inc(inc, global.startoffset.Read());
+	}
+	void IncStartOffset(int32_t inc) {
+		global.startoffset.Inc(inc);
+		for (auto &c : channel) {
+			c.startoffset.UpdatePivot(global.startoffset.Read());
+		}
+	}
+	void IncPlayMode(uint8_t chan, int32_t inc) {
+		channel[chan].playmode.Inc(inc, global.playmode.Read());
+	}
+	void IncPlayMode(int32_t inc) {
+		global.playmode.Inc(inc);
+		for (auto &c : channel) {
+			c.playmode.UpdatePivot(global.playmode.Read());
+		}
+	}
+	void IncTranspose(uint8_t chan, int32_t inc) {
+		channel[chan].transpose.Inc(inc, global.transpose.Read());
+	}
+	void IncTranspose(int32_t inc) {
+		global.transpose.Inc(inc);
+		for (auto &c : channel) {
+			c.transpose.UpdatePivot(global.transpose.Read());
+		}
+	}
+	void IncRange(uint8_t chan, int32_t inc) {
+		channel[chan].range.Inc(inc);
+	}
+	void IncClockDiv(uint8_t chan, int32_t inc) {
+		channel[chan].clockdiv.Inc(inc);
+	}
+	void IncRandomAmount(uint8_t chan, int32_t inc) {
+		auto i = (inc / Model::output_octave_range / 12.f);
+		channel[chan].randomamount += i;
+		channel[chan].randomamount = std::clamp(channel[chan].randomamount, 0.f, 1.f);
+	}
+	void IncChannelMode(uint8_t chan, int32_t inc) {
+		channel[chan].mode.Inc(inc);
+	}
+	void SetChannelMode(uint8_t chan, Catalyst2::Channel::Mode mode) {
+		channel[chan].mode = mode;
+	}
+};
+} // namespace Settings
+
+struct Step : Channel::Value {
 	StepModifier modifier;
 };
 
-class ChannelData {
-	std::array<Step, Model::MaxSeqSteps> step;
-	Clock::Divider::type clockdiv;
-	float randomamount = 0;
-
-public:
-	OptionalSetting<float, OptionalConfig::CanBeNull> phase_offset{0.f, .999f};
-	OptionalSetting<int8_t, OptionalConfig::CanBeNull> length{Model::MinSeqSteps, Model::MaxSeqSteps};
-	OptionalSetting<int8_t, OptionalConfig::CanBeNull> start_offset{0, Model::MaxSeqSteps - 1};
-	OptionalSetting<PlayMode, OptionalConfig::CanBeNull> playmode{PlayMode::Forward, PlayMode::Random};
-
-	OptionalSetting<Transposer::type, OptionalConfig::CanBeNull> transposer{Transposer::min, Transposer::max};
-	ChannelMode mode;
-
-	ChannelData() {
-	}
-
-	Step &GetStep(uint8_t step) {
-		return this->step[step];
-	}
-	Step &GetStep(uint8_t page, uint8_t step) {
-		return this->step[(page * Model::SeqStepsPerPage) + step];
-	}
-	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		GetStep(step).Inc(inc, fine, mode.IsGate());
-	}
-	void IncStep(uint8_t page, uint8_t step, int32_t inc, bool fine) {
-		GetStep(page, step).Inc(inc, fine, mode.IsGate());
-	}
-	void IncModifier(uint8_t step, int32_t inc) {
-		GetStep(step).modifier.Inc(inc);
-	}
-	void IncModifier(uint8_t page, uint8_t step, int32_t inc) {
-		GetStep(page, step).modifier.Inc(inc);
-	}
-	void IncClockDiv(int32_t inc) {
-		clockdiv.Inc(inc);
-	}
-	Clock::Divider::type GetClockDiv() {
-		return clockdiv;
-	}
-	void IncRandomAmount(int32_t inc) {
-		auto i = (inc / Model::output_octave_range / 12.f);
-		randomamount += i;
-		randomamount = std::clamp(randomamount, 0.f, 1.f);
-	}
-	float GetRandomAmount() {
-		return randomamount;
-	}
-};
-
-struct GlobalData {
-	OptionalSetting<float, OptionalConfig::Normal> phase_offset{0.f, .999f, 0.f};
-	OptionalSetting<int8_t, OptionalConfig::Normal> length{
-		Model::MinSeqSteps, Model::MaxSeqSteps, Model::SeqStepsPerPage};
-	OptionalSetting<int8_t, OptionalConfig::Normal> start_offset{0, Model::MaxSeqSteps - 1, 0};
-	OptionalSetting<PlayMode, OptionalConfig::Normal> playmode{PlayMode::Forward, PlayMode::Random, PlayMode::Forward};
-	OptionalSetting<Transposer::type, OptionalConfig::Normal> transposer{
-		Transposer::min, Transposer::max, Transposer::min};
-};
-
-struct Data {
-	std::array<ChannelData, Model::NumChans> channel;
-	GlobalData global;
-	float master_phase;
-};
+using ChannelData = std::array<Step, Model::MaxSeqSteps>;
 
 class PlayerInterface {
 	struct State {
@@ -164,10 +314,10 @@ class PlayerInterface {
 	};
 	std::array<State, Model::NumChans> channel;
 	bool pause = false;
-	Data &d;
+	Settings::Data &d;
 
 public:
-	PlayerInterface(Data &d)
+	PlayerInterface(Settings::Data &d)
 		: d{d} {
 	}
 
@@ -199,16 +349,24 @@ public:
 			Reset(i);
 		}
 	}
-	uint8_t GetFirstStep(uint8_t chan) {
-		return ToStep(chan, 0);
+	uint8_t GetFirstStep(std::optional<uint8_t> chan, float phase) {
+		return ToStep(chan, 0, phase);
 	}
 
-	uint8_t GetPlayheadStep(uint8_t chan) {
-		return ToStep(chan, channel[chan].step);
+	uint8_t GetPlayheadStep(uint8_t chan, float phase) {
+		return ToStep(chan, channel[chan].step, phase);
 	}
 
-	uint8_t GetNextStep(uint8_t chan) {
-		return ToStep(chan, channel[chan].next_step);
+	uint8_t GetPlayheadStepOnPage(uint8_t chan, float phase) {
+		return GetPlayheadStep(chan, phase) % Model::SeqPages;
+	}
+
+	uint8_t GetPlayheadPage(uint8_t chan, float phase) {
+		return GetPlayheadStep(chan, phase) / Model::SeqPages;
+	}
+
+	uint8_t GetNextStep(uint8_t chan, float phase) {
+		return ToStep(chan, channel[chan].next_step, phase);
 	}
 	bool IsCurrentStepNew(uint8_t chan) {
 		const auto out = channel[chan].new_step;
@@ -219,49 +377,45 @@ public:
 		pause = !pause;
 	}
 	void ToggleStop() {
-		pause = !pause;
+		pause = true;
 		Reset();
 	}
 	bool IsPaused() {
 		return pause;
 	}
 	float GetPhase(uint8_t chan, float phase) {
-		auto cdiv = d.channel[chan].GetClockDiv();
+		const auto cdiv = d.GetClockDiv(chan);
 		phase = phase / cdiv.Read();
-		auto cdivphase = channel[chan].clockdivider.GetPhase(cdiv);
+		const auto cdivphase = channel[chan].clockdivider.GetPhase(cdiv);
 		return phase + cdivphase;
 	}
 
 private:
 	void Step(uint8_t chan) {
-		auto &cd = d.channel[chan];
-		auto &gd = d.global;
 		auto &channel = this->channel[chan];
 
-		channel.clockdivider.Update(cd.GetClockDiv());
-		if (!channel.clockdivider.Step())
+		channel.clockdivider.Update(d.GetClockDiv(chan));
+		if (!channel.clockdivider.Step()) {
 			return;
-
+		}
 		channel.new_step = true;
 
 		channel.step = channel.next_step;
-		const auto playmode = cd.playmode.Read().value_or(gd.playmode.Read().value());
-		const auto length = cd.length.Read().value_or(gd.length.Read().value());
+		const auto playmode = d.GetPlayModeOrGlobal(chan);
+		const auto length = d.GetLengthOrGlobal(chan);
 
 		channel.counter += 1;
-		if (channel.counter >= ActualLength(chan, length, playmode)) {
+		if (channel.counter >= ActualLength(length, playmode)) {
 			channel.counter = 0;
 		}
 
 		channel.next_step = channel.counter;
 	}
 	void Reset(uint8_t chan) {
-		auto &cd = d.channel[chan];
-		auto &gd = d.global;
 		auto &c = channel[chan];
 
-		const auto playmode = cd.playmode.Read().value_or(gd.playmode.Read().value());
-		auto length = cd.length.Read().value_or(gd.length.Read().value());
+		const auto playmode = d.GetPlayModeOrGlobal(chan);
+		auto length = d.GetLengthOrGlobal(chan);
 		length += playmode == PlayMode::PingPong ? length - 2 : 0;
 
 		c.counter = 0;
@@ -274,171 +428,56 @@ private:
 		c.new_step = true;
 	}
 
-	uint8_t ToStep(uint8_t chan, uint8_t step) {
-		auto &cd = d.channel[chan];
-		auto &gd = d.global;
-		auto &c = channel[chan];
+	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step, float phase) {
+		const auto l = d.GetLengthOrGlobal(chan);
+		const auto pm = d.GetPlayModeOrGlobal(chan);
+		const auto actuallength = ActualLength(l, pm);
+		const auto mpo = static_cast<uint32_t>(phase * actuallength);
+		auto po = static_cast<uint32_t>(d.GetPhaseOffsetOrGlobal(chan) * actuallength);
+		po = po >= actuallength ? actuallength - 1 : po;
 
-		const auto l = cd.length.Read().value_or(gd.length.Read().value());
-		const auto pm = cd.playmode.Read().value_or(gd.playmode.Read().value());
-		const auto actuallength = ActualLength(chan, l, pm);
-		const auto mpo = d.master_phase * ((actuallength + 1.f) / actuallength);
-		const auto po = static_cast<int32_t>((cd.phase_offset.Read().value_or(gd.phase_offset.Read().value()) + mpo) *
-											 (actuallength - 1));
+		auto s = step + po + mpo;
 
-		auto o = 0;
 		switch (pm) {
 			using enum PlayMode;
-			case Forward:
-				o = step + po;
-				break;
 			case Backward:
-				o = l - 1 - step + po;
+				s = l + -1 + -s;
 				break;
 			case Random:
-				o = c.randomstep[(step + po) % l];
+				s = channel[chan.value_or(0)].randomstep[s % l];
 				break;
 			case PingPong: {
-				auto s = step + po;
 				auto ping = true;
-				const auto cmp = l == 1 ? 1 : l - 1;
+				const auto cmp = l == 1 ? 1u : l - 1u;
 
-				while (s < 0 || s >= cmp) {
+				while (s >= cmp) {
 					s -= cmp;
 					ping = !ping;
 				}
 
-				if (ping)
-					o = s;
-				else
-					o = l - 1 - s;
+				if (!ping) {
+					s = l - 1 - s;
+				}
 				break;
 			}
 			default:
 				break;
 		}
-		const auto so = cd.start_offset.Read().value_or(gd.start_offset.Read().value());
-		return ((o % l) + so) % Model::MaxSeqSteps;
+
+		const auto so = d.GetStartOffsetOrGlobal(chan);
+		return ((s % l) + so) % Model::MaxSeqSteps;
 	}
 
-	uint32_t ActualLength(uint8_t chan, int8_t length, PlayMode pm) {
+	uint32_t ActualLength(int8_t length, PlayMode pm) {
 		if (pm == PlayMode::PingPong) {
 			auto out = length + length - 2;
-			if (out < 2)
+			if (out < 2) {
 				out = 2;
-
+			}
 			return out;
 		}
 		return length;
 	}
 };
-
-class Interface {
-	Data &data;
-	RandomPool &randompool;
-
-	struct Clipboard {
-		std::array<Step, Model::SeqStepsPerPage> page;
-		Sequencer::ChannelData sequence;
-	} clipboard;
-
-public:
-	PlayerInterface player;
-
-	Interface(Data &data, RandomPool &r)
-		: data{data}
-		, randompool{r}
-		, player{data} {
-	}
-
-	Transposer::type GetTranspose(uint8_t chan) {
-		return data.channel[chan].transposer.Read().value_or(data.global.transposer.Read().value());
-	}
-
-	GlobalData &Global() {
-		return data.global;
-	}
-
-	ChannelData &Channel(uint8_t c) {
-		return data.channel[c];
-	}
-
-	void SetMasterPhaseOffset(float o) {
-		data.master_phase = o;
-	}
-
-	void CopySequence(uint8_t sequence) {
-		clipboard.sequence = data.channel[sequence];
-	}
-
-	void PasteSequence(uint8_t sequence) {
-		data.channel[sequence] = clipboard.sequence;
-	}
-
-	void CopyPage(uint8_t sequence, uint8_t page) {
-		for (auto [i, p] : countzip(clipboard.page)) {
-			p = data.channel[sequence].GetStep(page, i);
-		}
-	}
-	void PastePage(uint8_t sequence, uint8_t page) {
-		for (auto [i, p] : countzip(clipboard.page)) {
-			data.channel[sequence].GetStep(page, i) = p;
-		}
-	}
-
-	uint8_t GetPlayheadStep(uint8_t sequence) {
-		return player.GetPlayheadStep(sequence);
-	}
-
-	uint8_t GetPlayheadStepOnPage(uint8_t sequence) {
-		return player.GetPlayheadStep(sequence) % Model::SeqPages;
-	}
-
-	uint8_t GetPlayheadPage(uint8_t sequence) {
-		return player.GetPlayheadStep(sequence) / Model::SeqPages;
-	}
-
-	ChannelValue::type GetStepValue(uint8_t sequence, uint8_t step) {
-		auto rand = static_cast<int32_t>(randompool.GetSequenceVal(sequence, step) *
-										 data.channel[sequence].GetRandomAmount() * ChannelValue::Range);
-		if (data.channel[sequence].mode.IsGate()) {
-			// gates not affected by randomness?
-			rand = 0;
-		}
-
-		auto temp = data.channel[sequence].GetStep(step).val + rand;
-		return std::clamp<int32_t>(temp, ChannelValue::Min, ChannelValue::Max);
-	}
-
-	ChannelValue::type GetPlayheadValue(uint8_t sequence) {
-		return GetStepValue(sequence, GetPlayheadStep(sequence));
-	}
-
-	StepModifier GetPlayheadModifier(uint8_t sequence) {
-		return data.channel[sequence].GetStep(GetPlayheadStep(sequence)).modifier;
-	}
-
-	ChannelValue::type GetNextStepValue(uint8_t sequence) {
-		return GetStepValue(sequence, player.GetNextStep(sequence));
-	}
-
-	Model::OutputBuffer GetPageValues(uint8_t sequence, uint8_t page) {
-		Model::OutputBuffer out;
-
-		for (auto [i, o] : countzip(out))
-			o = GetStepValue(sequence, (page * Model::SeqStepsPerPage) + i);
-
-		return out;
-	}
-
-	std::array<float, Model::NumChans> GetPageValuesModifier(uint8_t sequence, uint8_t page) {
-		std::array<float, Model::NumChans> out;
-		for (auto [i, o] : countzip(out))
-			o = data.channel[sequence].GetStep(page, i).modifier.AsMorph();
-		return out;
-	}
-};
-
-static constexpr auto seqsize = sizeof(Interface);
 
 } // namespace Catalyst2::Sequencer
