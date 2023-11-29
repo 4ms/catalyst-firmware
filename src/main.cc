@@ -39,6 +39,38 @@ TODO: phase offset doesnt display correctly in backwards and pingpong mode
 
 */
 
+/*
+remove trig sense function to free a pin
+
+remove mode switch
+think of button combo to replace
+
+tap tempo overrides external clock
+external clock overrides tap tempo
+
+backwards is broken again!!!
+
+morph fix seems to have offset the sequencer :(
+
+gate bright green needs fix
+
+gate doesnt fire in macro mode if pressing new button while another is already held down
+
+no gate out when scrubbing
+
+change red setting to dim grey
+
+change channel setting color to not be sequencer head color
+
+random setting color should be the same across channels
+
+save on inactivity
+
+delete on shift hold reset or shift hold delete in seq or macro respectively
+do button led countdown before clearing
+
+*/
+
 void main() {
 	using namespace Catalyst2;
 
