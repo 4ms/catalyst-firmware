@@ -309,7 +309,7 @@ class PlayerInterface {
 		Clock::Divider clockdivider;
 		uint8_t counter = 0;
 		uint8_t step = 0;
-		uint8_t next_step = 1;
+		uint8_t prev_step = 7;
 		bool new_step = false;
 	};
 	std::array<State, Model::NumChans> channel;
@@ -364,9 +364,8 @@ public:
 	uint8_t GetPlayheadPage(uint8_t chan, float phase) {
 		return GetPlayheadStep(chan, phase) / Model::SeqPages;
 	}
-
-	uint8_t GetNextStep(uint8_t chan, float phase) {
-		return ToStep(chan, channel[chan].next_step, phase);
+	uint8_t GetPrevStep(uint8_t chan, float phase) {
+		return ToStep(chan, channel[chan].prev_step, phase);
 	}
 	bool IsCurrentStepNew(uint8_t chan) {
 		const auto out = channel[chan].new_step;
@@ -375,6 +374,11 @@ public:
 	}
 	void TogglePause() {
 		pause = !pause;
+		if (!pause) {
+			for (auto &i : channel) {
+				i.new_step = true;
+			}
+		}
 	}
 	void ToggleStop() {
 		pause = true;
@@ -400,7 +404,8 @@ private:
 		}
 		channel.new_step = true;
 
-		channel.step = channel.next_step;
+		channel.prev_step = channel.step;
+		channel.step = channel.counter;
 		const auto playmode = d.GetPlayModeOrGlobal(chan);
 		const auto length = d.GetLengthOrGlobal(chan);
 
@@ -408,8 +413,6 @@ private:
 		if (channel.counter >= ActualLength(length, playmode)) {
 			channel.counter = 0;
 		}
-
-		channel.next_step = channel.counter;
 	}
 	void Reset(uint8_t chan) {
 		auto &c = channel[chan];
@@ -423,9 +426,7 @@ private:
 		c.step = c.counter;
 		c.counter += 1;
 		c.counter = c.counter >= length ? 0 : c.counter;
-		c.next_step = c.counter;
-
-		c.new_step = true;
+		c.prev_step = c.step;
 	}
 
 	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step, float phase) {
