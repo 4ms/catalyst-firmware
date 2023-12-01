@@ -51,10 +51,7 @@ public:
 	}
 
 	auto Update() {
-		if (params.mode == Params::Mode::Macro)
-			return Macro(params.macro);
-		else
-			return Seq(params.sequencer);
+		return params.mode == Params::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
 	}
 
 private:
@@ -69,8 +66,9 @@ private:
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = p.bank.GetChannel(p.override_output.value(), chan);
-					if (do_trigs && is_primed >= Channel::gatearmed)
+					if (do_trigs && is_primed >= Channel::gatearmed) {
 						trigger[chan].Trig(time_now);
+					}
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : Channel::from_volts(0.f);
 				} else {
 					out = p.bank.GetChannel(p.override_output.value(), chan);
@@ -89,15 +87,17 @@ private:
 			do_trigs = false;
 			if (current_scene != last_scene_on) {
 				last_scene_on = current_scene;
-				if (current_scene < Model::NumScenes)
+				if (current_scene < Model::NumScenes) {
 					do_trigs = true;
+				}
 			}
 
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = Channel::from_volts(0.f);
-					if (current_scene < Model::NumScenes)
+					if (current_scene < Model::NumScenes) {
 						is_primed = p.bank.GetChannel(current_scene, chan);
+					}
 					if (do_trigs && is_primed >= Channel::gatearmed) {
 						trigger[chan].Trig(time_now);
 					}
@@ -115,8 +115,9 @@ private:
 		}
 
 		for (auto [i, out] : countzip(buf)) {
-			if (p.bank.GetChannelMode(i).IsQuantized())
+			if (p.bank.GetChannelMode(i).IsQuantized()) {
 				out = p.shared.quantizer[i].Process(out);
+			}
 		}
 
 		return buf;
@@ -125,12 +126,13 @@ private:
 	Model::Output::Buffer Seq(SeqMode::Interface &p) {
 		Model::Output::Buffer buf;
 
-		if (p.shared.internalclock.Output())
+		if (p.shared.internalclock.Output()) {
 			p.player.Step();
-
+		}
 		if (p.shared.internalclock.MultOutput()) {
-			for (auto &rt : retrigger)
+			for (auto &rt : retrigger) {
 				rt.Update();
+			}
 		}
 
 		const auto morph_phase = p.player.IsPaused() ? 0.f : p.shared.internalclock.GetPhase();
@@ -142,24 +144,24 @@ private:
 	}
 
 	Model::Output::type SeqTrig(SeqMode::Interface &p, uint8_t chan) {
-		const auto stepval = p.GetPlayheadValue(chan, p.shared.GetPos());
+		const auto stepval = p.GetPlayheadValue(chan);
 		const auto armed = stepval >= Channel::gatearmed;
 		const auto time_now = p.shared.internalclock.TimeNow();
-		if (armed && p.player.IsCurrentStepNew(chan))
-			retrigger[chan].Trig(p.GetPlayheadModifier(chan, p.shared.GetPos()).AsRetrig(),
-								 p.data.settings.GetClockDiv(chan).Read());
+		if (armed && p.player.IsCurrentStepNew(chan)) {
+			retrigger[chan].Trig(p.GetPlayheadModifier(chan).AsRetrig(), p.data.settings.GetClockDiv(chan).Read());
+		}
 
-		if (retrigger[chan].Read())
+		if (retrigger[chan].Read()) {
 			trigger[chan].Trig(time_now);
-
+		}
 		return trigger[chan].Read(time_now) ? Channel::gatehigh : armed ? Channel::gatearmed : Channel::gateoff;
 	}
 
 	Model::Output::type SeqCv(SeqMode::Interface &p, uint8_t chan, float morph_phase) {
 		morph_phase = p.player.GetPhase(chan, morph_phase);
-		const auto stepmorph = seqmorph(morph_phase, p.GetPlayheadModifier(chan, p.shared.GetPos()).AsMorph());
-		auto stepval = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan, p.shared.GetPos()));
-		const auto distance = p.shared.quantizer[chan].Process(p.GetNextStepValue(chan, p.shared.GetPos())) - stepval;
+		const auto stepmorph = seqmorph(morph_phase, p.GetPlayheadModifier(chan).AsMorph());
+		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan));
+		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan)) - stepval;
 		stepval += (distance * stepmorph);
 		return Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
 	}
