@@ -88,6 +88,24 @@ protected:
 
 		return youngest;
 	}
+
+	void DisplayRange(Catalyst2::Channel::Range range) const {
+		const auto half = Model::NumChans / 2u;
+		const auto pos = range.PosAmount();
+		const auto neg = range.NegAmount();
+		const auto posleds = static_cast<uint8_t>(pos * half);
+		const auto negleds = static_cast<uint8_t>(neg * half);
+		const auto lastposledfade = pos * half - posleds;
+		const auto lastnegledfade = neg * half - negleds;
+		for (auto i = 0u; i < posleds; i++) {
+			c.SetEncoderLed(i + half, Palette::Voltage::Positive);
+		}
+		c.SetEncoderLed(half + posleds, Palette::off.blend(Palette::Voltage::Positive, lastposledfade));
+		for (auto i = 0u; i < negleds; i++) {
+			c.SetEncoderLed(half - 1 - i, Palette::Voltage::Negative);
+		}
+		c.SetEncoderLed(half - negleds - 1, Palette::off.blend(Palette::Voltage::Negative, lastnegledfade));
+	}
 };
 
 } // namespace Catalyst2::Ui
