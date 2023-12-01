@@ -174,24 +174,34 @@ public:
 		data.channel[cur_channel][step].modifier.Inc(inc);
 	}
 	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
-		auto rand = static_cast<int32_t>(shared.randompool.GetSequenceVal(chan, step) *
-										 data.settings.GetRandomAmount(chan) * Channel::range);
-		if (data.settings.GetChannelMode(chan).IsGate()) {
-			// gates not affected by randomness?
-			rand = 0;
-		}
+		auto rand = shared.randompool.GetSequenceVal(chan, step);
+		const auto amnt = data.settings.GetRandomAmount(chan);
+		auto temp = data.channel[chan][step].val;
 
-		const auto temp = data.channel[chan][step].val + rand;
-		return std::clamp<int32_t>(temp, Channel::min, Channel::max);
+		if (!data.settings.GetChannelMode(chan).IsGate()) {
+			rand *= amnt;
+			if (rand > 0.f) {
+				rand *= data.settings.GetRange(chan).PosAmount();
+			} else {
+				rand *= data.settings.GetRange(chan).NegAmount();
+			}
+			rand *= Channel::range;
+			return std::clamp<int32_t>(temp + rand, Channel::min, Channel::max);
+		} else {
+			if (std::abs(rand) < amnt) {
+				temp = temp == Channel::gatearmed ? Channel::gateoff : Channel::gatearmed;
+			}
+			return temp;
+		}
 	}
-	Model::Output::type GetPlayheadValue(uint8_t chan, float phase) {
-		return GetStepValue(chan, player.GetPlayheadStep(chan, phase));
+	Model::Output::type GetPlayheadValue(uint8_t chan) {
+		return GetStepValue(chan, player.GetPlayheadStep(chan, shared.GetPos()));
 	}
-	Sequencer::StepModifier GetPlayheadModifier(uint8_t chan, float phase) {
-		return data.channel[chan][player.GetPlayheadStep(chan, phase)].modifier;
+	Sequencer::StepModifier GetPlayheadModifier(uint8_t chan) {
+		return data.channel[chan][player.GetPlayheadStep(chan, shared.GetPos())].modifier;
 	}
-	Model::Output::type GetNextStepValue(uint8_t chan, float phase) {
-		return GetStepValue(chan, player.GetNextStep(chan, phase));
+	Model::Output::type GetPrevStepValue(uint8_t chan) {
+		return GetStepValue(chan, player.GetPrevStep(chan, shared.GetPos()));
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
