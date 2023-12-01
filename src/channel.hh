@@ -33,7 +33,7 @@ class Range {
 	};
 	static constexpr std::array options = {
 		Option{Model::min_output_voltage, Model::max_output_voltage},
-		Option{0.f, 5.f},
+		Option{-5.f, 5.f},
 		Option{0.f, 5.f},
 		Option{0.f, 3.f},
 	};
@@ -54,7 +54,7 @@ class Range {
 		const auto max = std::abs(Model::max_output_voltage);
 		return max >= min ? max : min;
 	}();
-	uint8_t val;
+	uint8_t val = 0;
 
 public:
 	void Inc(int32_t inc) {
@@ -64,7 +64,7 @@ public:
 		return std::abs(options[val].min / absmaxv);
 	}
 	float PosAmount() const {
-		return std::abs(options[val].max / absmaxv);
+		return options[val].max / absmaxv;
 	}
 	Model::Output::type Min() const {
 		return from_volts(options[val].min);
