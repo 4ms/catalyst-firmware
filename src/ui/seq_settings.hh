@@ -84,7 +84,6 @@ public:
 				if (ysb.has_value()) {
 					inc = hang.has_value() ? inc : 0;
 					p.data.settings.IncRange(ysb.value(), inc);
-					p.UpdateRange(ysb.value());
 					p.shared.hang.Set(encoder, time_now);
 				}
 				break;

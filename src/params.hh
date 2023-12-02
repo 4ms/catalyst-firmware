@@ -217,11 +217,6 @@ public:
 		}
 		return out;
 	}
-	void UpdateRange(uint8_t chan) {
-		for (auto &i : data.channel[chan]) {
-			i.Update(data.settings.GetChannelMode(chan).IsGate(), data.settings.GetRange(chan));
-		}
-	}
 	void CopySequence() {
 		clipboard.cd = data.channel[cur_channel];
 		clipboard.cs = data.settings.Copy(cur_channel);
