@@ -11,30 +11,21 @@ class Morph : public Usual {
 public:
 	using Usual::Usual;
 	void Update(Abstract *&interface) override {
-		if (!c.button.morph.is_high())
+		if (!c.button.morph.is_high()) {
 			return;
-
+		}
+		if (c.button.shift.is_high()) {
+			return;
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		p.IncMorph(encoder, inc);
-
-		if (c.button.shift.is_high()) {
-			const auto m = p.GetMorph(encoder);
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.SetMorph(i, m);
-			}
-		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
-
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			const auto morph = p.GetMorph(i);
-			auto col = Palette::grey.blend(Palette::red, morph);
-			if (morph == 0.f)
-				col = Palette::green;
-
+			const auto col = p.GetMorph(i) == 0.f ? Palette::green : Palette::grey.blend(Palette::red, p.GetMorph(i));
 			c.SetEncoderLed(i, col);
 		}
 	}

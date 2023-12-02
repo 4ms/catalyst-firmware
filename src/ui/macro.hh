@@ -5,6 +5,7 @@
 #include "macro_bank.hh"
 #include "macro_common.hh"
 #include "macro_morph.hh"
+#include "macro_range.hh"
 #include "macro_settings.hh"
 #include "params.hh"
 
@@ -16,6 +17,7 @@ class Main : public Usual {
 	Bank bank{p, c};
 	Morph morph{p, c};
 	Settings settings{p, c};
+	Range range{p, c};
 
 public:
 	using Usual::Usual;
@@ -41,6 +43,10 @@ public:
 		}
 		if (c.button.bank.is_high()) {
 			interface = &bank;
+			return;
+		}
+		if (c.button.morph.is_high() && c.button.shift.is_high()) {
+			interface = &range;
 			return;
 		}
 		if (c.button.morph.is_high()) {

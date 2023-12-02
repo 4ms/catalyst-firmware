@@ -1,4 +1,5 @@
 #pragma once
+
 #include "channel.hh"
 #include "channelmode.hh"
 #include "conf/model.hh"
@@ -45,6 +46,9 @@ public:
 	}
 	void IncRange(uint8_t channel, int32_t inc) {
 		b->range[channel].Inc(inc);
+	}
+	Channel::Range GetRange(uint8_t channel) {
+		return b->range[channel];
 	}
 	Channel::Mode GetChannelMode(uint8_t channel) {
 		return b->channelmode[channel];
