@@ -19,27 +19,10 @@ Catalyst2::System _init;
 
 /* october 9th
 
-macro:
-shift == random should randomize nearest scened
-shift + scene == per bank channel random amount
-
-both: play button stops when playing and restarts when stopped
-
-//transpose and range.
-
 maybe clipboards should reset eachother?
 
 have holding multiple seq settings buttons change all pressed buttons together
 
-quantize prior to morph??
-
-Transpose into range. t -> t+r
-
-TODO: phase offset doesnt display correctly in backwards and pingpong mode
-
-*/
-
-/*
 remove trig sense function to free a pin
 
 remove mode switch
@@ -57,7 +40,7 @@ no gate out when scrubbing
 random setting color should be the same across channels
 
 save on inactivity
-\
+
 delete on shift hold reset or shift hold delete in seq or macro respectively
 do button led countdown before clearing
 
@@ -65,8 +48,6 @@ do button led countdown before clearing
 
 void main() {
 	using namespace Catalyst2;
-
-	// run_hardware_test();
 
 	Params params;
 	Ui::Interface ui{params};

@@ -13,14 +13,19 @@ public:
 		p.shared.hang.Cancel();
 	}
 	void Update(Abstract *&interface) override {
-		if (!c.button.shift.is_high())
+		if (!c.button.shift.is_high()) {
+			p.shared.reset.Notify(false);
 			return;
+		}
+
+		if (p.shared.reset.Check()) {
+			return;
+		}
 
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 		const auto ysb = YoungestSceneButton();
 
 		switch (encoder) {
@@ -60,7 +65,7 @@ public:
 				} else {
 					p.data.settings.IncStartOffset(inc);
 				}
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::EncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
@@ -69,7 +74,7 @@ public:
 				} else {
 					p.data.settings.IncPhaseOffset(inc);
 				}
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::EncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
@@ -78,27 +83,27 @@ public:
 				} else {
 					p.data.settings.IncLength(inc);
 				}
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::EncoderAlts::Range:
 				if (ysb.has_value()) {
 					inc = hang.has_value() ? inc : 0;
 					p.data.settings.IncRange(ysb.value(), inc);
-					p.shared.hang.Set(encoder, time_now);
+					p.shared.hang.Set(encoder);
 				}
 				break;
 			case Model::EncoderAlts::ClockDiv:
 				if (ysb.has_value()) {
 					inc = hang.has_value() ? inc : 0;
 					p.data.settings.IncClockDiv(ysb.value(), inc);
-					p.shared.hang.Set(encoder, time_now);
+					p.shared.hang.Set(encoder);
 				} else {
 					if (c.toggle.trig_sense.is_high()) {
 						p.shared.internalclock.Inc(inc, c.button.fine.is_high());
 						p.shared.hang.Cancel();
 					} else {
 						inc = hang.has_value() ? inc : 0;
-						p.shared.hang.Set(encoder, time_now);
+						p.shared.hang.Set(encoder);
 						p.shared.clockdiv.Inc(inc);
 					}
 				}
@@ -110,7 +115,7 @@ public:
 		ClearEncoderLeds();
 
 		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 
 		auto clockdiv = p.shared.clockdiv;
 

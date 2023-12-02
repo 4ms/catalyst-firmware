@@ -30,15 +30,21 @@ public:
 		}
 
 		if (c.button.play.just_went_high()) {
-			if (c.button.shift.is_high())
-				p.player.ToggleStop();
-			else
+			if (c.button.shift.is_high()) {
+				p.player.Stop();
+				p.shared.reset.Notify(true);
+			} else {
 				p.player.TogglePause();
+			}
 		}
 
-		if (c.button.add.just_went_high())
-			p.shared.internalclock.Tap();
+		if (c.button.play.just_went_low()) {
+			p.shared.reset.Notify(false);
+		}
 
+		if (c.button.add.just_went_high()) {
+			p.shared.internalclock.Tap();
+		}
 		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.shared.SetPos(pos);
 	}

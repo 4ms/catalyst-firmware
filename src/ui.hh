@@ -61,6 +61,7 @@ public:
 		if (controls.toggle.mode.just_went_high()) {
 			ui = &sequencer;
 			params.mode = Params::Mode::Sequencer;
+			params.sequencer.player.Stop();
 		} else if (controls.toggle.mode.just_went_low()) {
 			ui = &macro;
 			params.macro.SelectBank(params.macro.GetSelectedBank());

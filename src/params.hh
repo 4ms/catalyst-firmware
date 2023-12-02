@@ -18,25 +18,53 @@ class SharedInterface {
 		static constexpr uint32_t duration = Clock::MsToTicks(2000);
 		uint8_t onto;
 		uint32_t start_time;
+		Clock::Bpm &internalclock;
 
 	public:
+		DisplayHanger(Clock::Bpm &ic)
+			: internalclock{ic} {
+		}
 		void Cancel() {
 			onto = 0xff;
 		}
-		void Set(uint8_t encoder, uint32_t time_now) {
-			start_time = time_now;
+		void Set(uint8_t encoder) {
+			start_time = internalclock.TimeNow();
 			onto = encoder;
 		}
-		std::optional<uint8_t> Check(uint32_t time_now) {
-			if (time_now - start_time >= duration)
+		std::optional<uint8_t> Check() {
+			if (internalclock.TimeNow() - start_time >= duration) {
 				onto = 0xff;
-
-			if (onto == 0xff)
+			}
+			if (onto == 0xff) {
 				return std::nullopt;
-
+			}
 			return onto;
 		}
 	};
+	class ResetManager {
+		static constexpr auto hold_duration = Clock::MsToTicks(3000);
+		Clock::Bpm &internalclock;
+		uint32_t set_time;
+		bool notify = false;
+
+	public:
+		ResetManager(Clock::Bpm &ic)
+			: internalclock{ic} {
+		}
+		void Notify(bool on) {
+			notify = on;
+			if (on) {
+				set_time = internalclock.TimeNow();
+			}
+		}
+		bool Check() {
+			if (notify == false || internalclock.TimeNow() - set_time < hold_duration) {
+				return false;
+			}
+			return true;
+		}
+	};
+
 	float pos;
 
 public:
@@ -45,12 +73,12 @@ public:
 	Clock::Divider clockdivider;
 	Clock::Divider::type clockdiv;
 	RandomPool randompool;
-	DisplayHanger hang;
+	DisplayHanger hang{internalclock};
+	ResetManager reset{internalclock};
 
 	void SetPos(float pos) {
 		this->pos = pos;
 	}
-
 	float GetPos() {
 		return pos;
 	}

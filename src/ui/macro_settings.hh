@@ -26,8 +26,7 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		const auto time_now = HAL_GetTick();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 		const auto is_scene = YoungestSceneButton().has_value();
 
 		switch (encoder) {
@@ -53,10 +52,8 @@ public:
 				}
 				inc = hang.has_value() ? inc : 0;
 				p.shared.clockdiv.Inc(inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
-				// case Model::EncoderAlts::Transpose:
-				//	if ()
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
@@ -75,8 +72,7 @@ public:
 			}
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		} else {
-			const auto time_now = HAL_GetTick();
-			const auto hang = p.shared.hang.Check(time_now);
+			const auto hang = p.shared.hang.Check();
 			if (hang.has_value()) {
 				if (hang.value() == Model::EncoderAlts::ClockDiv) {
 					SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::Setting::active);

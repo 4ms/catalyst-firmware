@@ -5,6 +5,7 @@
 #include "seq_bank.hh"
 #include "seq_common.hh"
 #include "seq_morph.hh"
+#include "seq_reset.hh"
 #include "seq_settings.hh"
 
 namespace Catalyst2::Sequencer::Ui
@@ -13,6 +14,7 @@ class Main : public Usual {
 	Bank bank{p, c};
 	Morph morph{p, c};
 	Settings settings{p, c};
+	Reset reset{p, c};
 
 public:
 	using Usual::Usual;
@@ -21,15 +23,20 @@ public:
 		c.button.bank.clear_events();
 	}
 	void Update(Abstract *&interface) override {
+		if (p.shared.reset.Check()) {
+			p.shared.reset.Notify(false);
+			interface = &reset;
+			return;
+		}
 		if (p.IsSequenceSelected()) {
 			auto ysb = YoungestSceneButton();
-			if (c.button.fine.just_went_high() && ysb.has_value())
+			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.CopyPage(ysb.value());
-
-			if (c.button.bank.just_went_high() && c.button.fine.is_high())
+			}
+			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
 				p.PasteSequence();
+			}
 		}
-
 		if (c.button.shift.is_high()) {
 			interface = &settings;
 			return;

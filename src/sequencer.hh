@@ -70,8 +70,8 @@ class Global {
 
 	private:
 		T val;
-		const T min;
-		const T max;
+		T min;
+		T max;
 	};
 
 public:
@@ -380,7 +380,7 @@ public:
 			}
 		}
 	}
-	void ToggleStop() {
+	void Stop() {
 		pause = true;
 		Reset();
 	}

@@ -82,8 +82,9 @@ private:
 			auto phase = p.shared.GetPos() / p.pathway.GetSceneWidth();
 			phase -= static_cast<unsigned>(phase);
 
-			static Pathway::SceneId last_scene_on = Model::NumScenes;
-			const Pathway::SceneId current_scene = p.pathway.OnAScene() ? p.pathway.SceneNearest() : Model::NumScenes;
+			static auto last_scene_on = Model::NumScenes;
+			const auto current_scene = p.pathway.OnAScene() ? p.pathway.SceneNearest() : Model::NumScenes;
+
 			do_trigs = false;
 			if (current_scene != last_scene_on) {
 				last_scene_on = current_scene;
@@ -105,8 +106,8 @@ private:
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : is_primed;
 				} else {
 					const auto phs = MathTools::crossfade_ratio(phase, 1.f - p.GetMorph(chan));
-					const auto a = p.bank.GetChannel(left, chan);
-					const auto b = p.bank.GetChannel(right, chan);
+					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan));
+					const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan));
 					out = MathTools::interpolate(a, b, phs);
 				}
 			}
@@ -114,18 +115,11 @@ private:
 			do_trigs = true;
 		}
 
-		for (auto [i, out] : countzip(buf)) {
-			if (p.bank.GetChannelMode(i).IsQuantized()) {
-				out = p.shared.quantizer[i].Process(out);
-			}
-		}
-
 		return buf;
 	}
 
 	Model::Output::Buffer Seq(SeqMode::Interface &p) {
 		Model::Output::Buffer buf;
-
 		if (p.shared.internalclock.Output()) {
 			p.player.Step();
 		}
@@ -134,9 +128,7 @@ private:
 				rt.Update();
 			}
 		}
-
 		const auto morph_phase = p.player.IsPaused() ? 0.f : p.shared.internalclock.GetPhase();
-
 		for (auto [chan, o] : countzip(buf)) {
 			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan, morph_phase);
 		}
