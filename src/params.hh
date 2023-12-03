@@ -93,7 +93,6 @@ struct Data {
 
 class Interface {
 	Data &data;
-	std::array<float, Model::NumChans> morph;
 	uint8_t cur_bank = 0;
 
 public:
@@ -108,8 +107,6 @@ public:
 		, shared{shared}
 		, bank{shared.randompool} {
 		SelectBank(0);
-		for (auto &m : morph)
-			m = 1.f;
 	}
 	void SelectBank(uint8_t bank) {
 		if (bank >= Model::NumBanks)
@@ -125,16 +122,6 @@ public:
 	}
 	uint8_t GetSelectedBank() {
 		return cur_bank;
-	}
-	void SetMorph(uint8_t bank, float m) {
-		morph[bank] = std::clamp(m, 0.f, 1.f);
-	}
-	float GetMorph(uint8_t bank) {
-		return morph[bank];
-	}
-	void IncMorph(uint8_t bank, int32_t inc) {
-		const auto i = (1.f / 100.f) * inc;
-		SetMorph(bank, GetMorph(bank) + i);
 	}
 	void Reset() {
 		data.bank[cur_bank] = Bank::Data{};

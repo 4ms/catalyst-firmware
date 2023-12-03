@@ -20,12 +20,13 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		p.IncMorph(encoder, inc);
+		p.bank.IncMorph(encoder, inc);
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			const auto col = p.GetMorph(i) == 0.f ? Palette::green : Palette::grey.blend(Palette::red, p.GetMorph(i));
+			const auto col =
+				p.bank.GetMorph(i) == 0.f ? Palette::green : Palette::grey.blend(Palette::red, p.bank.GetMorph(i));
 			c.SetEncoderLed(i, col);
 		}
 	}
