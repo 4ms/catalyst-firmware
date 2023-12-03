@@ -14,12 +14,19 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		first = true;
-		c.button.shift.clear_events();
+		if (c.button.shift.is_high()) {
+			p.shared.reset.Notify(true);
+		}
 	}
 	void Update(Abstract *&interface) override {
-		if (!c.button.add.is_high() && !c.button.shift.is_high())
+		const auto add = c.button.add.is_high();
+		const auto shift = c.button.shift.is_high();
+		if (!add || !shift) {
+			p.shared.reset.Notify(false);
+		}
+		if ((!add && !shift) || p.shared.reset.Check()) {
 			return;
-
+		}
 		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t button) override {
@@ -27,13 +34,15 @@ public:
 
 		if (c.button.shift.is_high()) {
 			if (path.OnAScene()) {
-				if (path.SceneNearest() == button)
+				if (path.SceneNearest() == button) {
 					path.RemoveSceneNearest();
+				}
 			} else {
-				if (path.SceneLeft() == button)
+				if (path.SceneLeft() == button) {
 					path.RemoveSceneLeft();
-				else if (path.SceneRight() == button)
+				} else if (path.SceneRight() == button) {
 					path.RemoveSceneRight();
+				}
 			}
 			return;
 		}
@@ -45,10 +54,11 @@ public:
 
 		first = false;
 
-		if (path.OnAScene())
+		if (path.OnAScene()) {
 			path.ReplaceScene(button);
-		else
+		} else {
 			path.InsertScene(button, false);
+		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
@@ -56,9 +66,9 @@ public:
 		auto count = p.pathway.size();
 		const auto phase = 1.f / (Pathway::MaxPoints / static_cast<float>(count));
 
-		while (count > 8)
+		while (count > 8) {
 			count -= 8;
-
+		}
 		SetEncoderLedsCount(count, 0, Palette::green.blend(Palette::red, phase));
 
 		if (p.pathway.OnAScene()) {

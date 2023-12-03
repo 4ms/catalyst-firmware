@@ -6,6 +6,7 @@
 #include "macro_common.hh"
 #include "macro_morph.hh"
 #include "macro_range.hh"
+#include "macro_reset.hh"
 #include "macro_settings.hh"
 #include "params.hh"
 
@@ -18,6 +19,7 @@ class Main : public Usual {
 	Morph morph{p, c};
 	Settings settings{p, c};
 	Range range{p, c};
+	Reset reset{p, c};
 
 public:
 	using Usual::Usual;
@@ -35,6 +37,12 @@ public:
 
 			if (c.toggle.trig_sense.is_high())
 				p.recorder.reset();
+		}
+
+		if (p.shared.reset.Check()) {
+			p.shared.reset.Notify(false);
+			interface = &reset;
+			return;
 		}
 
 		if (c.button.add.is_high()) {

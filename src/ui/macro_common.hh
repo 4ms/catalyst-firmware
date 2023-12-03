@@ -25,6 +25,7 @@ public:
 					p.recorder.reset();
 			}
 		}
+
 		const auto pos = p.recorder.update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.shared.SetPos(pos);
 		p.pathway.Update(pos);
