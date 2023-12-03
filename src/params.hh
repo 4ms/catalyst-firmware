@@ -68,7 +68,7 @@ class SharedInterface {
 		static constexpr auto auto_save_duration = Clock::MsToTicks(Model::auto_save_seconds * 1000u);
 		Clock::Bpm &internalclock;
 		uint32_t last_activity_time;
-		bool has_saved = false;
+		bool has_saved = true;
 
 	public:
 		SaveManager(Clock::Bpm &ic)
