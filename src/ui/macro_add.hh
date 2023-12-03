@@ -17,10 +17,6 @@ public:
 		c.button.shift.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		if (c.button.shift.just_went_high()) {
-			if (p.pathway.OnAScene() || p.pathway.SceneLeft() == p.pathway.SceneRight())
-				p.pathway.RemoveSceneNearest();
-		}
 		if (!c.button.add.is_high() && !c.button.shift.is_high())
 			return;
 
