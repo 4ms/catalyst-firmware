@@ -136,6 +136,12 @@ public:
 		const auto i = (1.f / 100.f) * inc;
 		SetMorph(bank, GetMorph(bank) + i);
 	}
+	void Reset() {
+		data.bank[cur_bank] = Bank::Data{};
+	}
+	void Reset(uint8_t scene) {
+		data.bank[cur_bank].scene[scene] = Bank::Data::Scene{};
+	}
 };
 } // namespace MacroMode
 
