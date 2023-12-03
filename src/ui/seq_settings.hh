@@ -17,16 +17,15 @@ public:
 			p.shared.reset.Notify(false);
 			return;
 		}
-
 		if (p.shared.reset.Check()) {
 			return;
 		}
-
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		const auto hang = p.shared.hang.Check();
 		const auto ysb = YoungestSceneButton();
+		p.shared.save.Update();
 
 		switch (encoder) {
 			case Model::EncoderAlts::Transpose:
@@ -166,7 +165,7 @@ public:
 					break;
 				}
 				case EncoderAlts::PhaseOffset: {
-					const auto o = p.player.GetFirstStep(ysb, p.shared.GetPos());
+					const auto o = p.player.GetFirstStep(ysb, p.shared.pos);
 					const auto col = phaseoffset.has_value() ? Setting::active : Setting::null;
 					c.SetEncoderLed(o % SeqStepsPerPage, col);
 					c.SetButtonLed((o / SeqStepsPerPage) % SeqPages, true);

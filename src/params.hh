@@ -145,9 +145,6 @@ public:
 	void Reset(uint8_t scene) {
 		data.bank[cur_bank].scene[scene] = Bank::Data::Scene{};
 	}
-	const Data &GetData() const {
-		return data;
-	}
 };
 } // namespace MacroMode
 

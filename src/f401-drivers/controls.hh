@@ -159,6 +159,29 @@ public:
 		leds_ready_flag = false;
 		return true;
 	}
+	void Save(uint32_t const *payload, uint32_t size, Model::ModeSwitch mode) {
+		size /= sizeof(uint32_t *);
+		auto cnt = 0;
+		do {
+			// blah
+			cnt++;
+		} while (size--);
+		// TODO
+		for (auto i = 0u; i < 16; i++) {
+			SetButtonLed(0, !!(i & 0x01));
+			HAL_Delay(1000 / 16);
+		}
+	}
+	uint32_t const *Load(uint32_t size, Model::ModeSwitch mode) {
+		size /= sizeof(uint32_t *);
+		auto cnt = 0;
+		do {
+			// blah
+			cnt++;
+		} while (size--);
+
+		return nullptr; // TODO
+	}
 
 private:
 	void WriteToEncoderLeds() {

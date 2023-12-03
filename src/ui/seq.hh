@@ -35,6 +35,7 @@ public:
 			}
 			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
 				p.PasteSequence();
+				p.shared.save.Update();
 			}
 		}
 		if (c.button.shift.is_high()) {
@@ -57,6 +58,7 @@ public:
 
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
+		p.shared.save.Update();
 	}
 	void OnSceneButtonRelease(uint8_t button) override {
 		if (!p.IsSequenceSelected()) {
@@ -64,6 +66,7 @@ public:
 		} else {
 			if (c.button.fine.is_high()) {
 				p.PastePage(button);
+				p.shared.save.Update();
 			} else {
 				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
 					if (p.IsPageSelected() && button == p.GetSelectedPage())
@@ -79,8 +82,8 @@ public:
 
 		if (p.IsSequenceSelected()) {
 			const auto chan = p.GetSelectedChannel();
-			const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.GetPos());
-			const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.GetPos());
+			const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.pos);
+			const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.pos);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 			const auto pvals = p.GetPageValues(page);
 

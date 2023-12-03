@@ -83,7 +83,6 @@ public:
 		b->morph[channel] = std::clamp(GetMorph(channel) + i, 0.f, 1.f);
 	}
 	Model::Output::type GetChannel(uint8_t scene, uint8_t channel) {
-
 		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random_amount *
 										 Channel::range);
 

@@ -34,6 +34,7 @@ public:
 			p.data.settings.IncChannelMode(encoder, dir);
 			p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
 		}
+		p.shared.save.Update();
 	}
 	void OnSceneButtonRelease(uint8_t scene) override {
 		if (scene == p.GetSelectedChannel()) {

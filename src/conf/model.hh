@@ -23,6 +23,8 @@ constexpr auto SeqPages = NumScenes;
 constexpr auto MaxSeqSteps = SeqPages * SeqStepsPerPage;
 constexpr auto MinSeqSteps = 1;
 
+constexpr auto auto_save_seconds = 10u;
+
 namespace Output
 {
 using type = uint16_t;

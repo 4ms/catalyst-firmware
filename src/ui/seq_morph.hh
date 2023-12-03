@@ -22,6 +22,7 @@ public:
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		p.IncStepModifier(encoder, inc);
+		p.shared.save.Update();
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
@@ -29,8 +30,8 @@ public:
 		ClearButtonLeds();
 
 		const auto chan = p.GetSelectedChannel();
-		const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.GetPos());
-		const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.GetPos());
+		const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.pos);
+		const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.pos);
 		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 		const auto mvals = p.GetPageValuesModifier(page);
 

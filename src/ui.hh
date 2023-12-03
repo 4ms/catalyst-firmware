@@ -30,6 +30,16 @@ public:
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		ui = &macro;
 
+		// load data
+		auto data = controls.Load(sizeof(MacroMode::Data), Model::ModeSwitch::Macro);
+		if (data != nullptr) {
+			params.data.macro = *(MacroMode::Data *)data;
+		}
+		data = controls.Load(sizeof(SeqMode::Data), Model::ModeSwitch::Sequence);
+		if (data != nullptr) {
+			params.data.seq = *(SeqMode::Data *)data;
+		}
+
 		params.shared.internalclock.SetExternal(!controls.toggle.trig_sense.is_high());
 	}
 	void Update() {
@@ -37,8 +47,9 @@ public:
 
 		if (controls.jack.trig.just_went_high()) {
 			params.shared.clockdivider.Update(params.shared.clockdiv);
-			if (params.shared.clockdivider.Step())
+			if (params.shared.clockdivider.Step()) {
 				params.shared.internalclock.Input();
+			}
 		}
 
 		ui->Common();
@@ -46,11 +57,17 @@ public:
 		params.shared.internalclock.Update();
 
 		Abstract *next;
-		if (params.mode == Params::Mode::Macro)
+		if (params.mode == Params::Mode::Macro) {
+			if (false /* && params.shared.save.Check() */) {
+				controls.Save((uint32_t *)&params.data.macro, sizeof(MacroMode::Data), Model::ModeSwitch::Macro);
+			}
 			next = &macro;
-		else
+		} else {
+			if (params.sequencer.player.IsPaused() && params.shared.save.Check()) {
+				controls.Save((uint32_t *)&params.data.seq, sizeof(SeqMode::Data), Model::ModeSwitch::Sequence);
+			}
 			next = &sequencer;
-
+		}
 		ui->Update(next);
 
 		if (next != ui) {
@@ -79,8 +96,9 @@ public:
 	void SetOutputs(const Model::Output::Buffer &outs) {
 		outputs.write(outs);
 
-		if (controls.LedsReady())
+		if (controls.LedsReady()) {
 			ui->PaintLeds(outs);
+		}
 	}
 };
 
