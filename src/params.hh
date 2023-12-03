@@ -64,8 +64,29 @@ class SharedInterface {
 			return true;
 		}
 	};
+	class SaveManager {
+		static constexpr auto auto_save_duration = Clock::MsToTicks(Model::auto_save_seconds * 1000u);
+		Clock::Bpm &internalclock;
+		uint32_t last_activity_time;
+		bool has_saved = false;
 
-	float pos;
+	public:
+		SaveManager(Clock::Bpm &ic)
+			: internalclock{ic} {
+		}
+		void Update() {
+			last_activity_time = internalclock.TimeNow();
+			has_saved = false;
+		}
+		bool Check() {
+			if (has_saved) {
+				return false;
+			}
+			const auto save = internalclock.TimeNow() - last_activity_time >= auto_save_duration;
+			has_saved = save;
+			return save;
+		}
+	};
 
 public:
 	Clock::Bpm internalclock;
@@ -75,13 +96,8 @@ public:
 	RandomPool randompool;
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
-
-	void SetPos(float pos) {
-		this->pos = pos;
-	}
-	float GetPos() {
-		return pos;
-	}
+	SaveManager save{internalclock};
+	float pos;
 };
 
 namespace MacroMode
@@ -129,6 +145,9 @@ public:
 	void Reset(uint8_t scene) {
 		data.bank[cur_bank].scene[scene] = Bank::Data::Scene{};
 	}
+	const Data &GetData() const {
+		return data;
+	}
 };
 } // namespace MacroMode
 
@@ -158,7 +177,6 @@ public:
 		, shared{shared}
 		, player{data.settings} {
 	}
-
 	void SelectChannel(uint8_t chan) {
 		cur_channel = chan;
 	}
@@ -184,13 +202,13 @@ public:
 		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.GetPos());
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.pos);
 		step += (page * Model::SeqStepsPerPage);
 		data.channel[cur_channel][step].Inc(
 			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel));
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.GetPos());
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.pos);
 		step += (page * Model::SeqStepsPerPage);
 		data.channel[cur_channel][step].modifier.Inc(inc);
 	}
@@ -216,13 +234,13 @@ public:
 		}
 	}
 	Model::Output::type GetPlayheadValue(uint8_t chan) {
-		return GetStepValue(chan, player.GetPlayheadStep(chan, shared.GetPos()));
+		return GetStepValue(chan, player.GetPlayheadStep(chan, shared.pos));
 	}
 	Sequencer::StepModifier GetPlayheadModifier(uint8_t chan) {
-		return data.channel[chan][player.GetPlayheadStep(chan, shared.GetPos())].modifier;
+		return data.channel[chan][player.GetPlayheadStep(chan, shared.pos)].modifier;
 	}
 	Model::Output::type GetPrevStepValue(uint8_t chan) {
-		return GetStepValue(chan, player.GetPrevStep(chan, shared.GetPos()));
+		return GetStepValue(chan, player.GetPrevStep(chan, shared.pos));
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
