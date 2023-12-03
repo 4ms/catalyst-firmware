@@ -27,7 +27,7 @@ public:
 		}
 
 		const auto pos = p.recorder.update(c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.shared.SetPos(pos);
+		p.shared.pos = pos;
 		p.pathway.Update(pos);
 		p.override_output = YoungestSceneButton();
 	}

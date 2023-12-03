@@ -110,7 +110,7 @@ public:
 				if (l == r)
 					c.SetButtonLed(l, true);
 				else {
-					const auto pos = p.shared.GetPos();
+					const auto pos = p.shared.pos;
 					c.SetButtonLed(l, 1.f - pos);
 					c.SetButtonLed(r, pos);
 				}

@@ -46,7 +46,7 @@ public:
 			p.shared.internalclock.Tap();
 		}
 		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.shared.SetPos(pos);
+		p.shared.pos = pos;
 	}
 };
 } // namespace Catalyst2::Sequencer::Ui

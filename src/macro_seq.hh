@@ -79,7 +79,7 @@ private:
 			const auto left = p.pathway.SceneLeft();
 			const auto right = p.pathway.SceneRight();
 
-			auto phase = p.shared.GetPos() / p.pathway.GetSceneWidth();
+			auto phase = p.shared.pos / p.pathway.GetSceneWidth();
 			phase -= static_cast<unsigned>(phase);
 
 			static auto last_scene_on = Model::NumScenes;
