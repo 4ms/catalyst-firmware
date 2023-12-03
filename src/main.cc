@@ -41,7 +41,6 @@ random setting color should be the same across channels
 
 save on inactivity
 
-delete on shift hold reset or shift hold delete in seq or macro respectively
 do button led countdown before clearing
 
 */
