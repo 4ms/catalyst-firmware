@@ -31,6 +31,7 @@ public:
 	}
 	void OnSceneButtonRelease(uint8_t button) override {
 		auto &path = p.pathway;
+		p.shared.reset.Notify(false);
 
 		if (c.button.shift.is_high()) {
 			if (path.OnAScene()) {
