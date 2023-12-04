@@ -105,7 +105,7 @@ private:
 
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : is_primed;
 				} else {
-					const auto phs = MathTools::crossfade_ratio(phase, 1.f - p.bank.GetMorph(chan));
+					const auto phs = MathTools::crossfade_ratio(phase, p.bank.GetMorph(chan));
 					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan));
 					const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan));
 					out = MathTools::interpolate(a, b, phs);

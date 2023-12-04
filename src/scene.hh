@@ -22,11 +22,6 @@ struct Data {
 	std::array<Channel::Mode, Model::NumChans> channelmode;
 	std::array<Channel::Range, Model::NumChans> range;
 	std::array<float, Model::NumChans> morph;
-	Data() {
-		for (auto &m : morph) {
-			m = 1.f;
-		}
-	}
 };
 
 class Interface {
@@ -76,11 +71,11 @@ public:
 		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel]);
 	}
 	float GetMorph(uint8_t channel) {
-		return b->morph[channel];
+		return 1.f - b->morph[channel];
 	}
 	void IncMorph(uint8_t channel, int32_t inc) {
 		const auto i = (1.f / 100.f) * inc;
-		b->morph[channel] = std::clamp(GetMorph(channel) + i, 0.f, 1.f);
+		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
 	}
 	Model::Output::type GetChannel(uint8_t scene, uint8_t channel) {
 		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random_amount *
