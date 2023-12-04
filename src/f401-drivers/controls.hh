@@ -7,9 +7,11 @@
 #include "drivers/debounced_switch.hh"
 #include "drivers/led_driver_lp5024.hh"
 #include "drivers/muxed_io.hh"
+#include "flash.hh"
 #include "muxed_button.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
+#include "util/wear_level.hh"
 #include <cmath>
 #include <optional>
 #include <util/countzip.hh>
@@ -18,6 +20,7 @@ namespace Catalyst2
 {
 
 class Controls {
+	static inline WearLevel<Flash> flash;
 	static inline std::array<uint16_t, Board::NumAdcs> adc_buffer;
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
 	std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
