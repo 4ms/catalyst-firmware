@@ -39,58 +39,36 @@ public:
 		if (data != nullptr) {
 			params.data.seq = *(SeqMode::Data *)data;
 		}
-
-		params.shared.internalclock.SetExternal(!controls.toggle.trig_sense.is_high());
 	}
 	void Update() {
 		controls.Update();
-
-		if (controls.jack.trig.just_went_high()) {
-			params.shared.clockdivider.Update(params.shared.clockdiv);
-			if (params.shared.clockdivider.Step()) {
-				params.shared.internalclock.Input();
-			}
-		}
-
-		ui->Common();
-
 		params.shared.internalclock.Update();
+		ui->Common();
 
 		Abstract *next;
 		if (params.mode == Params::Mode::Macro) {
-			if (false /* && params.shared.save.Check() */) {
-				controls.Save((uint32_t *)&params.data.macro, sizeof(MacroMode::Data), Model::ModeSwitch::Macro);
+			if (true && params.shared.save.Check()) {
+				SaveMacro();
 			}
 			next = &macro;
 		} else {
 			if (params.sequencer.player.IsPaused() && params.shared.save.Check()) {
-				controls.Save((uint32_t *)&params.data.seq, sizeof(SeqMode::Data), Model::ModeSwitch::Sequence);
+				SaveSequencer();
 			}
 			next = &sequencer;
 		}
 		ui->Update(next);
-
 		if (next != ui) {
 			ui = next;
 			ui->Init();
 		}
-
-		if (controls.toggle.mode.just_went_high()) {
-			ui = &sequencer;
-			params.mode = Params::Mode::Sequencer;
-			params.sequencer.player.Stop();
-		} else if (controls.toggle.mode.just_went_low()) {
-			ui = &macro;
-			params.macro.SelectBank(params.macro.GetSelectedBank());
-			params.mode = Params::Mode::Macro;
-		}
-
 		for (auto [i, sb] : countzip(controls.button.scene)) {
-			if (sb.just_went_low())
+			if (sb.just_went_low()) {
 				ui->OnSceneButtonRelease(i);
+			}
 		}
-
 		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
+		CheckMode();
 	}
 
 	void SetOutputs(const Model::Output::Buffer &outs) {
@@ -99,6 +77,34 @@ public:
 		if (controls.LedsReady()) {
 			ui->PaintLeds(outs);
 		}
+	}
+
+private:
+	void CheckMode() {
+		if (controls.button.shift.just_went_high() && controls.button.play.is_high() && controls.button.bank.is_high())
+		{
+			params.shared.reset.Notify(false);
+			if (params.mode == Params::Mode::Sequencer) {
+				SaveSequencer();
+				params.mode = Params::Mode::Macro;
+				ui = &macro;
+				params.macro.SelectBank(params.macro.GetSelectedBank());
+			} else {
+				params.sequencer.player.Stop();
+				SaveMacro();
+				params.mode = Params::Mode::Sequencer;
+				ui = &sequencer;
+				controls.button.play.clear_events();
+			}
+		}
+	}
+	void SaveMacro() {
+		controls.Save((uint32_t *)&params.data.macro, sizeof(MacroMode::Data), Model::ModeSwitch::Macro);
+	}
+	void SaveSequencer() {
+		controls.Save((uint32_t *)&params.data.seq, sizeof(SeqMode::Data), Model::ModeSwitch::Sequence);
+	}
+	void Load(Params::Mode mode) {
 	}
 };
 

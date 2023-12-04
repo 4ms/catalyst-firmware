@@ -32,11 +32,9 @@ public:
 			p.bank.Copy(p.override_output.value());
 
 		if (c.button.play.just_went_high()) {
-			if (c.button.shift.is_high())
+			if (c.button.shift.is_high()) {
 				p.recorder.cue_recording();
-
-			if (c.toggle.trig_sense.is_high())
-				p.recorder.reset();
+			}
 		}
 
 		if (p.shared.reset.Check()) {

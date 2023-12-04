@@ -49,8 +49,8 @@ struct Buttons {
 	static constexpr uint8_t Play = 15;
 };
 
-inline constexpr uint8_t ModeSwitch = 3;
-inline constexpr uint8_t TrigJackSense = 13;
+// inline constexpr uint8_t ModeSwitch = 3;
+// inline constexpr uint8_t TrigJackSense = 13;
 
 //////////////// Encoders
 

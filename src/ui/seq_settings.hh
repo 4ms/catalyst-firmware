@@ -97,7 +97,7 @@ public:
 					p.data.settings.IncClockDiv(ysb.value(), inc);
 					p.shared.hang.Set(encoder);
 				} else {
-					if (c.toggle.trig_sense.is_high()) {
+					if (p.shared.internalclock.IsInternal()) {
 						p.shared.internalclock.Inc(inc, c.button.fine.is_high());
 						p.shared.hang.Cancel();
 					} else {
@@ -195,7 +195,7 @@ public:
 			col = phaseoffset.has_value() ? Setting::active : Setting::null;
 			c.SetEncoderLed(EncoderAlts::PhaseOffset, col);
 
-			if (c.toggle.trig_sense.is_high() && !ysb.has_value()) {
+			if (p.shared.internalclock.IsInternal() && !ysb.has_value()) {
 				if (p.shared.internalclock.Peek()) {
 					col = bpm;
 				} else {

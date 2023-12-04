@@ -43,11 +43,6 @@ class Controls {
 		MuxedButton add{Board::Buttons::Add};
 		MuxedButton play{Board::Buttons::Play};
 	};
-	// Switches
-	struct Toggles {
-		MuxedButton mode{Board::ModeSwitch};
-		MuxedButton trig_sense{Board::TrigJackSense};
-	};
 	// Jacks
 	struct Jacks {
 		Board::TrigJack trig;
@@ -81,7 +76,6 @@ class Controls {
 
 public:
 	Buttons button;
-	Toggles toggle;
 	Jacks jack;
 
 	Controls() {
@@ -99,20 +93,23 @@ public:
 		muxio_update_task.start();
 
 		adc_dma.register_callback([this] {
-			for (unsigned i = 0; auto &a : analog)
+			for (unsigned i = 0; auto &a : analog) {
 				a.add_val(adc_buffer[i++]);
+			}
 		});
 		adc_dma.start();
-		if (!led_driver.init())
+		if (!led_driver.init()) {
 			__BKPT();
+		}
 		HAL_Delay(2);
 	}
 
 	void ForEachEncoderInc(auto func) {
 		for (auto [i, enc] : countzip(encoders)) {
 			auto inc = enc.read();
-			if (inc)
+			if (inc) {
 				func(i, inc);
+			}
 		}
 	}
 
@@ -155,10 +152,10 @@ public:
 			enc.update();
 		}
 	}
-
 	bool LedsReady() {
-		if (!leds_ready_flag)
+		if (!leds_ready_flag) {
 			return false;
+		}
 		leds_ready_flag = false;
 		return true;
 	}
@@ -185,6 +182,9 @@ public:
 
 		return nullptr; // TODO
 	}
+	void Delay(uint32_t ms) {
+		HAL_Delay(ms);
+	}
 
 private:
 	void WriteToEncoderLeds() {
@@ -197,8 +197,9 @@ private:
 		auto button_leds = 0u;
 		for (auto x = 0u; x < Model::NumChans; x++) {
 			auto led = button_led_duty[x];
-			if (cnt < led)
+			if (cnt < led) {
 				button_leds |= 1ul << Board::ButtonLedMap[x];
+			}
 		}
 
 		auto mux_read = muxio.step(button_leds);
@@ -212,18 +213,15 @@ private:
 		}
 	}
 	void UpdateButtons(uint32_t raw_mux_read) {
-		for (auto &but : button.scene)
+		for (auto &but : button.scene) {
 			but.update(raw_mux_read);
-
+		}
 		button.shift.update(raw_mux_read);
 		button.morph.update(raw_mux_read);
 		button.bank.update(raw_mux_read);
 		button.fine.update(raw_mux_read);
 		button.add.update(raw_mux_read);
 		button.play.update(raw_mux_read);
-
-		toggle.mode.update(raw_mux_read);
-		toggle.trig_sense.update(raw_mux_read);
 	}
 };
 } // namespace Catalyst2

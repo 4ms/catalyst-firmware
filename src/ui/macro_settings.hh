@@ -14,6 +14,8 @@ public:
 		p.shared.hang.Cancel();
 	}
 	void Update(Abstract *&interface) override {
+		if (c.button.play.just_went_high()) {
+		}
 		if (!c.button.shift.is_high()) {
 			return;
 		}

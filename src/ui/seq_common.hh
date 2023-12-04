@@ -13,20 +13,21 @@ public:
 		, p{p} {
 	}
 	void Common() override final {
-
-		if (c.toggle.trig_sense.just_went_high())
-			p.shared.internalclock.SetExternal(false);
-		else if (c.toggle.trig_sense.just_went_low())
-			p.shared.internalclock.SetExternal(true);
-
 		if (c.jack.reset.is_high()) {
-			if (c.toggle.trig_sense.is_high())
-				p.shared.internalclock.Reset();
-			else
-				p.shared.clockdivider.Reset();
-
+			p.shared.internalclock.Reset();
+			p.shared.clockdivider.Reset();
 			p.player.Reset();
 			return;
+		}
+
+		if (c.jack.trig.just_went_high()) {
+			if (p.shared.internalclock.IsInternal()) {
+				p.shared.internalclock.SetExternal(true);
+			}
+			p.shared.clockdivider.Update(p.shared.clockdiv);
+			if (p.shared.clockdivider.Step()) {
+				p.shared.internalclock.Input();
+			}
 		}
 
 		if (c.button.play.just_went_high()) {
