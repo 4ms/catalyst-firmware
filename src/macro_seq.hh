@@ -79,9 +79,6 @@ private:
 			const auto left = p.pathway.SceneLeft();
 			const auto right = p.pathway.SceneRight();
 
-			auto phase = p.shared.pos / p.pathway.GetSceneWidth();
-			phase -= static_cast<unsigned>(phase);
-
 			static auto last_scene_on = Model::NumScenes;
 			const auto current_scene = p.pathway.OnAScene() ? p.pathway.SceneNearest() : Model::NumScenes;
 
@@ -105,7 +102,7 @@ private:
 
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : is_primed;
 				} else {
-					const auto phs = MathTools::crossfade_ratio(phase, p.bank.GetMorph(chan));
+					const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
 					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan));
 					const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan));
 					out = MathTools::interpolate(a, b, phs);

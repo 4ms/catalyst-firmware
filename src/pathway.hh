@@ -19,6 +19,7 @@ class Interface {
 	SceneId scene_nearest;
 	SceneId prev_index = 0;
 	bool on_a_scene;
+	float phase;
 
 public:
 	void Load(Data &d) {
@@ -35,6 +36,12 @@ public:
 		scene_left = PhaseToIndex(point);
 		auto n = PhaseToIndex(point + (scene_width * .5f));
 		scene_nearest = n >= size() ? 0 : n;
+		phase = point / scene_width;
+		phase -= static_cast<uint32_t>(phase);
+	}
+
+	float GetPhase() {
+		return phase;
 	}
 
 	SceneId SceneLeft() {
@@ -88,10 +95,10 @@ public:
 		if (size() <= 2)
 			return;
 
-		auto idxr = scene_left + 1;
-		idxr = size() ? 0 : idxr;
+		auto idx = scene_left + 1;
+		idx = idx >= size() ? 0 : idx;
 
-		p->erase(idxr);
+		p->erase(idx);
 		UpdateSceneWidth();
 	}
 

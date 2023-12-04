@@ -110,7 +110,7 @@ public:
 				if (l == r)
 					c.SetButtonLed(l, true);
 				else {
-					const auto pos = p.shared.pos;
+					const auto pos = p.pathway.GetPhase();
 					c.SetButtonLed(l, 1.f - pos);
 					c.SetButtonLed(r, pos);
 				}
