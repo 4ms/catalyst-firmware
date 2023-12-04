@@ -51,9 +51,10 @@ public:
 		cnt++;
 
 		if (cnt >= period) {
-			if (IsInternal()) {
+			if (IsInternal() || cnt >= period * 2) {
 				cnt = 0;
 				step = true;
+				SetExternal(false);
 			}
 			peek = !peek;
 			multout = true;
