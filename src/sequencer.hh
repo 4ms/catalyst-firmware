@@ -9,11 +9,8 @@
 #include "util/countzip.hh"
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstdint>
 #include <optional>
-#include <stdint-gcc.h>
-#include <type_traits>
 
 namespace Catalyst2::Sequencer
 {
