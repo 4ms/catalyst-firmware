@@ -7,7 +7,7 @@
 #include "drivers/debounced_switch.hh"
 #include "drivers/led_driver_lp5024.hh"
 #include "drivers/muxed_io.hh"
-#include "flash.hh"
+#include "flash_block.hh"
 #include "muxed_button.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
@@ -20,7 +20,7 @@ namespace Catalyst2
 {
 
 class Controls {
-	static inline WearLevel<Flash> flash;
+
 	static inline std::array<uint16_t, Board::NumAdcs> adc_buffer;
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
 	std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
@@ -158,29 +158,6 @@ public:
 		}
 		leds_ready_flag = false;
 		return true;
-	}
-	void Save(uint32_t const *payload, uint32_t size, Model::ModeSwitch mode) {
-		size /= sizeof(uint32_t *);
-		auto cnt = 0;
-		do {
-			// blah
-			cnt++;
-		} while (size--);
-		// TODO
-		for (auto i = 0u; i < 16; i++) {
-			SetButtonLed(0, !!(i & 0x01));
-			HAL_Delay(1000 / 16);
-		}
-	}
-	uint32_t const *Load(uint32_t size, Model::ModeSwitch mode) {
-		size /= sizeof(uint32_t *);
-		auto cnt = 0;
-		do {
-			// blah
-			cnt++;
-		} while (size--);
-
-		return nullptr; // TODO
 	}
 	void Delay(uint32_t ms) {
 		HAL_Delay(ms);

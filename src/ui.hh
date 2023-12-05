@@ -21,23 +21,28 @@ class Interface {
 	Macro::Ui::Main macro{params.macro, controls};
 	Sequencer::Ui::Main sequencer{params.sequencer, controls};
 
+	WearLevel<FlashBlock<Board::SeqSettingsFlashAddr, SeqMode::Data>> seq_settings_flash;
+	WearLevel<FlashBlock<Board::MacroSettingsFlashAddr, MacroMode::Data>> macro_settings_flash;
+
 public:
 	Interface(Params &params)
 		: params{params} {
 	}
+
 	void Start() {
 		controls.Start();
 		std::srand(controls.ReadSlider() + controls.ReadCv());
-		ui = &macro;
+		ui = &sequencer;
+		params.mode = Params::Mode::Sequencer;
 
 		// load data
-		auto data = controls.Load(sizeof(MacroMode::Data), Model::ModeSwitch::Macro);
-		if (data != nullptr) {
-			params.data.macro = *(MacroMode::Data *)data;
+		if (!seq_settings_flash.read(params.data.seq)) {
+			params.data.seq = SeqMode::Data{};
 		}
-		data = controls.Load(sizeof(SeqMode::Data), Model::ModeSwitch::Sequence);
-		if (data != nullptr) {
-			params.data.seq = *(SeqMode::Data *)data;
+
+		if (!macro_settings_flash.read(params.data.macro)) {
+			params.data.macro = MacroMode::Data{};
+			params.macro.SelectBank(0);
 		}
 	}
 	void Update() {
@@ -99,10 +104,36 @@ private:
 		}
 	}
 	void SaveMacro() {
-		controls.Save((uint32_t *)&params.data.macro, sizeof(MacroMode::Data), Model::ModeSwitch::Macro);
+		if (!macro_settings_flash.write(params.data.macro)) {
+			// Flash is damaged?
+			PanicWarning();
+		}
+
+		// TODO
+		for (auto i = 0u; i < 16; i++) {
+			controls.SetButtonLed(0, !!(i & 0x01));
+			controls.Delay(1000 / 16);
+		}
 	}
 	void SaveSequencer() {
-		controls.Save((uint32_t *)&params.data.seq, sizeof(SeqMode::Data), Model::ModeSwitch::Sequence);
+		if (!seq_settings_flash.write(params.data.seq)) {
+			// Flash is damaged?
+			PanicWarning();
+		}
+
+		// TODO
+		for (auto i = 0u; i < 16; i++) {
+			controls.SetButtonLed(1, !!(i & 0x01));
+			controls.Delay(1000 / 16);
+		}
+	}
+	// Non-fatal error. Loudly notify user, but continue operating
+	void PanicWarning() {
+		for (auto i = 0u; i < 48; i++) {
+			for (auto but = 0u; but < 8; but++)
+				controls.SetButtonLed(but, !!(i & 0b1));
+			controls.Delay(3000 / 48);
+		}
 	}
 	void Load(Params::Mode mode) {
 	}

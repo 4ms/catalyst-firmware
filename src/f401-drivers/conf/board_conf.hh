@@ -179,6 +179,11 @@ const TimekeeperConfig muxio_conf{
 	.priority2 = 2,
 };
 
+///////////////// Flash
+
+static constexpr uint32_t MacroSettingsFlashAddr = 0x0802'0000; // Eventually will be 0x0800'4000;
+static constexpr uint32_t SeqSettingsFlashAddr = 0x0804'0000;	// Eventually will be 0x0800'8000;
+
 ///////////////// Debug pin
 
 using DebugPin = mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output>;
