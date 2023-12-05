@@ -173,7 +173,7 @@ private:
 	// mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
 	// uint32_t button_leds = 0;
-	std::array<uint8_t, Model::NumChans> button_led_duty;
+	// std::array<uint8_t, Model::NumChans> button_led_duty;
 	std::array<Color, Model::NumChans> rgb_leds;
 };
 } // namespace Catalyst2
