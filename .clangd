@@ -1,7 +1,7 @@
 Diagnostics:
 
     UnusedIncludes: None #too many false positives in clangd 17.0.5
-      #MissingIncludes: Strict
+    # MissingIncludes: Strict
 
     ClangTidy:
         Add: [modernize*, cppcoreguidelines-prefer-member-initializer, readability-suspicious-call-argument]
