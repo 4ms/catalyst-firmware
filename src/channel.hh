@@ -50,8 +50,8 @@ class Range {
 	static constexpr uint8_t min = 0u;
 	static constexpr uint8_t max = options.size() - 1;
 	static constexpr auto absmaxv = [] {
-		const auto min = std::abs(Model::min_output_voltage);
-		const auto max = std::abs(Model::max_output_voltage);
+		const auto min = Model::min_output_voltage < 0 ? -Model::min_output_voltage : Model::min_output_voltage;
+		const auto max = Model::max_output_voltage < 0 ? -Model::max_output_voltage : Model::max_output_voltage;
 		return max >= min ? max : min;
 	}();
 	uint8_t val = 0;
