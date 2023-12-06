@@ -105,6 +105,14 @@ namespace MacroMode
 struct Data {
 	std::array<Pathway::Data, Model::NumBanks> pathway;
 	std::array<Bank::Data, Model::NumBanks> bank;
+
+	bool validate() {
+		for (auto &p : pathway) {
+			if (p.size() > 64)
+				return false;
+		}
+		return true;
+	}
 };
 
 class Interface {
@@ -153,6 +161,13 @@ namespace SeqMode
 struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
+
+	bool validate() {
+		if (channel[0][0].modifier.AsMorph() >= 0.f && channel[0][0].modifier.AsMorph() <= 1.f) {
+			return true;
+		} else
+			return false;
+	}
 };
 
 class Interface {
@@ -282,6 +297,7 @@ struct Params {
 		SeqMode::Data seq;
 		MacroMode::Data macro;
 	} data;
+
 	SharedInterface shared;
 
 	SeqMode::Interface sequencer{data.seq, shared};
