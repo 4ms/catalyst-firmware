@@ -15,7 +15,7 @@ public:
 		wait = true;
 		p.player.Stop();
 	}
-	void Update(Abstract *&interface) {
+	void Update(Abstract *&interface) override {
 		if (wait) {
 			if (!c.button.play.is_high() && !c.button.shift.is_high()) {
 				wait = false;
