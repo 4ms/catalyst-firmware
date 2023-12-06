@@ -1,9 +1,11 @@
 #pragma once
 
+#include "conf/board_conf.hh"
 #include "conf/model.hh"
 #include "controls.hh"
 #include "outputs.hh"
 #include "params.hh"
+#include "settings.hh"
 #include "ui/macro.hh"
 #include "ui/seq.hh"
 #include "util/countzip.hh"
@@ -21,8 +23,7 @@ class Interface {
 	Macro::Ui::Main macro{params.macro, controls};
 	Sequencer::Ui::Main sequencer{params.sequencer, controls};
 
-	WearLevel<FlashBlock<Board::SeqSettingsFlashAddr, SeqMode::Data>> seq_settings_flash;
-	WearLevel<FlashBlock<Board::MacroSettingsFlashAddr, MacroMode::Data>> macro_settings_flash;
+	SavedSettings<SeqMode::Data, MacroMode::Data> settings;
 
 public:
 	Interface(Params &params)
@@ -36,11 +37,11 @@ public:
 		params.mode = Params::Mode::Sequencer;
 
 		// load data
-		if (!seq_settings_flash.read(params.data.seq)) {
+		if (!settings.read(params.data.seq)) {
 			params.data.seq = SeqMode::Data{};
 		}
 
-		if (!macro_settings_flash.read(params.data.macro)) {
+		if (!settings.read(params.data.macro)) {
 			params.data.macro = MacroMode::Data{};
 			params.macro.SelectBank(0);
 		}
@@ -52,12 +53,12 @@ public:
 
 		Abstract *next;
 		if (params.mode == Params::Mode::Macro) {
-			if (true && params.shared.save.Check()) {
+			if (false && params.shared.save.Check()) {
 				SaveMacro();
 			}
 			next = &macro;
 		} else {
-			if (params.sequencer.player.IsPaused() && params.shared.save.Check()) {
+			if (false && params.sequencer.player.IsPaused() && params.shared.save.Check()) {
 				SaveSequencer();
 			}
 			next = &sequencer;
@@ -104,7 +105,7 @@ private:
 		}
 	}
 	void SaveMacro() {
-		if (!macro_settings_flash.write(params.data.macro)) {
+		if (!settings.write(params.data.macro)) {
 			// Flash is damaged?
 			PanicWarning();
 		}
@@ -116,7 +117,7 @@ private:
 		}
 	}
 	void SaveSequencer() {
-		if (!seq_settings_flash.write(params.data.seq)) {
+		if (!settings.write(params.data.seq)) {
 			// Flash is damaged?
 			PanicWarning();
 		}
