@@ -53,12 +53,12 @@ public:
 
 		Abstract *next;
 		if (params.mode == Params::Mode::Macro) {
-			if (false && params.shared.save.Check()) {
+			if (params.shared.save.Check()) {
 				SaveMacro();
 			}
 			next = &macro;
 		} else {
-			if (false && params.sequencer.player.IsPaused() && params.shared.save.Check()) {
+			if (params.sequencer.player.IsPaused() && params.shared.save.Check()) {
 				SaveSequencer();
 			}
 			next = &sequencer;
