@@ -1,37 +1,22 @@
-#include "../src/conf/model.hh"
-#include "macro_seq.hh"
+#include "ui.hh"
+
+#include "../src/macro_seq.hh"
+#include "controls.hh"
 #include "params.hh"
-
-struct SimUI {
-	Catalyst2::Params &params;
-
-	SimUI(Catalyst2::Params &params)
-		: params{params} {
-		// setup some way to read user input (keyboard, mouse, GUI window...)
-		// setup some way to display outputs and leds
-	}
-
-	void update() {
-		// read inputs, and store into params
-	}
-
-	void set_outputs(Catalyst2::Model::Output::Buffer &outs) {
-		// display the outputs
-		(void)outs;
-	}
-};
 
 // Test if we could make a simulator
 void sim_main() {
 	using namespace Catalyst2;
 
 	Params params;
-	SimUI ui{params};
+	Ui::Interface ui{params};
 	MacroSeq macroseq{params};
 
+	ui.Start();
+
 	while (true) {
-		ui.update();
+		ui.Update();
 		auto out = macroseq.Update();
-		ui.set_outputs(out);
+		ui.SetOutputs(out);
 	}
 }
