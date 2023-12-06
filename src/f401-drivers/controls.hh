@@ -7,7 +7,6 @@
 #include "drivers/debounced_switch.hh"
 #include "drivers/led_driver_lp5024.hh"
 #include "drivers/muxed_io.hh"
-#include "flash_block.hh"
 #include "muxed_button.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
