@@ -153,6 +153,7 @@ private:
 		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan)) - stepval;
 		stepval += (distance * stepmorph);
 		return Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
+		// TODO clamp range here!
 	}
 };
 
