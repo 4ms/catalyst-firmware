@@ -5,9 +5,29 @@
 #include <array>
 #include <cstdint>
 
-namespace Catalyst2
+namespace Catalyst2::Random
 {
-class RandomPool {
+class Amount {
+	using type = float;
+	static constexpr type inc_step = 1.f / 32.f;
+	static constexpr type min = 0.f, max = 1.f;
+	type val = 0.f;
+
+public:
+	void Inc(int32_t inc) {
+		val = std::clamp(val + (inc * inc_step), min, max);
+	}
+	type Read() {
+		return val;
+	}
+	bool Validate() {
+		return val >= min && val <= max;
+	}
+};
+using type = float;
+inline constexpr type min = 0.f, max = 1.f;
+
+class Pool {
 	// same pool of random values can be shared with the sequencer and the macro mode
 	static constexpr auto size_macro = Model::NumScenes * Model::NumChans;
 	static constexpr auto size_seq = Model::MaxSeqSteps * Model::NumChans;
@@ -67,4 +87,4 @@ private:
 		val[idx] = std::rand();
 	}
 };
-} // namespace Catalyst2
+} // namespace Catalyst2::Random
