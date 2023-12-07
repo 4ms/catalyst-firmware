@@ -1,11 +1,12 @@
 #pragma once
 
 #include "clock.hh"
+#include "macro.hh"
 #include "pathway.hh"
 #include "quantizer.hh"
 #include "recorder.hh"
-#include "scene.hh"
 #include "sequencer.hh"
+#include "util/countzip.hh"
 #include <array>
 #include <optional>
 
@@ -93,27 +94,15 @@ public:
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
 	Clock::Divider::type clockdiv;
-	RandomPool randompool;
+	Random::Pool randompool;
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
 	SaveManager save{internalclock};
 	float pos;
 };
 
-namespace MacroMode
+namespace Macro
 {
-struct Data {
-	std::array<Pathway::Data, Model::NumBanks> pathway;
-	std::array<Bank::Data, Model::NumBanks> bank;
-
-	bool validate() {
-		for (auto &p : pathway) {
-			if (p.size() > 64)
-				return false;
-		}
-		return true;
-	}
-};
 
 class Interface {
 	Data &data;
@@ -154,35 +143,23 @@ public:
 		data.bank[cur_bank].scene[scene] = Bank::Data::Scene{};
 	}
 };
-} // namespace MacroMode
+} // namespace Macro
 
-namespace SeqMode
+namespace Sequencer
 {
-struct Data {
-	std::array<Sequencer::ChannelData, Model::NumChans> channel;
-	Sequencer::Settings::Data settings;
-
-	bool validate() {
-		if (channel[0][0].modifier.AsMorph() >= 0.f && channel[0][0].modifier.AsMorph() <= 1.f) {
-			return true;
-		} else
-			return false;
-	}
-};
-
 class Interface {
 	uint8_t cur_channel = 0;
 	uint8_t cur_page = Model::SeqPages;
 	struct Clipboard {
-		Sequencer::ChannelData cd;
-		Sequencer::Settings::Channel cs;
-		std::array<Sequencer::Step, Model::SeqStepsPerPage> page;
+		ChannelData cd;
+		Settings::Channel cs;
+		std::array<Step, Model::SeqStepsPerPage> page;
 	} clipboard;
 
 public:
 	Data &data;
 	SharedInterface &shared;
-	Sequencer::PlayerInterface player;
+	PlayerInterface player;
 
 	Interface(Data &data, SharedInterface &shared)
 		: data{data}
@@ -222,7 +199,7 @@ public:
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.pos);
 		step += (page * Model::SeqStepsPerPage);
-		data.channel[cur_channel][step].modifier.Inc(inc);
+		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
 	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
 		auto rand = shared.randompool.GetSequenceVal(chan, step);
@@ -248,7 +225,7 @@ public:
 	Model::Output::type GetPlayheadValue(uint8_t chan) {
 		return GetStepValue(chan, player.GetPlayheadStep(chan, shared.pos));
 	}
-	Sequencer::StepModifier GetPlayheadModifier(uint8_t chan) {
+	StepModifier GetPlayheadModifier(uint8_t chan) {
 		return data.channel[chan][player.GetPlayheadStep(chan, shared.pos)].modifier;
 	}
 	Model::Output::type GetPrevStepValue(uint8_t chan) {
@@ -287,21 +264,21 @@ public:
 		}
 	}
 };
-} // namespace SeqMode
+} // namespace Sequencer
 
 struct Params {
 	enum class Mode : bool { Sequencer, Macro };
 	Mode mode = Mode::Macro;
 
 	struct Data {
-		SeqMode::Data seq;
-		MacroMode::Data macro;
+		Sequencer::Data seq;
+		Macro::Data macro;
 	} data;
 
 	SharedInterface shared;
 
-	SeqMode::Interface sequencer{data.seq, shared};
-	MacroMode::Interface macro{data.macro, shared};
+	Sequencer::Interface sequencer{data.seq, shared};
+	Macro::Interface macro{data.macro, shared};
 };
 
 } // namespace Catalyst2
