@@ -1,5 +1,6 @@
 #pragma once
-#include "conf/model.hh"
+#include "../src/conf/model.hh"
+#include "util/debouncer.hh"
 #include <array>
 
 // Configuration for everything that might change if we use a different ICs
@@ -16,30 +17,35 @@ namespace Catalyst2::Board
 
 // //////////////// Trigger Inputs
 
-// using TrigJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_14}, PinPolarity::Inverted>;
-// using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolarity::Inverted>;
+struct ToggleInput : Toggler {
+	void update() {
+	}
+};
+
+using TrigJack = ToggleInput;
+using ResetJack = ToggleInput;
 
 // //////////////// Buttons
 
-// struct Buttons {
-// 	static constexpr std::array<uint8_t, Model::NumScenes> SceneMap{
-// 		11,
-// 		8,
-// 		7,
-// 		5,
-// 		9,
-// 		10,
-// 		4,
-// 		6,
-// 	};
+struct Buttons {
+	static constexpr std::array<uint8_t, Model::NumScenes> SceneMap{
+		11,
+		8,
+		7,
+		5,
+		9,
+		10,
+		4,
+		6,
+	};
 
-// 	static constexpr uint8_t Shift = 1;
-// 	static constexpr uint8_t Morph = 12;
-// 	static constexpr uint8_t Bank = 2;
-// 	static constexpr uint8_t Fine = 14;
-// 	static constexpr uint8_t Add = 0;
-// 	static constexpr uint8_t Play = 15;
-// };
+	static constexpr uint8_t Shift = 1;
+	static constexpr uint8_t Morph = 12;
+	static constexpr uint8_t Bank = 2;
+	static constexpr uint8_t Fine = 14;
+	static constexpr uint8_t Add = 0;
+	static constexpr uint8_t Play = 15;
+};
 
 // inline constexpr uint8_t ModeSwitch = 3;
 // inline constexpr uint8_t TrigJackSense = 13;

@@ -1,3 +1,9 @@
+// Note this is identical to src/ui.hh (as of the commit where this file is added)
+// but we can't just use src/ui.hh in the test project because things like #include "output.hh" loads src/outputs.hh,
+// not tests/outputs.hh
+// FIXME: figure out how to make test project build system prefer tests/FILE.hh instead of ./FILE.hh when seeing
+// #include "FILE.hh"
+
 #pragma once
 
 #include "conf/board_conf.hh"
@@ -53,12 +59,12 @@ public:
 
 		Abstract *next;
 		if (params.mode == Params::Mode::Macro) {
-			if (params.shared.save.Check()) {
+			if (false && params.shared.save.Check()) {
 				SaveMacro();
 			}
 			next = &macro;
 		} else {
-			if (params.sequencer.player.IsPaused() && params.shared.save.Check()) {
+			if (false && params.sequencer.player.IsPaused() && params.shared.save.Check()) {
 				SaveSequencer();
 			}
 			next = &sequencer;

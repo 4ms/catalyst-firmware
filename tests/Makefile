@@ -21,11 +21,11 @@ CXXFLAGS = 	-Wall \
 			-I. \
 			-I.. \
 			-Isrc \
-			-I../src \
 			-Ilib/cpputil \
 			-Wno-unused-const-variable \
 			-DTESTPROJECT \
 			-Wno-unused-parameter \
+
 
 ### Boilerplate below here:
 

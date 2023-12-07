@@ -15,6 +15,8 @@ function(set_hal_sources sources family_name)
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_cortex.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_dma.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_exti.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_flash.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_flash_ex.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_gpio.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_spi.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c.c
@@ -35,6 +37,8 @@ function(set_bootloader_hal_sources sources family_name)
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_cortex.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_dma.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_flash.c
+      ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_flash_ex.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_gpio.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c.c
       ${root}/lib/${family_name_uc}xx_HAL_Driver/Src/${family_name}xx_hal_i2c_ex.c
@@ -103,6 +107,8 @@ function(create_target target driver_arch)
     ${root}/lib/mdrivlib/drivers/tim.cc
     ${root}/lib/mdrivlib/drivers/timekeeper.cc
     ${root}/lib/mdrivlib/drivers/i2c.cc
+    ${root}/lib/mdrivlib/drivers/hal_handlers.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/drivers/flash.cc
     ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
     ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
     ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c

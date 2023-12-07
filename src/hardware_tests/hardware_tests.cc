@@ -6,7 +6,6 @@
 #include "hardware_tests/encoders.hh"
 #include "hardware_tests/leds.hh"
 #include "hardware_tests/util.hh"
-#include "outputs.hh"
 
 namespace Catalyst2
 {

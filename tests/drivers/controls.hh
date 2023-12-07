@@ -1,11 +1,12 @@
 #pragma once
 
+#include "../src/muxed_button.hh"
 #include "conf/board_conf.hh"
-#include "conf/model.hh"
 #include "util/colors.hh"
 #include <cmath>
 #include <optional>
 #include <util/countzip.hh>
+#include <util/debouncer.hh>
 
 namespace Catalyst2
 {
@@ -16,32 +17,32 @@ class Controls {
 	// std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
 
 	struct Buttons {
-		// 	std::array<MuxedButton, Model::NumChans> scene{
-		// 		Board::Buttons::SceneMap[0],
-		// 		Board::Buttons::SceneMap[1],
-		// 		Board::Buttons::SceneMap[2],
-		// 		Board::Buttons::SceneMap[3],
-		// 		Board::Buttons::SceneMap[4],
-		// 		Board::Buttons::SceneMap[5],
-		// 		Board::Buttons::SceneMap[6],
-		// 		Board::Buttons::SceneMap[7],
-		// 	};
-		// 	MuxedButton shift{Board::Buttons::Shift};
-		// 	MuxedButton morph{Board::Buttons::Morph};
-		// 	MuxedButton bank{Board::Buttons::Bank};
-		// 	MuxedButton fine{Board::Buttons::Fine};
-		// 	MuxedButton add{Board::Buttons::Add};
-		// 	MuxedButton play{Board::Buttons::Play};
+		std::array<MuxedButton, Model::NumChans> scene{
+			Board::Buttons::SceneMap[0],
+			Board::Buttons::SceneMap[1],
+			Board::Buttons::SceneMap[2],
+			Board::Buttons::SceneMap[3],
+			Board::Buttons::SceneMap[4],
+			Board::Buttons::SceneMap[5],
+			Board::Buttons::SceneMap[6],
+			Board::Buttons::SceneMap[7],
+		};
+		MuxedButton shift{Board::Buttons::Shift};
+		MuxedButton morph{Board::Buttons::Morph};
+		MuxedButton bank{Board::Buttons::Bank};
+		MuxedButton fine{Board::Buttons::Fine};
+		MuxedButton add{Board::Buttons::Add};
+		MuxedButton play{Board::Buttons::Play};
 	};
 	// // Switches
 	struct Toggles {
-		// 	MuxedButton mode{Board::ModeSwitch};
-		// 	MuxedButton trig_sense{Board::TrigJackSense};
+		// MuxedButton mode{Board::ModeSwitch};
+		// MuxedButton trig_sense{Board::TrigJackSense};
 	};
 	// // Jacks
 	struct Jacks {
-		// 	Board::TrigJack trig;
-		// 	Board::ResetJack reset;
+		Board::TrigJack trig;
+		Board::ResetJack reset;
 	};
 	// // Encoders
 	// struct RotaryEncoder {};
@@ -122,6 +123,10 @@ public:
 
 	bool LedsReady() {
 		return true;
+	}
+
+	void Delay(unsigned x) {
+		;
 	}
 
 private:

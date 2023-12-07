@@ -14,7 +14,7 @@ public:
 			p.SelectChannel(0);
 		}
 	}
-	void Update(Abstract *&interface) {
+	void Update(Abstract *&interface) override {
 		if (!c.button.morph.is_high()) {
 			return;
 		}
