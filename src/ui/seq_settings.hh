@@ -220,17 +220,19 @@ public:
 	}
 
 private:
-	void PlayModeLedAnnimation(Sequencer::PlayMode pm, uint32_t time_now) {
+	void PlayModeLedAnnimation(Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
 		static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
 		auto phase = (time_now / animation_duration);
 		phase -= static_cast<uint32_t>(phase);
 		Color col;
 
-		if (pm == Sequencer::PlayMode::Forward) {
+		using enum Catalyst2::Sequencer::Settings::PlayMode::Mode;
+
+		if (pm == Forward) {
 			col = Palette::off.blend(Palette::blue, phase);
-		} else if (pm == Sequencer::PlayMode::Backward) {
+		} else if (pm == Backward) {
 			col = Palette::red.blend(Palette::off, phase);
-		} else if (pm == Sequencer::PlayMode::PingPong) {
+		} else if (pm == PingPong) {
 			if (phase < .5f) {
 				phase *= 2.f;
 				col = Palette::red.blend(Palette::off, phase);

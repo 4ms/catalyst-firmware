@@ -9,8 +9,8 @@ namespace Catalyst2::Macro::Ui
 
 class Usual : public Catalyst2::Ui::Abstract {
 public:
-	MacroMode::Interface &p;
-	Usual(MacroMode::Interface &p, Controls &c)
+	Macro::Interface &p;
+	Usual(Macro::Interface &p, Controls &c)
 		: Abstract{c}
 		, p{p} {
 	}

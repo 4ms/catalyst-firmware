@@ -7,8 +7,8 @@ namespace Catalyst2::Sequencer::Ui
 {
 class Usual : public Catalyst2::Ui::Abstract {
 public:
-	SeqMode::Interface &p;
-	Usual(SeqMode::Interface &p, Controls &c)
+	Sequencer::Interface &p;
+	Usual(Sequencer::Interface &p, Controls &c)
 		: Abstract{c}
 		, p{p} {
 	}

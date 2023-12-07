@@ -34,7 +34,7 @@ public:
 				}
 			}
 			if (c.button.play.is_high()) {
-				p.data = SeqMode::Data{};
+				p.data = Sequencer::Data{};
 				p.player.Stop();
 				p.shared.save.Update();
 				return;

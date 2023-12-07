@@ -4,7 +4,7 @@
 #include "util/math.hh"
 #include <array>
 
-namespace Catalyst2
+namespace Catalyst2::Macro
 {
 
 class Recorder {
@@ -126,4 +126,4 @@ private:
 		return !is_full();
 	}
 };
-} // namespace Catalyst2
+} // namespace Catalyst2::Macro

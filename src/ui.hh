@@ -21,8 +21,8 @@ class Interface {
 	Macro::Ui::Main macro{params.macro, controls};
 	Sequencer::Ui::Main sequencer{params.sequencer, controls};
 
-	WearLevel<FlashBlock<Board::SeqSettingsFlashAddr, SeqMode::Data>> seq_settings_flash;
-	WearLevel<FlashBlock<Board::MacroSettingsFlashAddr, MacroMode::Data>> macro_settings_flash;
+	WearLevel<FlashBlock<Board::SeqSettingsFlashAddr, Sequencer::Data>> seq_settings_flash;
+	WearLevel<FlashBlock<Board::MacroSettingsFlashAddr, Macro::Data>> macro_settings_flash;
 
 public:
 	Interface(Params &params)
@@ -37,11 +37,11 @@ public:
 
 		// load data
 		if (!seq_settings_flash.read(params.data.seq)) {
-			params.data.seq = SeqMode::Data{};
+			params.data.seq = Sequencer::Data{};
 		}
 
 		if (!macro_settings_flash.read(params.data.macro)) {
-			params.data.macro = MacroMode::Data{};
+			params.data.macro = Macro::Data{};
 			params.macro.SelectBank(0);
 		}
 	}
