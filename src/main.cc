@@ -1,8 +1,8 @@
+#include "app.hh"
 #include "controls.hh"
 #include "debug.hh"
 #include "drivers/timekeeper.hh"
 #include "hardware_tests/hardware_tests.hh"
-#include "macro_seq.hh"
 #include "system.hh"
 #include "ui.hh"
 namespace
