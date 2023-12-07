@@ -4,33 +4,51 @@
 #include "channelmode.hh"
 #include "conf/model.hh"
 #include "pathway.hh"
-#include "randompool.hh"
+#include "random.hh"
 #include "util/math.hh"
 #include <algorithm>
 #include <array>
 #include <bitset>
 #include <cstdint>
 
-namespace Catalyst2::Bank
+namespace Catalyst2::Macro
+{
+namespace Bank
 {
 struct Data {
 	struct Scene {
 		std::array<Channel::Value, Model::NumChans> channel;
-		float random_amount = 0; // 1.f / 15.f;
+		Random::Amount random;
 	};
 	std::array<Scene, Model::NumScenes> scene;
 	std::array<Channel::Mode, Model::NumChans> channelmode;
 	std::array<Channel::Range, Model::NumChans> range;
 	std::array<float, Model::NumChans> morph;
+	bool Validate() {
+		auto ret = true;
+		for (auto &s : scene) {
+			ret &= s.random.Validate();
+		}
+		for (auto &cm : channelmode) {
+			ret &= cm.Validate();
+		}
+		for (auto &r : range) {
+			ret &= r.Validate();
+		}
+		for (auto &m : morph) {
+			ret &= m >= 0.f && m <= 1.f;
+		}
+		return true;
+	}
 };
 
 class Interface {
 	Data::Scene clipboard;
-	RandomPool &randompool;
+	Random::Pool &randompool;
 	Data *b;
 
 public:
-	Interface(RandomPool &r)
+	Interface(Random::Pool &r)
 		: randompool{r} {
 	}
 	void Load(Data &d) {
@@ -57,15 +75,11 @@ public:
 	void SetChanMode(uint8_t channel, Channel::Mode mode) {
 		b->channelmode[channel] = mode;
 	}
-	float GetRandomAmount(uint8_t scene) {
-		return b->scene[scene].random_amount;
-	}
-	void SetRandomAmount(uint8_t scene, float amount) {
-		b->scene[scene].random_amount = std::clamp(amount, 0.f, 1.f);
+	auto GetRandomAmount(uint8_t scene) {
+		return b->scene[scene].random.Read();
 	}
 	void IncRandomAmount(uint8_t scene, int32_t inc) {
-		auto i = inc / 50.f;
-		SetRandomAmount(scene, b->scene[scene].random_amount + i);
+		b->scene[scene].random.Inc(inc);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
 		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel]);
@@ -78,7 +92,7 @@ public:
 		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
 	}
 	Model::Output::type GetChannel(uint8_t scene, uint8_t channel) {
-		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random_amount *
+		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random.Read() *
 										 Channel::range);
 
 		if (GetChannelMode(channel).IsGate()) {
@@ -89,5 +103,25 @@ public:
 		return std::clamp<int32_t>(temp, Channel::min, Channel::max);
 	}
 };
+} // namespace Bank
 
-} // namespace Catalyst2::Bank
+struct Data {
+	std::array<Pathway::Data, Model::NumBanks> pathway;
+	std::array<Bank::Data, Model::NumBanks> bank;
+
+	bool validate() {
+		for (auto &p : pathway) {
+			if (!p.Validate()) {
+				return false;
+			}
+		}
+		for (auto &b : bank) {
+			if (!b.Validate()) {
+				return false;
+			}
+		}
+		return true;
+	}
+};
+
+} // namespace Catalyst2::Macro

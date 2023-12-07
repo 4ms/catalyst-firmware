@@ -55,7 +55,7 @@ public:
 	}
 
 private:
-	Model::Output::Buffer Macro(MacroMode::Interface &p) {
+	Model::Output::Buffer Macro(Macro::Interface &p) {
 		static auto do_trigs = false;
 
 		Model::Output::Buffer buf;
@@ -115,7 +115,7 @@ private:
 		return buf;
 	}
 
-	Model::Output::Buffer Seq(SeqMode::Interface &p) {
+	Model::Output::Buffer Seq(Sequencer::Interface &p) {
 		Model::Output::Buffer buf;
 		if (p.shared.internalclock.Output()) {
 			p.player.Step();
@@ -132,7 +132,7 @@ private:
 		return buf;
 	}
 
-	Model::Output::type SeqTrig(SeqMode::Interface &p, uint8_t chan) {
+	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
 		const auto stepval = p.GetPlayheadValue(chan);
 		const auto armed = stepval >= Channel::gatearmed;
 		const auto time_now = p.shared.internalclock.TimeNow();
@@ -146,7 +146,7 @@ private:
 		return trigger[chan].Read(time_now) ? Channel::gatehigh : armed ? Channel::gatearmed : Channel::gateoff;
 	}
 
-	Model::Output::type SeqCv(SeqMode::Interface &p, uint8_t chan, float morph_phase) {
+	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan, float morph_phase) {
 		morph_phase = p.player.GetPhase(chan, morph_phase);
 		const auto stepmorph = seqmorph(morph_phase, p.GetPlayheadModifier(chan).AsMorph());
 		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan));
