@@ -9,6 +9,9 @@ namespace Catalyst2
 
 template<typename T, unsigned max_size>
 class FixedVector {
+	std::array<T, max_size> data;
+	unsigned count{0};
+
 public:
 	const T &operator[](std::size_t idx) const {
 		return data[idx];
@@ -18,6 +21,12 @@ public:
 	}
 	std::size_t size() const {
 		return count;
+	}
+	auto begin() const {
+		return data.begin();
+	}
+	auto end() const {
+		return begin() + count;
 	}
 
 	void insert(unsigned index, T d) {
@@ -67,9 +76,5 @@ public:
 		count -= 1;
 		return;
 	}
-
-private:
-	std::array<T, max_size> data;
-	unsigned count{0};
 };
 } // namespace Catalyst2
