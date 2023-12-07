@@ -18,10 +18,12 @@ TEST_CASE("Pingpong length bug") {
 	Sequencer::Settings::Data settings;
 	Sequencer::PlayerInterface player{settings};
 
-	while (settings.GetPlayMode() != Sequencer::PlayMode::PingPong)
+	using enum Sequencer::Settings::PlayMode::Mode;
+
+	while (settings.GetPlayMode() != PingPong)
 		settings.IncPlayMode(1);
 
-	CHECK(settings.GetPlayMode() == Sequencer::PlayMode::PingPong);
+	CHECK(settings.GetPlayMode() == PingPong);
 
 	while (settings.GetLength() != Model::MinSeqSteps)
 		settings.IncLength(-1);
