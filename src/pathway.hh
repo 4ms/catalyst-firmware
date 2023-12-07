@@ -4,11 +4,21 @@
 #include <array>
 #include <cstdint>
 
-namespace Catalyst2::Pathway
+namespace Catalyst2::Macro::Pathway
 {
 using SceneId = uint8_t;
 static constexpr auto MaxPoints = 64u;
-using Data = FixedVector<SceneId, MaxPoints>;
+// using Data = FixedVector<SceneId, MaxPoints>;
+struct Data : FixedVector<SceneId, MaxPoints> {
+	bool Validate() {
+		for (auto &s : *this) {
+			if (s >= Model::NumScenes) {
+				return false;
+			}
+		}
+		return this->size() <= MaxPoints && this->size() >= 1u;
+	}
+};
 
 class Interface {
 	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
@@ -142,4 +152,4 @@ private:
 		scene_width = 1.f / (size() - 1);
 	}
 };
-} // namespace Catalyst2::Pathway
+} // namespace Catalyst2::Macro::Pathway

@@ -73,6 +73,9 @@ public:
 	Model::Output::type Max() const {
 		return from_volts(options[val].max);
 	}
+	bool Validate() {
+		return val <= max;
+	}
 }; // namespace Catalyst2::Channel
 
 struct Value {

@@ -125,7 +125,7 @@ class Divider {
 public:
 	class type {
 		static constexpr std::array<uint8_t, 12> divideroptions = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 24, 32};
-		int32_t v = 0;
+		uint8_t v = 0;
 
 	public:
 		void Inc(int32_t inc) {
@@ -133,6 +133,9 @@ public:
 		}
 		uint8_t Read() const {
 			return divideroptions[v];
+		}
+		bool Validate() {
+			return v < divideroptions.size();
 		}
 	};
 	void Update(type div) {

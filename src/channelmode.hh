@@ -52,6 +52,9 @@ public:
 	Color GetColor() {
 		return color[val];
 	}
+	bool Validate() {
+		return val <= max;
+	}
 };
 
 } // namespace Catalyst2::Channel
