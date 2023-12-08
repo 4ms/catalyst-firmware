@@ -150,6 +150,10 @@ struct DacSpiConf : mdrivlib::DefaultSpiConf {
 	static constexpr uint16_t clock_division = 2;
 	static constexpr uint16_t data_size = 8;
 	static constexpr auto data_dir = mdrivlib::SpiDataDir::TXOnly;
+
+	// DAC chip: First falling edge of SCK after CS goes low captures SDI
+	static constexpr bool clock_high_when_idle = true;
+	static constexpr bool second_clk_transition_captures_data = false;
 };
 
 ////////////////// Stream "thread" configuration
