@@ -26,6 +26,10 @@ public:
 			}
 		}
 
+		if (!(c.button.play.is_high() && c.button.morph.is_high() && c.button.fine.is_high())) {
+			p.shared.modeswitcher.Notify();
+		}
+
 		const auto pos = p.recorder.update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.shared.pos = pos;
 		p.pathway.Update(pos);

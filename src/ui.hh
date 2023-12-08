@@ -35,16 +35,7 @@ public:
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		ui = &sequencer;
 		params.mode = Params::Mode::Sequencer;
-
-		// load data
-		if (!settings.read(params.data.seq)) {
-			params.data.seq = Sequencer::Data{};
-		}
-
-		if (!settings.read(params.data.macro)) {
-			params.data.macro = Macro::Data{};
-			params.macro.SelectBank(0);
-		}
+		Load();
 	}
 	void Update() {
 		controls.Update();
@@ -53,14 +44,8 @@ public:
 
 		Abstract *next;
 		if (params.mode == Params::Mode::Macro) {
-			if (params.shared.save.Check()) {
-				SaveMacro();
-			}
 			next = &macro;
 		} else {
-			if (params.sequencer.player.IsPaused() && params.shared.save.Check()) {
-				SaveSequencer();
-			}
 			next = &sequencer;
 		}
 		ui->Update(next);
@@ -75,6 +60,7 @@ public:
 		}
 		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
 		CheckMode();
+		Save();
 	}
 
 	void SetOutputs(const Model::Output::Buffer &outs) {
@@ -87,56 +73,46 @@ public:
 
 private:
 	void CheckMode() {
-		if (controls.button.shift.just_went_high() && controls.button.play.is_high() && controls.button.bank.is_high())
-		{
-			params.shared.reset.Notify(false);
-			if (params.mode == Params::Mode::Sequencer) {
-				SaveSequencer();
-				params.mode = Params::Mode::Macro;
-				ui = &macro;
-				params.macro.SelectBank(params.macro.GetSelectedBank());
-			} else {
-				params.sequencer.player.Stop();
-				SaveMacro();
-				params.mode = Params::Mode::Sequencer;
-				ui = &sequencer;
-				controls.button.play.clear_events();
+		if (params.shared.modeswitcher.Check()) {
+			params.shared.modeswitcher.Notify();
+			params.mode = params.mode == Params::Mode::Macro ? Params::Mode::Sequencer : Params::Mode::Macro;
+
+			for (auto i = 0u; i < 16; i++) {
+				for (auto l = 0u; l < Model::NumScenes; l++) {
+					controls.SetButtonLed(l, !!(i & 0b1));
+				}
+				controls.Delay(1000 / 16);
 			}
 		}
 	}
-	void SaveMacro() {
-		if (!settings.write(params.data.macro)) {
-			// Flash is damaged?
-			PanicWarning();
+	void Save() {
+		if (controls.button.bank.is_high() && controls.button.morph.just_went_high()) {
+			const auto result = params.mode == Params::Mode::Macro ? settings.write(params.data.macro) :
+																	 settings.write(params.data.seq);
+			if (!result) {
+				for (auto i = 0u; i < 48; i++) {
+					for (auto but = 0u; but < 8; but++) {
+						controls.SetButtonLed(but, !!(i & 0b1));
+					}
+					controls.Delay(3000 / 48);
+				}
+			} else {
+				for (auto i = 0u; i < 16; i++) {
+					controls.SetButtonLed(0, !!(i & 0x01));
+					controls.Delay(1000 / 16);
+				}
+			}
+		}
+	}
+	void Load() {
+		if (!settings.read(params.data.seq)) {
+			params.data.seq = Sequencer::Data{};
 		}
 
-		// TODO
-		for (auto i = 0u; i < 16; i++) {
-			controls.SetButtonLed(0, !!(i & 0x01));
-			controls.Delay(1000 / 16);
+		if (!settings.read(params.data.macro)) {
+			params.data.macro = Macro::Data{};
+			params.macro.SelectBank(0);
 		}
-	}
-	void SaveSequencer() {
-		if (!settings.write(params.data.seq)) {
-			// Flash is damaged?
-			PanicWarning();
-		}
-
-		// TODO
-		for (auto i = 0u; i < 16; i++) {
-			controls.SetButtonLed(1, !!(i & 0x01));
-			controls.Delay(1000 / 16);
-		}
-	}
-	// Non-fatal error. Loudly notify user, but continue operating
-	void PanicWarning() {
-		for (auto i = 0u; i < 48; i++) {
-			for (auto but = 0u; but < 8; but++)
-				controls.SetButtonLed(but, !!(i & 0b1));
-			controls.Delay(3000 / 48);
-		}
-	}
-	void Load(Params::Mode mode) {
 	}
 };
 

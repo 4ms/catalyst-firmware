@@ -29,14 +29,12 @@ public:
 			for (auto [inc, b, chan] : countzip(c.button.scene, p.data.channel)) {
 				if (b.is_high()) {
 					chan = Sequencer::ChannelData{};
-					p.shared.save.Update();
 					return;
 				}
 			}
 			if (c.button.play.is_high()) {
 				p.data = Sequencer::Data{};
 				p.player.Stop();
-				p.shared.save.Update();
 				return;
 			}
 		}

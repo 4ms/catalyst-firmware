@@ -25,7 +25,6 @@ public:
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		const auto hang = p.shared.hang.Check();
 		const auto ysb = YoungestSceneButton();
-		p.shared.save.Update();
 
 		switch (encoder) {
 			case Model::EncoderAlts::Transpose:

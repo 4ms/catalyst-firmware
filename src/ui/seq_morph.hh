@@ -22,7 +22,6 @@ public:
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
 		p.IncStepModifier(encoder, inc);
-		p.shared.save.Update();
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {

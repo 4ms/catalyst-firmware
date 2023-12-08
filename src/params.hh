@@ -65,27 +65,20 @@ class SharedInterface {
 			return true;
 		}
 	};
-	class SaveManager {
-		static constexpr auto auto_save_duration = Clock::MsToTicks(Model::auto_save_seconds * 1000u);
+	class ModeSwitcher {
+		static constexpr auto hold_duration = Clock::MsToTicks(3000);
 		Clock::Bpm &internalclock;
-		uint32_t last_activity_time;
-		bool has_saved = true;
+		uint32_t set_time;
 
 	public:
-		SaveManager(Clock::Bpm &ic)
+		ModeSwitcher(Clock::Bpm &ic)
 			: internalclock{ic} {
 		}
-		void Update() {
-			last_activity_time = internalclock.TimeNow();
-			has_saved = false;
+		void Notify() {
+			set_time = internalclock.TimeNow();
 		}
 		bool Check() {
-			if (has_saved) {
-				return false;
-			}
-			const auto save = internalclock.TimeNow() - last_activity_time >= auto_save_duration;
-			has_saved = save;
-			return save;
+			return internalclock.TimeNow() - set_time >= hold_duration;
 		}
 	};
 
@@ -97,7 +90,7 @@ public:
 	Random::Pool randompool;
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
-	SaveManager save{internalclock};
+	ModeSwitcher modeswitcher{internalclock};
 	float pos;
 };
 

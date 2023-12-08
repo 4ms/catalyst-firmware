@@ -46,6 +46,11 @@ public:
 		if (c.button.add.just_went_high()) {
 			p.shared.internalclock.Tap();
 		}
+
+		if (!(c.button.add.is_high() && c.button.bank.is_high() && c.button.shift.is_high())) {
+			p.shared.modeswitcher.Notify();
+		}
+
 		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.shared.pos = pos;
 	}

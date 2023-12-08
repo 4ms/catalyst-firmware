@@ -35,7 +35,6 @@ public:
 			}
 			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
 				p.PasteSequence();
-				p.shared.save.Update();
 			}
 		}
 		if (c.button.shift.is_high()) {
@@ -58,7 +57,6 @@ public:
 
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
-		p.shared.save.Update();
 	}
 	void OnSceneButtonRelease(uint8_t button) override {
 		if (!p.IsSequenceSelected()) {
@@ -66,7 +64,6 @@ public:
 		} else {
 			if (c.button.fine.is_high()) {
 				p.PastePage(button);
-				p.shared.save.Update();
 			} else {
 				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
 					if (p.IsPageSelected() && button == p.GetSelectedPage())
