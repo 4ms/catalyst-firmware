@@ -25,7 +25,9 @@ constexpr auto octave = range / Model::output_octave_range;
 constexpr auto note = octave / 12;
 
 constexpr Model::Output::type inc_step = note + .5f;
-constexpr Model::Output::type inc_step_fine = (note / 25.f) + .5f;
+
+// limit of resolution: 16bit values sent to 12-bit DAC
+constexpr Model::Output::type inc_step_fine = 1 << (16 - 12);
 
 class Range {
 	struct Option {
