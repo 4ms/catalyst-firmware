@@ -33,8 +33,6 @@ public:
 	void Start() {
 		controls.Start();
 		std::srand(controls.ReadSlider() + controls.ReadCv());
-		ui = &sequencer;
-		params.mode = Params::Mode::Sequencer;
 		Load();
 	}
 	void Update() {
@@ -43,7 +41,7 @@ public:
 		ui->Common();
 
 		Abstract *next;
-		if (params.mode == Params::Mode::Macro) {
+		if (params.mode == Model::Mode::Macro) {
 			next = &macro;
 		} else {
 			next = &sequencer;
@@ -75,7 +73,14 @@ private:
 	void CheckMode() {
 		if (params.shared.modeswitcher.Check()) {
 			params.shared.modeswitcher.Notify();
-			params.mode = params.mode == Params::Mode::Macro ? Params::Mode::Sequencer : Params::Mode::Macro;
+			if (params.mode == Model::Mode::Macro) {
+				params.mode = Model::Mode::Sequencer;
+				ui = &sequencer;
+			} else {
+				params.mode = Model::Mode::Macro;
+				ui = &macro;
+				params.macro.SelectBank(0);
+			}
 
 			for (auto i = 0u; i < 16; i++) {
 				for (auto l = 0u; l < Model::NumScenes; l++) {
@@ -87,8 +92,8 @@ private:
 	}
 	void Save() {
 		if (controls.button.bank.is_high() && controls.button.morph.just_went_high()) {
-			const auto result = params.mode == Params::Mode::Macro ? settings.write(params.data.macro) :
-																	 settings.write(params.data.seq);
+			const auto result =
+				params.mode == Model::Mode::Macro ? settings.write(params.data.macro) : settings.write(params.data.seq);
 			if (!result) {
 				for (auto i = 0u; i < 48; i++) {
 					for (auto but = 0u; but < 8; but++) {
@@ -104,6 +109,10 @@ private:
 			}
 		}
 	}
+	void SaveForce() {
+		(void)settings.write(params.data.macro);
+		(void)settings.write(params.data.seq);
+	}
 	void Load() {
 		if (!settings.read(params.data.seq)) {
 			params.data.seq = Sequencer::Data{};
@@ -111,7 +120,30 @@ private:
 
 		if (!settings.read(params.data.macro)) {
 			params.data.macro = Macro::Data{};
+		}
+
+		const auto prev = params.mode;
+
+		auto &b = controls.button;
+		if (b.play.is_high() && b.morph.is_high() && b.fine.is_high()) {
+			params.mode = Model::Mode::Sequencer;
+		} else if (b.bank.is_high() && b.add.is_high() && b.shift.is_high()) {
+			params.mode = Model::Mode::Macro;
+		}
+
+		if (prev != params.mode) {
+			SaveForce();
+		}
+		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
+			   b.shift.is_high())
+		{
+			__NOP(); // wait until the buttons are released before cont
+		}
+		if (params.mode == Model::Mode::Macro) {
+			ui = &macro;
 			params.macro.SelectBank(0);
+		} else {
+			ui = &sequencer;
 		}
 	}
 };

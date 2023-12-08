@@ -17,13 +17,13 @@ namespace Bank
 {
 struct Data {
 	struct Scene {
-		std::array<Channel::Value, Model::NumChans> channel;
+		std::array<Channel::Value, Model::NumChans> channel{};
 		Random::Amount random;
 	};
-	std::array<Scene, Model::NumScenes> scene;
-	std::array<Channel::Mode, Model::NumChans> channelmode;
-	std::array<Channel::Range, Model::NumChans> range;
-	std::array<float, Model::NumChans> morph;
+	std::array<Scene, Model::NumScenes> scene{};
+	std::array<Channel::Mode, Model::NumChans> channelmode{};
+	std::array<Channel::Range, Model::NumChans> range{};
+	std::array<float, Model::NumChans> morph{};
 	bool Validate() {
 		auto ret = true;
 		for (auto &s : scene) {
@@ -36,9 +36,9 @@ struct Data {
 			ret &= r.Validate();
 		}
 		for (auto &m : morph) {
-			ret &= m >= 0.f && m <= 1.f;
+			ret &= (m >= 0.f && m <= 1.f);
 		}
-		return true;
+		return ret;
 	}
 };
 
@@ -104,24 +104,5 @@ public:
 	}
 };
 } // namespace Bank
-
-struct Data {
-	std::array<Pathway::Data, Model::NumBanks> pathway;
-	std::array<Bank::Data, Model::NumBanks> bank;
-
-	bool validate() {
-		for (auto &p : pathway) {
-			if (!p.Validate()) {
-				return false;
-			}
-		}
-		for (auto &b : bank) {
-			if (!b.Validate()) {
-				return false;
-			}
-		}
-		return true;
-	}
-};
 
 } // namespace Catalyst2::Macro

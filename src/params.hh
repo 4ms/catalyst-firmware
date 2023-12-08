@@ -13,6 +13,8 @@
 namespace Catalyst2
 {
 
+struct Params;
+
 class SharedInterface {
 	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 	class DisplayHanger {
@@ -97,6 +99,28 @@ public:
 namespace Macro
 {
 
+struct Data {
+	friend class Catalyst2::Params;
+
+	std::array<Pathway::Data, Model::NumBanks> pathway{};
+	std::array<Bank::Data, Model::NumBanks> bank{};
+
+	bool validate() {
+		auto ret = true;
+		for (auto &p : pathway) {
+			ret &= p.Validate();
+		}
+		for (auto &b : bank) {
+			ret &= b.Validate();
+		}
+		ret &= (saved_mode == Model::Mode::Macro || saved_mode == Model::Mode::Sequencer);
+		return ret;
+	}
+
+private:
+	Model::Mode saved_mode = Model::default_mode;
+};
+
 class Interface {
 	Data &data;
 	uint8_t cur_bank = 0;
@@ -115,15 +139,15 @@ public:
 		SelectBank(0);
 	}
 	void SelectBank(uint8_t bank) {
-		if (bank >= Model::NumBanks)
+		if (bank >= Model::NumBanks) {
 			return;
-
+		}
 		this->bank.Load(data.bank[bank]);
 		this->pathway.Load(data.pathway[bank]);
 
-		for (auto [i, q] : countzip(shared.quantizer))
+		for (auto [i, q] : countzip(shared.quantizer)) {
 			q.Load(this->bank.GetChannelMode(i).GetScale());
-
+		}
 		cur_bank = bank;
 	}
 	uint8_t GetSelectedBank() {
@@ -260,16 +284,13 @@ public:
 } // namespace Sequencer
 
 struct Params {
-	enum class Mode : bool { Sequencer, Macro };
-	Mode mode = Mode::Macro;
-
 	struct Data {
 		Sequencer::Data seq;
 		Macro::Data macro;
 	} data;
 
+	Model::Mode &mode = data.macro.saved_mode;
 	SharedInterface shared;
-
 	Sequencer::Interface sequencer{data.seq, shared};
 	Macro::Interface macro{data.macro, shared};
 };

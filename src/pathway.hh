@@ -10,13 +10,17 @@ using SceneId = uint8_t;
 static constexpr auto MaxPoints = 64u;
 // using Data = FixedVector<SceneId, MaxPoints>;
 struct Data : FixedVector<SceneId, MaxPoints> {
+	Data() {
+		insert(0, 0);
+		insert(1, 7);
+	}
 	bool Validate() {
 		for (auto &s : *this) {
 			if (s >= Model::NumScenes) {
 				return false;
 			}
 		}
-		return this->size() <= MaxPoints && this->size() >= 1u;
+		return this->size() <= MaxPoints && this->size() >= 2u;
 	}
 };
 
@@ -34,10 +38,6 @@ class Interface {
 public:
 	void Load(Data &d) {
 		p = &d;
-		if (size() < 2) {
-			p->insert(0, 0);
-			p->insert(1, 7);
-		}
 		UpdateSceneWidth();
 	}
 

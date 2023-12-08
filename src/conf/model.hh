@@ -9,6 +9,10 @@
 // Configuration for everything that might change if we make a version with more or less user-facing features
 namespace Catalyst2::Model
 {
+enum class Mode : bool { Sequencer, Macro };
+
+static constexpr auto default_mode = Mode::Sequencer;
+
 constexpr auto sample_rate_hz = 3000u;
 constexpr auto clock_mult_factor = 12u;
 

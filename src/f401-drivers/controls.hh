@@ -100,7 +100,8 @@ public:
 		if (!led_driver.init()) {
 			__BKPT();
 		}
-		HAL_Delay(2);
+		// long delay to let the muxio run a few times so buttons checked on start up will be accurate
+		HAL_Delay(500);
 	}
 
 	void ForEachEncoderInc(auto func) {
