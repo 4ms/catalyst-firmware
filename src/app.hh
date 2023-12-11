@@ -139,7 +139,6 @@ private:
 		if (armed && p.player.IsCurrentStepNew(chan)) {
 			retrigger[chan].Trig(p.GetPlayheadModifier(chan).AsRetrig(), p.data.settings.GetClockDiv(chan).Read());
 		}
-
 		if (retrigger[chan].Read()) {
 			trigger[chan].Trig(time_now);
 		}
@@ -152,7 +151,9 @@ private:
 		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan));
 		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan)) - stepval;
 		stepval += (distance * stepmorph);
-		return Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
+		stepval = Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
+		const auto range = p.data.settings.GetRange(chan);
+		return std::clamp(stepval, range.Min(), range.Max());
 		// TODO clamp range here!
 	}
 };
