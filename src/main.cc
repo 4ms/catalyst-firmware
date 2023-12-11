@@ -15,52 +15,29 @@ Catalyst2::System _init;
 
 // TODO: make color fades appear more linear
 
-// better way to delete banks
-
 /* october 9th
 
 maybe clipboards should reset eachother?
 
 have holding multiple seq settings buttons change all pressed buttons together
 
-remove trig sense function to free a pin
-
-remove mode switch
-think of button combo to replace
-
-tap tempo overrides external clock
-external clock overrides tap tempo
-
 gate bright green needs fix
 
 gate doesnt fire in macro mode if pressing new button while another is already held down
-p
+
 no gate out when scrubbing
 
 random setting color should be the same across channels
-
-save on inactivity
-
-do button led countdown before clearing
 
 */
 
 /*
 12/5
 
-have save be press and hold bank + morph
-and switch mode be hold
-
-press and hold three buttons on either side during power on to boot into alternate mode and save that setting
-same but already on, don't save
-
-Clamp range in main app
 make sure you can adjust random values even if range technically shouldnt let you
 val - clamp(val + inc, rangemin - random, rangemax - random)
 
-macro gets stuck on switch sometimes... bugbug
 clear settings when clearing a single sequence channel
-
 
 */
 

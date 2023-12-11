@@ -73,6 +73,9 @@ public:
 	Model::Output::type Max() const {
 		return from_volts(options[val].max);
 	}
+	Model::Output::type Clamp(Model::Output::type in) {
+		return std::clamp(in, Min(), Max());
+	}
 	bool Validate() {
 		return val <= max;
 	}
