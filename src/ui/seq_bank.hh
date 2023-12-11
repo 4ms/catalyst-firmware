@@ -14,12 +14,12 @@ public:
 		c.button.morph.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		if (c.button.fine.just_went_high() && p.IsSequenceSelected())
+		if (c.button.fine.just_went_high() && p.IsSequenceSelected()) {
 			p.CopySequence();
-
-		if (!c.button.bank.is_high())
+		}
+		if (!c.button.bank.is_high()) {
 			return;
-
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) override {
