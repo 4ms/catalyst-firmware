@@ -11,6 +11,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
+		c.button.morph.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		if (c.button.fine.just_went_high() && p.IsSequenceSelected())

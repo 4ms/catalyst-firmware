@@ -10,6 +10,9 @@ namespace Catalyst2::Macro::Ui
 class Bank : public Usual {
 public:
 	using Usual::Usual;
+	void Init() override {
+		c.button.morph.clear_events();
+	}
 	void Update(Abstract *&interface) override {
 		if (!c.button.bank.is_high())
 			return;
