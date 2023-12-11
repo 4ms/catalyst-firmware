@@ -72,6 +72,8 @@ private:
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : Channel::from_volts(0.f);
 				} else {
 					out = p.bank.GetChannel(p.override_output.value(), chan);
+					const auto range = p.bank.GetRange(chan);
+					out = std::clamp(out, range.Min(), range.Max());
 				}
 			}
 			do_trigs = false;
@@ -106,6 +108,8 @@ private:
 					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan));
 					const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan));
 					out = MathTools::interpolate(a, b, phs);
+					const auto range = p.bank.GetRange(chan);
+					out = std::clamp(out, range.Min(), range.Max());
 				}
 			}
 
@@ -154,7 +158,6 @@ private:
 		stepval = Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
 		const auto range = p.data.settings.GetRange(chan);
 		return std::clamp(stepval, range.Min(), range.Max());
-		// TODO clamp range here!
 	}
 };
 
