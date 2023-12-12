@@ -25,8 +25,6 @@ gate bright green needs fix
 
 gate doesnt fire in macro mode if pressing new button while another is already held down
 
-no gate out when scrubbing
-
 random setting color should be the same across channels
 
 */
@@ -36,8 +34,6 @@ random setting color should be the same across channels
 
 make sure you can adjust random values even if range technically shouldnt let you
 val - clamp(val + inc, rangemin - random, rangemax - random)
-
-clear settings when clearing a single sequence channel
 
 */
 
