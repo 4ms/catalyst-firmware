@@ -105,7 +105,7 @@ const mdrivlib::I2CConfig LedDriverConf{
 	.timing = {400'000},
 };
 
-static constexpr uint8_t LedDriverAddr = 0b0101'0000;
+inline constexpr uint8_t LedDriverAddr = 0b0101'0000;
 
 inline constexpr std::array<uint32_t, Model::NumChans> EncLedMap{4, 5, 6, 7, 0, 1, 2, 3};
 
@@ -133,8 +133,8 @@ struct AdcConf : mdrivlib::DefaultAdcPeriphConf {
 	static constexpr uint16_t uni_min_value = 20;
 };
 
-constexpr auto NumAdcs = 2;
-constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
+inline constexpr auto NumAdcs = 2u;
+inline constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
 	{{GPIO::A, PinNum::_0}, mdrivlib::AdcChanNum::_0, 0, mdrivlib::AdcSamplingTime::_56Cycles},
 	{{GPIO::A, PinNum::_1}, mdrivlib::AdcChanNum::_1, 1, mdrivlib::AdcSamplingTime::_56Cycles},
 }};
@@ -160,7 +160,7 @@ const TimekeeperConfig cv_stream_conf{
 	.priority2 = 2,
 };
 
-constexpr unsigned encoder_led_hz = 60;
+inline constexpr unsigned encoder_led_hz = 60;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
 	.period_ns = TimekeeperConfig::Hz(encoder_led_hz),
@@ -168,7 +168,7 @@ const TimekeeperConfig encoder_led_task{
 	.priority2 = 2,
 };
 
-constexpr unsigned muxio_update_hz = 16000;
+inline constexpr unsigned muxio_update_hz = 16000;
 const TimekeeperConfig muxio_conf{
 	.TIMx = TIM5,
 	.period_ns = TimekeeperConfig::Hz(muxio_update_hz),
