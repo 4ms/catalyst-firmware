@@ -27,7 +27,7 @@ public:
 		if (is_gate) {
 			inc *= 2;
 		}
-		m = std::clamp<int32_t>(m + inc, min, max);
+		m = std::clamp<int32_t>(m + inc, min, max - 1);
 	}
 	bool Validate() {
 		return m <= max;

@@ -17,6 +17,7 @@ class PlayerInterface {
 		uint8_t step = 0;
 		uint8_t prev_step = Model::SeqStepsPerPage - 1;
 		bool new_step = false;
+		bool did_step = false;
 		uint8_t playhead = 0;
 		uint8_t prev_playhead = 0;
 	};
@@ -50,16 +51,17 @@ public:
 			const auto last = s.playhead;
 			s.playhead = ToStep(chan, s.step);
 			s.prev_playhead = ToStep(chan, s.prev_step);
-			if (last != s.playhead) {
-				s.new_step |= true;
+			if (last != s.playhead || s.did_step) {
+				s.new_step = true;
+				s.did_step = false;
 			}
 		}
 	}
 
 	void Step() {
-		if (pause)
+		if (pause) {
 			return;
-
+		}
 		for (auto i = 0u; i < channel.size(); i++) {
 			Step(i);
 		}
@@ -89,7 +91,7 @@ public:
 		return channel[chan].prev_playhead;
 	}
 	bool IsCurrentStepNew(uint8_t chan) {
-		auto out = channel[chan].new_step;
+		const auto out = channel[chan].new_step;
 		channel[chan].new_step = false;
 		return out;
 	}
@@ -123,7 +125,7 @@ private:
 		if (!channel.clockdivider.Step()) {
 			return;
 		}
-		channel.new_step = true;
+		channel.did_step = true;
 
 		channel.prev_step = channel.step;
 		channel.step = channel.counter;

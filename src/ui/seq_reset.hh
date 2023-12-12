@@ -26,9 +26,10 @@ public:
 			{
 				return;
 			}
-			for (auto [inc, b, chan] : countzip(c.button.scene, p.data.channel)) {
-				if (b.is_high()) {
-					chan = Sequencer::ChannelData{};
+			for (auto [chan, butt, sequence] : countzip(c.button.scene, p.data.channel)) {
+				if (butt.is_high()) {
+					sequence = Sequencer::ChannelData{};
+					p.data.settings.Clear(chan);
 					return;
 				}
 			}
