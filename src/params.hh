@@ -209,13 +209,13 @@ public:
 		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.pos);
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
 		step += (page * Model::SeqStepsPerPage);
 		data.channel[cur_channel][step].Inc(
 			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel));
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel, shared.pos);
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
 		step += (page * Model::SeqStepsPerPage);
 		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
@@ -241,13 +241,13 @@ public:
 		}
 	}
 	Model::Output::type GetPlayheadValue(uint8_t chan) {
-		return GetStepValue(chan, player.GetPlayheadStep(chan, shared.pos));
+		return GetStepValue(chan, player.GetPlayheadStep(chan));
 	}
 	StepModifier GetPlayheadModifier(uint8_t chan) {
-		return data.channel[chan][player.GetPlayheadStep(chan, shared.pos)].modifier;
+		return data.channel[chan][player.GetPlayheadStep(chan)].modifier;
 	}
 	Model::Output::type GetPrevStepValue(uint8_t chan) {
-		return GetStepValue(chan, player.GetPrevStep(chan, shared.pos));
+		return GetStepValue(chan, player.GetPrevStep(chan));
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;

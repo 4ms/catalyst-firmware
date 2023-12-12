@@ -29,8 +29,8 @@ public:
 		ClearButtonLeds();
 
 		const auto chan = p.GetSelectedChannel();
-		const uint8_t led = p.player.GetPlayheadStepOnPage(chan, p.shared.pos);
-		const auto playheadpage = p.player.GetPlayheadPage(chan, p.shared.pos);
+		const uint8_t led = p.player.GetPlayheadStepOnPage(chan);
+		const auto playheadpage = p.player.GetPlayheadPage(chan);
 		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 		const auto mvals = p.GetPageValuesModifier(page);
 

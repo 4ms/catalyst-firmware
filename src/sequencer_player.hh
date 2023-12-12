@@ -2,6 +2,7 @@
 
 #include "clock.hh"
 #include "sequencer_settings.hh"
+#include "util/countzip.hh"
 #include <array>
 #include <optional>
 
@@ -14,12 +15,15 @@ class PlayerInterface {
 		Clock::Divider clockdivider;
 		uint8_t counter = 0;
 		uint8_t step = 0;
-		uint8_t prev_step = 7;
+		uint8_t prev_step = Model::SeqStepsPerPage - 1;
 		bool new_step = false;
+		uint8_t playhead = 0;
+		uint8_t prev_playhead = 0;
 	};
 	std::array<State, Model::NumChans> channel;
 	bool pause = false;
 	Settings::Data &d;
+	float phase = 0.f;
 
 public:
 	PlayerInterface(Settings::Data &d)
@@ -33,10 +37,22 @@ public:
 	}
 
 	void RandomizeSteps(uint8_t chan) {
-		// can this be prettier?
+		// TODO can this be prettier?
 		uint32_t *d = reinterpret_cast<uint32_t *>(channel[chan].randomstep.data());
 		for (auto i = 0u; i < channel[chan].randomstep.size() / sizeof(uint32_t); i++) {
 			d[i] = static_cast<uint32_t>(std::rand());
+		}
+	}
+
+	void Update(float phase) {
+		this->phase = phase;
+		for (auto [chan, s] : countzip(channel)) {
+			const auto last = s.playhead;
+			s.playhead = ToStep(chan, s.step);
+			s.prev_playhead = ToStep(chan, s.prev_step);
+			if (last != s.playhead) {
+				s.new_step |= true;
+			}
 		}
 	}
 
@@ -54,26 +70,26 @@ public:
 			Reset(i);
 		}
 	}
-	uint8_t GetFirstStep(std::optional<uint8_t> chan, float phase) {
-		return ToStep(chan, 0, phase);
+	uint8_t GetFirstStep(std::optional<uint8_t> chan) {
+		return ToStep(chan, 0);
 	}
 
-	uint8_t GetPlayheadStep(uint8_t chan, float phase) {
-		return ToStep(chan, channel[chan].step, phase);
+	uint8_t GetPlayheadStep(uint8_t chan) {
+		return channel[chan].playhead;
 	}
 
-	uint8_t GetPlayheadStepOnPage(uint8_t chan, float phase) {
-		return GetPlayheadStep(chan, phase) % Model::SeqPages;
+	uint8_t GetPlayheadStepOnPage(uint8_t chan) {
+		return GetPlayheadStep(chan) % Model::SeqPages;
 	}
 
-	uint8_t GetPlayheadPage(uint8_t chan, float phase) {
-		return GetPlayheadStep(chan, phase) / Model::SeqPages;
+	uint8_t GetPlayheadPage(uint8_t chan) {
+		return GetPlayheadStep(chan) / Model::SeqPages;
 	}
-	uint8_t GetPrevStep(uint8_t chan, float phase) {
-		return ToStep(chan, channel[chan].prev_step, phase);
+	uint8_t GetPrevStep(uint8_t chan) {
+		return channel[chan].prev_playhead;
 	}
 	bool IsCurrentStepNew(uint8_t chan) {
-		const auto out = channel[chan].new_step;
+		auto out = channel[chan].new_step;
 		channel[chan].new_step = false;
 		return out;
 	}
@@ -134,7 +150,7 @@ private:
 		c.prev_step = c.step;
 	}
 
-	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step, float phase) {
+	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step) {
 		const auto l = d.GetLengthOrGlobal(chan);
 		const auto pm = d.GetPlayModeOrGlobal(chan);
 		const auto actuallength = ActualLength(l, pm);

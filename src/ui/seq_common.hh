@@ -51,8 +51,8 @@ public:
 			p.shared.modeswitcher.Notify();
 		}
 
-		const auto pos = (c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.shared.pos = pos;
+		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
+		p.player.Update(phase);
 	}
 };
 } // namespace Catalyst2::Sequencer::Ui

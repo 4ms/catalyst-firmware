@@ -164,7 +164,7 @@ public:
 					break;
 				}
 				case EncoderAlts::PhaseOffset: {
-					const auto o = p.player.GetFirstStep(ysb, p.shared.pos);
+					const auto o = p.player.GetFirstStep(ysb);
 					const auto col = phaseoffset.has_value() ? Setting::active : Setting::null;
 					c.SetEncoderLed(o % SeqStepsPerPage, col);
 					c.SetButtonLed((o / SeqStepsPerPage) % SeqPages, true);
