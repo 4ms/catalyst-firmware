@@ -186,6 +186,9 @@ class Data {
 	Global global;
 
 public:
+	void Clear(uint8_t chan) {
+		channel[chan] = Channel{};
+	}
 	bool Validate() {
 		for (auto &c : channel) {
 			if (!c.Validate()) {
