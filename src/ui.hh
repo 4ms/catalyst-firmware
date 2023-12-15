@@ -109,10 +109,6 @@ private:
 			}
 		}
 	}
-	void SaveForce() {
-		(void)settings.write(params.data.macro);
-		(void)settings.write(params.data.seq);
-	}
 	void Load() {
 		if (!settings.read(params.data.seq)) {
 			params.data.seq = Sequencer::Data{};
@@ -122,7 +118,7 @@ private:
 			params.data.macro = Macro::Data{};
 		}
 
-		const auto prev = params.mode;
+		const auto saved_mode = params.mode;
 
 		auto &b = controls.button;
 		if (b.play.is_high() && b.morph.is_high() && b.fine.is_high()) {
@@ -131,8 +127,9 @@ private:
 			params.mode = Model::Mode::Macro;
 		}
 
-		if (prev != params.mode) {
-			SaveForce();
+		if (saved_mode != params.mode) {
+			(void)settings.write(params.data.macro);
+			(void)settings.write(params.data.seq);
 		}
 		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
 			   b.shift.is_high())
