@@ -18,7 +18,7 @@ struct Params;
 class SharedInterface {
 	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 	class DisplayHanger {
-		static constexpr uint32_t duration = Clock::MsToTicks(2000);
+		static constexpr uint32_t duration = Clock::MsToTicks(4000);
 		uint8_t onto;
 		uint32_t start_time;
 		Clock::Bpm &internalclock;
@@ -211,8 +211,10 @@ public:
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
 		step += (page * Model::SeqStepsPerPage);
+		const auto rand = shared.randompool.GetSequenceOffset(
+			cur_channel, step, data.settings.GetRandomAmount(cur_channel), data.settings.GetRange(cur_channel));
 		data.channel[cur_channel][step].Inc(
-			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel));
+			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel), rand);
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
@@ -220,21 +222,14 @@ public:
 		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
 	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
-		auto rand = shared.randompool.GetSequenceVal(chan, step);
-		const auto amnt = data.settings.GetRandomAmount(chan);
+		const auto rand = shared.randompool.GetSequenceOffset(
+			chan, step, data.settings.GetRandomAmount(chan), data.settings.GetRange(chan));
 		auto temp = data.channel[chan][step].val;
 
 		if (!data.settings.GetChannelMode(chan).IsGate()) {
-			rand *= amnt;
-			if (rand > 0.f) {
-				rand *= data.settings.GetRange(chan).PosAmount();
-			} else {
-				rand *= data.settings.GetRange(chan).NegAmount();
-			}
-			rand *= Channel::range;
 			return std::clamp<int32_t>(temp + rand, Channel::min, Channel::max);
 		} else {
-			if (std::abs(rand) < amnt) {
+			if (std::abs(rand) < 0) {
 				temp = temp == Channel::gatearmed ? Channel::gateoff : Channel::gatearmed;
 			}
 			return temp;
@@ -288,8 +283,9 @@ struct Params {
 	struct Data {
 		Sequencer::Data seq;
 		Macro::Data macro;
-	} data;
+	};
 
+	Data data;
 	Model::Mode &mode = data.macro.saved_mode;
 	SharedInterface shared;
 	Sequencer::Interface sequencer{data.seq, shared};
