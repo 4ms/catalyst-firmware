@@ -19,13 +19,7 @@ Catalyst2::System _init;
 
 maybe clipboards should reset eachother?
 
-have holding multiple seq settings buttons change all pressed buttons together
-
 gate bright green needs fix
-
-gate doesnt fire in macro mode if pressing new button while another is already held down
-
-random setting color should be the same across channels
 
 */
 
