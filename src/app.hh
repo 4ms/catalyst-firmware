@@ -85,13 +85,10 @@ private:
 			const auto left = p.pathway.SceneLeft();
 			const auto right = p.pathway.SceneRight();
 
-			static auto last_scene_on = Model::NumScenes;
-			const auto current_scene = p.pathway.OnAScene() ? p.pathway.SceneNearest() : Model::NumScenes;
-
 			do_trigs = false;
-			if (current_scene != last_scene_on) {
-				last_scene_on = current_scene;
-				if (current_scene < Model::NumScenes) {
+			const auto current_scene = p.pathway.CurrentScene();
+			if (current_scene != p.pathway.LastSceneOn()) {
+				if (current_scene.has_value()) {
 					do_trigs = true;
 				}
 			}
@@ -99,8 +96,8 @@ private:
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = Channel::from_volts(0.f);
-					if (current_scene < Model::NumScenes) {
-						is_primed = p.bank.GetChannel(current_scene, chan);
+					if (current_scene.has_value()) {
+						is_primed = p.bank.GetChannel(current_scene.value(), chan);
 					}
 					if (do_trigs && is_primed >= Channel::gatearmed) {
 						trigger[chan].Trig(time_now);

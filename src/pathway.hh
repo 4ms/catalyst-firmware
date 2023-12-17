@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <optional>
 
 namespace Catalyst2::Macro::Pathway
 {
@@ -34,6 +35,7 @@ class Interface {
 	SceneId prev_index = 0;
 	bool on_a_scene;
 	float phase;
+	std::optional<SceneId> last_scene_on;
 
 public:
 	void Load(Data &d) {
@@ -42,6 +44,7 @@ public:
 	}
 
 	void Update(float point) {
+		last_scene_on = CurrentScene();
 		on_a_scene = SceneIsNear(point);
 		scene_left = PhaseToIndex(point);
 		auto n = PhaseToIndex(point + (scene_width * .5f));
@@ -68,11 +71,20 @@ public:
 	bool OnAScene() {
 		return on_a_scene;
 	}
+	std::optional<SceneId> LastSceneOn() {
+		return last_scene_on;
+	}
+	std::optional<SceneId> CurrentScene() {
+		if (on_a_scene) {
+			return SceneNearest();
+		} else {
+			return std::nullopt;
+		}
+	}
 	void ReplaceScene(SceneId scene) {
 		(*p)[scene_nearest] = scene;
 		prev_index = scene_nearest;
 	}
-
 	void InsertScene(SceneId scene, bool after_last) {
 		auto index = scene_left;
 
