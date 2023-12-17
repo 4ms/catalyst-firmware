@@ -26,6 +26,16 @@ public:
 			}
 		}
 
+		const auto shift = c.button.shift.is_high();
+
+		if (c.button.play.just_went_high()) {
+			if (shift) {
+				p.recorder.cue_recording();
+			} else {
+				p.recorder.reset();
+			}
+		}
+
 		if (!(c.button.play.is_high() && c.button.morph.is_high() && c.button.fine.is_high())) {
 			p.shared.modeswitcher.Notify();
 		}

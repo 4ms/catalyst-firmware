@@ -31,12 +31,6 @@ public:
 		if (c.button.fine.just_went_high() && p.override_output.has_value())
 			p.bank.Copy(p.override_output.value());
 
-		if (c.button.play.just_went_high()) {
-			if (c.button.shift.is_high()) {
-				p.recorder.cue_recording();
-			}
-		}
-
 		if (p.shared.reset.Check()) {
 			p.shared.reset.Notify(false);
 			interface = &reset;
@@ -127,7 +121,7 @@ private:
 
 	void SceneButtonDisplayRecording() {
 		const auto led = static_cast<unsigned>(p.recorder.capacity_filled() * 8u);
-		const auto level = (p.recorder.size() & 0x10) > 0;
+		const auto level = (p.recorder.size() & 0x100) > 0;
 		c.SetButtonLed(led, level);
 	}
 
