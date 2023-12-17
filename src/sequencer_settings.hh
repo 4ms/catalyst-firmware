@@ -258,8 +258,8 @@ public:
 	Clock::Divider::type GetClockDiv(uint8_t chan) {
 		return channel[chan].clockdiv;
 	}
-	auto GetRandomAmount(uint8_t chan) {
-		return channel[chan].random.Read();
+	Random::Amount GetRandomAmount(uint8_t chan) {
+		return channel[chan].random;
 	}
 	Catalyst2::Channel::Mode GetChannelMode(uint8_t chan) {
 		return channel[chan].mode;
