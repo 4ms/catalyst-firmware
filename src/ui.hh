@@ -13,6 +13,11 @@
 namespace Catalyst2::Ui
 {
 
+#ifndef __NOP
+volatile uint8_t dummy;
+#define __NOP() (void)dummy
+#endif
+
 class Interface {
 	Outputs outputs;
 	Params &params;

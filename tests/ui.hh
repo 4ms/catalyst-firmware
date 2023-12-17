@@ -3,7 +3,6 @@
 // not tests/outputs.hh
 // FIXME: figure out how to make test project build system prefer tests/FILE.hh instead of ./FILE.hh when seeing
 // #include "FILE.hh"
-
 #pragma once
 
 #include "conf/board_conf.hh"
@@ -18,6 +17,11 @@
 
 namespace Catalyst2::Ui
 {
+
+#ifndef __NOP
+volatile uint8_t dummy;
+#define __NOP() (void)dummy
+#endif
 
 class Interface {
 	Outputs outputs;
@@ -39,18 +43,7 @@ public:
 	void Start() {
 		controls.Start();
 		std::srand(controls.ReadSlider() + controls.ReadCv());
-		ui = &sequencer;
-		params.mode = Params::Mode::Sequencer;
-
-		// load data
-		if (!settings.read(params.data.seq)) {
-			params.data.seq = Sequencer::Data{};
-		}
-
-		if (!settings.read(params.data.macro)) {
-			params.data.macro = Macro::Data{};
-			params.macro.SelectBank(0);
-		}
+		Load();
 	}
 	void Update() {
 		controls.Update();
@@ -58,15 +51,9 @@ public:
 		ui->Common();
 
 		Abstract *next;
-		if (params.mode == Params::Mode::Macro) {
-			if (false && params.shared.save.Check()) {
-				SaveMacro();
-			}
+		if (params.mode == Model::Mode::Macro) {
 			next = &macro;
 		} else {
-			if (false && params.sequencer.player.IsPaused() && params.shared.save.Check()) {
-				SaveSequencer();
-			}
 			next = &sequencer;
 		}
 		ui->Update(next);
@@ -81,6 +68,7 @@ public:
 		}
 		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
 		CheckMode();
+		Save();
 	}
 
 	void SetOutputs(const Model::Output::Buffer &outs) {
@@ -93,56 +81,77 @@ public:
 
 private:
 	void CheckMode() {
-		if (controls.button.shift.just_went_high() && controls.button.play.is_high() && controls.button.bank.is_high())
-		{
-			params.shared.reset.Notify(false);
-			if (params.mode == Params::Mode::Sequencer) {
-				SaveSequencer();
-				params.mode = Params::Mode::Macro;
-				ui = &macro;
-				params.macro.SelectBank(params.macro.GetSelectedBank());
-			} else {
-				params.sequencer.player.Stop();
-				SaveMacro();
-				params.mode = Params::Mode::Sequencer;
+		if (params.shared.modeswitcher.Check()) {
+			params.shared.modeswitcher.Notify();
+			if (params.mode == Model::Mode::Macro) {
+				params.mode = Model::Mode::Sequencer;
 				ui = &sequencer;
-				controls.button.play.clear_events();
+			} else {
+				params.mode = Model::Mode::Macro;
+				ui = &macro;
+				params.macro.SelectBank(0);
+			}
+
+			for (auto i = 0u; i < 16; i++) {
+				for (auto l = 0u; l < Model::NumScenes; l++) {
+					controls.SetButtonLed(l, !!(i & 0b1));
+				}
+				controls.Delay(1000 / 16);
 			}
 		}
 	}
-	void SaveMacro() {
-		if (!settings.write(params.data.macro)) {
-			// Flash is damaged?
-			PanicWarning();
+	void Save() {
+		if (controls.button.bank.is_high() && controls.button.morph.just_went_high()) {
+			const auto result =
+				params.mode == Model::Mode::Macro ? settings.write(params.data.macro) : settings.write(params.data.seq);
+			if (!result) {
+				for (auto i = 0u; i < 48; i++) {
+					for (auto but = 0u; but < 8; but++) {
+						controls.SetButtonLed(but, !!(i & 0b1));
+					}
+					controls.Delay(3000 / 48);
+				}
+			} else {
+				for (auto i = 0u; i < 16; i++) {
+					controls.SetButtonLed(0, !!(i & 0x01));
+					controls.Delay(1000 / 16);
+				}
+			}
+		}
+	}
+	void Load() {
+		if (!settings.read(params.data.seq)) {
+			params.data.seq = Sequencer::Data{};
 		}
 
-		// TODO
-		for (auto i = 0u; i < 16; i++) {
-			controls.SetButtonLed(0, !!(i & 0x01));
-			controls.Delay(1000 / 16);
-		}
-	}
-	void SaveSequencer() {
-		if (!settings.write(params.data.seq)) {
-			// Flash is damaged?
-			PanicWarning();
+		if (!settings.read(params.data.macro)) {
+			params.data.macro = Macro::Data{};
 		}
 
-		// TODO
-		for (auto i = 0u; i < 16; i++) {
-			controls.SetButtonLed(1, !!(i & 0x01));
-			controls.Delay(1000 / 16);
+		const auto saved_mode = params.mode;
+
+		auto &b = controls.button;
+		if (b.play.is_high() && b.morph.is_high() && b.fine.is_high()) {
+			params.mode = Model::Mode::Sequencer;
+		} else if (b.bank.is_high() && b.add.is_high() && b.shift.is_high()) {
+			params.mode = Model::Mode::Macro;
 		}
-	}
-	// Non-fatal error. Loudly notify user, but continue operating
-	void PanicWarning() {
-		for (auto i = 0u; i < 48; i++) {
-			for (auto but = 0u; but < 8; but++)
-				controls.SetButtonLed(but, !!(i & 0b1));
-			controls.Delay(3000 / 48);
+
+		if (saved_mode != params.mode) {
+			(void)settings.write(params.data.macro);
+			(void)settings.write(params.data.seq);
 		}
-	}
-	void Load(Params::Mode mode) {
+		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
+			   b.shift.is_high())
+		{
+			__NOP(); // wait until the buttons are released before cont
+		}
+		if (params.mode == Model::Mode::Macro) {
+			ui = &macro;
+			params.macro.SelectBank(0);
+		} else {
+			ui = &sequencer;
+		}
 	}
 };
 
