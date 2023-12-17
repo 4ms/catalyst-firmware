@@ -57,12 +57,17 @@ public:
 private:
 	Model::Output::Buffer Macro(Macro::Interface &p) {
 		static auto do_trigs = false;
+		static uint8_t prev = 0;
 
 		Model::Output::Buffer buf;
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 
 		if (p.override_output.has_value()) {
+			if (p.override_output.value() != prev) {
+				prev = p.override_output.value();
+				do_trigs = true;
+			}
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = p.bank.GetChannel(p.override_output.value(), chan);
