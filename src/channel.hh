@@ -21,7 +21,7 @@ constexpr auto gatehigh = from_volts(5.f);
 constexpr auto gatearmed = from_volts(0.f) + 1u;
 constexpr auto gateoff = gatearmed - 1u;
 
-constexpr auto octave = (range / Model::output_octave_range);
+constexpr auto octave = range / Model::output_octave_range;
 constexpr auto note = octave / 12;
 
 constexpr Model::Output::type inc_step = note + .5f;
@@ -83,7 +83,7 @@ public:
 
 struct Value {
 	Model::Output::type val = from_volts(0.f);
-	void Inc(int32_t inc, bool fine, bool is_gate, Range range) {
+	void Inc(int32_t inc, bool fine, bool is_gate, Range range, int32_t offset) {
 		if (is_gate) {
 			if (inc > 0) {
 				val = gatearmed;
@@ -92,19 +92,14 @@ struct Value {
 			}
 		} else {
 			int32_t i = fine ? inc_step_fine : inc_step;
-
 			if (inc < 0) {
 				i *= -1;
 			}
-			val = std::clamp<int32_t>(val + i, range.Min(), range.Max());
+
+			const auto m = std::clamp<int32_t>(range.Min() - offset, min, max);
+			const auto M = std::clamp<int32_t>(range.Max() - offset, min, max);
+			val = std::clamp<int32_t>(val + i, m, M);
 		}
-	}
-
-	void Update(bool is_gate, Range range) {
-		if (is_gate)
-			return;
-
-		val = std::clamp<int32_t>(val, range.Min(), range.Max());
 	}
 };
 } // namespace Catalyst2::Channel
