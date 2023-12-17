@@ -32,6 +32,6 @@ TEST_CASE("Pingpong length bug") {
 
 	for (auto i = 0u; i < 1000u; i++) {
 		player.Step();
-		player.GetPlayheadStep(0, 0.f);
+		player.GetPlayheadStep(0);
 	}
 }
