@@ -15,6 +15,7 @@ namespace Catalyst2::Macro
 {
 namespace Bank
 {
+
 struct Data {
 	struct Scene {
 		std::array<Channel::Value, Model::NumChans> channel{};
@@ -24,6 +25,11 @@ struct Data {
 	std::array<Channel::Mode, Model::NumChans> channelmode{};
 	std::array<Channel::Range, Model::NumChans> range{};
 	std::array<float, Model::NumChans> morph{};
+	Data() {
+		for (auto &m : morph) {
+			m = 1.f;
+		}
+	}
 	bool Validate() {
 		auto ret = true;
 		for (auto &s : scene) {
@@ -82,7 +88,8 @@ public:
 		b->scene[scene].random.Inc(inc);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
-		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel]);
+		const auto rand = randompool.GetMacroOffset(scene, channel, b->scene[scene].random, b->range[channel]);
+		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel], rand);
 	}
 	float GetMorph(uint8_t channel) {
 		return 1.f - b->morph[channel];
@@ -92,8 +99,7 @@ public:
 		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
 	}
 	Model::Output::type GetChannel(uint8_t scene, uint8_t channel) {
-		auto rand = static_cast<int32_t>(randompool.GetSceneVal(scene, channel) * b->scene[scene].random.Read() *
-										 Channel::range);
+		auto rand = randompool.GetMacroOffset(scene, channel, b->scene[scene].random, b->range[channel]);
 
 		if (GetChannelMode(channel).IsGate()) {
 			// gates not affected by randomness?
