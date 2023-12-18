@@ -24,6 +24,8 @@ public:
 		startup[2] = TriggerRegister::Reset;
 		send_data(startup);
 
+		HAL_Delay(2);
+
 		startup[0] = GainRegister::Address;
 		startup[1] = GainRegister::DisableRefDiv;
 		startup[2] = GainRegister::AllDacsGainX2;
