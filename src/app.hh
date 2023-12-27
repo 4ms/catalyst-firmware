@@ -51,7 +51,7 @@ public:
 	}
 
 	auto Update() {
-		return params.mode == Model::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
+		return params.shared.data.mode == Model::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
 	}
 
 private:

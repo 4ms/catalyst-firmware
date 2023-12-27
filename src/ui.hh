@@ -47,7 +47,7 @@ public:
 		ui->Common();
 
 		Abstract *next;
-		if (params.mode == Model::Mode::Macro) {
+		if (params.shared.data.mode == Model::Mode::Macro) {
 			next = &macro;
 		} else {
 			next = &sequencer;
@@ -79,11 +79,11 @@ private:
 	void CheckMode() {
 		if (params.shared.modeswitcher.Check()) {
 			params.shared.modeswitcher.Notify();
-			if (params.mode == Model::Mode::Macro) {
-				params.mode = Model::Mode::Sequencer;
+			if (params.shared.data.mode == Model::Mode::Macro) {
+				params.shared.data.mode = Model::Mode::Sequencer;
 				ui = &sequencer;
 			} else {
-				params.mode = Model::Mode::Macro;
+				params.shared.data.mode = Model::Mode::Macro;
 				ui = &macro;
 				params.macro.SelectBank(0);
 			}
@@ -99,8 +99,8 @@ private:
 	void Save() {
 		if (params.shared.do_save) {
 			params.shared.do_save = false;
-			const auto result =
-				params.mode == Model::Mode::Macro ? settings.write(params.data.macro) : settings.write(params.data.seq);
+			const auto result = params.shared.data.mode == Model::Mode::Macro ? settings.write(params.data.macro) :
+																				settings.write(params.data.seq);
 			if (!result) {
 				for (auto i = 0u; i < 48; i++) {
 					for (auto but = 0u; but < 8; but++) {
@@ -125,16 +125,16 @@ private:
 			params.data.macro = Macro::Data{};
 		}
 
-		const auto saved_mode = params.mode;
+		const auto saved_mode = params.shared.data.mode;
 
 		auto &b = controls.button;
 		if (b.play.is_high() && b.morph.is_high() && b.fine.is_high()) {
-			params.mode = Model::Mode::Sequencer;
+			params.shared.data.mode = Model::Mode::Sequencer;
 		} else if (b.bank.is_high() && b.add.is_high() && b.shift.is_high()) {
-			params.mode = Model::Mode::Macro;
+			params.shared.data.mode = Model::Mode::Macro;
 		}
 
-		if (saved_mode != params.mode) {
+		if (saved_mode != params.shared.data.mode) {
 			(void)settings.write(params.data.macro);
 			(void)settings.write(params.data.seq);
 		}
@@ -143,7 +143,7 @@ private:
 		{
 			__NOP(); // wait until the buttons are released before cont
 		}
-		if (params.mode == Model::Mode::Macro) {
+		if (params.shared.data.mode == Model::Mode::Macro) {
 			ui = &macro;
 			params.macro.SelectBank(0);
 		} else {
