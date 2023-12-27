@@ -17,6 +17,9 @@ public:
 		if (c.button.fine.just_went_high() && p.IsSequenceSelected()) {
 			p.CopySequence();
 		}
+		if (c.button.morph.just_went_high()) {
+			p.shared.do_save = true;
+		}
 		if (!c.button.bank.is_high()) {
 			return;
 		}

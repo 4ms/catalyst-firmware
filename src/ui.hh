@@ -97,7 +97,8 @@ private:
 		}
 	}
 	void Save() {
-		if (controls.button.bank.is_high() && controls.button.morph.just_went_high()) {
+		if (params.shared.do_save) {
+			params.shared.do_save = false;
 			const auto result =
 				params.mode == Model::Mode::Macro ? settings.write(params.data.macro) : settings.write(params.data.seq);
 			if (!result) {

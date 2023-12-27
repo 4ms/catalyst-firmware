@@ -14,9 +14,13 @@ public:
 		c.button.morph.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		if (!c.button.bank.is_high())
-			return;
+		if (c.button.morph.just_went_high()) {
+			p.shared.do_save = true;
+		}
 
+		if (!c.button.bank.is_high()) {
+			return;
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
