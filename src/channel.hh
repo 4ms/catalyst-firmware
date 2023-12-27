@@ -106,7 +106,7 @@ public:
 		auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
 		val = MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
 	}
-	void Inc(int32_t inc, bool fine, bool is_gate, Range range, Random::type offset) {
+	void Inc(int32_t inc, bool fine, bool is_gate, Range range, Random::Pool::type offset) {
 		if (is_gate) {
 			if (inc > 0 && !(val & 0x01)) {
 				val += 1;
@@ -122,7 +122,7 @@ public:
 			val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
 		}
 	}
-	Proxy Read(Range range, Random::type offset) const {
+	Proxy Read(Range range, Random::Pool::type offset) const {
 		const auto t = val + CalculateRandom(range, offset);
 		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
 		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
@@ -130,7 +130,7 @@ public:
 	}
 
 private:
-	int32_t CalculateRandom(Range range, Random::type offset) const {
+	int32_t CalculateRandom(Range range, Random::Pool::type offset) const {
 		offset *= offset < 0.f ? range.NegAmount() : range.PosAmount();
 		return offset * max;
 	}
