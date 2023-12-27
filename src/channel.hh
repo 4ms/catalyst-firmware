@@ -1,6 +1,7 @@
 #pragma once
 
 #include "conf/model.hh"
+#include "random.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -23,9 +24,6 @@ constexpr auto gateoff = gatearmed - 1u;
 
 constexpr auto octave = range / Model::output_octave_range;
 constexpr auto note = octave / 12;
-
-constexpr Model::Output::type inc_step = note + .5f;
-constexpr Model::Output::type inc_step_fine = (note / 25.f) + .5f;
 
 class Range {
 	struct Option {
@@ -79,27 +77,62 @@ public:
 	bool Validate() {
 		return val <= max;
 	}
-}; // namespace Catalyst2::Channel
+};
 
-struct Value {
-	Model::Output::type val = from_volts(0.f);
-	void Inc(int32_t inc, bool fine, bool is_gate, Range range, int32_t offset) {
+class Value {
+	static constexpr auto inc_step_fine = 1;
+	static constexpr auto inc_step = inc_step_fine * 25;
+	static constexpr auto min = 0, max = static_cast<int>(inc_step * 12 * Model::output_octave_range);
+	static constexpr auto zero =
+		MathTools::map_value(0.f, Model::min_output_voltage, Model::max_output_voltage, min, max);
+	int16_t val;
+
+public:
+	class Proxy {
+		const int32_t val;
+
+	public:
+		Proxy(int32_t offset)
+			: val{offset} {
+		}
+		Model::Output::type AsCV() const {
+			return val / static_cast<float>(max) * Channel::max;
+		}
+		bool AsGate() const {
+			return val & 0x01;
+		}
+	};
+	constexpr Value(float volts = 0.f) {
+		auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
+		val = MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
+	}
+	void Inc(int32_t inc, bool fine, bool is_gate, Range range, Random::type offset) {
 		if (is_gate) {
-			if (inc > 0) {
-				val = gatearmed;
-			} else if (inc < 0) {
-				val = gateoff;
+			if (inc > 0 && !(val & 0x01)) {
+				val += 1;
+			} else if (inc < 0 && (val & 0x01)) {
+				val -= 1;
 			}
 		} else {
-			int32_t i = fine ? inc_step_fine : inc_step;
-			if (inc < 0) {
-				i *= -1;
-			}
+			inc *= fine ? inc_step_fine : inc_step;
 
-			const auto m = std::clamp<int32_t>(range.Min() - offset, min, max);
-			const auto M = std::clamp<int32_t>(range.Max() - offset, min, max);
-			val = std::clamp<int32_t>(val + i, m, M);
+			const auto o = CalculateRandom(range, offset);
+			const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
+			const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
+			val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
 		}
+	}
+	Proxy Read(Range range, Random::type offset) const {
+		const auto t = val + CalculateRandom(range, offset);
+		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
+		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
+		return Proxy{std::clamp<int32_t>(t, min_, max_)};
+	}
+
+private:
+	int32_t CalculateRandom(Range range, Random::type offset) const {
+		offset *= offset < 0.f ? range.NegAmount() : range.PosAmount();
+		return offset * max;
 	}
 };
 } // namespace Catalyst2::Channel
