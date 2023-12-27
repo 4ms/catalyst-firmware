@@ -52,6 +52,7 @@ struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
+	Random::Pool::SeqData randompool{};
 
 	bool validate() {
 		for (auto &c : channel) {

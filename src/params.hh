@@ -89,7 +89,6 @@ public:
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
 	Clock::Divider::type clockdiv;
-	Random::Pool randompool;
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
 	ModeSwitcher modeswitcher{internalclock};
@@ -104,6 +103,7 @@ struct Data {
 
 	std::array<Pathway::Data, Model::NumBanks> pathway{};
 	std::array<Bank::Data, Model::NumBanks> bank{};
+	Random::Pool::MacroData randompool{};
 
 	bool validate() {
 		auto ret = true;
@@ -135,7 +135,7 @@ public:
 	Interface(Data &data, SharedInterface &shared)
 		: data{data}
 		, shared{shared}
-		, bank{shared.randompool} {
+		, bank{data.randompool} {
 		SelectBank(0);
 	}
 	void SelectBank(uint8_t bank) {
@@ -177,12 +177,12 @@ class Interface {
 public:
 	Data &data;
 	SharedInterface &shared;
-	PlayerInterface player;
+	PlayerInterface player{data.settings};
+	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
 
 	Interface(Data &data, SharedInterface &shared)
 		: data{data}
-		, shared{shared}
-		, player{data.settings} {
+		, shared{shared} {
 	}
 	void SelectChannel(uint8_t chan) {
 		cur_channel = chan;
@@ -211,8 +211,7 @@ public:
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
 		step += (page * Model::SeqStepsPerPage);
-		const auto rand = shared.randompool.GetSequenceOffset(
-			cur_channel, step, data.settings.GetRandomAmount(cur_channel), data.settings.GetRange(cur_channel));
+		const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomAmount(cur_channel));
 		data.channel[cur_channel][step].Inc(
 			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel), rand);
 	}
@@ -221,28 +220,18 @@ public:
 		step += (page * Model::SeqStepsPerPage);
 		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
-	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
-		const auto rand = shared.randompool.GetSequenceOffset(
-			chan, step, data.settings.GetRandomAmount(chan), data.settings.GetRange(chan));
-		auto temp = data.channel[chan][step].val;
-
-		if (!data.settings.GetChannelMode(chan).IsGate()) {
-			return std::clamp<int32_t>(temp + rand, Channel::min, Channel::max);
-		} else {
-			if (std::abs(rand) < 0) {
-				temp = temp == Channel::gatearmed ? Channel::gateoff : Channel::gatearmed;
-			}
-			return temp;
-		}
-	}
-	Model::Output::type GetPlayheadValue(uint8_t chan) {
-		return GetStepValue(chan, player.GetPlayheadStep(chan));
+	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
+		const auto step = player.GetPlayheadStep(chan);
+		return data.channel[chan][step].Read(data.settings.GetRange(chan),
+											 randompool.Read(chan, step, data.settings.GetRandomAmount(chan)));
 	}
 	StepModifier GetPlayheadModifier(uint8_t chan) {
 		return data.channel[chan][player.GetPlayheadStep(chan)].modifier;
 	}
-	Model::Output::type GetPrevStepValue(uint8_t chan) {
-		return GetStepValue(chan, player.GetPrevStep(chan));
+	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
+		const auto step = player.GetPrevStep(chan);
+		return data.channel[chan][step].Read(data.settings.GetRange(chan),
+											 randompool.Read(chan, step, data.settings.GetRandomAmount(chan)));
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
@@ -274,6 +263,18 @@ public:
 	void PastePage(uint8_t page) {
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
+		}
+	}
+
+private:
+	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
+		const auto rand = randompool.Read(chan, step, data.settings.GetRandomAmount(chan));
+		const auto range = data.settings.GetRange(chan);
+
+		if (data.settings.GetChannelMode(chan).IsGate()) {
+			return data.channel[chan][step].Read(range, rand).AsGate();
+		} else {
+			return data.channel[chan][step].Read(range, rand).AsCV();
 		}
 	}
 };

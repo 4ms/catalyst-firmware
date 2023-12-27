@@ -50,11 +50,12 @@ struct Data {
 
 class Interface {
 	Data::Scene clipboard;
-	Random::Pool &randompool;
 	Data *b;
 
 public:
-	Interface(Random::Pool &r)
+	Random::Pool::Interface<Random::Pool::MacroData> randompool;
+
+	Interface(Random::Pool::MacroData &r)
 		: randompool{r} {
 	}
 	void Load(Data &d) {
@@ -88,7 +89,7 @@ public:
 		b->scene[scene].random.Inc(inc);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
-		const auto rand = randompool.GetMacroOffset(scene, channel, b->scene[scene].random, b->range[channel]);
+		const auto rand = randompool.Read(channel, scene, b->scene[scene].random);
 		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel], rand);
 	}
 	float GetMorph(uint8_t channel) {
@@ -98,15 +99,9 @@ public:
 		const auto i = (1.f / 100.f) * inc;
 		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
 	}
-	Model::Output::type GetChannel(uint8_t scene, uint8_t channel) {
-		auto rand = randompool.GetMacroOffset(scene, channel, b->scene[scene].random, b->range[channel]);
-
-		if (GetChannelMode(channel).IsGate()) {
-			// gates not affected by randomness?
-			rand = 0;
-		}
-		auto temp = b->scene[scene].channel[channel].val + rand;
-		return std::clamp<int32_t>(temp, Channel::min, Channel::max);
+	Channel::Value::Proxy GetChannel(uint8_t scene, uint8_t channel) {
+		const auto rand = randompool.Read(channel, scene, b->scene[scene].random);
+		return b->scene[scene].channel[channel].Read(b->range[channel], rand);
 	}
 };
 } // namespace Bank
