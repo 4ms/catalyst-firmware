@@ -51,7 +51,7 @@ public:
 					break;
 				}
 				inc = hang.has_value() ? inc : 0;
-				p.shared.clockdiv.Inc(inc);
+				p.shared.data.clockdiv.Inc(inc);
 				p.shared.hang.Set(encoder);
 				break;
 		}
@@ -75,7 +75,7 @@ public:
 			const auto hang = p.shared.hang.Check();
 			if (hang.has_value()) {
 				if (hang.value() == Model::EncoderAlts::ClockDiv) {
-					SetEncoderLedsAddition(p.shared.clockdiv.Read(), Palette::Setting::active);
+					SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);

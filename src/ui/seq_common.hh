@@ -24,7 +24,7 @@ public:
 			if (p.shared.internalclock.IsInternal()) {
 				p.shared.internalclock.SetExternal(true);
 			}
-			p.shared.clockdivider.Update(p.shared.clockdiv);
+			p.shared.clockdivider.Update(p.shared.data.clockdiv);
 			if (p.shared.clockdivider.Step()) {
 				p.shared.internalclock.Input();
 			}

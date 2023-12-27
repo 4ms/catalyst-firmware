@@ -109,12 +109,12 @@ public:
 						p.shared.hang.Set(encoder);
 					} else {
 						if (p.shared.internalclock.IsInternal()) {
-							p.shared.internalclock.Inc(inc, c.button.fine.is_high());
+							p.shared.data.bpm.Inc(inc, c.button.fine.is_high());
 							p.shared.hang.Cancel();
 						} else {
 							inc = hang.has_value() ? inc : 0;
 							p.shared.hang.Set(encoder);
-							p.shared.clockdiv.Inc(inc);
+							p.shared.data.clockdiv.Inc(inc);
 						}
 					}
 					break;
@@ -128,7 +128,7 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check();
 
-		auto clockdiv = p.shared.clockdiv;
+		auto clockdiv = p.shared.data.clockdiv;
 
 		auto length = std::make_optional(p.data.settings.GetLength());
 		auto phaseoffset = std::make_optional(p.data.settings.GetPhaseOffset());
