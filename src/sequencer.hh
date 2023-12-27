@@ -13,7 +13,7 @@ namespace Catalyst2::Sequencer
 {
 
 class StepModifier {
-	static constexpr uint8_t min = 0, max = 7;
+	static constexpr uint8_t min = 0, max = 12;
 	uint8_t m = 0;
 
 public:
@@ -21,13 +21,13 @@ public:
 		return m / static_cast<float>(max);
 	}
 	uint8_t AsRetrig() {
-		return m >> 1;
+		return m >> 2;
 	}
 	void Inc(int32_t inc, bool is_gate) {
 		if (is_gate) {
-			inc *= 2;
+			inc *= 4;
 		}
-		m = std::clamp<int32_t>(m + inc, min, max - 1);
+		m = std::clamp<int32_t>(m + inc, min, max);
 	}
 	bool Validate() {
 		return m <= max;
