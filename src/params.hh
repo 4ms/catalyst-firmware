@@ -92,6 +92,7 @@ public:
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
 	ModeSwitcher modeswitcher{internalclock};
+	bool do_save = false;
 	float pos;
 };
 
@@ -235,8 +236,15 @@ public:
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
+		const auto range = data.settings.GetRange(cur_channel);
 		for (auto [i, o] : countzip(out)) {
-			o = GetStepValue(cur_channel, (page * Model::SeqStepsPerPage) + i);
+			const auto step = (page * Model::SeqStepsPerPage) + i;
+			const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomAmount(cur_channel));
+			if (data.settings.GetChannelMode(cur_channel).IsGate()) {
+				o = data.channel[cur_channel][step].Read(range, rand).AsGate() ? Channel::gatearmed : Channel::gateoff;
+			} else {
+				o = data.channel[cur_channel][step].Read(range, rand).AsCV();
+			}
 		}
 		return out;
 	}
@@ -263,18 +271,6 @@ public:
 	void PastePage(uint8_t page) {
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
-		}
-	}
-
-private:
-	Model::Output::type GetStepValue(uint8_t chan, uint8_t step) {
-		const auto rand = randompool.Read(chan, step, data.settings.GetRandomAmount(chan));
-		const auto range = data.settings.GetRange(chan);
-
-		if (data.settings.GetChannelMode(chan).IsGate()) {
-			return data.channel[chan][step].Read(range, rand).AsGate();
-		} else {
-			return data.channel[chan][step].Read(range, rand).AsCV();
 		}
 	}
 };
