@@ -50,10 +50,11 @@ public:
 					if (ysb.has_value()) {
 						p.data.settings.IncRandomAmount(i, inc);
 					} else {
-						if (inc > 0)
-							p.shared.randompool.RandomizeSequence();
-						else
-							p.shared.randompool.ClearSequence();
+						if (inc > 0) {
+							p.randompool.Randomize();
+						} else {
+							p.randompool.Clear();
+						}
 					}
 					p.shared.hang.Cancel();
 					break;
@@ -135,7 +136,7 @@ public:
 		auto playmode = std::make_optional(p.data.settings.GetPlayMode());
 		auto tpose = std::make_optional(p.data.settings.GetTranspose());
 		auto range = Channel::Range{};
-		auto random = p.shared.randompool.IsRandomized() ? 1.f : 0.f;
+		auto random = p.randompool.IsRandomized() ? 1.f : 0.f;
 
 		auto ysb = YoungestSceneButton();
 		if (ysb.has_value()) {
@@ -217,10 +218,10 @@ public:
 			}
 			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
 
-			if (!p.shared.randompool.IsRandomized() || random == 0.f) {
+			if (!p.randompool.IsRandomized() || random == 0.f) {
 				col = red;
 			} else {
-				col = off.blend(from_raw(p.shared.randompool.GetSeed()), random);
+				col = off.blend(from_raw(p.randompool.GetSeed()), random);
 			}
 
 			c.SetEncoderLed(EncoderAlts::Random, col);

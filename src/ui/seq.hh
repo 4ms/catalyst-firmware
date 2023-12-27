@@ -52,9 +52,9 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
-		if (!p.IsSequenceSelected())
+		if (!p.IsSequenceSelected()) {
 			return;
-
+		}
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
