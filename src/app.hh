@@ -70,13 +70,12 @@ private:
 			}
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					auto is_primed = p.bank.GetChannel(p.override_output.value(), chan);
-					if (do_trigs && is_primed >= Channel::gatearmed) {
+					if (do_trigs && p.bank.GetChannel(p.override_output.value(), chan).AsGate()) {
 						trigger[chan].Trig(time_now);
 					}
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : Channel::from_volts(0.f);
 				} else {
-					out = p.bank.GetChannel(p.override_output.value(), chan);
+					out = p.bank.GetChannel(p.override_output.value(), chan).AsCV();
 					out = p.bank.GetRange(chan).Clamp(out);
 				}
 			}
@@ -97,17 +96,17 @@ private:
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					auto is_primed = Channel::from_volts(0.f);
 					if (current_scene.has_value()) {
-						is_primed = p.bank.GetChannel(current_scene.value(), chan);
+						is_primed = p.bank.GetChannel(current_scene.value(), chan).AsGate();
 					}
-					if (do_trigs && is_primed >= Channel::gatearmed) {
+					if (do_trigs && is_primed) {
 						trigger[chan].Trig(time_now);
 					}
 
 					out = trigger[chan].Read(time_now) ? Channel::gatehigh : is_primed;
 				} else {
 					const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
-					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan));
-					const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan));
+					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan).AsCV());
+					const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan).AsCV());
 					out = MathTools::interpolate(a, b, phs);
 					out = p.bank.GetRange(chan).Clamp(out);
 				}
@@ -138,7 +137,7 @@ private:
 
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
 		const auto stepval = p.GetPlayheadValue(chan);
-		const auto armed = stepval >= Channel::gatearmed;
+		const auto armed = stepval.AsGate();
 		const auto time_now = p.shared.internalclock.TimeNow();
 		if (armed && p.player.IsCurrentStepNew(chan)) {
 			retrigger[chan].Trig(p.GetPlayheadModifier(chan).AsRetrig(), p.data.settings.GetClockDiv(chan).Read());
@@ -152,8 +151,8 @@ private:
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan, float morph_phase) {
 		morph_phase = p.player.GetPhase(chan, morph_phase);
 		const auto stepmorph = seqmorph(morph_phase, p.GetPlayheadModifier(chan).AsMorph());
-		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan));
-		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan)) - stepval;
+		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan).AsCV());
+		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
 		return p.data.settings.GetRange(chan).Clamp(stepval);
