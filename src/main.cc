@@ -30,6 +30,15 @@ make sure you can adjust random values even if range technically shouldnt let yo
 val - clamp(val + inc, rangemin - random, rangemax - random)
 
 */
+/*
+12/19
+bug when switch modes it will get stuck on bank mode leds or morph mode leds sometimes
+make play led work
+save tap tempo time on power off1
+hide playhead when adjusting that step
+make channel value 0 - 16384 instead of uint16 range so that it can go above and below the max without overflowing and
+without using more data
+*/
 
 void main() {
 	using namespace Catalyst2;
