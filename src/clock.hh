@@ -36,8 +36,6 @@ protected:
 class Bpm : public Internal {
 	static constexpr auto multfactor = Model::clock_mult_factor;
 	uint32_t cnt = 0;
-	uint32_t bpm = 120;
-	uint32_t period = BpmToTicks(120);
 	uint32_t prevtaptime;
 	bool peek = false;
 	bool external = false;
@@ -45,8 +43,33 @@ class Bpm : public Internal {
 	bool multout = false;
 
 public:
+	class type {
+		static constexpr auto min = 1u, max = 1200u;
+		uint32_t val = BpmToTicks(120u);
+
+	public:
+		void Inc(int32_t inc, bool fine) {
+			auto temp = TicksToBpm(val);
+			inc = fine ? inc : inc * 10;
+			temp = std::clamp<int32_t>(temp + inc, min, max);
+			val = BpmToTicks(temp);
+		}
+		uint32_t Read() {
+			return val;
+		}
+		void Set(uint32_t ticks) {
+			val = ticks;
+		}
+		bool Validate() {
+			return val <= BpmToTicks(min) && val >= BpmToTicks(max);
+		}
+	};
+	Bpm(type &bpm)
+		: bpm{bpm} {
+	}
 	void Update() {
 		Internal::Update();
+		const auto period = bpm.Read();
 		const auto cntmult = (cnt % (period / multfactor)) + 1;
 		cnt++;
 
@@ -85,7 +108,7 @@ public:
 	}
 	void Tap() {
 		const auto tn = TimeNow();
-		Set(TicksToBpm(tn - prevtaptime));
+		bpm.Set(tn - prevtaptime);
 		prevtaptime = tn;
 	}
 	bool IsInternal() {
@@ -97,25 +120,17 @@ public:
 	bool Peek() {
 		return peek;
 	}
-	void Set(int32_t bpm) {
-		this->bpm = std::clamp<int32_t>(bpm, 1, 1200);
-		period = BpmToTicks(this->bpm);
-	}
-	void Inc(int by, bool fine) {
-		auto inc = fine ? 1 : 10;
-		if (by > 0)
-			Set(bpm + inc);
-		else if (by < 0)
-			Set(bpm - inc);
-	}
 	float GetPhase() {
-		auto out = static_cast<float>(cnt) / period;
+		auto out = static_cast<float>(cnt) / bpm.Read();
 		return std::clamp(out, 0.f, 1.f);
 	}
 	void Reset() {
 		cnt = 0;
 		peek = false;
 	}
+
+private:
+	type &bpm;
 };
 
 class Divider {
