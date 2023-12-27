@@ -15,7 +15,23 @@ namespace Catalyst2
 
 struct Params;
 
-class SharedInterface {
+namespace Shared
+{
+
+struct Data {
+	Clock::Bpm::type bpm{};
+	Clock::Divider::type clockdiv{};
+	Model::Mode mode = Model::default_mode;
+	bool Validate() {
+		auto ret = true;
+		ret &= clockdiv.Validate();
+		ret &= mode == Model::Mode::Macro || mode == Model::Mode::Sequencer;
+		ret &= bpm.Validate();
+		return ret;
+	}
+};
+
+class Interface {
 	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 	class DisplayHanger {
 		static constexpr uint32_t duration = Clock::MsToTicks(4000);
@@ -85,16 +101,21 @@ class SharedInterface {
 	};
 
 public:
-	Clock::Bpm internalclock;
+	Data data;
+	Interface(Data &data)
+		: data{data} {
+	}
+	Clock::Bpm internalclock{data.bpm};
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
-	Clock::Divider::type clockdiv;
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
 	ModeSwitcher modeswitcher{internalclock};
 	bool do_save = false;
 	float pos;
 };
+
+} // namespace Shared
 
 namespace Macro
 {
@@ -105,6 +126,7 @@ struct Data {
 	std::array<Pathway::Data, Model::NumBanks> pathway{};
 	std::array<Bank::Data, Model::NumBanks> bank{};
 	Random::Pool::MacroData randompool{};
+	Recorder::Data recorder{};
 
 	bool validate() {
 		auto ret = true;
@@ -114,12 +136,13 @@ struct Data {
 		for (auto &b : bank) {
 			ret &= b.Validate();
 		}
-		ret &= (saved_mode == Model::Mode::Macro || saved_mode == Model::Mode::Sequencer);
+		ret &= recorder.Validate();
+		ret &= shared_data.Validate();
 		return ret;
 	}
 
 private:
-	Model::Mode saved_mode = Model::default_mode;
+	Shared::Data shared_data{};
 };
 
 class Interface {
@@ -127,16 +150,15 @@ class Interface {
 	uint8_t cur_bank = 0;
 
 public:
-	SharedInterface &shared;
+	Shared::Interface &shared;
 	Pathway::Interface pathway;
-	Bank::Interface bank;
-	Recorder recorder;
+	Bank::Interface bank{data.randompool};
+	Recorder::Interface recorder{data.recorder};
 	std::optional<uint8_t> override_output; // this doesnt need to be shared.
 
-	Interface(Data &data, SharedInterface &shared)
+	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
-		, shared{shared}
-		, bank{data.randompool} {
+		, shared{shared} {
 		SelectBank(0);
 	}
 	void SelectBank(uint8_t bank) {
@@ -177,11 +199,11 @@ class Interface {
 
 public:
 	Data &data;
-	SharedInterface &shared;
+	Shared::Interface &shared;
 	PlayerInterface player{data.settings};
 	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
 
-	Interface(Data &data, SharedInterface &shared)
+	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
 		, shared{shared} {
 	}
@@ -282,9 +304,10 @@ struct Params {
 		Macro::Data macro;
 	};
 
+	static constexpr auto seq_size = sizeof(Sequencer::Data);
+	static constexpr auto macro_size = sizeof(Macro::Data) - sizeof(Shared::Data);
 	Data data;
-	Model::Mode &mode = data.macro.saved_mode;
-	SharedInterface shared;
+	Shared::Interface shared{data.macro.shared_data};
 	Sequencer::Interface sequencer{data.seq, shared};
 	Macro::Interface macro{data.macro, shared};
 };
