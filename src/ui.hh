@@ -39,6 +39,7 @@ public:
 		controls.Start();
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
+		params.sequencer.player.Stop();
 	}
 	void Update() {
 		controls.Update();
