@@ -55,25 +55,25 @@ constexpr Color from_raw(int8_t val) {
 	return Color(r, b, g);
 }
 
-constexpr Color EncoderBlend(uint16_t level, bool is_gate) {
+constexpr Color CvBlend(uint16_t level) {
 	using namespace Channel;
-	if (is_gate) {
-		if (level == gatearmed)
-			return Gate::Primed;
-		if (level == gatehigh)
-			return Gate::High;
-		return off;
-	} else {
-		constexpr auto neg = from_volts(0.f);
-		auto temp = level - neg;
-		auto c = Voltage::Positive;
-		if (temp < 0) {
-			temp *= -2;
-			c = Voltage::Negative;
-		}
-		const auto phase = (temp / (neg * 2.f));
-		return off.blend(c, phase);
+	constexpr auto neg = from_volts(0.f);
+	auto temp = level - neg;
+	auto c = Voltage::Positive;
+	if (temp < 0) {
+		temp *= -2;
+		c = Voltage::Negative;
 	}
+	const auto phase = (temp / (neg * 2.f));
+	return off.blend(c, phase);
+}
+
+constexpr Color GateBlend(bool level) {
+	return level == true ? Gate::Primed : off;
+}
+
+constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {
+	return isgate ? GateBlend(val >= Channel::gatearmed) : CvBlend(val);
 }
 
 } // namespace Catalyst2::Palette

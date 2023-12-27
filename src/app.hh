@@ -56,6 +56,7 @@ public:
 
 private:
 	Model::Output::Buffer Macro(Macro::Interface &p) {
+		// TODO: get rid of these static variables
 		static auto do_trigs = false;
 		static uint8_t prev = 0;
 
@@ -70,10 +71,13 @@ private:
 			}
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					if (do_trigs && p.bank.GetChannel(p.override_output.value(), chan).AsGate()) {
+					const auto gate_armed = p.bank.GetChannel(p.override_output.value(), chan).AsGate();
+					if (do_trigs && gate_armed) {
 						trigger[chan].Trig(time_now);
 					}
-					out = trigger[chan].Read(time_now) ? Channel::gatehigh : Channel::from_volts(0.f);
+					out = trigger[chan].Read(time_now) ? Channel::gatehigh :
+						  gate_armed				   ? Channel::gatearmed :
+														 Channel::gateoff;
 				} else {
 					out = p.bank.GetChannel(p.override_output.value(), chan).AsCV();
 					out = p.bank.GetRange(chan).Clamp(out);
@@ -94,15 +98,20 @@ private:
 
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					auto is_primed = Channel::from_volts(0.f);
+					auto is_primed = false;
+					auto level = Channel::gateoff;
 					if (current_scene.has_value()) {
-						is_primed = p.bank.GetChannel(current_scene.value(), chan).AsGate();
+						const auto is_primed = p.bank.GetChannel(current_scene.value(), chan).AsGate();
+						if (is_primed) {
+							level = Channel::gatearmed;
+						}
 					}
+
 					if (do_trigs && is_primed) {
 						trigger[chan].Trig(time_now);
 					}
 
-					out = trigger[chan].Read(time_now) ? Channel::gatehigh : is_primed;
+					out = trigger[chan].Read(time_now) ? Channel::gatehigh : level;
 				} else {
 					const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
 					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan).AsCV());

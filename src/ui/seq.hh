@@ -83,12 +83,13 @@ public:
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 			const auto pvals = p.GetPageValues(page);
+			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
 
 			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 				if (i == led && page == playheadpage) {
 					c.SetEncoderLed(led, Palette::seqhead);
 				} else {
-					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], p.data.settings.GetChannelMode(chan).IsGate()));
+					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], is_gate));
 				}
 			}
 			if (p.IsPageSelected()) {
