@@ -46,8 +46,8 @@ constexpr auto output_octave_range = max_output_voltage - min_output_voltage;
 
 constexpr auto fader_width_mm = 60u;
 
-constexpr auto rec_buffer_size = 2048u * 16u;
-constexpr auto rec_buffer_prescaler = 1u;
+constexpr auto rec_buffer_size = 2048u;
+constexpr auto rec_buffer_prescaler = 16u;
 
 struct EncoderAlts {
 	static constexpr auto StartOffset = 0u;
