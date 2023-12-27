@@ -4,10 +4,20 @@
 #include "util/math.hh"
 #include <array>
 
-namespace Catalyst2::Macro
+namespace Catalyst2::Macro::Recorder
 {
 
-class Recorder {
+struct Data : public std::array<uint16_t, Model::rec_buffer_size> {
+	bool Validate() const {
+		auto ret = true;
+		for (auto &i : *this) {
+			ret &= i <= 4095;
+		}
+		return ret;
+	}
+};
+
+class Interface {
 	static constexpr auto prescaler = Model::rec_buffer_prescaler;
 	static constexpr auto buff_size = Model::rec_buffer_size;
 	static constexpr auto max_record_lenth_seconds =
@@ -21,17 +31,20 @@ class Recorder {
 		uint8_t cue_rec : 1 = 0;
 	} flags;
 
-	std::array<uint16_t, buff_size> buffer;
 	unsigned size_{0};
 	unsigned pos_{0};
 	uint8_t scaler{0};
 	unsigned accum{0};
+	Data &buffer;
 
 public:
+	Interface(Data &data)
+		: buffer{data} {
+	}
 	uint16_t update(uint16_t sample) {
-		if (!flags.playing && !flags.recording)
+		if (!flags.playing && !flags.recording) {
 			return sample;
-
+		}
 		if (flags.recording) {
 			if (!insert(sample)) {
 				stop();
@@ -55,9 +68,9 @@ public:
 		flags.playing = true;
 	}
 	void record() {
-		if (!flags.cue_rec)
+		if (!flags.cue_rec) {
 			return;
-
+		}
 		flags.cue_rec = false;
 		flags.recording = true;
 	}
@@ -69,8 +82,9 @@ public:
 			size_ = 0;
 			return;
 		}
-		if (size_ >= 2)
+		if (size_ >= 2) {
 			flags.playing = true;
+		}
 	}
 	void toggle_loop() {
 		flags.loop_playback ^= 1;
@@ -97,8 +111,9 @@ private:
 			pos_ += 1;
 			if (pos_ >= size_ - 1) {
 				stop();
-				if (flags.loop_playback)
+				if (flags.loop_playback) {
 					play();
+				}
 			}
 		}
 
@@ -107,9 +122,9 @@ private:
 		return out;
 	}
 	bool insert(uint16_t sample) {
-		if (is_full())
+		if (is_full()) {
 			return false;
-
+		}
 		accum += sample;
 		scaler += 1;
 		if (scaler == prescaler) {
@@ -126,4 +141,4 @@ private:
 		return !is_full();
 	}
 };
-} // namespace Catalyst2::Macro
+} // namespace Catalyst2::Macro::Recorder
