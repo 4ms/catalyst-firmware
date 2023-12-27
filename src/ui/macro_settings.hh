@@ -39,9 +39,9 @@ public:
 					}
 				} else {
 					if (inc > 0) {
-						p.shared.randompool.RandomizeScene();
+						p.bank.randompool.Randomize();
 					} else {
-						p.shared.randompool.ClearScene();
+						p.bank.randompool.Clear();
 					}
 				}
 				p.shared.hang.Cancel();
@@ -67,8 +67,8 @@ public:
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
 			auto col = Palette::red;
-			if (p.shared.randompool.IsRandomized() && random > 0.f) {
-				col = Palette::off.blend(Palette::from_raw(p.shared.randompool.GetSeed()), random);
+			if (p.bank.randompool.IsRandomized() && random > 0.f) {
+				col = Palette::off.blend(Palette::from_raw(p.bank.randompool.GetSeed()), random);
 			}
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		} else {
@@ -79,8 +79,8 @@ public:
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
-				const auto col = p.shared.randompool.IsRandomized() ? Palette::from_raw(p.shared.randompool.GetSeed()) :
-																	  Palette::Setting::null;
+				const auto col = p.bank.randompool.IsRandomized() ? Palette::from_raw(p.bank.randompool.GetSeed()) :
+																	Palette::Setting::null;
 				c.SetEncoderLed(Model::EncoderAlts::Random, col);
 			}
 		}
