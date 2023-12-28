@@ -28,7 +28,7 @@ class Interface {
 	Macro::Ui::Main macro{params.macro, controls};
 	Sequencer::Ui::Main sequencer{params.sequencer, controls};
 
-	SavedSettings<Sequencer::Data, Macro::Data> settings;
+	SavedSettings<SequencerData, MacroData> settings;
 
 public:
 	Interface(Params &params)
@@ -96,11 +96,13 @@ private:
 			}
 		}
 	}
-	void Save() {
-		if (params.shared.do_save) {
+	void Save(bool force = false) {
+		if (params.shared.do_save || force) {
 			params.shared.do_save = false;
-			const auto result = params.shared.data.mode == Model::Mode::Macro ? settings.write(params.data.macro) :
-																				settings.write(params.data.seq);
+
+			auto result = settings.write(params.data.macro);
+			result &= settings.write(params.data.sequencer);
+
 			if (!result) {
 				for (auto i = 0u; i < 48; i++) {
 					for (auto but = 0u; but < 8; but++) {
@@ -117,12 +119,12 @@ private:
 		}
 	}
 	void Load() {
-		if (!settings.read(params.data.seq)) {
-			params.data.seq = Sequencer::Data{};
+		if (!settings.read(params.data.sequencer)) {
+			params.data.sequencer = SequencerData{};
 		}
 
 		if (!settings.read(params.data.macro)) {
-			params.data.macro = Macro::Data{};
+			params.data.macro = MacroData{};
 		}
 
 		const auto saved_mode = params.shared.data.mode;
@@ -135,8 +137,7 @@ private:
 		}
 
 		if (saved_mode != params.shared.data.mode) {
-			(void)settings.write(params.data.macro);
-			(void)settings.write(params.data.seq);
+			Save(true);
 		}
 		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
 			   b.shift.is_high())
