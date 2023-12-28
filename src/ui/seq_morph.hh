@@ -33,9 +33,10 @@ public:
 		const auto playheadpage = p.player.GetPlayheadPage(chan);
 		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 		const auto mvals = p.GetPageValuesModifier(page);
+		const auto offset = Model::SeqStepsPerPage * page;
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			if (i == led && page == playheadpage)
+			if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep())
 				c.SetEncoderLed(led, Palette::seqhead);
 			else {
 				auto col = Palette::grey.blend(Palette::red, mvals[i]);

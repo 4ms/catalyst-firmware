@@ -79,14 +79,15 @@ public:
 
 		if (p.IsSequenceSelected()) {
 			const auto chan = p.GetSelectedChannel();
-			const uint8_t led = p.player.GetPlayheadStepOnPage(chan);
+			const auto led = p.player.GetPlayheadStepOnPage(chan);
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 			const auto pvals = p.GetPageValues(page);
 			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
+			const auto offset = Model::SeqStepsPerPage * page;
 
 			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-				if (i == led && page == playheadpage) {
+				if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep()) {
 					c.SetEncoderLed(led, Palette::seqhead);
 				} else {
 					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], is_gate));

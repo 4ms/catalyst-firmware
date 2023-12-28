@@ -68,6 +68,7 @@ struct Data {
 class Interface {
 	uint8_t cur_channel = 0;
 	uint8_t cur_page = Model::SeqPages;
+	int8_t hide_playhead = Model::SeqStepsPerPage;
 	struct Clipboard {
 		ChannelData cd;
 		Settings::Channel cs;
@@ -83,6 +84,9 @@ public:
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
 		, shared{shared} {
+	}
+	int8_t GetHiddenStep() {
+		return hide_playhead;
 	}
 	void SelectChannel(uint8_t chan) {
 		cur_channel = chan;
@@ -109,24 +113,39 @@ public:
 		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
-		step += (page * Model::SeqStepsPerPage);
+		step = StepOnPageToStep(step);
+		if (step == player.GetPlayheadStep(cur_channel)) {
+			hide_playhead = step;
+		} else {
+			hide_playhead = -1;
+		}
 		const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomAmount(cur_channel));
 		data.channel[cur_channel][step].Inc(
 			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel), rand);
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
-		step += (page * Model::SeqStepsPerPage);
+		step = StepOnPageToStep(step);
+		if (step == player.GetPlayheadStep(cur_channel)) {
+			hide_playhead = step;
+		} else {
+			hide_playhead = -1;
+		}
 		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
 	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
 		const auto step = player.GetPlayheadStep(chan);
+		if (step != hide_playhead) {
+			hide_playhead = -1;
+		}
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
 											 randompool.Read(chan, step, data.settings.GetRandomAmount(chan)));
 	}
 	StepModifier GetPlayheadModifier(uint8_t chan) {
-		return data.channel[chan][player.GetPlayheadStep(chan)].modifier;
+		const auto step = player.GetPlayheadStep(chan);
+		if (step != hide_playhead) {
+			hide_playhead = -1;
+		}
+		return data.channel[chan][step].modifier;
 	}
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
 		const auto step = player.GetPrevStep(chan);
@@ -171,6 +190,12 @@ public:
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
 		}
+	}
+
+private:
+	uint8_t StepOnPageToStep(uint8_t step_on_page) {
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
+		return step_on_page + (page * Model::SeqStepsPerPage);
 	}
 };
 
