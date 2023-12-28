@@ -37,6 +37,7 @@ public:
 			} else {
 				p.player.TogglePause();
 			}
+			c.SetPlayLed(!p.player.IsPaused());
 		}
 
 		if (c.button.play.just_went_low()) {

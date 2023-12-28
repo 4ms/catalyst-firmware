@@ -96,6 +96,8 @@ inline constexpr MuxedIOConfig<Board::NumInputMuxChips, Board::NumOutputMuxChips
 
 inline constexpr std::array<uint32_t, Model::NumChans> ButtonLedMap{4, 6, 2, 1, 7, 5, 3, 0};
 
+using PlayLed = mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output>;
+
 //////////////// LED Driver
 
 const mdrivlib::I2CConfig LedDriverConf{

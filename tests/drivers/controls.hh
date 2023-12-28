@@ -112,6 +112,9 @@ public:
 	void SetButtonLed(unsigned led, bool on) {
 		// button_led_duty[led] = on ? 32 : 0;
 	}
+	void SetPlayLed(bool on) {
+		// playled.set(on);
+	}
 
 	void Update() {
 		// jack.trig.update();

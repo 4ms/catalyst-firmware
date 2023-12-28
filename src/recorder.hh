@@ -67,6 +67,9 @@ public:
 	void play() {
 		flags.playing = true;
 	}
+	bool IsPlaying() {
+		return flags.playing;
+	}
 	void record() {
 		if (!flags.cue_rec) {
 			return;

@@ -71,6 +71,7 @@ class Controls {
 
 	mdrivlib::Timekeeper encoder_led_update_task;
 	mdrivlib::Timekeeper muxio_update_task;
+	Board::PlayLed playled;
 	bool leds_ready_flag = false;
 
 public:
@@ -140,6 +141,10 @@ public:
 
 	void SetButtonLed(unsigned led, bool on) {
 		button_led_duty[led] = on ? 32 : 0;
+	}
+
+	void SetPlayLed(bool on) {
+		playled.set(on);
 	}
 
 	void Update() {

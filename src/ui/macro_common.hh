@@ -21,8 +21,10 @@ public:
 				p.recorder.record();
 			} else {
 				p.shared.clockdivider.Update(p.shared.data.clockdiv);
-				if (p.shared.clockdivider.Step())
+				if (p.shared.clockdivider.Step()) {
 					p.recorder.reset();
+				}
+				c.SetPlayLed(p.recorder.IsPlaying());
 			}
 		}
 
@@ -34,6 +36,7 @@ public:
 			} else {
 				p.recorder.reset();
 			}
+			c.SetPlayLed(p.recorder.IsPlaying());
 		}
 
 		if (!(c.button.play.is_high() && c.button.morph.is_high() && c.button.fine.is_high())) {
