@@ -1,109 +1,71 @@
 #pragma once
 
-#include "channel.hh"
-#include "channelmode.hh"
-#include "conf/model.hh"
+#include "bank.hh"
 #include "pathway.hh"
 #include "random.hh"
-#include "util/math.hh"
-#include <algorithm>
-#include <array>
-#include <bitset>
-#include <cstdint>
+#include "recorder.hh"
+#include "shared.hh"
+#include "util/countzip.hh"
 
 namespace Catalyst2::Macro
 {
-namespace Bank
-{
 
 struct Data {
-	struct Scene {
-		std::array<Channel::Value, Model::NumChans> channel{};
-		Random::Amount random;
-	};
-	std::array<Scene, Model::NumScenes> scene{};
-	std::array<Channel::Mode, Model::NumChans> channelmode{};
-	std::array<Channel::Range, Model::NumChans> range{};
-	std::array<float, Model::NumChans> morph{};
-	Data() {
-		for (auto &m : morph) {
-			m = 1.f;
-		}
-	}
-	bool Validate() {
+	std::array<Pathway::Data, Model::NumBanks> pathway{};
+	std::array<Bank::Data, Model::NumBanks> bank{};
+	Random::Pool::MacroData randompool{};
+	Recorder::Data recorder{};
+
+	bool validate() {
 		auto ret = true;
-		for (auto &s : scene) {
-			ret &= s.random.Validate();
+		for (auto &p : pathway) {
+			ret &= p.Validate();
 		}
-		for (auto &cm : channelmode) {
-			ret &= cm.Validate();
+		for (auto &b : bank) {
+			ret &= b.Validate();
 		}
-		for (auto &r : range) {
-			ret &= r.Validate();
-		}
-		for (auto &m : morph) {
-			ret &= (m >= 0.f && m <= 1.f);
-		}
+		ret &= recorder.Validate();
 		return ret;
 	}
 };
 
 class Interface {
-	Data::Scene clipboard;
-	Data *b;
+	Data &data;
+	uint8_t cur_bank = 0;
 
 public:
-	Random::Pool::Interface<Random::Pool::MacroData> randompool;
+	Pathway::Interface pathway;
+	Bank::Interface bank{data.randompool};
+	Recorder::Interface recorder{data.recorder};
+	std::optional<uint8_t> override_output;
+	Shared::Interface &shared;
 
-	Interface(Random::Pool::MacroData &r)
-		: randompool{r} {
+	Interface(Data &data, Shared::Interface &shared)
+		: data{data}
+		, shared{shared} {
+		SelectBank(0);
 	}
-	void Load(Data &d) {
-		b = &d;
+	void SelectBank(uint8_t bank) {
+		if (bank >= Model::NumBanks) {
+			return;
+		}
+		this->bank.Load(data.bank[bank]);
+		this->pathway.Load(data.pathway[bank]);
+
+		for (auto [i, q] : countzip(shared.quantizer)) {
+			q.Load(this->bank.GetChannelMode(i).GetScale());
+		}
+		cur_bank = bank;
 	}
-	void Copy(uint8_t scene) {
-		clipboard = b->scene[scene];
+	uint8_t GetSelectedBank() {
+		return cur_bank;
 	}
-	void Paste(uint8_t scene) {
-		b->scene[scene] = clipboard;
+	void Reset() {
+		data.bank[cur_bank] = Bank::Data{};
+		data.pathway[cur_bank] = Pathway::Data{};
 	}
-	void IncChannelMode(uint8_t channel, int32_t inc) {
-		b->channelmode[channel].Inc(inc);
-	}
-	void IncRange(uint8_t channel, int32_t inc) {
-		b->range[channel].Inc(inc);
-	}
-	Channel::Range GetRange(uint8_t channel) {
-		return b->range[channel];
-	}
-	Channel::Mode GetChannelMode(uint8_t channel) {
-		return b->channelmode[channel];
-	}
-	void SetChanMode(uint8_t channel, Channel::Mode mode) {
-		b->channelmode[channel] = mode;
-	}
-	auto GetRandomAmount(uint8_t scene) {
-		return b->scene[scene].random.Read();
-	}
-	void IncRandomAmount(uint8_t scene, int32_t inc) {
-		b->scene[scene].random.Inc(inc);
-	}
-	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random);
-		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel], rand);
-	}
-	float GetMorph(uint8_t channel) {
-		return 1.f - b->morph[channel];
-	}
-	void IncMorph(uint8_t channel, int32_t inc) {
-		const auto i = (1.f / 100.f) * inc;
-		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
-	}
-	Channel::Value::Proxy GetChannel(uint8_t scene, uint8_t channel) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random);
-		return b->scene[scene].channel[channel].Read(b->range[channel], rand);
+	void Reset(uint8_t scene) {
+		data.bank[cur_bank].scene[scene] = Bank::Data::Scene{};
 	}
 };
-} // namespace Bank
-
 } // namespace Catalyst2::Macro
