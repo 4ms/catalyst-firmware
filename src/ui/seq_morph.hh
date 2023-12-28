@@ -36,19 +36,21 @@ public:
 		const auto offset = Model::SeqStepsPerPage * page;
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep())
+			if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep()) {
 				c.SetEncoderLed(led, Palette::seqhead);
-			else {
+			} else {
 				auto col = Palette::grey.blend(Palette::red, mvals[i]);
-				if (mvals[i] == 0.f)
+				if (mvals[i] == 0.f) {
 					col = Palette::green;
+				}
 				c.SetEncoderLed(i, col);
 			}
 		}
-		if (p.IsPageSelected())
+		if (p.IsPageSelected()) {
 			c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
-		else
+		} else {
 			c.SetButtonLed(page, true);
+		}
 	}
 };
 
