@@ -22,7 +22,6 @@ maybe clipboards should reset eachother?
 /*
 12/19
 bug when switch modes it will get stuck on bank mode leds or morph mode leds sometimes
-make play led work
 */
 
 void main() {
@@ -34,7 +33,7 @@ void main() {
 
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
 		ui.Update();
-		auto out = macroseq.Update();
+		const auto out = macroseq.Update();
 		ui.SetOutputs(out);
 	});
 
