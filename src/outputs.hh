@@ -15,25 +15,28 @@ class Outputs {
 
 public:
 	Outputs() {
-		// sets up peripheral using pins/config from board_conf.hh
-		// use Board::DacConf
 		spi.configure();
 		spi.enable();
 
 		uint8_t startup[3];
-		startup[0] = start_command;
+		startup[0] = TriggerRegister::Address;
 		startup[1] = 0;
-		startup[2] = 0;
+		startup[2] = TriggerRegister::Reset;
+		send_data(startup);
 
+		HAL_Delay(2);
+
+		startup[0] = GainRegister::Address;
+		startup[1] = GainRegister::DisableRefDiv;
+		startup[2] = GainRegister::AllDacsGainX2;
 		send_data(startup);
 	}
 
 	void write(const Model::Output::Buffer &out) {
-		// write to the DAC
 		uint8_t data_buffer[3];
 
 		for (auto [chan, val] : countzip(out)) {
-			data_buffer[0] = write_command | chan;
+			data_buffer[0] = DacOutRegister::Address | chan;
 			data_buffer[1] = static_cast<uint8_t>(val >> 8) ^ 0xff;
 			data_buffer[2] = static_cast<uint8_t>(val & 0xff) ^ 0xff;
 			send_data(data_buffer);
@@ -61,10 +64,20 @@ private:
 		spi.unselect<0>();
 	}
 
-	// write to and update dac channel N
-	// datasheet page 20
-	static constexpr uint8_t start_command = (1u << 6);
-	static constexpr uint8_t write_command = (1u << 5) | (1u << 4);
+	struct GainRegister {
+		static constexpr uint8_t Address = 0x04;
+		static constexpr uint8_t DisableRefDiv = 0x00;
+		static constexpr uint8_t AllDacsGainX2 = 0xFF;
+	};
+
+	struct DacOutRegister {
+		static constexpr uint8_t Address = 0x08;
+	};
+
+	struct TriggerRegister {
+		static constexpr uint8_t Address = 0x05;
+		static constexpr uint8_t Reset = 0b1010;
+	};
 
 	SpiPeriph<Board::DacSpiConf> spi;
 };
