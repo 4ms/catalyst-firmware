@@ -171,9 +171,7 @@ function(create_bootloader_target target driver_arch)
     ${target}-bootloader.elf
     ${root}/src/bootloader/main.cc
     ${root}/lib/mdrivlib/drivers/hal_handlers.cc
-    # ${root}/src/bootloader/animation.cc
-    ${root}/src/bootloader/stm_audio_bootloader/qpsk/packet_decoder.cc
-    ${root}/src/bootloader/stm_audio_bootloader/qpsk/demodulator.cc
+    ${root}/src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
     ${root}/src/libc_stub.c
     ${root}/src/libcpp_stub.cc
     ${root}/lib/mdrivlib/drivers/pin.cc

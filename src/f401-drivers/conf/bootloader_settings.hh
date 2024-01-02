@@ -4,10 +4,9 @@
 
 namespace BootloaderConf
 {
-static constexpr bool UseGateInThreshold = true;
-static constexpr uint32_t SampleRate = 22050;
+static constexpr uint32_t SampleRate = 48000;
 
-constexpr inline uint32_t ReceiveSectorSize = 64 * 1024; // APP_FLASH_SIZE; // 128 * 1024;
+constexpr inline uint32_t ReceiveSectorSize = 16 * 1024; // -g param
 
 struct FskEncoding {
 	uint32_t blank;
