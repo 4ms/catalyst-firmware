@@ -180,6 +180,7 @@ function(create_bootloader_target target driver_arch)
     ${root}/lib/mdrivlib/drivers/timekeeper.cc
     ${root}/lib/mdrivlib/drivers/tim.cc
     ${root}/lib/mdrivlib/drivers/i2c.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/drivers/flash.cc
     ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
     ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
     ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c

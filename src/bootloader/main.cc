@@ -1,5 +1,4 @@
 #include "bootloader.hh"
-
 #include "conf/flash_layout.hh"
 #include "conf/rcc_conf.hh"
 #include "debug.hh"
@@ -26,15 +25,6 @@ void main() {
 
 	Catalyst2::Bootloader::System system_init;
 	Catalyst2::Bootloader::GateBootloader bootloader;
-
-	mdrivlib::Timekeeper update_task{{
-										 .TIMx = TIM7,
-										 .period_ns = 1'000'000'000 / 1'000, // 1'000Hz = 1ms
-										 .priority1 = 1,
-										 .priority2 = 1,
-									 },
-									 [&] { bootloader.update_LEDs(); }};
-	update_task.start();
 
 	if (bootloader.check_enter_bootloader())
 		bootloader.run();
