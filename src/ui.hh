@@ -78,6 +78,7 @@ private:
 			params.shared.modeswitcher.Notify();
 			if (params.shared.data.mode == Model::Mode::Macro) {
 				params.shared.data.mode = Model::Mode::Sequencer;
+				params.shared.internalclock.SetExternal(false);
 				ui = &sequencer;
 			} else {
 				params.shared.data.mode = Model::Mode::Macro;

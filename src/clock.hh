@@ -45,9 +45,12 @@ class Bpm : public Internal {
 public:
 	class type {
 		static constexpr auto min = 1u, max = 1200u;
-		uint32_t val = BpmToTicks(120u);
+		uint32_t val;
 
 	public:
+		type()
+			: val{BpmToTicks(120u)} {
+		}
 		void Inc(int32_t inc, bool fine) {
 			auto temp = TicksToBpm(val);
 			inc = fine ? inc : inc * 10;
