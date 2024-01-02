@@ -19,7 +19,7 @@ public:
 	float Read() {
 		return val / static_cast<float>(max);
 	}
-	bool Validate() {
+	bool Validate() const {
 		return val >= min && val <= max;
 	}
 };

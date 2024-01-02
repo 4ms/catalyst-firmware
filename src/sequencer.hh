@@ -30,7 +30,7 @@ public:
 		}
 		m = std::clamp<int32_t>(m + inc, min, max);
 	}
-	bool Validate() {
+	bool Validate() const {
 		return m <= max;
 	}
 };
@@ -40,13 +40,13 @@ struct Step : Channel::Value {
 };
 
 struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
-	bool Validate() {
+	bool Validate() const {
+		auto ret = true;
 		for (auto &s : *this) {
-			if (!s.modifier.Validate()) {
-				return false;
-			}
+			ret &= s.modifier.Validate();
+			ret &= s.Validate();
 		}
-		return true;
+		return ret;
 	}
 };
 
@@ -55,13 +55,13 @@ struct Data {
 	Sequencer::Settings::Data settings;
 	Random::Pool::SeqData randompool{};
 
-	bool validate() {
+	bool validate() const {
+		auto ret = true;
 		for (auto &c : channel) {
-			if (!c.Validate()) {
-				return false;
-			}
+			ret &= c.Validate();
 		}
-		return settings.Validate();
+		ret &= settings.Validate();
+		return ret;
 	}
 };
 

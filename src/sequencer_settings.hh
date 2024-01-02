@@ -60,7 +60,7 @@ class Global {
 			return val;
 		}
 
-		bool Validate() {
+		bool Validate() const {
 			return val >= min || val <= max;
 		}
 
@@ -76,7 +76,7 @@ public:
 	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max, StartOffset::def};
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max, PlayMode::def};
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, 0};
-	bool Validate() {
+	bool Validate() const {
 		auto ret = true;
 		ret &= phaseoffset.Validate();
 		ret &= length.Validate();
@@ -144,7 +144,7 @@ class Channel {
 			return val;
 		}
 
-		bool Validate() {
+		bool Validate() const {
 			return val == std::nullopt || val >= min || val <= max;
 		}
 
@@ -166,7 +166,7 @@ public:
 	Random::Amount random;
 	Catalyst2::Channel::Mode mode;
 
-	bool Validate() {
+	bool Validate() const {
 		auto ret = true;
 		ret &= phaseoffset.Validate();
 		ret &= length.Validate();
@@ -189,13 +189,13 @@ public:
 	void Clear(uint8_t chan) {
 		channel[chan] = Channel{};
 	}
-	bool Validate() {
+	bool Validate() const {
+		auto ret = true;
 		for (auto &c : channel) {
-			if (!c.Validate()) {
-				return false;
-			}
+			ret &= c.Validate();
 		}
-		return global.Validate();
+		ret &= global.Validate();
+		return ret;
 	}
 	const Channel &Copy(uint8_t chan) const {
 		return channel[chan];

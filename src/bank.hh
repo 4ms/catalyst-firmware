@@ -24,9 +24,12 @@ struct Data {
 			m = 1.f;
 		}
 	}
-	bool Validate() {
+	bool Validate() const {
 		auto ret = true;
 		for (auto &s : scene) {
+			for (auto &cv : s.channel) {
+				ret &= cv.Validate();
+			}
 			ret &= s.random.Validate();
 		}
 		for (auto &cm : channelmode) {

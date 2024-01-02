@@ -52,7 +52,7 @@ public:
 	Color GetColor() {
 		return color[val];
 	}
-	bool Validate() {
+	bool Validate() const {
 		return val <= max;
 	}
 };

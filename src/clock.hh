@@ -149,7 +149,7 @@ public:
 		uint8_t Read() const {
 			return divideroptions[v];
 		}
-		bool Validate() {
+		bool Validate() const {
 			return v < divideroptions.size();
 		}
 	};

@@ -74,7 +74,7 @@ public:
 	Model::Output::type Clamp(Model::Output::type in) {
 		return std::clamp(in, Min(), Max());
 	}
-	bool Validate() {
+	bool Validate() const {
 		return val <= max;
 	}
 };
@@ -127,6 +127,9 @@ public:
 		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
 		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
 		return Proxy{std::clamp<int32_t>(t, min_, max_)};
+	}
+	bool Validate() const {
+		return val >= min && val <= max;
 	}
 
 private:
