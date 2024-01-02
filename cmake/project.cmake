@@ -168,22 +168,21 @@ function(create_bootloader_target target driver_arch)
 
   # Create bootloader elf file target
   add_executable(
-    # ${target}-bootloader.elf
-    # ${root}/src/bootloader/main.cc
+    ${target}-bootloader.elf
+    ${root}/src/bootloader/main.cc
+    ${root}/lib/mdrivlib/drivers/hal_handlers.cc
     # ${root}/src/bootloader/animation.cc
-    # ${root}/src/bootloader/stm_audio_bootloader/qpsk/packet_decoder.cc
-    # ${root}/src/bootloader/stm_audio_bootloader/qpsk/demodulator.cc
-    # ${root}/src/libc_stub.c
-    # ${root}/src/libcpp_stub.cc
-    # ${root}/lib/mdrivlib/drivers/pin.cc
-    # ${root}/lib/mdrivlib/drivers/timekeeper.cc
-    # ${root}/lib/mdrivlib/drivers/tim.cc
-    # ${root}/lib/mdrivlib/drivers/i2c.cc
-    # ${root}/lib/mdrivlib/drivers/codec_PCM3060.cc
-    # ${root}/lib/mdrivlib/target/${driver_arch}/drivers/sai_tdm.cc
-    # ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
-    # ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
-    # ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c
+    ${root}/src/bootloader/stm_audio_bootloader/qpsk/packet_decoder.cc
+    ${root}/src/bootloader/stm_audio_bootloader/qpsk/demodulator.cc
+    ${root}/src/libc_stub.c
+    ${root}/src/libcpp_stub.cc
+    ${root}/lib/mdrivlib/drivers/pin.cc
+    ${root}/lib/mdrivlib/drivers/timekeeper.cc
+    ${root}/lib/mdrivlib/drivers/tim.cc
+    ${root}/lib/mdrivlib/drivers/i2c.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
+    ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c
     ${TARGET_BOOTLOADER_SOURCES}
     ${BOOTLOADER_HAL_SOURCES}
   )
@@ -200,7 +199,7 @@ function(create_bootloader_target target driver_arch)
   )
 
   target_link_libraries(${target}-bootloader.elf PRIVATE ${target}_ARCH)
-  target_link_script(${target}-bootloader ${TARGET_BOOTLOADER_LINK_SCRIPT})
+  preprocess_link_script(${target}-bootloader ${TARGET_BOOTLOADER_LINK_SCRIPT})
   add_bin_hex_command(${target}-bootloader)
 
   # Target: XXX-wav: Create .wav file for distributing firmware upgrades
@@ -212,7 +211,7 @@ function(create_bootloader_target target driver_arch)
 
   set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
 
-  # Target: XXX-combo: Create a hex file containing bootloader and app, that can be loaded via USB DFU
+  # Target: XXX-combo: Create a hex file containing bootloader and app
   add_custom_target(
     ${target}-combo
     DEPENDS ${TARGET_BASE}.hex ${TARGET_BASE}-bootloader.elf
