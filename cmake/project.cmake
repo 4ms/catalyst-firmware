@@ -1,5 +1,3 @@
-# TODO: make this src/CMakeLists.txt somehow...?
-
 include(${CMAKE_SOURCE_DIR}/cmake/common.cmake)
 
 # ############## Common #####################
@@ -138,7 +136,7 @@ function(create_target target driver_arch)
   )
 
   target_link_libraries(${target}.elf PRIVATE ${target}_ARCH)
-  target_link_script(${target} ${TARGET_LINK_SCRIPT})
+  preprocess_link_script(${target} ${TARGET_LINK_SCRIPT})
   add_bin_hex_command(${target})
 
   # Create libhwtests target, and link to the ARCH interface, and link main app to it

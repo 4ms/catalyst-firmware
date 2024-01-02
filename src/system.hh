@@ -11,7 +11,7 @@ namespace Catalyst2
 
 struct System {
 	System() {
-		mdrivlib::System::SetVectorTable(AppStartAddr);
+		mdrivlib::System::SetVectorTable(AppFlashAddr);
 		mdrivlib::SystemClocks::init_clocks(osc_conf, clk_conf, rcc_periph_conf);
 
 		Debug::Pin0{};

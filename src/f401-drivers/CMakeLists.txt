@@ -4,7 +4,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(f401 LANGUAGES C CXX ASM)
 
 message("Configuring f401")
-include(${CMAKE_SOURCE_DIR}/cmake/project.cmake)
 
 set(root ${CMAKE_SOURCE_DIR})
 

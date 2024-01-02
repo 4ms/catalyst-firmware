@@ -11,6 +11,8 @@ project(
   LANGUAGES C CXX ASM
 )
 
+include(cmake/project.cmake)
+
 add_subdirectory(src/f401-drivers f401)
 
 add_custom_target(
