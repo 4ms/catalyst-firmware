@@ -45,6 +45,7 @@ public:
 		controls.Update();
 		params.shared.internalclock.Update();
 		ui->Common();
+		CheckMode();
 
 		Abstract *next;
 		if (params.shared.data.mode == Model::Mode::Macro) {
@@ -63,7 +64,6 @@ public:
 			}
 		}
 		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
-		CheckMode();
 		Save();
 	}
 
