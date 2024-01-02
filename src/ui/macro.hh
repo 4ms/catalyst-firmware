@@ -121,7 +121,7 @@ private:
 
 	void SceneButtonDisplayRecording() {
 		const auto led = static_cast<unsigned>(p.recorder.CapacityFilled() * 8u);
-		const auto level = (p.recorder.size() & 0x100) > 0;
+		const auto level = (p.recorder.size() & 0x10) > 0;
 		c.SetButtonLed(led, level);
 	}
 
