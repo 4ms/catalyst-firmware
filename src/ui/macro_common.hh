@@ -16,13 +16,13 @@ public:
 	}
 	void Common() override final {
 		if (c.jack.trig.just_went_high()) {
-			if (p.recorder.is_cued()) {
+			if (p.recorder.IsCued()) {
 				p.shared.clockdivider.Reset();
-				p.recorder.record();
+				p.recorder.Record();
 			} else {
 				p.shared.clockdivider.Update(p.shared.data.clockdiv);
 				if (p.shared.clockdivider.Step()) {
-					p.recorder.reset();
+					p.recorder.Reset();
 				}
 				c.SetPlayLed(p.recorder.IsPlaying());
 			}
@@ -32,9 +32,9 @@ public:
 
 		if (c.button.play.just_went_high()) {
 			if (shift) {
-				p.recorder.cue_recording();
+				p.recorder.CueRecord();
 			} else {
-				p.recorder.reset();
+				p.recorder.Reset();
 			}
 			c.SetPlayLed(p.recorder.IsPlaying());
 		}
@@ -43,7 +43,7 @@ public:
 			p.shared.modeswitcher.Notify();
 		}
 
-		const auto pos = p.recorder.update(c.ReadSlider() + c.ReadCv()) / 4095.f;
+		const auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.shared.pos = pos;
 		p.pathway.Update(pos);
 		p.override_output = YoungestSceneButton();

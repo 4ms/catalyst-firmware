@@ -94,7 +94,7 @@ public:
 			EncoderDisplayScene(scene_to_display);
 		} else {
 			EncoderDisplayOutput(outs);
-			if (p.recorder.is_recordering())
+			if (p.recorder.IsRecording())
 				SceneButtonDisplayRecording();
 			else {
 				const auto l = p.pathway.SceneLeft();
@@ -120,7 +120,7 @@ private:
 	}
 
 	void SceneButtonDisplayRecording() {
-		const auto led = static_cast<unsigned>(p.recorder.capacity_filled() * 8u);
+		const auto led = static_cast<unsigned>(p.recorder.CapacityFilled() * 8u);
 		const auto level = (p.recorder.size() & 0x100) > 0;
 		c.SetButtonLed(led, level);
 	}

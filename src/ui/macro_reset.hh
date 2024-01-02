@@ -14,7 +14,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		wait = true;
-		p.recorder.stop();
+		p.recorder.Stop();
 	}
 	void Update(Abstract *&interface) override {
 		if (wait) {

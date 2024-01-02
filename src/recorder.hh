@@ -41,44 +41,44 @@ public:
 	Interface(Data &data)
 		: buffer{data} {
 	}
-	uint16_t update(uint16_t sample) {
+	uint16_t Update(uint16_t sample) {
 		if (!flags.playing && !flags.recording) {
 			return sample;
 		}
 		if (flags.recording) {
-			if (!insert(sample)) {
-				stop();
+			if (!Insert(sample)) {
+				Stop();
 			}
 			return sample;
 		}
 
-		return read();
+		return Read();
 	}
-	void stop() {
+	void Stop() {
 		flags.playing = flags.recording = false;
 		scaler = 0;
 		accum = 0;
 		pos_ = 0;
 	}
-	void cue_recording() {
+	void CueRecord() {
 		size_ = 0;
 		flags.cue_rec = true;
 	}
-	void play() {
+	void Play() {
 		flags.playing = true;
 	}
 	bool IsPlaying() {
 		return flags.playing;
 	}
-	void record() {
+	void Record() {
 		if (!flags.cue_rec) {
 			return;
 		}
 		flags.cue_rec = false;
 		flags.recording = true;
 	}
-	void reset() {
-		stop();
+	void Reset() {
+		Stop();
 		if (flags.cue_rec) {
 			flags.cue_rec = false;
 			flags.recording = true;
@@ -89,33 +89,30 @@ public:
 			flags.playing = true;
 		}
 	}
-	void toggle_loop() {
-		flags.loop_playback ^= 1;
-	}
-	auto capacity_filled() {
+	auto CapacityFilled() {
 		return static_cast<float>(size_) / buff_size;
 	}
 	auto size() {
 		return size_;
 	}
-	bool is_recordering() {
+	bool IsRecording() {
 		return flags.recording;
 	}
-	bool is_cued() {
+	bool IsCued() {
 		return flags.cue_rec;
 	}
 
 private:
-	uint16_t read() {
+	uint16_t Read() {
 		const auto coef = scaler / 16.f;
 		const auto out = MathTools::interpolate(buffer[pos_], buffer[pos_ + 1], coef);
 
 		if (!scaler) {
 			pos_ += 1;
 			if (pos_ >= size_ - 1) {
-				stop();
+				Stop();
 				if (flags.loop_playback) {
-					play();
+					Play();
 				}
 			}
 		}
@@ -124,8 +121,8 @@ private:
 		scaler &= prescaler - 1;
 		return out;
 	}
-	bool insert(uint16_t sample) {
-		if (is_full()) {
+	bool Insert(uint16_t sample) {
+		if (IsFull()) {
 			return false;
 		}
 		accum += sample;
@@ -137,11 +134,8 @@ private:
 		}
 		return true;
 	}
-	bool is_full() {
+	bool IsFull() {
 		return size_ == buff_size;
-	}
-	bool has_space() {
-		return !is_full();
 	}
 };
 } // namespace Catalyst2::Macro::Recorder
