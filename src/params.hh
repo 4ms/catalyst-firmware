@@ -36,8 +36,8 @@ struct Data {
 struct Params {
 	Data data;
 	Shared::Interface shared{data.sequencer.shared};
-	Catalyst2::Sequencer::Interface sequencer{data.sequencer, shared};
-	Catalyst2::Macro::Interface macro{data.macro, shared};
+	Sequencer::Interface sequencer{data.sequencer, shared};
+	Macro::Interface macro{data.macro, shared};
 };
 
 inline constexpr auto params_size = sizeof(Params);
