@@ -2,6 +2,7 @@
 
 #include "../src/muxed_button.hh"
 #include "conf/board_conf.hh"
+#include "outputs.hh"
 #include "util/colors.hh"
 #include <cmath>
 #include <optional>
@@ -56,8 +57,30 @@ class Controls {
 	// 	{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
 	// 	{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
 	// }};
+	Outputs outputs;
 
 public:
+	template<typename SeqModeData, typename MacroModeData>
+	class SavedSettings {
+
+		// WearLevel<mdrivlib::FlashBlock<SeqModeData, SeqSettingsFlashAddr, SettingsSectorSize>> seq_settings_flash;
+		// WearLevel<mdrivlib::FlashBlock<MacroModeData, MacroSettingsFlashAddr, SettingsSectorSize>>
+		// macro_settings_flash;
+
+	public:
+		bool read(SeqModeData &data) {
+			return true;
+		}
+		bool write(SeqModeData const &data) {
+			return true;
+		}
+		bool read(MacroModeData &data) {
+			return true;
+		}
+		bool write(MacroModeData const &data) {
+			return true;
+		}
+	};
 	Buttons button;
 	Toggles toggle;
 	Jacks jack;
@@ -130,6 +153,10 @@ public:
 
 	void Delay(unsigned x) {
 		;
+	}
+
+	void Write(const Model::Output::Buffer &outs) {
+		outputs.write(outs);
 	}
 
 private:

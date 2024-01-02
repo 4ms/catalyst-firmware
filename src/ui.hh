@@ -3,9 +3,7 @@
 #include "conf/board_conf.hh"
 #include "conf/model.hh"
 #include "controls.hh"
-#include "outputs.hh"
 #include "params.hh"
-#include "settings.hh"
 #include "ui/macro.hh"
 #include "ui/seq.hh"
 #include "util/countzip.hh"
@@ -19,7 +17,6 @@ volatile uint8_t dummy;
 #endif
 
 class Interface {
-	Outputs outputs;
 	Params &params;
 	Controls controls;
 
@@ -28,7 +25,7 @@ class Interface {
 	Macro::Ui::Main macro{params.macro, controls};
 	Sequencer::Ui::Main sequencer{params.sequencer, controls};
 
-	SavedSettings<SequencerData, MacroData> settings;
+	Controls::SavedSettings<SequencerData, MacroData> settings;
 
 public:
 	Interface(Params &params)
@@ -68,7 +65,7 @@ public:
 	}
 
 	void SetOutputs(const Model::Output::Buffer &outs) {
-		outputs.write(outs);
+		controls.Write(outs);
 
 		if (controls.LedsReady()) {
 			ui->PaintLeds(outs);
