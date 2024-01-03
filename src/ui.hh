@@ -48,8 +48,6 @@ public:
 		if (next != ui) {
 			ui = next;
 			if (ui == nullptr) {
-				params.shared.data.mode =
-					params.shared.data.mode == Model::Mode::Macro ? Model::Mode::Sequencer : Model::Mode::Macro;
 				ui = GetUi();
 				for (auto i = 0u; i < 16; i++) {
 					for (auto l = 0u; l < Model::NumScenes; l++) {

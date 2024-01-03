@@ -19,6 +19,7 @@ public:
 		}
 		if (p.shared.modeswitcher.Check()) {
 			interface = nullptr;
+			p.shared.data.mode = Model::Mode::Sequencer;
 			return;
 		}
 		interface = this;
