@@ -206,6 +206,9 @@ struct GateBootloader {
 				button_exit_armed = 1;
 		}
 
+		update_task.stop();
+		animate_task.stop();
+
 		ui_state = UiState::DONE;
 
 		while (controls.button.play.is_pressed() || controls.button.add.is_pressed())
