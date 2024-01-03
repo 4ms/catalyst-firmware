@@ -144,20 +144,39 @@ function(create_target target driver_arch)
   target_link_libraries(libhwtests${target} PRIVATE ${target}_ARCH)
   target_link_libraries(${target}.elf PRIVATE libhwtests${target})
 
-  # Target: XXX-flash: Flashes bootloader and app to chip. Requires JFlashExe to be executable and in your $PATH
+
+  # Flashing 
   set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
+
   add_custom_target(
     ${target}-jflash-app
     DEPENDS ${target}.elf
     COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}.hex -auto -exit
+    COMMENT "Flashing app. Requires JFlashExe on your PATH"
     USES_TERMINAL
   )
 
-  # FIXME: this only works for F4 chips:
+  add_custom_target(
+    ${target}-jflash-combo
+    DEPENDS ${target}.elf ${target}-bootloader.elf
+    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit
+    COMMENT "Flashing app+bootloader. Requires JFlashExe on your PATH"
+    USES_TERMINAL
+  )
+
   add_custom_target(
     ${target}-oflash-app
     DEPENDS ${target}.elf
     COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.hex verify reset exit"
+    COMMENT "Flashing app+bootloader. Only for F4xx chips"
+    USES_TERMINAL
+  )
+
+  add_custom_target(
+    ${target}-oflash-combo
+    DEPENDS ${target}.elf ${target}-bootloader.elf
+    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}-combo.hex verify reset exit"
+    COMMENT "Flashing app+bootloader. Only for F4xx chips"
     USES_TERMINAL
   )
 
