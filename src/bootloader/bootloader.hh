@@ -104,6 +104,12 @@ struct GateBootloader {
 		};
 		update_task.start();
 
+		mdrivlib::Timekeeper animate_task{
+			{.TIMx = TIM2, .period_ns = 1'000'000'000 / 1'000, .priority1 = 2, .priority2 = 2},
+			[this] { update_LEDs(); },
+		};
+		animate_task.start();
+
 		uint32_t button_exit_armed = 0;
 		uint32_t rev_but_armed = 0;
 
