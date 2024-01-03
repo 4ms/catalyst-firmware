@@ -21,12 +21,11 @@ public:
 	void Init() override {
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
+		c.button.add.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		if (p.shared.reset.Check()) {
-			p.shared.reset.Notify(false);
-			interface = &reset;
-			return;
+		if (c.button.add.just_went_high()) {
+			p.shared.internalclock.Tap();
 		}
 		if (p.IsSequenceSelected()) {
 			auto ysb = YoungestSceneButton();
@@ -36,6 +35,11 @@ public:
 			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
 				p.PasteSequence();
 			}
+		}
+		if (p.shared.reset.Check()) {
+			p.shared.reset.Notify(false);
+			interface = &reset;
+			return;
 		}
 		if (c.button.shift.is_high()) {
 			interface = &settings;

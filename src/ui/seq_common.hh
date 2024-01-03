@@ -44,10 +44,6 @@ public:
 			p.shared.reset.Notify(false);
 		}
 
-		if (c.button.add.just_went_high()) {
-			p.shared.internalclock.Tap();
-		}
-
 		if (!(c.button.add.is_high() && c.button.bank.is_high() && c.button.shift.is_high())) {
 			p.shared.modeswitcher.Notify();
 		}
