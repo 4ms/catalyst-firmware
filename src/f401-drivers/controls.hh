@@ -187,11 +187,9 @@ public:
 		}
 	}
 	bool LedsReady() {
-		if (!leds_ready_flag) {
-			return false;
-		}
+		const auto ret = leds_ready_flag;
 		leds_ready_flag = false;
-		return true;
+		return ret;
 	}
 	void Delay(uint32_t ms) {
 		HAL_Delay(ms);
