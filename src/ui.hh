@@ -42,17 +42,22 @@ public:
 		controls.Update();
 		params.shared.internalclock.Update();
 		ui->Common();
-		CheckMode();
 
-		Abstract *next;
-		if (params.shared.data.mode == Model::Mode::Macro) {
-			next = &macro;
-		} else {
-			next = &sequencer;
-		}
+		auto next = GetUi();
 		ui->Update(next);
 		if (next != ui) {
 			ui = next;
+			if (ui == nullptr) {
+				params.shared.data.mode =
+					params.shared.data.mode == Model::Mode::Macro ? Model::Mode::Sequencer : Model::Mode::Macro;
+				ui = GetUi();
+				for (auto i = 0u; i < 16; i++) {
+					for (auto l = 0u; l < Model::NumScenes; l++) {
+						controls.SetButtonLed(l, !!(i & 0b1));
+					}
+					controls.Delay(1000 / 16);
+				}
+			}
 			ui->Init();
 		}
 		for (auto [i, sb] : countzip(controls.button.scene)) {
@@ -73,25 +78,11 @@ public:
 	}
 
 private:
-	void CheckMode() {
-		if (params.shared.modeswitcher.Check()) {
-			params.shared.modeswitcher.Notify();
-			if (params.shared.data.mode == Model::Mode::Macro) {
-				params.shared.data.mode = Model::Mode::Sequencer;
-				params.shared.internalclock.SetExternal(false);
-				ui = &sequencer;
-			} else {
-				params.shared.data.mode = Model::Mode::Macro;
-				ui = &macro;
-				params.macro.SelectBank(0);
-			}
-
-			for (auto i = 0u; i < 16; i++) {
-				for (auto l = 0u; l < Model::NumScenes; l++) {
-					controls.SetButtonLed(l, !!(i & 0b1));
-				}
-				controls.Delay(1000 / 16);
-			}
+	Abstract *GetUi() {
+		if (params.shared.data.mode == Model::Mode::Macro) {
+			return &macro;
+		} else {
+			return &sequencer;
 		}
 	}
 	void Save(bool force = false) {
@@ -147,6 +138,7 @@ private:
 			params.macro.SelectBank(0);
 		} else {
 			ui = &sequencer;
+			params.sequencer.player.Stop();
 		}
 	}
 };

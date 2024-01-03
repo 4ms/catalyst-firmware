@@ -23,6 +23,10 @@ public:
 		if (!c.button.bank.is_high()) {
 			return;
 		}
+		if (p.shared.modeswitcher.Check()) {
+			interface = nullptr;
+			return;
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) override {

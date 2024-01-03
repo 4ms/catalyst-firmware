@@ -20,6 +20,10 @@ public:
 		if (p.shared.reset.Check()) {
 			return;
 		}
+		if (p.shared.modeswitcher.Check()) {
+			interface = nullptr;
+			return;
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
