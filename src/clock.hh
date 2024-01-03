@@ -101,9 +101,9 @@ public:
 		return out;
 	}
 	void Input() {
-		if (IsInternal())
+		if (IsInternal()) {
 			return;
-
+		}
 		step = true;
 		cnt = 0;
 
