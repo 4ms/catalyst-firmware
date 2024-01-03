@@ -47,9 +47,7 @@ struct GateBootloader {
 
 	uint16_t packet_index = 0;
 	uint16_t discard_samples = 16000;
-	uint32_t current_flash_address;
-
-	int32_t atten = 256;
+	uint32_t current_flash_address = 0;
 
 	enum class UiState { WAITING, RECEIVING, ERROR, WRITING, DONE };
 	UiState ui_state{};
@@ -90,16 +88,16 @@ struct GateBootloader {
 
 		mdrivlib::Timekeeper update_task{
 			{
-				.TIMx = TIM7,
+				.TIMx = TIM3,
 				.period_ns = 1'000'000'000 / kSampleRate,
 				.priority1 = 0,
 				.priority2 = 0,
 			},
 			[this] {
 				if (!discard_samples) {
+					controls.clk_in.update();
 					bool sample = controls.clk_in.is_high();
 					demodulator.PushSample(sample);
-					controls.SetPlayLed(sample);
 				} else
 					--discard_samples;
 			},
