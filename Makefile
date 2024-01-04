@@ -28,7 +28,7 @@ jflash-combo:
 oflash-app:
 	cmake --build $(BUILDDIR) --target $(TARGET)-oflash-app
 
-oflash-app:
+oflash-combo:
 	cmake --build $(BUILDDIR) --target $(TARGET)-oflash-combo
 
 .PHONY: test clean wav combo jflash-app oflash-app jflash-combo oflash-combo all
