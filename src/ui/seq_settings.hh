@@ -237,6 +237,7 @@ public:
 
 private:
 	void PlayModeLedAnnimation(Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
+		using namespace Palette::Setting;
 		static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
 		auto phase = (time_now / animation_duration);
 		phase -= static_cast<uint32_t>(phase);
@@ -245,17 +246,17 @@ private:
 		using enum Catalyst2::Sequencer::Settings::PlayMode::Mode;
 
 		if (pm == Forward) {
-			col = Palette::off.blend(Palette::blue, phase);
+			col = playmode_fwd.blend(Palette::off, 1.f - phase);
 		} else if (pm == Backward) {
-			col = Palette::red.blend(Palette::off, phase);
+			col = playmode_bck.blend(Palette::off, phase);
 		} else if (pm == PingPong) {
 			if (phase < .5f) {
 				phase *= 2.f;
-				col = Palette::red.blend(Palette::off, phase);
+				col = playmode_bck.blend(Palette::off, phase);
 			} else {
 				phase -= .5f;
 				phase *= 2.f;
-				col = Palette::blue.blend(Palette::off, phase);
+				col = playmode_fwd.blend(Palette::off, 1.f - phase);
 			}
 		} else {
 			col = Palette::from_raw(time_now >> 8);

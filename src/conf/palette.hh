@@ -34,9 +34,25 @@ struct Gate {
 	static constexpr auto High = green;
 };
 
-struct Setting {
-	static constexpr auto null = Color{10, 10, 10};
-	static constexpr auto active = blue;
+namespace Setting
+{
+constexpr auto null = Color{10, 10, 10};
+constexpr auto active = blue;
+constexpr auto playmode_fwd = blue;
+constexpr auto playmode_bck = red;
+}; // namespace Setting
+
+struct Scales {
+	static constexpr std::array color = {
+		Color{2, 2, 0},	  // off
+		Palette::magenta, // chromatic
+		Palette::blue,	  // major
+		Palette::red,	  // minor
+		Palette::cyan,	  // major pent
+		Palette::yellow,  // minor pent
+		Palette::pink,	  // wholetone
+		Palette::green,	  // gate
+	};
 };
 
 constexpr auto seqhead = magenta;

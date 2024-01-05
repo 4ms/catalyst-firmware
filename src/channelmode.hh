@@ -20,18 +20,7 @@ class Mode {
 		Quantizer::Scale{0.f, 2.f, 4.f, 8.f, 10.f},										// wholetone
 	};
 
-	static constexpr std::array color = {
-		Color{2, 2, 0},	  // off
-		Palette::magenta, // chromatic
-		Palette::blue,	  // major
-		Palette::red,	  // minor
-		Palette::cyan,	  // major pent
-		Palette::yellow,  // minor pent
-		Palette::pink,	  // wholetone
-		Palette::green,	  // gate
-	};
-
-	static constexpr uint8_t max = color.size() - 1;
+	static constexpr uint8_t max = Palette::Scales::color.size() - 1;
 	static constexpr uint8_t min = 0u;
 	uint8_t val = min;
 
@@ -50,7 +39,7 @@ public:
 		return Scale[IsGate() ? 0 : val];
 	}
 	Color GetColor() {
-		return color[val];
+		return Palette::Scales::color[val];
 	}
 	bool Validate() const {
 		return val <= max;
