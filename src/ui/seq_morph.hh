@@ -24,6 +24,22 @@ public:
 		p.IncStepModifier(encoder, inc);
 	}
 
+	void OnSceneButtonRelease(uint8_t button) override {
+		if (!p.IsSequenceSelected()) {
+			p.SelectChannel(button);
+		} else {
+			if (c.button.fine.is_high()) {
+				p.PastePage(button);
+			} else {
+				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
+					if (p.IsPageSelected() && button == p.GetSelectedPage())
+						p.DeselectPage();
+					else
+						p.SelectPage(button);
+				}
+			}
+		}
+	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
 		ClearButtonLeds();
