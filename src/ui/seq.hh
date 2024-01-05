@@ -22,6 +22,9 @@ public:
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
 		c.button.add.clear_events();
+		for (auto &b : c.button.scene) {
+			b.clear_events();
+		}
 	}
 	void Update(Abstract *&interface) override {
 		if (c.button.add.just_went_high()) {

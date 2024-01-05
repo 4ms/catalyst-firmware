@@ -20,7 +20,7 @@ public:
 		if (c.button.morph.just_went_high()) {
 			p.shared.do_save = true;
 		}
-		if (!c.button.bank.is_high()) {
+		if (!c.button.bank.is_high() && !YoungestSceneButton().has_value()) {
 			return;
 		}
 		if (p.shared.modeswitcher.Check()) {
