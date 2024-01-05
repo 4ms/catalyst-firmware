@@ -1,5 +1,3 @@
-# TODO: make this src/CMakeLists.txt somehow...?
-
 include(${CMAKE_SOURCE_DIR}/cmake/common.cmake)
 
 # ############## Common #####################
@@ -138,7 +136,7 @@ function(create_target target driver_arch)
   )
 
   target_link_libraries(${target}.elf PRIVATE ${target}_ARCH)
-  target_link_script(${target} ${TARGET_LINK_SCRIPT})
+  preprocess_link_script(${target} ${TARGET_LINK_SCRIPT})
   add_bin_hex_command(${target})
 
   # Create libhwtests target, and link to the ARCH interface, and link main app to it
@@ -146,20 +144,39 @@ function(create_target target driver_arch)
   target_link_libraries(libhwtests${target} PRIVATE ${target}_ARCH)
   target_link_libraries(${target}.elf PRIVATE libhwtests${target})
 
-  # Target: XXX-flash: Flashes bootloader and app to chip. Requires JFlashExe to be executable and in your $PATH
+
+  # Flashing 
   set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
+
   add_custom_target(
     ${target}-jflash-app
     DEPENDS ${target}.elf
     COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}.hex -auto -exit
+    COMMENT "Flashing app. Requires JFlashExe on your PATH"
     USES_TERMINAL
   )
 
-  # FIXME: this only works for F4 chips:
+  add_custom_target(
+    ${target}-jflash-combo
+    DEPENDS ${target}.elf ${target}-bootloader.elf
+    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit
+    COMMENT "Flashing app+bootloader. Requires JFlashExe on your PATH"
+    USES_TERMINAL
+  )
+
   add_custom_target(
     ${target}-oflash-app
     DEPENDS ${target}.elf
     COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.hex verify reset exit"
+    COMMENT "Flashing app+bootloader. Only for F4xx chips"
+    USES_TERMINAL
+  )
+
+  add_custom_target(
+    ${target}-oflash-combo
+    DEPENDS ${target}.elf ${target}-bootloader.elf
+    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}-combo.hex verify reset exit"
+    COMMENT "Flashing app+bootloader. Only for F4xx chips"
     USES_TERMINAL
   )
 
@@ -170,22 +187,20 @@ function(create_bootloader_target target driver_arch)
 
   # Create bootloader elf file target
   add_executable(
-    # ${target}-bootloader.elf
-    # ${root}/src/bootloader/main.cc
-    # ${root}/src/bootloader/animation.cc
-    # ${root}/src/bootloader/stm_audio_bootloader/qpsk/packet_decoder.cc
-    # ${root}/src/bootloader/stm_audio_bootloader/qpsk/demodulator.cc
-    # ${root}/src/libc_stub.c
-    # ${root}/src/libcpp_stub.cc
-    # ${root}/lib/mdrivlib/drivers/pin.cc
-    # ${root}/lib/mdrivlib/drivers/timekeeper.cc
-    # ${root}/lib/mdrivlib/drivers/tim.cc
-    # ${root}/lib/mdrivlib/drivers/i2c.cc
-    # ${root}/lib/mdrivlib/drivers/codec_PCM3060.cc
-    # ${root}/lib/mdrivlib/target/${driver_arch}/drivers/sai_tdm.cc
-    # ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
-    # ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
-    # ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c
+    ${target}-bootloader.elf
+    ${root}/src/bootloader/main.cc
+    ${root}/lib/mdrivlib/drivers/hal_handlers.cc
+    ${root}/src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
+    ${root}/src/libc_stub.c
+    ${root}/src/libcpp_stub.cc
+    ${root}/lib/mdrivlib/drivers/pin.cc
+    ${root}/lib/mdrivlib/drivers/timekeeper.cc
+    ${root}/lib/mdrivlib/drivers/tim.cc
+    ${root}/lib/mdrivlib/drivers/i2c.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/drivers/flash.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/drivers/interrupt_handler.cc
+    ${root}/lib/mdrivlib/target/${driver_arch}/boot/startup.s
+    ${root}/lib/mdrivlib/target/${driver_arch}/boot/system_init.c
     ${TARGET_BOOTLOADER_SOURCES}
     ${BOOTLOADER_HAL_SOURCES}
   )
@@ -202,7 +217,7 @@ function(create_bootloader_target target driver_arch)
   )
 
   target_link_libraries(${target}-bootloader.elf PRIVATE ${target}_ARCH)
-  target_link_script(${target}-bootloader ${TARGET_BOOTLOADER_LINK_SCRIPT})
+  preprocess_link_script(${target}-bootloader ${TARGET_BOOTLOADER_LINK_SCRIPT})
   add_bin_hex_command(${target}-bootloader)
 
   # Target: XXX-wav: Create .wav file for distributing firmware upgrades
@@ -214,7 +229,7 @@ function(create_bootloader_target target driver_arch)
 
   set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
 
-  # Target: XXX-combo: Create a hex file containing bootloader and app, that can be loaded via USB DFU
+  # Target: XXX-combo: Create a hex file containing bootloader and app
   add_custom_target(
     ${target}-combo
     DEPENDS ${TARGET_BASE}.hex ${TARGET_BASE}-bootloader.elf

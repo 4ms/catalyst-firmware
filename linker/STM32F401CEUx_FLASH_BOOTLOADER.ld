@@ -64,7 +64,7 @@ _Min_Stack_Size = 0x1000;
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K
-FLASH (rx)     : ORIGIN = APP_FLASH_START, LENGTH = APP_FLASH_SIZE
+FLASH (rx)     : ORIGIN = BOOTLOADER_FLASH_START, LENGTH = BOOTLOADER_FLASH_SIZE
 }
 
 /* Define output sections */

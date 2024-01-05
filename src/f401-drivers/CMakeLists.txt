@@ -4,14 +4,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(f401 LANGUAGES C CXX ASM)
 
 message("Configuring f401")
-include(${CMAKE_SOURCE_DIR}/cmake/project.cmake)
 
 set(root ${CMAKE_SOURCE_DIR})
 
 set(target f401)
-set(TARGET_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F401CEUx_FLASH.ld)
+
 set(ARCH_DEFINES STM32F401xE STM32F4 ARM_MATH_CM4)
 set(ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mthumb)
+
+set(TARGET_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F401CEUx_FLASH.ld)
 
 set(TARGET_INCLUDES
     ${root}/src/f401-drivers/
@@ -25,10 +26,26 @@ set(TARGET_SOURCES
 )
 
 set(WAV_ENCODE_PYTHON_CMD
-    # cmake-format: off
-    # python3 ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/qpsk/encoder.py -s 48000 -b 12000 -c 6000 -p 256 -t stm32f4 -a 3 -g 131072 $<TARGET_FILE_DIR:${target}.elf>/${target}.bin
-    # cmake-format: on
+    python3 ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 48000 -b 16 -n 8 -z 4 -p 256 -k 100 -g 16384 $<TARGET_FILE_DIR:${target}.elf>/${target}.bin
 )
 
 set_hal_sources(HAL_SOURCES stm32f4)
 create_target(${target} stm32f4xx)
+
+
+set(TARGET_BOOTLOADER_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F401CEUx_FLASH_BOOTLOADER.ld)
+set(TARGET_BOOTLOADER_INCLUDES
+    ${root}/src/f401-drivers/
+    ${root}/lib/mdrivlib/target/stm32f401
+    ${root}/lib/mdrivlib/target/stm32f4xx
+    ${root}/lib/CMSIS/Device/ST/STM32F4xx/Include
+    ${root}/lib/STM32F4xx_HAL_Driver/Inc
+)
+
+set(TARGET_BOOTLOADER_SOURCES
+)
+
+
+set_bootloader_hal_sources(BOOTLOADER_HAL_SOURCES stm32f4)
+create_bootloader_target(${target} stm32f4xx)
+
