@@ -72,6 +72,7 @@ class Controls {
 
 	std::array<uint8_t, Model::NumChans> button_led_duty;
 	std::array<Color, Model::NumChans> rgb_leds;
+	Color::Adjustment global_brightness{64, 64, 64};
 
 	mdrivlib::Timekeeper encoder_led_update_task;
 	mdrivlib::Timekeeper muxio_update_task;
@@ -128,7 +129,7 @@ public:
 		});
 		adc_dma.start();
 		if (!led_driver.init()) {
-			__BKPT();
+			// __BKPT();
 		}
 		// long delay to let the muxio run a few times so buttons checked on start up will be accurate
 		HAL_Delay(500);
@@ -158,7 +159,7 @@ public:
 			return;
 		}
 		auto idx = Board::EncLedMap[led];
-		rgb_leds[idx] = color;
+		rgb_leds[idx] = color.adjust(global_brightness);
 	}
 
 	void SetButtonLed(unsigned led, float intensity) {
