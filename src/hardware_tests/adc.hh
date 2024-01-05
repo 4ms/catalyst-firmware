@@ -16,11 +16,10 @@ struct TestAdc {
 	unsigned cv_map[4] = {1, 3, 4, 6};
 
 	TestAdc(Controls &controls)
-		: controls{controls}
-	{}
+		: controls{controls} {
+	}
 
-	void run_test()
-	{
+	void run_test() {
 		while (true) {
 			controls.SetEncoderLed(slider_map[slider_left_led], Palette::black);
 			controls.SetEncoderLed(slider_map[slider_right_led], Palette::black);
@@ -28,8 +27,10 @@ struct TestAdc {
 			slider_left_led = (unsigned)slider;
 			slider_right_led = (slider_left_led + 1) & 0b11;
 			float slider_phase = slider - (float)slider_left_led;
-			controls.SetEncoderLed(slider_map[slider_left_led], Palette::white.blend(Palette::black, slider_phase));
-			controls.SetEncoderLed(slider_map[slider_right_led], Palette::black.blend(Palette::white, slider_phase));
+			controls.SetEncoderLed(slider_map[slider_left_led],
+								   Palette::full_white.blend(Palette::black, slider_phase));
+			controls.SetEncoderLed(slider_map[slider_right_led],
+								   Palette::black.blend(Palette::full_white, slider_phase));
 
 			controls.SetEncoderLed(cv_map[cv_left_led], Palette::black);
 			controls.SetEncoderLed(cv_map[cv_right_led], Palette::black);

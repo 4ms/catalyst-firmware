@@ -157,7 +157,7 @@ public:
 		}
 
 		using namespace Model;
-		using namespace Palette;
+		namespace Setting = Palette::Setting;
 
 		if (hang.has_value()) {
 			switch (hang.value()) {
@@ -178,7 +178,7 @@ public:
 					break;
 				}
 				case EncoderAlts::ClockDiv: {
-					SetEncoderLedsAddition(clockdiv.Read(), blue);
+					SetEncoderLedsAddition(clockdiv.Read(), Setting::clockdiv);
 					break;
 				}
 				case EncoderAlts::PhaseOffset: {
@@ -197,7 +197,7 @@ public:
 			auto col = startoffset.has_value() ? Setting::active : Setting::null;
 			c.SetEncoderLed(EncoderAlts::StartOffset, col);
 
-			col = tpose.has_value() ? off.blend(green, tpose.value() / 12.f) : Setting::null;
+			col = tpose.has_value() ? Palette::off.blend(Setting::transpose, tpose.value() / 12.f) : Setting::null;
 			c.SetEncoderLed(EncoderAlts::Transpose, col);
 
 			if (playmode.has_value()) {
@@ -214,9 +214,9 @@ public:
 
 			if (p.shared.internalclock.IsInternal() && !ysb.has_value()) {
 				if (p.shared.internalclock.Peek()) {
-					col = bpm;
+					col = Setting::bpm;
 				} else {
-					col = off;
+					col = Palette::off;
 				}
 			} else {
 				col = Setting::active;
@@ -224,14 +224,14 @@ public:
 			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
 
 			if (!p.randompool.IsRandomized() || random == 0.f) {
-				col = red;
+				col = Palette::Random::none;
 			} else {
-				col = off.blend(from_raw(p.randompool.GetSeed()), random);
+				col = Palette::Random::none.blend(Palette::Random::color(p.randompool.GetSeed()), random);
 			}
 
 			c.SetEncoderLed(EncoderAlts::Random, col);
 
-			c.SetEncoderLed(EncoderAlts::Range, ysb.has_value() ? Setting::active : off);
+			c.SetEncoderLed(EncoderAlts::Range, ysb.has_value() ? Setting::active : Palette::off);
 		}
 	}
 
@@ -259,7 +259,7 @@ private:
 				col = playmode_fwd.blend(Palette::off, 1.f - phase);
 			}
 		} else {
-			col = Palette::from_raw(time_now >> 8);
+			col = Palette::Random::color(time_now >> 8);
 		}
 		c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
 	}

@@ -72,7 +72,7 @@ class Controls {
 
 	std::array<uint8_t, Model::NumChans> button_led_duty;
 	std::array<Color, Model::NumChans> rgb_leds;
-	Color::Adjustment global_brightness{64, 64, 64};
+	Color::Adjustment global_brightness{128, 128, 128}; // 64, 64, 64};
 
 	mdrivlib::Timekeeper encoder_led_update_task;
 	mdrivlib::Timekeeper muxio_update_task;

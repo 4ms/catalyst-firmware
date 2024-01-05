@@ -30,8 +30,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			const auto col =
-				p.bank.GetMorph(i) == 0.f ? Palette::green : Palette::grey.blend(Palette::red, p.bank.GetMorph(i));
+			auto col = Palette::Morph::color(p.bank.GetMorph(i));
 			c.SetEncoderLed(i, col);
 		}
 	}

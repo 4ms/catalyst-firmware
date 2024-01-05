@@ -70,7 +70,7 @@ public:
 		while (count > 8) {
 			count -= 8;
 		}
-		SetEncoderLedsCount(count, 0, Palette::green.blend(Palette::red, phase));
+		SetEncoderLedsCount(count, 0, Palette::Pathway::color(phase));
 
 		if (p.pathway.OnAScene()) {
 			c.SetButtonLed(p.pathway.SceneNearest(), true);
