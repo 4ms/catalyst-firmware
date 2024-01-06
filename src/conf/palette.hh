@@ -84,9 +84,12 @@ namespace Random
 constexpr auto none = off;
 
 constexpr Color color(uint8_t val) {
-	const uint8_t r = val & 0xc0;
+	uint8_t r = val & 0xc0;
 	uint8_t b = (val << 2) & 0xc0;
 	uint8_t g = (val << 4) & 0xc0;
+	if (!r && !b && !g)
+		return grey;
+
 	return Color(r, b, g);
 }
 } // namespace Random
