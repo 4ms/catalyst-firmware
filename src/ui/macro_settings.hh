@@ -78,7 +78,7 @@ public:
 					SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
 				}
 			} else {
-				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
+				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::SeqHead::color);
 				const auto col = p.bank.randompool.IsRandomized() ?
 									 Palette::Random::color(p.bank.randompool.GetSeed()) :
 									 Palette::Setting::null;

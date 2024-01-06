@@ -37,7 +37,7 @@ public:
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep()) {
-				c.SetEncoderLed(led, Palette::seqhead);
+				c.SetEncoderLed(led, Palette::SeqHead::color);
 			} else {
 				auto col = Palette::Morph::color(1.f - mvals[i]);
 				c.SetEncoderLed(i, col);

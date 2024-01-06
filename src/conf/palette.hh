@@ -10,6 +10,7 @@ namespace Catalyst2::Palette
 // Board is Red-Blue-Green (not normal RGB)
 constexpr Color off = Color(0, 0, 0);
 constexpr Color black = Color(0, 0, 0);
+constexpr Color very_dim_grey = Color(3, 3, 3);
 constexpr Color dim_grey = Color(5, 5, 5);
 constexpr Color grey = Color(100, 40, 40);
 
@@ -17,6 +18,7 @@ constexpr Color red = Color(128, 0, 0);
 constexpr Color pink = Color(80, 20, 20);
 constexpr Color orange = Color(150, 0, 100);
 constexpr Color yellow = Color(150, 0, 60);
+constexpr Color dim_green = Color(0, 0, 9);
 constexpr Color green = Color(0, 0, 90);
 constexpr Color cyan = Color(0, 90, 90);
 constexpr Color blue = Color(0, 128, 0);
@@ -27,14 +29,16 @@ constexpr Color full_red = Color(255, 0, 0);
 constexpr Color full_green = Color(0, 0, 255);
 constexpr Color full_blue = Color(0, 255, 0);
 
-struct Voltage {
-	static constexpr auto Negative = full_red;
-	static constexpr auto Positive = blue;
-};
+namespace Voltage
+{
+constexpr auto Negative = full_red;
+constexpr auto Positive = blue;
+} // namespace Voltage
 
-struct Gate {
-	static constexpr auto Primed = Color{0, 0, 8};
-};
+namespace Gate
+{
+constexpr auto color = dim_green;
+}
 
 namespace Setting
 {
@@ -50,24 +54,27 @@ constexpr auto bpm = yellow;
 namespace Scales
 {
 constexpr inline std::array color = {
-	Color{4, 4, 4},					  // off
-	Palette::pink,					  // chromatic
-	Palette::red.blend(off, 0.5f),	  // major
-	Palette::yellow.blend(off, 0.5f), // minor
-	Palette::cyan.blend(off, 0.5f),	  // major pent
-	Palette::blue.blend(off, 0.5f),	  // minor pent
-	Palette::grey,					  // wholetone
-	Palette::green.blend(off, 0.5f),  // gate
+	very_dim_grey,			 // off
+	pink,					 // chromatic
+	red.blend(off, 0.5f),	 // major
+	yellow.blend(off, 0.5f), // minor
+	cyan.blend(off, 0.5f),	 // major pent
+	blue.blend(off, 0.5f),	 // minor pent
+	grey,					 // wholetone
+	green.blend(off, 0.5f),	 // gate
 };
 }
 
-constexpr auto seqhead = magenta;
+namespace SeqHead
+{
+constexpr auto color = magenta;
+}
 
 namespace Morph
 {
-constexpr auto linear = Palette::grey;
-constexpr auto chop = Palette::red;
 constexpr Color color(float phase) {
+	constexpr auto linear = grey.blend(off, 0.3f);
+	constexpr auto chop = red.blend(off, 0.3f);
 	return linear.blend(chop, phase);
 }
 } // namespace Morph
@@ -75,7 +82,9 @@ constexpr Color color(float phase) {
 namespace Pathway
 {
 constexpr Color color(float phase) {
-	return green.blend(red, phase);
+	constexpr auto first_page = green.blend(off, 0.5f);
+	constexpr auto last_page = red.blend(off, 0.5f);
+	return first_page.blend(last_page, phase);
 }
 } // namespace Pathway
 
@@ -84,9 +93,9 @@ namespace Random
 constexpr auto none = off;
 
 constexpr Color color(uint8_t val) {
-	uint8_t r = val & 0xc0;
-	uint8_t b = (val << 2) & 0xc0;
-	uint8_t g = (val << 4) & 0xc0;
+	uint8_t r = (val & 0b0110000) >> 1;
+	uint8_t b = (val & 0b0001100) << 1;
+	uint8_t g = (val & 0b0000011) << 3;
 	if (!r && !b && !g)
 		return grey;
 
@@ -108,7 +117,7 @@ constexpr Color CvBlend(uint16_t level) {
 }
 
 constexpr Color GateBlend(bool level) {
-	return level == true ? Gate::Primed : off;
+	return level == true ? Gate::color : off;
 }
 
 constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {

@@ -92,7 +92,7 @@ public:
 
 			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 				if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep()) {
-					c.SetEncoderLed(led, Palette::seqhead);
+					c.SetEncoderLed(led, Palette::SeqHead::color);
 				} else {
 					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], is_gate));
 				}
