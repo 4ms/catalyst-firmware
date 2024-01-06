@@ -10,50 +10,98 @@ namespace Catalyst2::Palette
 // Board is Red-Blue-Green (not normal RGB)
 constexpr Color off = Color(0, 0, 0);
 constexpr Color black = Color(0, 0, 0);
-constexpr Color grey = Color(127, 127, 127);
-constexpr Color white = Color(255, 255, 255);
-constexpr Color red = Color(255, 0, 0);
-constexpr Color pink = Color(255, 0xb4, 0x69);
-constexpr Color pale_pink = Color(255, 200, 200);
-constexpr Color tangerine = Color(255, 0, 200);
-constexpr Color orange = Color(255, 0, 127);
-constexpr Color yellow = Color(191, 0, 63);
-constexpr Color green = Color(0, 0, 255);
-constexpr Color cyan = Color(0, 255, 255);
-constexpr Color blue = Color(0, 255, 0);
-constexpr Color purple = Color(255, 255, 0);
-constexpr Color magenta = Color(200, 100, 0);
+constexpr Color very_dim_grey = Color(3, 3, 3);
+constexpr Color dim_grey = Color(5, 5, 5);
+constexpr Color grey = Color(100, 40, 40);
 
-struct Voltage {
-	static constexpr auto Negative = red;
-	static constexpr auto Positive = blue;
-};
+constexpr Color red = Color(128, 0, 0);
+constexpr Color pink = Color(80, 20, 20);
+constexpr Color orange = Color(150, 0, 100);
+constexpr Color yellow = Color(150, 0, 60);
+constexpr Color dim_green = Color(0, 0, 9);
+constexpr Color green = Color(0, 0, 90);
+constexpr Color cyan = Color(0, 90, 90);
+constexpr Color blue = Color(0, 128, 0);
+constexpr Color magenta = Color(100, 50, 0);
 
-struct Gate {
-	static constexpr auto Primed = Color{0, 0, 2};
-	static constexpr auto High = green;
-};
+constexpr Color full_white = Color(255, 255, 255);
+constexpr Color full_red = Color(255, 0, 0);
+constexpr Color full_green = Color(0, 0, 255);
+constexpr Color full_blue = Color(0, 255, 0);
 
-struct Setting {
-	static constexpr auto null = Color{10, 10, 10};
-	static constexpr auto active = blue;
-};
+namespace Voltage
+{
+constexpr auto Negative = full_red;
+constexpr auto Positive = blue;
+} // namespace Voltage
 
-constexpr auto seqhead = magenta;
+namespace Gate
+{
+constexpr auto color = dim_green;
+}
 
+namespace Setting
+{
+constexpr auto null = dim_grey;
+constexpr auto active = blue;
+constexpr auto playmode_fwd = blue;
+constexpr auto playmode_bck = red;
+constexpr auto transpose = green;
+constexpr auto clockdiv = blue;
 constexpr auto bpm = yellow;
+} // namespace Setting
 
-// filter out red colors
-constexpr Color from_raw(int8_t val) {
-	const uint8_t r = val & 0xc0;
-	uint8_t b = (val << 2) & 0xc0;
-	uint8_t g = (val << 4) & 0xc0;
-	if (!b && !g) {
-		b = r;
-		g = ~r;
-	}
+namespace Scales
+{
+constexpr inline std::array color = {
+	very_dim_grey,			 // off
+	pink,					 // chromatic
+	red.blend(off, 0.5f),	 // major
+	yellow.blend(off, 0.5f), // minor
+	cyan.blend(off, 0.5f),	 // major pent
+	blue.blend(off, 0.5f),	 // minor pent
+	grey,					 // wholetone
+	green.blend(off, 0.5f),	 // gate
+};
+}
+
+namespace SeqHead
+{
+constexpr auto color = magenta;
+}
+
+namespace Morph
+{
+constexpr Color color(float phase) {
+	constexpr auto linear = grey.blend(off, 0.3f);
+	constexpr auto chop = red.blend(off, 0.3f);
+	return linear.blend(chop, phase);
+}
+} // namespace Morph
+
+namespace Pathway
+{
+constexpr Color color(float phase) {
+	constexpr auto first_page = green.blend(off, 0.5f);
+	constexpr auto last_page = red.blend(off, 0.5f);
+	return first_page.blend(last_page, phase);
+}
+} // namespace Pathway
+
+namespace Random
+{
+constexpr auto none = off;
+
+constexpr Color color(uint8_t val) {
+	uint8_t r = (val & 0b0110000) >> 1;
+	uint8_t b = (val & 0b0001100) << 1;
+	uint8_t g = (val & 0b0000011) << 3;
+	if (!r && !b && !g)
+		return grey;
+
 	return Color(r, b, g);
 }
+} // namespace Random
 
 constexpr Color CvBlend(uint16_t level) {
 	using namespace Channel;
@@ -69,7 +117,7 @@ constexpr Color CvBlend(uint16_t level) {
 }
 
 constexpr Color GateBlend(bool level) {
-	return level == true ? Gate::Primed : off;
+	return level == true ? Gate::color : off;
 }
 
 constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {

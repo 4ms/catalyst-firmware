@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/palette.hh"
 #include "controls.hh"
 
 namespace Catalyst2::Ui
@@ -32,7 +33,7 @@ protected:
 
 	void ClearEncoderLeds() {
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetEncoderLed(i, Color{0, 0, 0});
+			c.SetEncoderLed(i, Palette::off);
 		}
 	}
 

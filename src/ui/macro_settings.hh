@@ -66,9 +66,9 @@ public:
 
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
-			auto col = Palette::red;
+			auto col = Palette::Random::none;
 			if (p.bank.randompool.IsRandomized() && random > 0.f) {
-				col = Palette::off.blend(Palette::from_raw(p.bank.randompool.GetSeed()), random);
+				col = Palette::off.blend(Palette::Random::color(p.bank.randompool.GetSeed()), random);
 			}
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		} else {
@@ -78,9 +78,10 @@ public:
 					SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
 				}
 			} else {
-				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::seqhead);
-				const auto col = p.bank.randompool.IsRandomized() ? Palette::from_raw(p.bank.randompool.GetSeed()) :
-																	Palette::Setting::null;
+				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::SeqHead::color);
+				const auto col = p.bank.randompool.IsRandomized() ?
+									 Palette::Random::color(p.bank.randompool.GetSeed()) :
+									 Palette::Setting::null;
 				c.SetEncoderLed(Model::EncoderAlts::Random, col);
 			}
 		}
