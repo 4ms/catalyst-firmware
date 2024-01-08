@@ -13,7 +13,7 @@ namespace Catalyst2::Macro::Bank
 struct Data {
 	struct Scene {
 		std::array<Channel::Value, Model::NumChans> channel{};
-		Random::Amount random;
+		float random_amount;
 	};
 	std::array<Scene, Model::NumScenes> scene{};
 	std::array<Channel::Mode, Model::NumChans> channelmode{};
@@ -30,7 +30,7 @@ struct Data {
 			for (auto &cv : s.channel) {
 				ret &= cv.Validate();
 			}
-			ret &= s.random.Validate();
+			ret &= s.random_amount <= 1.f && s.random_amount >= 0.f;
 		}
 		for (auto &cm : channelmode) {
 			ret &= cm.Validate();
@@ -80,13 +80,15 @@ public:
 		b->channelmode[channel] = mode;
 	}
 	auto GetRandomAmount(uint8_t scene) {
-		return b->scene[scene].random.Read();
+		return b->scene[scene].random_amount;
 	}
 	void IncRandomAmount(uint8_t scene, int32_t inc) {
-		b->scene[scene].random.Inc(inc);
+		auto t = b->scene[scene].random_amount;
+		t += inc / static_cast<float>(32);
+		b->scene[scene].random_amount = std::clamp(t, 0.f, 1.f);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random);
+		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
 		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel], rand);
 	}
 	float GetMorph(uint8_t channel) {
@@ -97,7 +99,7 @@ public:
 		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
 	}
 	Channel::Value::Proxy GetChannel(uint8_t scene, uint8_t channel) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random);
+		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
 		return b->scene[scene].channel[channel].Read(b->range[channel], rand);
 	}
 };
