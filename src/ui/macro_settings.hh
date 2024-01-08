@@ -14,6 +14,8 @@ public:
 		p.shared.hang.Cancel();
 	}
 	void Update(Abstract *&interface) override {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+
 		if (!c.button.shift.is_high()) {
 			return;
 		}
@@ -25,7 +27,7 @@ public:
 		}
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto hang = p.shared.hang.Check();
 		const auto is_scene = YoungestSceneButton().has_value();
 

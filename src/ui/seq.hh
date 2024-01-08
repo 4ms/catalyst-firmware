@@ -27,6 +27,9 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+
 		if (c.button.add.just_went_high()) {
 			p.shared.internalclock.Tap();
 		}
@@ -60,14 +63,14 @@ public:
 		}
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		if (!p.IsSequenceSelected()) {
 			return;
 		}
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
-	void OnSceneButtonRelease(uint8_t button) override {
+	void OnSceneButtonRelease(uint8_t button) {
 		if (!p.IsSequenceSelected()) {
 			p.SelectChannel(button);
 		} else {

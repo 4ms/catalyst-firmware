@@ -58,12 +58,6 @@ public:
 			}
 			ui->Init();
 		}
-		for (auto [i, sb] : countzip(controls.button.scene)) {
-			if (sb.just_went_low()) {
-				ui->OnSceneButtonRelease(i);
-			}
-		}
-		controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) { ui->OnEncoderInc(encoder, dir); });
 		Save();
 	}
 

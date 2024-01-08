@@ -13,12 +13,14 @@ public:
 		p.shared.hang.Cancel();
 	}
 	void Update(Abstract *&interface) override {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+
 		if (!c.button.morph.is_high())
 			return;
 
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t channel, int32_t inc) override {
+	void OnEncoderInc(uint8_t channel, int32_t inc) {
 		inc = p.shared.hang.Check().has_value() ? inc : 0;
 		p.bank.IncRange(channel, inc);
 		p.shared.hang.Set(channel);

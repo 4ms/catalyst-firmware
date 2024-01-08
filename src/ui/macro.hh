@@ -28,7 +28,10 @@ public:
 		p.shared.internalclock.SetExternal(true);
 	}
 	void Update(Abstract *&interface) override {
-		if (c.button.fine.just_went_high() && p.override_output.has_value()) {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+
+		if (c.button.fine.just_went_high() && p.override_output.has_value())
 			p.bank.Copy(p.override_output.value());
 			ConfirmCopy(p.override_output.value());
 		}
@@ -61,13 +64,13 @@ public:
 		}
 		interface = this;
 	}
-	void OnSceneButtonRelease(uint8_t button) override {
+	void OnSceneButtonRelease(uint8_t button) {
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
 			ConfirmPaste(button);
 		}
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto scenebdown = YoungestSceneButton().has_value();
 		const auto fine = c.button.fine.is_high();
 
