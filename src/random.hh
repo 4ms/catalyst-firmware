@@ -19,6 +19,7 @@ class Interface {
 public:
 	Interface(T &data)
 		: data{data} {
+		Randomize();
 	}
 	uint8_t GetSeed() const {
 		return data[0] + 128;
