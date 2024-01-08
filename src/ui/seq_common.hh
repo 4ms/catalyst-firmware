@@ -51,5 +51,13 @@ public:
 		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.player.Update(phase);
 	}
+
+protected:
+	void ConfirmCopy(uint8_t led) {
+		p.shared.blinker.Set(led, 8, 250);
+	}
+	void ConfirmPaste(uint8_t led) {
+		ConfirmCopy(led);
+	}
 };
 } // namespace Catalyst2::Sequencer::Ui

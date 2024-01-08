@@ -36,6 +36,13 @@ protected:
 			}
 		}
 	}
+	void ForEachSceneButtonPressed(auto func) {
+		for (auto [i, b] : countzip(c.button.scene)) {
+			if (b.just_went_high()) {
+				func(i);
+			}
+		}
+	}
 	void ClearButtonLeds() {
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetButtonLed(i, false);
