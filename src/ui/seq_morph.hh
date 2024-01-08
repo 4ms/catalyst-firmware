@@ -15,16 +15,19 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+
 		if (!c.button.morph.is_high()) {
 			return;
 		}
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		p.IncStepModifier(encoder, inc);
 	}
 
-	void OnSceneButtonRelease(uint8_t button) override {
+	void OnSceneButtonRelease(uint8_t button) {
 		if (!p.IsSequenceSelected()) {
 			p.SelectChannel(button);
 		} else {

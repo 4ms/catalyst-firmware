@@ -19,6 +19,8 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
+		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
 		if (!add || !shift) {
@@ -29,7 +31,7 @@ public:
 		}
 		interface = this;
 	}
-	void OnSceneButtonRelease(uint8_t button) override {
+	void OnSceneButtonRelease(uint8_t button) {
 		auto &path = p.pathway;
 		p.shared.reset.Notify(false);
 

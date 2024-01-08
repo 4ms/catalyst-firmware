@@ -14,6 +14,9 @@ public:
 		c.button.morph.clear_events();
 	}
 	void Update(Abstract *&interface) override {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+
 		if (c.button.fine.just_went_high() && p.IsSequenceSelected()) {
 			p.CopySequence();
 		}
@@ -30,7 +33,7 @@ public:
 		}
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t dir) override {
+	void OnEncoderInc(uint8_t encoder, int32_t dir) {
 		if (c.button.shift.is_high()) {
 			// change all channgels.
 			auto cm = p.data.settings.GetChannelMode(encoder);
@@ -44,7 +47,7 @@ public:
 			p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
 		}
 	}
-	void OnSceneButtonRelease(uint8_t scene) override {
+	void OnSceneButtonRelease(uint8_t scene) {
 		if (scene == p.GetSelectedChannel()) {
 			p.DeselectSequence();
 		} else {

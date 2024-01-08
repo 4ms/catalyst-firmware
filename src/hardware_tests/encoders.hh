@@ -16,9 +16,12 @@ struct TestEncoders {
 
 	void run_test() {
 		while (true) {
-			controls.ForEachEncoderInc([this](uint8_t encoder, int32_t dir) {
-				controls.SetEncoderLed(encoder, dir > 0 ? Palette::blue : Palette::red);
-			});
+			for (auto i = 0u; i < controls.encoders.size(); i++) {
+				const auto dir = controls.encoders[i].read();
+				if (dir) {
+					controls.SetEncoderLed(i, dir > 0 ? Palette::blue : Palette::red);
+				}
+			}
 
 			HAL_Delay(10);
 

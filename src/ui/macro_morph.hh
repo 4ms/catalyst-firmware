@@ -11,6 +11,8 @@ class Morph : public Usual {
 public:
 	using Usual::Usual;
 	void Update(Abstract *&interface) override {
+		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+
 		if (!c.button.morph.is_high()) {
 			return;
 		}
@@ -24,7 +26,7 @@ public:
 		}
 		interface = this;
 	}
-	void OnEncoderInc(uint8_t encoder, int32_t inc) override {
+	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		p.bank.IncMorph(encoder, inc);
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

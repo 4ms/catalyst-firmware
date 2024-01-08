@@ -17,14 +17,25 @@ public:
 	}
 	virtual void Update(Abstract *&interface) = 0;
 	virtual void Common() = 0;
-	virtual void OnSceneButtonRelease(uint8_t button) {
-	}
-	virtual void OnEncoderInc(uint8_t encoder, int32_t inc) {
-	}
 	virtual void PaintLeds(const Model::Output::Buffer &outs) {
 	}
 
 protected:
+	void ForEachEncoderInc(auto func) {
+		for (auto [i, enc] : countzip(c.encoders)) {
+			const auto inc = enc.read();
+			if (inc) {
+				func(i, inc);
+			}
+		}
+	}
+	void ForEachSceneButtonReleased(auto func) {
+		for (auto [i, b] : countzip(c.button.scene)) {
+			if (b.just_went_low()) {
+				func(i);
+			}
+		}
+	}
 	void ClearButtonLeds() {
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetButtonLed(i, false);

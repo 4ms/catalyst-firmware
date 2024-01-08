@@ -45,18 +45,7 @@ class Controls {
 		Board::TrigJack trig;
 		Board::ResetJack reset;
 	};
-	// // Encoders
-	// struct RotaryEncoder {};
-	// std::array<RotaryEncoder, Model::NumChans> encoders{{
-	// 	{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
-	// 	{Board::Enc2A, Board::Enc2B, Board::EncStepSize},
-	// 	{Board::Enc3A, Board::Enc3B, Board::EncStepSize},
-	// 	{Board::Enc4A, Board::Enc4B, Board::EncStepSize},
-	// 	{Board::Enc5A, Board::Enc5B, Board::EncStepSize},
-	// 	{Board::Enc6A, Board::Enc6B, Board::EncStepSize},
-	// 	{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
-	// 	{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
-	// }};
+
 	Outputs outputs;
 
 public:
@@ -81,6 +70,13 @@ public:
 			return true;
 		}
 	};
+	// Encoders
+	struct RotaryEncoder {
+		int32_t read() {
+			return 0;
+		}
+	};
+	std::array<RotaryEncoder, Model::NumChans> encoders{};
 	Buttons button;
 	Toggles toggle;
 	Jacks jack;
@@ -95,14 +91,6 @@ public:
 		// adc_dma.start();
 		// if (!led_driver.init())
 		// 	__BKPT();
-	}
-
-	void ForEachEncoderInc(auto func) {
-		// for (auto [i, enc] : countzip(encoders)) {
-		// 	auto inc = enc.read();
-		// 	if (inc)
-		// 		func(i, inc);
-		// }
 	}
 
 	uint16_t ReadSlider() {

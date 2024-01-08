@@ -51,17 +51,6 @@ class Controls {
 		Board::TrigJack trig;
 		Board::ResetJack reset;
 	};
-	// Encoders
-	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
-		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
-		{Board::Enc2A, Board::Enc2B, Board::EncStepSize},
-		{Board::Enc3A, Board::Enc3B, Board::EncStepSize},
-		{Board::Enc4A, Board::Enc4B, Board::EncStepSize},
-		{Board::Enc5A, Board::Enc5B, Board::EncStepSize},
-		{Board::Enc6A, Board::Enc6B, Board::EncStepSize},
-		{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
-		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
-	}};
 
 	// Mux
 	MuxedIO<Board::MuxConf> muxio;
@@ -105,6 +94,17 @@ public:
 			return macro_settings_flash.write(data);
 		}
 	};
+	// Encoders
+	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
+		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},
+		{Board::Enc2A, Board::Enc2B, Board::EncStepSize},
+		{Board::Enc3A, Board::Enc3B, Board::EncStepSize},
+		{Board::Enc4A, Board::Enc4B, Board::EncStepSize},
+		{Board::Enc5A, Board::Enc5B, Board::EncStepSize},
+		{Board::Enc6A, Board::Enc6B, Board::EncStepSize},
+		{Board::Enc7A, Board::Enc7B, Board::EncStepSize},
+		{Board::Enc8A, Board::Enc8B, Board::EncStepSize},
+	}};
 	Buttons button;
 	Jacks jack;
 
@@ -133,15 +133,6 @@ public:
 		}
 		// long delay to let the muxio run a few times so buttons checked on start up will be accurate
 		HAL_Delay(500);
-	}
-
-	void ForEachEncoderInc(auto func) {
-		for (auto [i, enc] : countzip(encoders)) {
-			auto inc = enc.read();
-			if (inc) {
-				func(i, inc);
-			}
-		}
 	}
 
 	uint16_t ReadSlider() {
