@@ -40,10 +40,12 @@ public:
 						}
 					}
 				} else {
-					if (inc > 0) {
-						p.bank.randompool.Randomize();
-					} else {
-						p.bank.randompool.Clear();
+					if (c.button.fine.is_high()) {
+						if (inc > 0) {
+							p.bank.randompool.Randomize();
+						} else {
+							p.bank.randompool.Clear();
+						}
 					}
 				}
 				p.shared.hang.Cancel();
@@ -68,10 +70,7 @@ public:
 
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
-			auto col = Palette::Random::none;
-			if (p.bank.randompool.IsRandomized() && random > 0.f) {
-				col = Palette::off.blend(Palette::Random::color(p.bank.randompool.GetSeed()), random);
-			}
+			auto col = Palette::off.blend(Palette::Random::set, random);
 			c.SetEncoderLed(Model::EncoderAlts::Random, col);
 		} else {
 			const auto hang = p.shared.hang.Check();
@@ -81,10 +80,12 @@ public:
 				}
 			} else {
 				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::SeqHead::color);
-				const auto col = p.bank.randompool.IsRandomized() ?
-									 Palette::Random::color(p.bank.randompool.GetSeed()) :
-									 Palette::Setting::null;
-				c.SetEncoderLed(Model::EncoderAlts::Random, col);
+				if (c.button.fine.is_high()) {
+					const auto col = p.bank.randompool.IsRandomized() ?
+										 Palette::Random::color(p.bank.randompool.GetSeed()) :
+										 Palette::Setting::null;
+					c.SetEncoderLed(Model::EncoderAlts::Random, col);
+				}
 			}
 		}
 	}

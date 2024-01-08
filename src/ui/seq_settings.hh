@@ -54,12 +54,16 @@ public:
 					break;
 				case Model::EncoderAlts::Random:
 					if (ysb.has_value()) {
-						p.data.settings.IncRandomAmount(i, inc);
+						p.data.settings.IncRandom(i, inc);
 					} else {
-						if (inc > 0) {
-							p.randompool.Randomize();
+						if (!c.button.fine.is_high()) {
+							p.data.settings.IncRandom(inc);
 						} else {
-							p.randompool.Clear();
+							if (inc > 0) {
+								p.randompool.Randomize();
+							} else {
+								p.randompool.Clear();
+							}
 						}
 					}
 					p.shared.hang.Cancel();
@@ -141,8 +145,8 @@ public:
 		auto startoffset = std::make_optional(p.data.settings.GetStartOffset());
 		auto playmode = std::make_optional(p.data.settings.GetPlayMode());
 		auto tpose = std::make_optional(p.data.settings.GetTranspose());
+		auto random = std::make_optional(p.data.settings.GetRandom());
 		auto range = Channel::Range{};
-		auto random = p.randompool.IsRandomized() ? 1.f : 0.f;
 
 		auto ysb = YoungestSceneButton();
 		if (ysb.has_value()) {
@@ -153,7 +157,7 @@ public:
 			playmode = p.data.settings.GetPlayMode(chan);
 			clockdiv = p.data.settings.GetClockDiv(chan);
 			tpose = p.data.settings.GetTranspose(chan);
-			random = p.data.settings.GetRandomAmount(chan).Read();
+			random = p.data.settings.GetRandom(chan);
 			range = p.data.settings.GetRange(chan);
 		}
 
@@ -224,12 +228,10 @@ public:
 			}
 			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
 
-			if (!p.randompool.IsRandomized() || random == 0.f) {
-				col = Palette::Random::none;
-			} else {
-				col = Palette::Random::none.blend(Palette::Random::color(p.randompool.GetSeed()), random);
+			col = random.has_value() ? Palette::off.blend(Palette::Random::set, random.value()) : Setting::null;
+			if (c.button.fine.is_high()) {
+				col = Palette::Random::color(p.randompool.GetSeed());
 			}
-
 			c.SetEncoderLed(EncoderAlts::Random, col);
 
 			c.SetEncoderLed(EncoderAlts::Range, ysb.has_value() ? Setting::active : Palette::off);
