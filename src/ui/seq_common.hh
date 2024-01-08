@@ -6,6 +6,7 @@
 namespace Catalyst2::Sequencer::Ui
 {
 class Usual : public Catalyst2::Ui::Abstract {
+
 public:
 	Sequencer::Interface &p;
 	Usual(Sequencer::Interface &p, Controls &c)
@@ -13,21 +14,12 @@ public:
 		, p{p} {
 	}
 	void Common() override final {
-		if (c.jack.reset.is_high()) {
-			p.shared.internalclock.Reset();
-			p.shared.clockdivider.Reset();
-			p.player.Reset();
-			return;
+		if (c.jack.reset.just_went_high()) {
+			p.Reset();
 		}
 
 		if (c.jack.trig.just_went_high()) {
-			if (p.shared.internalclock.IsInternal()) {
-				p.shared.internalclock.SetExternal(true);
-			}
-			p.shared.clockdivider.Update(p.shared.data.clockdiv);
-			if (p.shared.clockdivider.Step()) {
-				p.shared.internalclock.Input();
-			}
+			p.Trig();
 		}
 
 		if (c.button.play.just_went_high()) {
