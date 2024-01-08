@@ -57,8 +57,11 @@ public:
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
-		c.SetButtonLed(p.GetSelectedChannel(), true);
-
+		if (p.shared.blinker.IsSet()) {
+			c.SetButtonLed(p.shared.blinker.Led(), p.shared.blinker.IsHigh());
+		} else {
+			c.SetButtonLed(p.GetSelectedChannel(), true);
+		}
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetEncoderLed(i, p.data.settings.GetChannelMode(i).GetColor());
 		}

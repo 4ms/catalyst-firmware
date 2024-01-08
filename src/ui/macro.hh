@@ -114,6 +114,9 @@ public:
 				}
 			}
 		}
+		if (p.shared.blinker.IsSet()) {
+			c.SetButtonLed(p.shared.blinker.Led(), p.shared.blinker.IsHigh());
+		}
 	}
 
 private:

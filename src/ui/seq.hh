@@ -119,10 +119,15 @@ public:
 					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], is_gate));
 				}
 			}
-			if (p.IsPageSelected()) {
-				c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
+			const auto &b = p.shared.blinker;
+			if (b.IsSet()) {
+				c.SetButtonLed(b.Led(), b.IsHigh());
 			} else {
-				c.SetButtonLed(page, true);
+				if (p.IsPageSelected()) {
+					c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
+				} else {
+					c.SetButtonLed(page, true);
+				}
 			}
 		} else {
 			EncoderDisplayOutput(outs);

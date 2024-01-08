@@ -41,6 +41,7 @@ public:
 	void Update() {
 		controls.Update();
 		params.shared.internalclock.Update();
+		params.shared.blinker.Update();
 		ui->Common();
 
 		auto next = GetUi();

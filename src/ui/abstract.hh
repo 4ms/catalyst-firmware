@@ -21,18 +21,6 @@ public:
 	}
 
 protected:
-	void ConfirmCopy(uint8_t led) {
-		static constexpr auto num_flashes = 8u;
-		static constexpr auto time_ms = 500u;
-		for (auto i = 0u; i < num_flashes; i++) {
-			c.SetButtonLed(led, static_cast<bool>(i & 0x01));
-			c.Delay(time_ms / num_flashes);
-		}
-	}
-	void ConfirmPaste(uint8_t led) {
-		ConfirmCopy(led);
-	}
-
 	void ForEachEncoderInc(auto func) {
 		for (auto [i, enc] : countzip(c.encoders)) {
 			const auto inc = enc.read();
