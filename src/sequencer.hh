@@ -119,7 +119,7 @@ public:
 		} else {
 			hide_playhead = -1;
 		}
-		const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomAmount(cur_channel));
+		const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomOrGlobal(cur_channel));
 		data.channel[cur_channel][step].Inc(
 			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel), rand);
 	}
@@ -138,7 +138,7 @@ public:
 			hide_playhead = -1;
 		}
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
-											 randompool.Read(chan, step, data.settings.GetRandomAmount(chan)));
+											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
 	}
 	StepModifier GetPlayheadModifier(uint8_t chan) {
 		const auto step = player.GetPlayheadStep(chan);
@@ -150,14 +150,14 @@ public:
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
 		const auto step = player.GetPrevStep(chan);
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
-											 randompool.Read(chan, step, data.settings.GetRandomAmount(chan)));
+											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
 		const auto range = data.settings.GetRange(cur_channel);
 		for (auto [i, o] : countzip(out)) {
 			const auto step = (page * Model::SeqStepsPerPage) + i;
-			const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomAmount(cur_channel));
+			const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomOrGlobal(cur_channel));
 			if (data.settings.GetChannelMode(cur_channel).IsGate()) {
 				o = data.channel[cur_channel][step].Read(range, rand).AsGate() ? Channel::gatearmed : Channel::gateoff;
 			} else {
