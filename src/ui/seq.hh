@@ -28,6 +28,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonPressed([this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.add.just_went_high()) {
@@ -36,6 +37,7 @@ public:
 		if (p.IsSequenceSelected()) {
 			auto ysb = YoungestSceneButton();
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
+				p.shared.did_copy = true;
 				p.CopyPage(ysb.value());
 				ConfirmCopy(ysb.value());
 			}
@@ -70,21 +72,32 @@ public:
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
-	void OnSceneButtonRelease(uint8_t button) {
+	void OnSceneButtonPress(uint8_t button) {
 		if (!p.IsSequenceSelected()) {
 			p.SelectChannel(button);
+		}
+		if (c.button.fine.is_high()) {
+			p.PastePage(button);
+			ConfirmPaste(button);
+			p.shared.did_paste = true;
+		}
+	}
+	void OnSceneButtonRelease(uint8_t button) {
+		if (p.shared.did_paste) {
+			p.shared.did_paste = false;
+			return;
+		}
+		if (p.shared.did_copy) {
+			p.shared.did_copy = false;
+			return;
+		}
+		if (c.button.fine.is_high()) {
+			return;
+		}
+		if (p.IsPageSelected() && button == p.GetSelectedPage()) {
+			p.DeselectPage();
 		} else {
-			if (c.button.fine.is_high()) {
-				p.PastePage(button);
-				ConfirmPaste(button);
-			} else {
-				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
-					if (p.IsPageSelected() && button == p.GetSelectedPage())
-						p.DeselectPage();
-					else
-						p.SelectPage(button);
-				}
-			}
+			p.SelectPage(button);
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

@@ -31,7 +31,7 @@ public:
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		if (c.button.fine.just_went_high() && p.override_output.has_value())
+		if (c.button.fine.just_went_high() && p.override_output.has_value()) {
 			p.bank.Copy(p.override_output.value());
 			ConfirmCopy(p.override_output.value());
 		}

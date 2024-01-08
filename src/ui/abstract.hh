@@ -31,6 +31,8 @@ protected:
 	}
 	void ConfirmPaste(uint8_t led) {
 		ConfirmCopy(led);
+	}
+
 	void ForEachEncoderInc(auto func) {
 		for (auto [i, enc] : countzip(c.encoders)) {
 			const auto inc = enc.read();
@@ -42,6 +44,13 @@ protected:
 	void ForEachSceneButtonReleased(auto func) {
 		for (auto [i, b] : countzip(c.button.scene)) {
 			if (b.just_went_low()) {
+				func(i);
+			}
+		}
+	}
+	void ForEachSceneButtonPressed(auto func) {
+		for (auto [i, b] : countzip(c.button.scene)) {
+			if (b.just_went_high()) {
 				func(i);
 			}
 		}

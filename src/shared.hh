@@ -101,6 +101,8 @@ public:
 	ResetManager reset{internalclock};
 	ModeSwitcher modeswitcher{internalclock};
 	bool do_save = false;
+	bool did_paste = false;
+	bool did_copy = false;
 	float pos;
 };
 
