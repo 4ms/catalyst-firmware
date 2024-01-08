@@ -34,9 +34,11 @@ public:
 			auto ysb = YoungestSceneButton();
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.CopyPage(ysb.value());
+				ConfirmCopy(ysb.value());
 			}
 			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
 				p.PasteSequence();
+				ConfirmPaste(p.GetSelectedChannel());
 			}
 		}
 		if (p.shared.reset.Check()) {
@@ -71,6 +73,7 @@ public:
 		} else {
 			if (c.button.fine.is_high()) {
 				p.PastePage(button);
+				ConfirmPaste(button);
 			} else {
 				if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
 					if (p.IsPageSelected() && button == p.GetSelectedPage())

@@ -16,6 +16,7 @@ public:
 	void Update(Abstract *&interface) override {
 		if (c.button.fine.just_went_high() && p.IsSequenceSelected()) {
 			p.CopySequence();
+			ConfirmCopy(p.GetSelectedChannel());
 		}
 		if (c.button.morph.just_went_high()) {
 			p.shared.do_save = true;
