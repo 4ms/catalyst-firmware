@@ -88,6 +88,43 @@ class Interface {
 			return internalclock.TimeNow() - set_time >= hold_duration;
 		}
 	};
+	class Blinker {
+		Clock::Bpm &internalclock;
+		uint32_t remaining = 0;
+		uint32_t blink_duration = Clock::MsToTicks(3000);
+		uint8_t led = 0;
+		uint32_t set_time;
+
+	public:
+		Blinker(Clock::Bpm &ic)
+			: internalclock{ic} {
+		}
+		void Set(uint8_t led, uint32_t num_blinks, uint32_t duration_ms) {
+			remaining = num_blinks * 2;
+			this->led = led;
+			blink_duration = Clock::MsToTicks(duration_ms) / num_blinks;
+			set_time = internalclock.TimeNow();
+		}
+		void Update() {
+			if (!remaining) {
+				return;
+			}
+			const auto t = internalclock.TimeNow();
+			if (t - set_time >= blink_duration) {
+				set_time = t;
+				remaining -= 1;
+			}
+		}
+		bool IsSet() const {
+			return remaining > 0;
+		}
+		bool IsHigh() const {
+			return remaining & 0x01;
+		}
+		uint8_t Led() const {
+			return led;
+		}
+	};
 
 public:
 	Data &data;
@@ -100,6 +137,7 @@ public:
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
 	ModeSwitcher modeswitcher{internalclock};
+	Blinker blinker{internalclock};
 	bool do_save = false;
 	bool did_paste = false;
 	bool did_copy = false;
