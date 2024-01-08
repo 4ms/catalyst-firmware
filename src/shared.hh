@@ -14,7 +14,8 @@ struct Data {
 	bool Validate() {
 		auto ret = true;
 		ret &= clockdiv.Validate();
-		ret &= mode == Model::Mode::Macro || mode == Model::Mode::Sequencer;
+		ret &= static_cast<uint8_t>(mode) == static_cast<uint8_t>(Model::Mode::Macro) ||
+			   static_cast<uint8_t>(mode) == static_cast<uint8_t>(Model::Mode::Sequencer);
 		ret &= bpm.Validate();
 		return ret;
 	}

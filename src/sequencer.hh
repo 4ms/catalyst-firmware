@@ -74,6 +74,7 @@ class Interface {
 		Settings::Channel cs;
 		std::array<Step, Model::SeqStepsPerPage> page;
 	} clipboard;
+	uint32_t time_trigged;
 
 public:
 	Data &data;
@@ -85,6 +86,26 @@ public:
 		: data{data}
 		, shared{shared} {
 	}
+
+	void Reset() {
+		shared.internalclock.Reset();
+		shared.clockdivider.Reset();
+		player.Reset();
+		time_trigged = shared.internalclock.TimeNow();
+	}
+
+	void Trig() {
+		if (shared.internalclock.TimeNow() - time_trigged >= Clock::BpmToTicks(1200)) {
+			if (shared.internalclock.IsInternal()) {
+				shared.internalclock.SetExternal(true);
+			}
+			shared.clockdivider.Update(shared.data.clockdiv);
+			if (shared.clockdivider.Step()) {
+				shared.internalclock.Input();
+			}
+		}
+	}
+
 	int8_t GetHiddenStep() {
 		return hide_playhead;
 	}
