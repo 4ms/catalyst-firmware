@@ -25,6 +25,17 @@ public:
 	}
 
 protected:
+	void ConfirmCopy(uint8_t led) {
+		static constexpr auto num_flashes = 8u;
+		static constexpr auto time_ms = 500u;
+		for (auto i = 0u; i < num_flashes; i++) {
+			c.SetButtonLed(led, static_cast<bool>(i & 0x01));
+			c.Delay(time_ms / num_flashes);
+		}
+	}
+	void ConfirmPaste(uint8_t led) {
+		ConfirmCopy(led);
+	}
 	void ClearButtonLeds() {
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetButtonLed(i, false);
