@@ -91,6 +91,7 @@ constexpr Color color(float phase) {
 namespace Random
 {
 constexpr auto none = off;
+constexpr auto set = red;
 
 constexpr Color color(uint8_t val) {
 	uint8_t r = (val & 0b0110000) >> 1;
