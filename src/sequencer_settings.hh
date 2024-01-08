@@ -36,6 +36,10 @@ struct PhaseOffset {
 	using type = float;
 	static constexpr type min = 0.f, max = 1.f, def = min;
 };
+struct RandomAmount {
+	using type = float;
+	static constexpr type min = 0.f, max = 1.f, def = min;
+};
 
 class Global {
 	template<typename T>
@@ -76,6 +80,8 @@ public:
 	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max, StartOffset::def};
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max, PlayMode::def};
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, 0};
+	Setting<RandomAmount::type> random{RandomAmount::min, RandomAmount::max, 0};
+
 	bool Validate() const {
 		auto ret = true;
 		ret &= phaseoffset.Validate();
@@ -83,6 +89,7 @@ public:
 		ret &= startoffset.Validate();
 		ret &= playmode.Validate();
 		ret &= transpose.Validate();
+		ret &= random.Validate();
 		return ret;
 	}
 };
@@ -161,9 +168,9 @@ public:
 	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max};
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max};
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max};
+	Setting<RandomAmount::type> random{RandomAmount::min, RandomAmount::max};
 	Catalyst2::Channel::Range range;
 	Clock::Divider::type clockdiv;
-	Random::Amount random;
 	Catalyst2::Channel::Mode mode;
 
 	bool Validate() const {
@@ -173,6 +180,7 @@ public:
 		ret &= startoffset.Validate();
 		ret &= playmode.Validate();
 		ret &= transpose.Validate();
+		ret &= random.Validate();
 		ret &= range.Validate();
 		ret &= clockdiv.Validate();
 		ret &= random.Validate();
@@ -218,6 +226,9 @@ public:
 	Transposer::type GetTransposeOrGlobal(std::optional<uint8_t> chan) {
 		return chan.has_value() ? GetTranspose(chan.value()).value_or(GetTranspose()) : GetTranspose();
 	}
+	RandomAmount::type GetRandomOrGlobal(std::optional<uint8_t> chan) {
+		return chan.has_value() ? GetRandom(chan.value()).value_or(GetRandom()) : GetRandom();
+	}
 	std::optional<PhaseOffset::type> GetPhaseOffset(uint8_t chan) {
 		return channel[chan].phaseoffset.Read();
 	}
@@ -252,14 +263,17 @@ public:
 	Transposer::type GetTranspose() {
 		return global.transpose.Read();
 	}
+	std::optional<RandomAmount::type> GetRandom(uint8_t chan) {
+		return channel[chan].random.Read();
+	}
+	RandomAmount::type GetRandom() {
+		return global.random.Read();
+	}
 	Catalyst2::Channel::Range GetRange(uint8_t chan) {
 		return channel[chan].range;
 	}
 	Clock::Divider::type GetClockDiv(uint8_t chan) {
 		return channel[chan].clockdiv;
-	}
-	Random::Amount GetRandomAmount(uint8_t chan) {
-		return channel[chan].random;
 	}
 	Catalyst2::Channel::Mode GetChannelMode(uint8_t chan) {
 		return channel[chan].mode;
@@ -317,14 +331,20 @@ public:
 			c.transpose.UpdatePivot(global.transpose.Read());
 		}
 	}
+	void IncRandom(uint8_t chan, int32_t inc) {
+		channel[chan].random.Inc(inc / static_cast<float>(32), global.random.Read());
+	}
+	void IncRandom(int32_t inc) {
+		global.random.Inc(inc / static_cast<float>(32));
+		for (auto &c : channel) {
+			c.random.UpdatePivot(global.random.Read());
+		}
+	}
 	void IncRange(uint8_t chan, int32_t inc) {
 		channel[chan].range.Inc(inc);
 	}
 	void IncClockDiv(uint8_t chan, int32_t inc) {
 		channel[chan].clockdiv.Inc(inc);
-	}
-	void IncRandomAmount(uint8_t chan, int32_t inc) {
-		channel[chan].random.Inc(inc);
 	}
 	void IncChannelMode(uint8_t chan, int32_t inc) {
 		channel[chan].mode.Inc(inc);
