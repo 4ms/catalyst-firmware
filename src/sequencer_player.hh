@@ -32,6 +32,7 @@ class PlayerInterface {
 		uint8_t playhead = 0;
 		uint8_t prev_playhead = 0;
 		float phase = 0.f;
+		uint8_t actual_length;
 	};
 	std::array<State, Model::NumChans> channel;
 	bool pause = false;
@@ -60,6 +61,7 @@ public:
 	void Update(float phase) {
 		this->phase = phase;
 		for (auto [chan, s] : countzip(channel)) {
+			s.actual_length = LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan));
 			s.phase = CalculateSequencePhase(s, chan);
 			const auto last = s.playhead;
 			s.playhead = ToStep(chan, s.step);
@@ -135,12 +137,10 @@ public:
 
 private:
 	float CalculateSequencePhase(const State &c, uint8_t chan) const {
-		const auto length =
-			static_cast<float>(LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan)));
-		auto p = c.counter / length;
+		auto p = c.counter / static_cast<float>(c.actual_length);
 		p += this->phase;
 		p += d.GetPhaseOffsetOrGlobal(chan);
-		p += c.clockdivider.GetPhase(d.GetClockDiv(chan)) * (1 / length);
+		p += c.clockdivider.GetPhase(d.GetClockDiv(chan)) * (1.f / c.actual_length);
 		return p - static_cast<int32_t>(p);
 	}
 
@@ -153,23 +153,20 @@ private:
 		}
 
 		channel.step = channel.counter;
-		const auto length = LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan));
 
 		channel.counter += 1;
-		if (channel.counter >= length) {
+		if (channel.counter >= channel.actual_length) {
 			channel.counter = 0;
 		}
 	}
 	void Reset(uint8_t chan) {
 		auto &c = channel[chan];
 
-		const auto length = LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan));
-
 		c.counter = 0;
 		c.clockdivider.Reset();
 		c.step = c.counter;
 		c.counter += 1;
-		c.counter = c.counter >= length ? 0 : c.counter;
+		c.counter = c.counter >= c.actual_length ? 0 : c.counter;
 		c.phase = 0.f;
 	}
 
