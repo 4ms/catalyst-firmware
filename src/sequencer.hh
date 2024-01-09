@@ -180,7 +180,7 @@ public:
 			const auto step = (page * Model::SeqStepsPerPage) + i;
 			const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomOrGlobal(cur_channel));
 			if (data.settings.GetChannelMode(cur_channel).IsGate()) {
-				o = data.channel[cur_channel][step].Read(range, rand).AsGate() ? Channel::gatearmed : Channel::gateoff;
+				o = data.channel[cur_channel][step].Read(range, rand).AsGate() * Channel::range;
 			} else {
 				o = data.channel[cur_channel][step].Read(range, rand).AsCV();
 			}
