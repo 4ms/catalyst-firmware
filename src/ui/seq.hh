@@ -130,7 +130,12 @@ public:
 				}
 			}
 		} else {
-			EncoderDisplayOutput(outs);
+			for (auto i = 0; i < 8; i++) {
+				const auto phase = p.player.GetSequencePhase(i);
+				const auto col = Palette::off.blend(Palette::red, phase);
+				c.SetEncoderLed(i, col);
+			}
+			// EncoderDisplayOutput(outs);
 		}
 	}
 
