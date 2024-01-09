@@ -202,7 +202,11 @@ public:
 			auto col = startoffset.has_value() ? Setting::active : Setting::null;
 			c.SetEncoderLed(EncoderAlts::StartOffset, col);
 
-			col = tpose.has_value() ? Palette::off.blend(Setting::transpose, tpose.value() / 12.f) : Setting::null;
+			col =
+				tpose.has_value() ?
+					Palette::off.blend(tpose.value() > 0 ? Setting::Transpose::positive : Setting::Transpose::negative,
+									   std::abs(tpose.value()) / static_cast<float>(Transposer::max)) :
+					Setting::null;
 			c.SetEncoderLed(EncoderAlts::Transpose, col);
 
 			if (playmode.has_value()) {
