@@ -38,6 +38,7 @@ class Bpm : public Internal {
 	uint32_t prevtaptime;
 	bool external = false;
 	bool step = false;
+	bool peek;
 
 public:
 	class type {
@@ -76,6 +77,7 @@ public:
 			if (IsInternal() || cnt >= period * 2) {
 				cnt = 0;
 				step = true;
+				peek = !peek;
 				SetExternal(false);
 			}
 		}
@@ -112,6 +114,9 @@ public:
 	}
 	void Reset() {
 		cnt = 0;
+	}
+	bool Peek() const {
+		return peek;
 	}
 
 private:
