@@ -123,12 +123,12 @@ constexpr Color CvBlend(uint16_t level) {
 	return off.blend(c, phase);
 }
 
-constexpr Color GateBlend(bool level) {
-	return level == true ? Gate::color : off;
+constexpr Color GateBlend(Model::Output::type level) {
+	return level == 0 ? off : Color{0, 0, 1}.blend(green, level / 65536.f);
 }
 
 constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {
-	return isgate ? GateBlend(val >= Channel::gatearmed) : CvBlend(val);
+	return isgate ? GateBlend(val) : CvBlend(val);
 }
 
 } // namespace Catalyst2::Palette
