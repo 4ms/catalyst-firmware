@@ -79,7 +79,7 @@ public:
 	Setting<Length::type> length{Length::min, Length::max, Length::def};
 	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max, StartOffset::def};
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max, PlayMode::def};
-	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, 0};
+	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, Transposer::def};
 	Setting<RandomAmount::type> random{RandomAmount::min, RandomAmount::max, 0};
 
 	bool Validate() const {
