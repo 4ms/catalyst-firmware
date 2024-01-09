@@ -57,7 +57,6 @@ public:
 			d[i] = static_cast<uint32_t>(std::rand());
 		}
 	}
-
 	void Update(float phase) {
 		this->phase = phase;
 		for (auto [chan, s] : countzip(channel)) {
@@ -72,16 +71,13 @@ public:
 			}
 		}
 	}
-
 	void Step() {
-		if (pause) {
-			return;
-		}
-		for (auto i = 0u; i < channel.size(); i++) {
-			Step(i);
+		if (!pause) {
+			for (auto i = 0u; i < channel.size(); i++) {
+				Step(i);
+			}
 		}
 	}
-
 	void Reset() {
 		for (auto i = 0u; i < channel.size(); i++) {
 			Reset(i);
@@ -90,15 +86,12 @@ public:
 	uint8_t GetFirstStep(std::optional<uint8_t> chan) {
 		return ToStep(chan, 0);
 	}
-
 	uint8_t GetPlayheadStep(uint8_t chan) {
 		return channel[chan].playhead;
 	}
-
 	uint8_t GetPlayheadStepOnPage(uint8_t chan) {
 		return GetPlayheadStep(chan) % Model::SeqPages;
 	}
-
 	uint8_t GetPlayheadPage(uint8_t chan) {
 		return GetPlayheadStep(chan) / Model::SeqPages;
 	}
@@ -143,7 +136,6 @@ private:
 		p += c.clockdivider.GetPhase(d.GetClockDiv(chan)) * (1.f / c.actual_length);
 		return p - static_cast<int32_t>(p);
 	}
-
 	void Step(uint8_t chan) {
 		auto &channel = this->channel[chan];
 
@@ -165,20 +157,16 @@ private:
 		c.counter = 0;
 		c.clockdivider.Reset();
 		c.step = c.counter;
-		c.counter += 1;
-		c.counter = c.counter >= c.actual_length ? 0 : c.counter;
+		c.counter = 0;
 		c.phase = 0.f;
 	}
-
 	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step) {
 		const auto l = d.GetLengthOrGlobal(chan);
 		const auto pm = d.GetPlayModeOrGlobal(chan);
 		const auto actuallength = LengthAndPlaymodeToActualLength(l, pm);
-		const auto mpo = static_cast<uint32_t>(phase * actuallength);
-		auto po = static_cast<uint32_t>(d.GetPhaseOffsetOrGlobal(chan) * actuallength);
-		po = po >= actuallength ? actuallength - 1 : po;
+		const auto mpo = static_cast<uint32_t>(channel[chan.value_or(0)].phase * actuallength);
 
-		auto s = step + po + mpo;
+		auto s = step + mpo;
 
 		switch (pm) {
 			using enum Settings::PlayMode::Mode;
@@ -203,10 +191,6 @@ private:
 				break;
 			}
 			case Forward:
-				break;
-
-			default:
-				// TODO: assert?
 				break;
 		}
 
