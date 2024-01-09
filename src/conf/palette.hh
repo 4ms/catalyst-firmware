@@ -46,7 +46,13 @@ constexpr auto null = dim_grey;
 constexpr auto active = blue;
 constexpr auto playmode_fwd = blue;
 constexpr auto playmode_bck = red;
-constexpr auto transpose = green;
+
+namespace Transpose
+{
+constexpr auto positive = blue;
+constexpr auto negative = red;
+} // namespace Transpose
+
 constexpr auto clockdiv = blue;
 constexpr auto bpm = yellow;
 } // namespace Setting
