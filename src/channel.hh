@@ -85,6 +85,8 @@ class Value {
 	static constexpr auto min = 0, max = static_cast<int>(inc_step * 12 * Model::output_octave_range);
 	static constexpr auto zero =
 		MathTools::map_value(0.f, Model::min_output_voltage, Model::max_output_voltage, min, max);
+	static constexpr auto mid_point = max / 2;
+	static_assert(min == 0, "mid_point will be wrong if min != 0");
 	int16_t val;
 
 public:
@@ -98,8 +100,12 @@ public:
 		Model::Output::type AsCV() const {
 			return val / static_cast<float>(max) * Channel::max;
 		}
-		bool AsGate() const {
-			return val & 0x01;
+		float AsGate() const {
+			if (val < mid_point) {
+				return 0.f;
+			} else {
+				return (val - mid_point) / static_cast<float>(mid_point);
+			}
 		}
 	};
 	constexpr Value(float volts = 0.f) {
@@ -107,19 +113,14 @@ public:
 		val = MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
 	}
 	void Inc(int32_t inc, bool fine, bool is_gate, Range range, Random::Pool::type offset) {
-		if (is_gate) {
-			if (inc > 0 && !(val & 0x01)) {
-				val += 1;
-			} else if (inc < 0 && (val & 0x01)) {
-				val -= 1;
-			}
-		} else {
-			inc *= fine ? inc_step_fine : inc_step;
+		inc *= fine ? inc_step_fine : inc_step;
 
-			const auto o = CalculateRandom(range, offset);
-			const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
-			const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
-			val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
+		const auto o = CalculateRandom(range, offset);
+		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
+		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
+		val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
+		if (is_gate && val < mid_point - o) {
+			val = mid_point - o;
 		}
 	}
 	Proxy Read(Range range, Random::Pool::type offset) const {
