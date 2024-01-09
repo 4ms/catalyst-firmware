@@ -42,8 +42,6 @@ namespace Catalyst2
 
 class MacroSeq {
 	Params &params;
-	std::array<Trigger, Model::NumChans> trigger;
-	std::array<Retrigger, Model::NumChans> retrigger;
 
 public:
 	MacroSeq(Params &params)
@@ -73,11 +71,7 @@ private:
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					const auto gate_armed = p.bank.GetChannel(p.override_output.value(), chan).AsGate();
 					if (do_trigs && gate_armed) {
-						trigger[chan].Trig(time_now);
 					}
-					out = trigger[chan].Read(time_now) ? Channel::gatehigh :
-						  gate_armed				   ? Channel::gatearmed :
-														 Channel::gateoff;
 				} else {
 					out = p.bank.GetChannel(p.override_output.value(), chan).AsCV();
 					out = p.bank.GetRange(chan).Clamp(out);
@@ -108,10 +102,8 @@ private:
 					}
 
 					if (do_trigs && is_primed) {
-						trigger[chan].Trig(time_now);
 					}
 
-					out = trigger[chan].Read(time_now) ? Channel::gatehigh : level;
 				} else {
 					const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
 					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan).AsCV());
@@ -132,15 +124,13 @@ private:
 		if (p.shared.internalclock.Output()) {
 			p.player.Step();
 		}
-		if (p.shared.internalclock.MultOutput()) {
-			for (auto &rt : retrigger) {
-				rt.Update();
-			}
-		}
+
 		const auto morph_phase = p.player.IsPaused() ? 0.f : p.shared.internalclock.GetPhase();
+
 		for (auto [chan, o] : countzip(buf)) {
 			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan, morph_phase);
 		}
+
 		return buf;
 	}
 
@@ -149,12 +139,9 @@ private:
 		const auto armed = stepval.AsGate();
 		const auto time_now = p.shared.internalclock.TimeNow();
 		if (armed && p.player.IsCurrentStepNew(chan)) {
-			retrigger[chan].Trig(p.GetPlayheadModifier(chan).AsRetrig(), p.data.settings.GetClockDiv(chan).Read());
 		}
-		if (retrigger[chan].Read()) {
-			trigger[chan].Trig(time_now);
-		}
-		return trigger[chan].Read(time_now) ? Channel::gatehigh : armed ? Channel::gatearmed : Channel::gateoff;
+
+		return 0;
 	}
 
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan, float morph_phase) {
