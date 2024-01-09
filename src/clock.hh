@@ -34,13 +34,10 @@ protected:
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm : public Internal {
-	static constexpr auto multfactor = Model::clock_mult_factor;
 	uint32_t cnt = 0;
 	uint32_t prevtaptime;
-	bool peek = false;
 	bool external = false;
 	bool step = false;
-	bool multout = false;
 
 public:
 	class type {
@@ -73,7 +70,6 @@ public:
 	void Update() {
 		Internal::Update();
 		const auto period = bpm.Read();
-		const auto cntmult = (cnt % (period / multfactor)) + 1;
 		cnt++;
 
 		if (cnt >= period) {
@@ -82,11 +78,6 @@ public:
 				step = true;
 				SetExternal(false);
 			}
-			peek = !peek;
-			multout = true;
-		}
-		if (cntmult >= period / multfactor) {
-			multout = true;
 		}
 	}
 
@@ -94,11 +85,6 @@ public:
 		bool ret = step;
 		step = false;
 		return ret;
-	}
-	bool MultOutput() {
-		const auto out = multout;
-		multout = false;
-		return out;
 	}
 	void Input() {
 		if (IsInternal()) {
@@ -114,22 +100,18 @@ public:
 		bpm.Set(tn - prevtaptime);
 		prevtaptime = tn;
 	}
-	bool IsInternal() {
+	bool IsInternal() const {
 		return external == false;
 	}
 	void SetExternal(bool on) {
 		external = on;
 	}
-	bool Peek() {
-		return peek;
-	}
-	float GetPhase() {
+	float GetPhase() const {
 		auto out = static_cast<float>(cnt) / bpm.Read();
 		return std::clamp(out, 0.f, 1.f);
 	}
 	void Reset() {
 		cnt = 0;
-		peek = false;
 	}
 
 private:
@@ -165,6 +147,9 @@ public:
 	}
 	float GetPhase(type div) const {
 		return static_cast<float>(counter) / div.Read();
+	}
+	float GetPhase(type div, float phase) const {
+		return (phase / div.Read()) + GetPhase(div);
 	}
 	bool Step() {
 		bool ret = false;
