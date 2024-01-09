@@ -163,7 +163,7 @@ public:
 			counter = 0;
 		}
 	}
-	float GetPhase(type div) {
+	float GetPhase(type div) const {
 		return static_cast<float>(counter) / div.Read();
 	}
 	bool Step() {
