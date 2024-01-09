@@ -9,7 +9,7 @@ TEST_CASE("clock phase") {
 	Clock::Bpm clock{bpm};
 
 	Clock::Divider::type cdiv;
-	cdiv.Inc(16);
+	cdiv.Inc(3);
 
 	Clock::Divider divider;
 
@@ -21,7 +21,6 @@ TEST_CASE("clock phase") {
 		if (clock.Output()) {
 
 			fprintf(stderr, "Clock Divider Phase: %f\n", divider.GetPhase(cdiv));
-			fprintf(stderr, "Actual Phase: %f\n", divider.GetPhase(cdiv) * step);
 
 			divider.Update(cdiv);
 
