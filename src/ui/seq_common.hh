@@ -40,8 +40,10 @@ public:
 			p.shared.modeswitcher.Notify();
 		}
 
-		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.player.Update(phase);
+		const auto cp = c.ReadCv() / 4096.f;
+		const auto sp = c.ReadSlider() / 4096.f;
+
+		p.player.Update(sp + cp);
 	}
 
 protected:
