@@ -9,6 +9,17 @@
 namespace Catalyst2::Sequencer
 {
 
+inline uint32_t LengthAndPlaymodeToActualLength(int8_t length, Settings::PlayMode::Mode pm) {
+	if (pm == Settings::PlayMode::Mode::PingPong) {
+		auto out = length + length - 2;
+		if (out < 2) {
+			out = 2;
+		}
+		return out;
+	}
+	return length;
+}
+
 class PlayerInterface {
 	struct State {
 		std::array<uint8_t, Model::MaxSeqSteps> randomstep;
@@ -20,6 +31,7 @@ class PlayerInterface {
 		bool did_step = false;
 		uint8_t playhead = 0;
 		uint8_t prev_playhead = 0;
+		float phase = 0.f;
 	};
 	std::array<State, Model::NumChans> channel;
 	bool pause = false;
@@ -48,6 +60,7 @@ public:
 	void Update(float phase) {
 		this->phase = phase;
 		for (auto [chan, s] : countzip(channel)) {
+			s.phase = CalculateSequencePhase(s, chan);
 			const auto last = s.playhead;
 			s.playhead = ToStep(chan, s.step);
 			s.prev_playhead = ToStep(chan, s.prev_step);
@@ -116,8 +129,21 @@ public:
 		const auto cdivphase = channel[chan].clockdivider.GetPhase(cdiv);
 		return phase + cdivphase;
 	}
+	float GetSequencePhase(uint8_t chan) {
+		return channel[chan].phase;
+	}
 
 private:
+	float CalculateSequencePhase(const State &c, uint8_t chan) const {
+		const auto length =
+			static_cast<float>(LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan)));
+		auto p = c.counter / length;
+		p += this->phase;
+		p += d.GetPhaseOffsetOrGlobal(chan);
+		p += c.clockdivider.GetPhase(d.GetClockDiv(chan)) * (1 / length);
+		return p - static_cast<int32_t>(p);
+	}
+
 	void Step(uint8_t chan) {
 		auto &channel = this->channel[chan];
 
@@ -125,37 +151,32 @@ private:
 		if (!channel.clockdivider.Step()) {
 			return;
 		}
-		channel.did_step = true;
 
-		channel.prev_step = channel.step;
 		channel.step = channel.counter;
-		const auto playmode = d.GetPlayModeOrGlobal(chan);
-		const auto length = d.GetLengthOrGlobal(chan);
+		const auto length = LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan));
 
 		channel.counter += 1;
-		if (channel.counter >= ActualLength(length, playmode)) {
+		if (channel.counter >= length) {
 			channel.counter = 0;
 		}
 	}
 	void Reset(uint8_t chan) {
 		auto &c = channel[chan];
 
-		const auto playmode = d.GetPlayModeOrGlobal(chan);
-		auto length = d.GetLengthOrGlobal(chan);
-		length += playmode == Settings::PlayMode::Mode::PingPong ? length - 2 : 0;
+		const auto length = LengthAndPlaymodeToActualLength(d.GetLengthOrGlobal(chan), d.GetPlayModeOrGlobal(chan));
 
 		c.counter = 0;
 		c.clockdivider.Reset();
 		c.step = c.counter;
 		c.counter += 1;
 		c.counter = c.counter >= length ? 0 : c.counter;
-		c.prev_step = c.step;
+		c.phase = 0.f;
 	}
 
 	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step) {
 		const auto l = d.GetLengthOrGlobal(chan);
 		const auto pm = d.GetPlayModeOrGlobal(chan);
-		const auto actuallength = ActualLength(l, pm);
+		const auto actuallength = LengthAndPlaymodeToActualLength(l, pm);
 		const auto mpo = static_cast<uint32_t>(phase * actuallength);
 		auto po = static_cast<uint32_t>(d.GetPhaseOffsetOrGlobal(chan) * actuallength);
 		po = po >= actuallength ? actuallength - 1 : po;
@@ -194,17 +215,6 @@ private:
 
 		const auto so = d.GetStartOffsetOrGlobal(chan);
 		return ((s % l) + so) % Model::MaxSeqSteps;
-	}
-
-	uint32_t ActualLength(int8_t length, Settings::PlayMode::Mode pm) {
-		if (pm == Settings::PlayMode::Mode::PingPong) {
-			auto out = length + length - 2;
-			if (out < 2) {
-				out = 2;
-			}
-			return out;
-		}
-		return length;
 	}
 };
 } // namespace Catalyst2::Sequencer
