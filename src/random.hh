@@ -6,7 +6,15 @@
 #include <cstdint>
 #include <span>
 
-namespace Catalyst2::Random::Pool
+namespace Catalyst2::Random
+{
+namespace Amount
+{
+using type = float;
+inline constexpr auto min = 0.f, max = 1.f, def = 0.f, inc = (max / (Model::output_octave_range * 12)) * 2;
+} // namespace Amount
+
+namespace Pool
 {
 
 using type = float;
@@ -62,4 +70,5 @@ public:
 		return t * amnt;
 	}
 };
-} // namespace Catalyst2::Random::Pool
+} // namespace Pool
+} // namespace Catalyst2::Random
