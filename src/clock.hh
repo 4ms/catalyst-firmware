@@ -38,7 +38,7 @@ class Bpm : public Internal {
 	uint32_t prevtaptime;
 	bool external = false;
 	bool step = false;
-	bool peek;
+	bool peek = false;
 
 public:
 	class type {
@@ -110,7 +110,7 @@ public:
 	}
 	float GetPhase() const {
 		auto out = static_cast<float>(cnt) / bpm.Read();
-		return std::clamp(out, 0.f, 1.f);
+		return std::clamp(out, 0.f, .9999f);
 	}
 	void Reset() {
 		cnt = 0;
