@@ -4,13 +4,32 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <span>
 
 namespace Catalyst2::Random::Pool
 {
 
-using SeqData = std::array<int8_t, Model::MaxSeqSteps * Model::NumChans>;
-using MacroData = std::array<int8_t, Model::NumScenes * Model::NumChans>;
 using type = float;
+
+template<typename T>
+void RandomizeBuffer(T &d) {
+	for (auto &r : d) {
+		r = std::rand();
+		r = r == 0 ? 1 : r;
+	}
+}
+
+struct SeqData : public std::array<int8_t, Model::MaxSeqSteps * Model::NumChans> {
+	SeqData() {
+		RandomizeBuffer(*this);
+	}
+};
+
+struct MacroData : public std::array<int8_t, Model::NumScenes * Model::NumChans> {
+	MacroData() {
+		RandomizeBuffer(*this);
+	}
+};
 
 template<typename T>
 class Interface {
@@ -19,7 +38,6 @@ class Interface {
 public:
 	Interface(T &data)
 		: data{data} {
-		Randomize();
 	}
 	uint8_t GetSeed() const {
 		return data[0] + 128;
@@ -28,10 +46,7 @@ public:
 		std::fill(data.begin(), data.end(), 0);
 	}
 	void Randomize() {
-		for (auto &r : data) {
-			r = std::rand();
-			r = r == 0 ? 1 : r;
-		}
+		RandomizeBuffer(data);
 	}
 	bool IsRandomized() const {
 		return data[0] != 0;
