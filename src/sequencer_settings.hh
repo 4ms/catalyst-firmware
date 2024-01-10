@@ -328,10 +328,11 @@ public:
 		}
 	}
 	void IncRandom(uint8_t chan, int32_t inc) {
-		channel[chan].random.Inc(inc * Random::Amount::inc, global.random.Read());
+		const auto r = GetRange(chan);
+		channel[chan].random.Inc(inc * Random::Amount::CalculateInc(r), global.random.Read());
 	}
 	void IncRandom(int32_t inc) {
-		global.random.Inc(inc * Random::Amount::inc);
+		global.random.Inc(inc * Random::Amount::default_inc);
 		for (auto &c : channel) {
 			c.random.UpdatePivot(global.random.Read());
 		}
