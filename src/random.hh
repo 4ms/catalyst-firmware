@@ -1,16 +1,48 @@
 #pragma once
 
 #include "conf/model.hh"
+#include "range.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <span>
 
-namespace Catalyst2::Random::Pool
+namespace Catalyst2::Random
+{
+namespace Amount
+{
+using type = float;
+inline constexpr auto min = 0.f, max = 1.f, def = 0.f, default_inc = (max / (Model::output_octave_range * 12)) * 2;
+inline float CalculateInc(Channel::Range range) {
+	const auto r = range.GetOctaveRange();
+	return (max / (r * 12));
+}
+} // namespace Amount
+
+namespace Pool
 {
 
-using SeqData = std::array<int8_t, Model::MaxSeqSteps * Model::NumChans>;
-using MacroData = std::array<int8_t, Model::NumScenes * Model::NumChans>;
 using type = float;
+
+template<typename T>
+void RandomizeBuffer(T &d) {
+	for (auto &r : d) {
+		r = std::rand();
+		r = r == 0 ? 1 : r;
+	}
+}
+
+struct SeqData : public std::array<int8_t, Model::MaxSeqSteps * Model::NumChans> {
+	SeqData() {
+		RandomizeBuffer(*this);
+	}
+};
+
+struct MacroData : public std::array<int8_t, Model::NumScenes * Model::NumChans> {
+	MacroData() {
+		RandomizeBuffer(*this);
+	}
+};
 
 template<typename T>
 class Interface {
@@ -19,7 +51,6 @@ class Interface {
 public:
 	Interface(T &data)
 		: data{data} {
-		Randomize();
 	}
 	uint8_t GetSeed() const {
 		return data[0] + 128;
@@ -28,10 +59,7 @@ public:
 		std::fill(data.begin(), data.end(), 0);
 	}
 	void Randomize() {
-		for (auto &r : data) {
-			r = std::rand();
-			r = r == 0 ? 1 : r;
-		}
+		RandomizeBuffer(data);
 	}
 	bool IsRandomized() const {
 		return data[0] != 0;
@@ -47,4 +75,5 @@ public:
 		return t * amnt;
 	}
 };
-} // namespace Catalyst2::Random::Pool
+} // namespace Pool
+} // namespace Catalyst2::Random
