@@ -13,7 +13,7 @@ namespace Catalyst2::Macro::Bank
 struct Data {
 	struct Scene {
 		std::array<Channel::Value, Model::NumChans> channel{};
-		float random_amount;
+		Random::Amount::type random_amount;
 	};
 	std::array<Scene, Model::NumScenes> scene{};
 	std::array<Channel::Mode, Model::NumChans> channelmode{};
@@ -30,7 +30,7 @@ struct Data {
 			for (auto &cv : s.channel) {
 				ret &= cv.Validate();
 			}
-			ret &= s.random_amount <= 1.f && s.random_amount >= 0.f;
+			ret &= s.random_amount <= Random::Amount::max && s.random_amount >= Random::Amount::min;
 		}
 		for (auto &cm : channelmode) {
 			ret &= cm.Validate();
@@ -84,8 +84,8 @@ public:
 	}
 	void IncRandomAmount(uint8_t scene, int32_t inc) {
 		auto t = b->scene[scene].random_amount;
-		t += inc / static_cast<float>(32);
-		b->scene[scene].random_amount = std::clamp(t, 0.f, 1.f);
+		t += inc * Random::Amount::inc;
+		b->scene[scene].random_amount = std::clamp(t, Random::Amount::min, Random::Amount::max);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
 		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);

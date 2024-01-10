@@ -36,10 +36,6 @@ struct PhaseOffset {
 	using type = float;
 	static constexpr type min = 0.f, max = 1.f, def = min;
 };
-struct RandomAmount {
-	using type = float;
-	static constexpr type min = 0.f, max = 1.f, def = min;
-};
 
 class Global {
 	template<typename T>
@@ -80,7 +76,7 @@ public:
 	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max, StartOffset::def};
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max, PlayMode::def};
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, Transposer::def};
-	Setting<RandomAmount::type> random{RandomAmount::min, RandomAmount::max, 0};
+	Setting<Random::Amount::type> random{Random::Amount::min, Random::Amount::max, Random::Amount::def};
 
 	bool Validate() const {
 		auto ret = true;
@@ -168,7 +164,7 @@ public:
 	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max};
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max};
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max};
-	Setting<RandomAmount::type> random{RandomAmount::min, RandomAmount::max};
+	Setting<Random::Amount::type> random{Random::Amount::min, Random::Amount::max};
 	Catalyst2::Channel::Range range;
 	Clock::Divider::type clockdiv;
 	Catalyst2::Channel::Mode mode;
@@ -226,7 +222,7 @@ public:
 	Transposer::type GetTransposeOrGlobal(std::optional<uint8_t> chan) {
 		return chan.has_value() ? GetTranspose(chan.value()).value_or(GetTranspose()) : GetTranspose();
 	}
-	RandomAmount::type GetRandomOrGlobal(std::optional<uint8_t> chan) {
+	Random::Amount::type GetRandomOrGlobal(std::optional<uint8_t> chan) {
 		return chan.has_value() ? GetRandom(chan.value()).value_or(GetRandom()) : GetRandom();
 	}
 	std::optional<PhaseOffset::type> GetPhaseOffset(uint8_t chan) {
@@ -263,10 +259,10 @@ public:
 	Transposer::type GetTranspose() {
 		return global.transpose.Read();
 	}
-	std::optional<RandomAmount::type> GetRandom(uint8_t chan) {
+	std::optional<Random::Amount::type> GetRandom(uint8_t chan) {
 		return channel[chan].random.Read();
 	}
-	RandomAmount::type GetRandom() {
+	Random::Amount::type GetRandom() {
 		return global.random.Read();
 	}
 	Catalyst2::Channel::Range GetRange(uint8_t chan) {
@@ -332,10 +328,10 @@ public:
 		}
 	}
 	void IncRandom(uint8_t chan, int32_t inc) {
-		channel[chan].random.Inc(inc / static_cast<float>(32), global.random.Read());
+		channel[chan].random.Inc(inc * Random::Amount::inc, global.random.Read());
 	}
 	void IncRandom(int32_t inc) {
-		global.random.Inc(inc / static_cast<float>(32));
+		global.random.Inc(inc * Random::Amount::inc);
 		for (auto &c : channel) {
 			c.random.UpdatePivot(global.random.Read());
 		}
