@@ -52,16 +52,14 @@ public:
 	void Inc(int32_t inc, bool fine, bool is_gate, Range range, Random::Pool::type offset) {
 		inc *= fine ? inc_step_fine : inc_step;
 
-		const auto o = CalculateRandom(range, offset);
-		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
-		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
-		val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
-		if (is_gate && val < mid_point - o) {
-			val = mid_point - o;
+			const auto o = offset * max;
+			const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
+			const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
+			val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
 		}
 	}
 	Proxy Read(Range range, Random::Pool::type offset) const {
-		const auto t = val + CalculateRandom(range, offset);
+		const auto t = val + (offset * max);
 		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
 		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
 		return Proxy{std::clamp<int32_t>(t, min_, max_)};
@@ -69,14 +67,4 @@ public:
 	bool Validate() const {
 		return val >= min && val <= max;
 	}
-
-private:
-	int32_t CalculateRandom(Range range, Random::Pool::type offset) const {
-		const auto pa = range.PosAmount();
-		auto na = range.NegAmount();
-		na = na == 0.f ? -pa : na;
-		offset *= offset < 0.f ? na : pa;
-		return offset * max;
-	}
 };
-} // namespace Catalyst2::Channel

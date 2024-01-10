@@ -12,11 +12,7 @@ namespace Catalyst2::Random
 namespace Amount
 {
 using type = float;
-inline constexpr auto min = 0.f, max = 1.f, def = 0.f, default_inc = (max / (Model::output_octave_range * 12)) * 2;
-inline float CalculateInc(Channel::Range range) {
-	const auto r = range.GetOctaveRange();
-	return (max / (r * 12));
-}
+inline constexpr auto min = 0.f, max = 1.f, def = 0.f, inc = (max / (Model::output_octave_range * 12)) * 2;
 } // namespace Amount
 
 namespace Pool

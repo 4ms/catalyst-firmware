@@ -84,7 +84,7 @@ public:
 	}
 	void IncRandomAmount(uint8_t scene, int32_t inc) {
 		auto t = b->scene[scene].random_amount;
-		t += inc * Random::Amount::default_inc;
+		t += inc * Random::Amount::inc;
 		b->scene[scene].random_amount = std::clamp(t, Random::Amount::min, Random::Amount::max);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
