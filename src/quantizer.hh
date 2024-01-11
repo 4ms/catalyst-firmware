@@ -55,8 +55,11 @@ public:
 		}
 
 		value = note + (value / Channel::note);
-		value = *(std::upper_bound(scale.begin(), scale.end(), value) - 1);
-		return (value * Channel::note) + (octave * Channel::octave);
+		auto lb = std::lower_bound(scale.begin(), scale.end(), value);
+		if (lb == scale.end()) {
+			lb -= 1;
+		}
+		return (*lb * Channel::note) + (octave * Channel::octave);
 	}
 	void Load(const Scale &scl) {
 		scale = scl;
