@@ -3,6 +3,7 @@
 #include "channel.hh"
 #include "conf/model.hh"
 #include "random.hh"
+#include "sequence_phaser.hh"
 #include "sequencer_player.hh"
 #include "sequencer_settings.hh"
 #include "shared.hh"
@@ -53,7 +54,8 @@ struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
-	Random::Pool::SeqData randompool{};
+	Random::Pool::SeqData randompool;
+	Random::Steps::Data randomsteps;
 
 	bool validate() const {
 		auto ret = true;
@@ -68,19 +70,22 @@ struct Data {
 class Interface {
 	uint8_t cur_channel = 0;
 	uint8_t cur_page = Model::SeqPages;
-	int8_t hide_playhead = Model::SeqStepsPerPage;
 	struct Clipboard {
 		ChannelData cd;
 		Settings::Channel cs;
 		std::array<Step, Model::SeqStepsPerPage> page;
 	} clipboard;
 	uint32_t time_trigged;
+	float phase;
+
+	static constexpr auto test = (+0u - 1) % 7;
 
 public:
 	Data &data;
 	Shared::Interface &shared;
-	PlayerInterface player{data.settings};
+	Phaser::Interface phaser{data.settings.phaser};
 	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
+	Random::Steps::Interface randomsteps{data.randomsteps};
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
@@ -90,7 +95,7 @@ public:
 	void Reset() {
 		shared.internalclock.Reset();
 		shared.clockdivider.Reset();
-		player.Reset();
+		phaser.Reset();
 		time_trigged = shared.internalclock.TimeNow();
 	}
 
@@ -106,9 +111,6 @@ public:
 		}
 	}
 
-	int8_t GetHiddenStep() {
-		return hide_playhead;
-	}
 	void SelectChannel(uint8_t chan) {
 		cur_channel = chan;
 	}
@@ -135,41 +137,25 @@ public:
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
 		step = StepOnPageToStep(step);
-		if (step == player.GetPlayheadStep(cur_channel)) {
-			hide_playhead = step;
-		} else {
-			hide_playhead = -1;
-		}
 		const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomOrGlobal(cur_channel));
 		data.channel[cur_channel][step].Inc(
 			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel), rand);
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
-		if (step == player.GetPlayheadStep(cur_channel)) {
-			hide_playhead = step;
-		} else {
-			hide_playhead = -1;
-		}
 		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
 	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
-		const auto step = player.GetPlayheadStep(chan);
-		if (step != hide_playhead) {
-			hide_playhead = -1;
-		}
+		const auto step = phaser.GetPlayheadStep(chan);
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
 											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
 	}
 	StepModifier GetPlayheadModifier(uint8_t chan) {
-		const auto step = player.GetPlayheadStep(chan);
-		if (step != hide_playhead) {
-			hide_playhead = -1;
-		}
+		const auto step = phaser.GetPlayheadStep(chan);
 		return data.channel[chan][step].modifier;
 	}
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
-		const auto step = player.GetPrevStep(chan);
+		const auto step = phaser.GetPrevStep(chan);
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
 											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
 	}
@@ -212,11 +198,71 @@ public:
 			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
 		}
 	}
+	void Update() {
+		const auto ico = shared.internalclock.Output();
+		const auto icp = shared.internalclock.GetPhase();
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			const auto l = data.settings.GetLengthOrGlobal(i);
+			const auto pm = data.settings.GetPlayModeOrGlobal(i);
+			const auto actual_length = ActualLength(l, pm);
+			if (ico) {
+				phaser.Step(i, actual_length);
+			}
+			const auto phase = GetSeqPhase(i, icp, actual_length);
+			const auto playhead = static_cast<uint32_t>(phase);
+			const auto playhead_step = ToStep(i, playhead, l, pm);
+			const auto prev_step = ToStep(i, (playhead - 1u) % actual_length, l, pm);
+			const auto step_phase = phase - static_cast<int32_t>(phase);
+		}
+	}
 
 private:
 	uint8_t StepOnPageToStep(uint8_t step_on_page) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
+		const auto page = IsPageSelected() ? GetSelectedPage() : phaser.GetPlayheadPage(cur_channel);
 		return step_on_page + (page * Model::SeqStepsPerPage);
+	}
+	//////////
+	uint32_t ActualLength(Settings::Length::type length, Settings::PlayMode::Mode pm) {
+		if (pm != Settings::PlayMode::Mode::PingPong) {
+			return length;
+		}
+		const auto out = length + length - 2;
+		return out < 2 ? 2 : out;
+	}
+	float GetSeqPhase(uint8_t chan, float internal_clock_phase, uint8_t actual_length) {
+		const auto phase_offset = (data.settings.GetPhaseOffsetOrGlobal(chan) + phase) * actual_length;
+		auto current_phase = phaser.GetPhase(chan, internal_clock_phase) + phase_offset;
+		return std::fmodf(current_phase, actual_length);
+	}
+	int32_t ToStep(uint8_t chan, uint32_t step, Settings::Length::type length, Settings::PlayMode::Mode pm) {
+		switch (pm) {
+			using enum Settings::PlayMode::Mode;
+			case Backward:
+				step = length + -1 + -step;
+				break;
+			case Random:
+				step = randomsteps.Read(chan, step % length);
+				break;
+			case PingPong: {
+				auto ping = true;
+				const auto cmp = length == 1 ? 1u : length - 1u;
+
+				while (step >= cmp) {
+					step -= cmp;
+					ping = !ping;
+				}
+
+				if (!ping) {
+					step = length - 1 - step;
+				}
+				break;
+			}
+			default:
+				break;
+		}
+
+		const auto so = data.settings.GetStartOffsetOrGlobal(chan);
+		return ((step % length) + so) % Model::MaxSeqSteps;
 	}
 };
 

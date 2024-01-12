@@ -41,6 +41,7 @@ class Bpm : public Internal {
 	bool peek = false;
 
 public:
+	bool pause = false;
 	class type {
 		static constexpr auto min = 1u, max = 1200u;
 		uint32_t val;
@@ -70,6 +71,9 @@ public:
 	}
 	void Update() {
 		Internal::Update();
+		if (pause) {
+			return;
+		}
 		const auto period = bpm.Read();
 		cnt++;
 
@@ -82,7 +86,6 @@ public:
 			}
 		}
 	}
-
 	bool Output() {
 		bool ret = step;
 		step = false;
@@ -157,11 +160,8 @@ public:
 		return (phase / div.Read()) + GetPhase(div);
 	}
 	bool Step() {
-		bool ret = false;
-		if (step) {
-			ret = true;
-			step = false;
-		}
+		bool ret = step;
+		step = false;
 		return ret;
 	}
 	void Reset() {

@@ -13,7 +13,8 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		wait = true;
-		p.player.Stop();
+		p.shared.internalclock.pause = true;
+		p.player.Reset();
 	}
 	void Update(Abstract *&interface) override {
 		if (wait) {
@@ -35,7 +36,8 @@ public:
 			}
 			if (c.button.play.is_high()) {
 				p.data = Sequencer::Data{};
-				p.player.Stop();
+				p.shared.internalclock.pause = true;
+				p.player.Reset();
 				return;
 			}
 		}
