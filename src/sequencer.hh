@@ -196,71 +196,11 @@ public:
 			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
 		}
 	}
-	void Update() {
-		const auto ico = shared.internalclock.Output();
-		const auto icp = shared.internalclock.GetPhase();
-		for (auto i = 0u; i < Model::NumChans; i++) {
-			const auto l = data.settings.GetLengthOrGlobal(i);
-			const auto pm = data.settings.GetPlayModeOrGlobal(i);
-			const auto actual_length = ActualLength(l, pm);
-			if (ico) {
-				phaser.Step(i, actual_length);
-			}
-			const auto phase = GetSeqPhase(i, icp, actual_length);
-			const auto playhead = static_cast<uint32_t>(phase);
-			const auto playhead_step = ToStep(i, playhead, l, pm);
-			const auto prev_step = ToStep(i, (playhead - 1u) % actual_length, l, pm);
-			const auto step_phase = phase - static_cast<int32_t>(phase);
-		}
-	}
 
 private:
 	uint8_t StepOnPageToStep(uint8_t step_on_page) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
 		return step_on_page + (page * Model::SeqStepsPerPage);
-	}
-	//////////
-	uint32_t ActualLength(Settings::Length::type length, Settings::PlayMode::Mode pm) {
-		if (pm != Settings::PlayMode::Mode::PingPong) {
-			return length;
-		}
-		const auto out = length + length - 2;
-		return out < 2 ? 2 : out;
-	}
-	float GetSeqPhase(uint8_t chan, float internal_clock_phase, uint8_t actual_length) {
-		const auto phase_offset = (data.settings.GetPhaseOffsetOrGlobal(chan) + phase) * actual_length;
-		auto current_phase = phaser.GetPhase(chan, internal_clock_phase) + phase_offset;
-		return std::fmodf(current_phase, actual_length);
-	}
-	int32_t ToStep(uint8_t chan, uint32_t step, Settings::Length::type length, Settings::PlayMode::Mode pm) {
-		switch (pm) {
-			using enum Settings::PlayMode::Mode;
-			case Backward:
-				step = length + -1 + -step;
-				break;
-			case Random:
-				step = randomsteps.Read(chan, step % length);
-				break;
-			case PingPong: {
-				auto ping = true;
-				const auto cmp = length == 1 ? 1u : length - 1u;
-
-				while (step >= cmp) {
-					step -= cmp;
-					ping = !ping;
-				}
-
-				if (!ping) {
-					step = length - 1 - step;
-				}
-				break;
-			}
-			default:
-				break;
-		}
-
-		const auto so = data.settings.GetStartOffsetOrGlobal(chan);
-		return ((step % length) + so) % Model::MaxSeqSteps;
 	}
 };
 
