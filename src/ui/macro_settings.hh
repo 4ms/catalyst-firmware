@@ -73,7 +73,7 @@ public:
 				inc = hang.has_value() ? inc : 0;
 				if (inc > 0)
 					p.slider_slew.SetCurve(SliderSlew::Curve::Linear);
-				else
+				else if (inc < 0)
 					p.slider_slew.SetCurve(SliderSlew::Curve::Expo);
 				p.shared.hang.Set(encoder);
 				break;
