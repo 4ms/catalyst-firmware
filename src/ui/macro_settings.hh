@@ -32,7 +32,7 @@ public:
 		const auto is_scene = YoungestSceneButton().has_value();
 
 		switch (encoder) {
-			case Model::EncoderAlts::Random:
+			case Model::MacroEncoderAlts::Random:
 				if (is_scene) {
 					for (auto [i, b] : countzip(c.button.scene)) {
 						if (b.is_high()) {
@@ -50,7 +50,7 @@ public:
 				}
 				p.shared.hang.Cancel();
 				break;
-			case Model::EncoderAlts::ClockDiv:
+			case Model::MacroEncoderAlts::ClockDiv:
 				if (is_scene) {
 					break;
 				}
@@ -71,20 +71,20 @@ public:
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
 			auto col = Palette::off.blend(Palette::Random::set, random);
-			c.SetEncoderLed(Model::EncoderAlts::Random, col);
+			c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
 		} else {
 			const auto hang = p.shared.hang.Check();
 			if (hang.has_value()) {
-				if (hang.value() == Model::EncoderAlts::ClockDiv) {
+				if (hang.value() == Model::MacroEncoderAlts::ClockDiv) {
 					SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
 				}
 			} else {
-				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::SeqHead::color);
+				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::SeqHead::color);
 				if (c.button.fine.is_high()) {
 					const auto col = p.bank.randompool.IsRandomized() ?
 										 Palette::Random::color(p.bank.randompool.GetSeed()) :
 										 Palette::Setting::null;
-					c.SetEncoderLed(Model::EncoderAlts::Random, col);
+					c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
 				}
 			}
 		}
