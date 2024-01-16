@@ -43,8 +43,8 @@ public:
 
 		const auto cp = c.ReadCv() / 4096.f;
 		const auto sp = c.ReadSlider() / 4096.f;
-
-		p.player.Update(sp + cp);
+		p.player.Update(sp + cp, p.shared.internalclock.GetPhase(), p.shared.internalclock.Output());
+	}
 	void Stop() {
 		p.shared.clockdivider.Reset();
 		p.shared.internalclock.Reset();
