@@ -71,10 +71,10 @@ public:
 				case Model::EncoderAlts::PlayMode:
 					if (ysb.has_value()) {
 						p.data.settings.IncPlayMode(i, inc);
-						p.player.RandomizeSteps(i);
+						p.player.randomsteps.Randomize(i);
 					} else {
 						p.data.settings.IncPlayMode(inc);
-						p.player.RandomizeSteps();
+						p.player.randomsteps.Randomize();
 					}
 					p.shared.hang.Cancel();
 					break;
@@ -187,7 +187,7 @@ public:
 					break;
 				}
 				case EncoderAlts::PhaseOffset: {
-					const auto o = p.player.GetFirstStep(ysb);
+					const auto o = p.player.GetFirstStep(ysb.value_or(p.GetSelectedChannel()));
 					const auto col = phaseoffset.has_value() ? Setting::active : Setting::null;
 					c.SetEncoderLed(o % SeqStepsPerPage, col);
 					c.SetButtonLed((o / SeqStepsPerPage) % SeqPages, true);
