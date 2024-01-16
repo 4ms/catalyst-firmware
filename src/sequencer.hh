@@ -63,6 +63,8 @@ struct Data {
 			ret &= c.Validate();
 		}
 		ret &= settings.Validate();
+		ret &= player.Validate();
+		ret &= randompool.Validate();
 		return ret;
 	}
 };
