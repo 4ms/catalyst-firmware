@@ -66,6 +66,17 @@ public:
 				p.slider_slew.Inc(inc);
 				p.shared.hang.Set(encoder);
 				break;
+			case Model::MacroEncoderAlts::SliderSlewCurve:
+				if (is_scene) {
+					break;
+				}
+				inc = hang.has_value() ? inc : 0;
+				if (inc > 0)
+					p.slider_slew.SetCurve(SliderSlew::Curve::Linear);
+				else
+					p.slider_slew.SetCurve(SliderSlew::Curve::Expo);
+				p.shared.hang.Set(encoder);
+				break;
 			default:
 				break;
 		}
@@ -86,14 +97,21 @@ public:
 			const auto hang = p.shared.hang.Check();
 			if (hang.has_value()) {
 				switch (hang.value()) {
-					case Model::MacroEncoderAlts::ClockDiv:
+					case Model::MacroEncoderAlts::ClockDiv: {
 						SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
-						break;
+					} break;
 
-					case Model::MacroEncoderAlts::SliderSlew:
+					case Model::MacroEncoderAlts::SliderSlew: {
 						float num_lights = p.slider_slew.Value() * 8.f;
 						SetEncoderLedsFloat(num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
-						break;
+					} break;
+
+					case Model::MacroEncoderAlts::SliderSlewCurve: {
+						auto col = p.slider_slew.GetCurve() == SliderSlew::Curve::Linear ?
+									   Palette::Setting::curve_linear :
+									   Palette::Setting::curve_expo;
+						c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlewCurve, col);
+					} break;
 				}
 			} else {
 				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::SeqHead::color);

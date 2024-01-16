@@ -60,6 +60,7 @@ struct SeqEncoderAlts {
 	static constexpr auto Random = 7u;
 };
 struct MacroEncoderAlts {
+	static constexpr auto SliderSlewCurve = 4u;
 	static constexpr auto ClockDiv = 5u;
 	static constexpr auto SliderSlew = 6u;
 	static constexpr auto Random = 7u;

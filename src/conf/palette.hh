@@ -47,6 +47,8 @@ constexpr auto active = blue;
 constexpr auto playmode_fwd = blue;
 constexpr auto playmode_bck = red;
 constexpr auto slider_slew = pink;
+constexpr auto curve_linear = blue;
+constexpr auto curve_expo = yellow;
 
 namespace Transpose
 {

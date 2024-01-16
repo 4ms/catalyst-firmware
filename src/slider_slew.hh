@@ -6,6 +6,8 @@
 namespace Catalyst2::Macro::SliderSlew
 {
 
+enum class Curve { Linear, Expo } curve{Curve::Linear};
+
 struct Data {
 	float slew{0.f};
 };
@@ -13,7 +15,6 @@ struct Data {
 class Interface {
 	Data &data;
 
-	enum class Curve { Linear, Expo } mode{Curve::Linear};
 	float coef;
 	float current{0.f};
 
@@ -50,7 +51,7 @@ public:
 	}
 
 	float Update(float new_val) {
-		return mode == Curve::Linear ? UpdateLinear(new_val) : UpdateExpo(new_val);
+		return curve == Curve::Linear ? UpdateLinear(new_val) : UpdateExpo(new_val);
 	}
 
 	float UpdateExpo(float new_val) {
@@ -59,21 +60,24 @@ public:
 	}
 
 	float UpdateLinear(float new_val) {
+		// Rough adjustment to make linear vs expo curves perceived as more similar in rate of change
+		auto lin_coef = coef / 3.f;
+
 		if (new_val > current) {
-			current = std::clamp(current + coef, current, new_val);
+			current = std::clamp(current + lin_coef, current, new_val);
 		} else if (new_val < current) {
-			current = std::clamp(current - coef, new_val, current);
+			current = std::clamp(current - lin_coef, new_val, current);
 		}
 
 		return current;
 	}
 
-	void LinearMode() {
-		mode = Curve::Linear;
+	void SetCurve(Curve new_curve) {
+		curve = new_curve;
 	}
 
-	void ExpoMode() {
-		mode = Curve::Expo;
+	Curve GetCurve() {
+		return curve;
 	}
 };
 } // namespace Catalyst2::Macro::SliderSlew
