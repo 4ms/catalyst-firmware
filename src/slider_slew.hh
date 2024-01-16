@@ -6,7 +6,7 @@
 namespace Catalyst2::Macro::SliderSlew
 {
 
-enum class Curve { Linear, Expo };
+enum class Curve : uint8_t { Linear, Expo };
 static constexpr float MaxSlew = Model::sample_rate_hz * 120.f;
 static constexpr float EncoderStepSize = 1.f / 200.f;
 
@@ -25,33 +25,33 @@ inline float CalcCoef(float slew) {
 
 struct Data {
 	float slew{0.f};
+	float coef{CalcCoef(slew)};
 	Curve curve{Curve::Linear};
 
 	bool Validate() {
-		return (slew >= 0.f && slew <= 1.f) && (static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Linear) ||
-												static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Expo));
+		return (std::abs(CalcCoef(slew) - coef) < 0.0001f) && (slew >= 0.f && slew <= 1.f) &&
+			   (static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Linear) ||
+				static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Expo));
 	}
 };
 
 class Interface {
 	Data &data;
 
-	float coef;
 	float current{0.f};
 
 public:
 	Interface(Data &data)
-		: data{data}
-		, coef{CalcCoef(data.slew)} {
+		: data{data} {
 	}
 
 	void Inc(int32_t inc) {
 		auto slew = data.slew + inc * EncoderStepSize;
 		data.slew = std::clamp(slew, 0.f, 1.f);
-		coef = CalcCoef(data.slew);
+		data.coef = CalcCoef(data.slew);
 	}
 
-	float Value() {
+	float Value() const {
 		return data.slew;
 	}
 
@@ -60,13 +60,13 @@ public:
 	}
 
 	float UpdateExpo(float new_val) {
-		current += (new_val - current) * coef;
+		current += (new_val - current) * data.coef;
 		return current;
 	}
 
 	float UpdateLinear(float new_val) {
 		// Rough adjustment to make linear vs expo curves perceived as more similar in rate of change
-		auto lin_coef = coef / 3.f;
+		auto lin_coef = data.coef / 3.f;
 
 		if (new_val > current) {
 			current = std::clamp(current + lin_coef, current, new_val);
@@ -81,7 +81,7 @@ public:
 		data.curve = new_curve;
 	}
 
-	Curve GetCurve() {
+	Curve GetCurve() const {
 		return data.curve;
 	}
 };
