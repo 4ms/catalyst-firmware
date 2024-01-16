@@ -27,7 +27,7 @@ struct Data {
 			ret &= b.Validate();
 		}
 		ret &= recorder.Validate();
-		ret &= (slider_slew.slew >= 0.f && slider_slew.slew <= 1.f);
+		ret &= slider_slew.Validate();
 		return ret;
 	}
 };
