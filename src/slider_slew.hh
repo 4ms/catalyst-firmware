@@ -7,20 +7,19 @@ namespace Catalyst2::Macro::SliderSlew
 {
 
 enum class Curve : uint8_t { Linear, Expo };
-static constexpr float MaxSlew = Model::sample_rate_hz * 120.f;
+static constexpr float MaxTime = Model::sample_rate_hz * 120.f;
+static constexpr float MinSlew = 0.04f; // TODO: when constexpr math in gcc:  = std::powf(MaxTime, 0.25);
 static constexpr float EncoderStepSize = 1.f / 200.f;
 
+// Converts slew amount(0..1) to a coef (1..1/MaxSlew)
+// FIXME
 inline float CalcCoef(float slew) {
-	if (slew <= EncoderStepSize)
+	float scaled_slew = slew * (1.f - MinSlew) + MinSlew;
+	scaled_slew = slew * slew * slew * slew * MaxTime;
+	if (scaled_slew < 1.f)
 		return 1.f;
-	if (slew >= (1.f - EncoderStepSize))
-		return 1.f / MaxSlew;
 
-	auto rate = slew * slew * slew * slew * MaxSlew;
-	if (rate > 1.f / MaxSlew)
-		return 1.f / rate;
-
-	return 1.f / MaxSlew;
+	return 1.f / scaled_slew;
 }
 
 struct Data {
