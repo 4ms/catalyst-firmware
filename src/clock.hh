@@ -39,9 +39,9 @@ class Bpm : public Internal {
 	bool external = false;
 	bool step = false;
 	bool peek = false;
+	bool pause;
 
 public:
-	bool pause = false;
 	class type {
 		static constexpr auto min = 1u, max = 1200u;
 		uint32_t val;
@@ -120,6 +120,15 @@ public:
 	}
 	bool Peek() const {
 		return peek;
+	}
+	void Pause() {
+		pause = !pause;
+	}
+	void Pause(bool pause) {
+		this->pause = pause;
+	}
+	bool IsPaused() {
+		return pause;
 	}
 
 private:
