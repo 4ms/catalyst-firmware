@@ -5,6 +5,7 @@
 #include "random.hh"
 #include "recorder.hh"
 #include "shared.hh"
+#include "slider_slew.hh"
 #include "util/countzip.hh"
 
 namespace Catalyst2::Macro
@@ -15,6 +16,7 @@ struct Data {
 	std::array<Bank::Data, Model::NumBanks> bank{};
 	Random::Pool::MacroData randompool{};
 	Recorder::Data recorder{};
+	SliderSlew::Data slider_slew{};
 
 	bool validate() {
 		auto ret = true;
@@ -25,6 +27,7 @@ struct Data {
 			ret &= b.Validate();
 		}
 		ret &= recorder.Validate();
+		ret &= slider_slew.Validate();
 		return ret;
 	}
 };
@@ -37,6 +40,7 @@ public:
 	Pathway::Interface pathway;
 	Bank::Interface bank{data.randompool};
 	Recorder::Interface recorder{data.recorder};
+	SliderSlew::Interface slider_slew{data.slider_slew};
 	std::optional<uint8_t> override_output;
 	Shared::Interface &shared;
 

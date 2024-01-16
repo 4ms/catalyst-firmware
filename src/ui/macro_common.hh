@@ -14,7 +14,7 @@ public:
 		: Abstract{c}
 		, p{p} {
 	}
-	void Common() override final {
+	void Common() final {
 		if (c.jack.trig.just_went_high()) {
 			if (p.recorder.IsCued()) {
 				p.shared.clockdivider.Reset();
@@ -43,7 +43,8 @@ public:
 			p.shared.modeswitcher.Notify();
 		}
 
-		const auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
+		auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
+		pos = p.slider_slew.Update(pos);
 		p.shared.pos = pos;
 		p.pathway.Update(pos);
 		p.override_output = YoungestSceneButton();

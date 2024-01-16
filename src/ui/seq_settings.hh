@@ -44,7 +44,7 @@ public:
 			}
 
 			switch (encoder) {
-				case Model::EncoderAlts::Transpose:
+				case Model::SeqEncoderAlts::Transpose:
 					if (ysb.has_value()) {
 						p.data.settings.IncTranspose(i, inc);
 					} else {
@@ -52,7 +52,7 @@ public:
 					}
 					p.shared.hang.Cancel();
 					break;
-				case Model::EncoderAlts::Random:
+				case Model::SeqEncoderAlts::Random:
 					if (ysb.has_value()) {
 						p.data.settings.IncRandom(i, inc);
 					} else {
@@ -68,7 +68,7 @@ public:
 					}
 					p.shared.hang.Cancel();
 					break;
-				case Model::EncoderAlts::PlayMode:
+				case Model::SeqEncoderAlts::PlayMode:
 					if (ysb.has_value()) {
 						p.data.settings.IncPlayMode(i, inc);
 						p.player.randomsteps.Randomize(i);
@@ -78,7 +78,7 @@ public:
 					}
 					p.shared.hang.Cancel();
 					break;
-				case Model::EncoderAlts::StartOffset:
+				case Model::SeqEncoderAlts::StartOffset:
 					inc = hang.has_value() ? inc : 0;
 					if (ysb.has_value()) {
 						p.data.settings.IncStartOffset(i, inc);
@@ -87,7 +87,7 @@ public:
 					}
 					p.shared.hang.Set(encoder);
 					break;
-				case Model::EncoderAlts::PhaseOffset:
+				case Model::SeqEncoderAlts::PhaseOffset:
 					inc = hang.has_value() ? inc : 0;
 					if (ysb.has_value()) {
 						p.data.settings.IncPhaseOffset(i, inc);
@@ -96,7 +96,7 @@ public:
 					}
 					p.shared.hang.Set(encoder);
 					break;
-				case Model::EncoderAlts::SeqLength:
+				case Model::SeqEncoderAlts::SeqLength:
 					inc = hang.has_value() ? inc : 0;
 					if (ysb.has_value()) {
 						p.data.settings.IncLength(i, inc);
@@ -105,14 +105,14 @@ public:
 					}
 					p.shared.hang.Set(encoder);
 					break;
-				case Model::EncoderAlts::Range:
+				case Model::SeqEncoderAlts::Range:
 					if (ysb.has_value()) {
 						inc = hang.has_value() ? inc : 0;
 						p.data.settings.IncRange(i, inc);
 						p.shared.hang.Set(encoder);
 					}
 					break;
-				case Model::EncoderAlts::ClockDiv:
+				case Model::SeqEncoderAlts::ClockDiv:
 					if (ysb.has_value()) {
 						inc = hang.has_value() ? inc : 0;
 						p.data.settings.IncClockDiv(i, inc);
@@ -166,14 +166,14 @@ public:
 
 		if (hang.has_value()) {
 			switch (hang.value()) {
-				case EncoderAlts::StartOffset: {
+				case SeqEncoderAlts::StartOffset: {
 					const auto l = startoffset.value_or(p.data.settings.GetStartOffset());
 					const auto col = startoffset.has_value() ? Setting::active : Setting::null;
 					c.SetEncoderLed(l % SeqStepsPerPage, col);
 					c.SetButtonLed(l / SeqStepsPerPage, true);
 					break;
 				}
-				case EncoderAlts::SeqLength: {
+				case SeqEncoderAlts::SeqLength: {
 					const auto l = length.value_or(p.data.settings.GetLength());
 					const auto col = length.has_value() ? Setting::active : Setting::null;
 					auto led = l % SeqStepsPerPage;
@@ -182,44 +182,44 @@ public:
 					SetButtonLedsCount(led + 1, true);
 					break;
 				}
-				case EncoderAlts::ClockDiv: {
+				case SeqEncoderAlts::ClockDiv: {
 					SetEncoderLedsAddition(clockdiv.Read(), Setting::clockdiv);
 					break;
 				}
-				case EncoderAlts::PhaseOffset: {
+				case SeqEncoderAlts::PhaseOffset: {
 					const auto o = p.player.GetFirstStep(ysb.value_or(p.GetSelectedChannel()));
 					const auto col = phaseoffset.has_value() ? Setting::active : Setting::null;
 					c.SetEncoderLed(o % SeqStepsPerPage, col);
 					c.SetButtonLed((o / SeqStepsPerPage) % SeqPages, true);
 					break;
 				}
-				case EncoderAlts::Range: {
+				case SeqEncoderAlts::Range: {
 					DisplayRange(range);
 					break;
 				}
 			}
 		} else {
 			auto col = startoffset.has_value() ? Setting::active : Setting::null;
-			c.SetEncoderLed(EncoderAlts::StartOffset, col);
+			c.SetEncoderLed(SeqEncoderAlts::StartOffset, col);
 
 			col =
 				tpose.has_value() ?
 					Palette::off.blend(tpose.value() > 0 ? Setting::Transpose::positive : Setting::Transpose::negative,
 									   std::abs(tpose.value()) / static_cast<float>(Transposer::max)) :
 					Setting::null;
-			c.SetEncoderLed(EncoderAlts::Transpose, col);
+			c.SetEncoderLed(SeqEncoderAlts::Transpose, col);
 
 			if (playmode.has_value()) {
 				PlayModeLedAnnimation(playmode.value(), time_now);
 			} else {
-				c.SetEncoderLed(EncoderAlts::PlayMode, Setting::null);
+				c.SetEncoderLed(SeqEncoderAlts::PlayMode, Setting::null);
 			}
 
 			col = length.has_value() ? Setting::active : Setting::null;
-			c.SetEncoderLed(EncoderAlts::SeqLength, col);
+			c.SetEncoderLed(SeqEncoderAlts::SeqLength, col);
 
 			col = phaseoffset.has_value() ? Setting::active : Setting::null;
-			c.SetEncoderLed(EncoderAlts::PhaseOffset, col);
+			c.SetEncoderLed(SeqEncoderAlts::PhaseOffset, col);
 
 			if (p.shared.internalclock.IsInternal() && !ysb.has_value()) {
 				if (p.shared.internalclock.Peek()) {
@@ -230,15 +230,15 @@ public:
 			} else {
 				col = Setting::active;
 			}
-			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
+			c.SetEncoderLed(SeqEncoderAlts::ClockDiv, col);
 
 			col = random.has_value() ? Palette::off.blend(Palette::Random::set, random.value()) : Setting::null;
 			if (c.button.fine.is_high()) {
 				col = Palette::Random::color(p.randompool.GetSeed());
 			}
-			c.SetEncoderLed(EncoderAlts::Random, col);
+			c.SetEncoderLed(SeqEncoderAlts::Random, col);
 
-			c.SetEncoderLed(EncoderAlts::Range, ysb.has_value() ? Setting::active : Palette::off);
+			c.SetEncoderLed(SeqEncoderAlts::Range, ysb.has_value() ? Setting::active : Palette::off);
 		}
 	}
 
@@ -268,7 +268,7 @@ private:
 		} else {
 			col = Palette::Random::color(time_now >> 8);
 		}
-		c.SetEncoderLed(Model::EncoderAlts::PlayMode, col);
+		c.SetEncoderLed(Model::SeqEncoderAlts::PlayMode, col);
 	}
 };
 

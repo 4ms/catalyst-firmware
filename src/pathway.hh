@@ -1,4 +1,5 @@
 #pragma once
+#include "conf/model.hh"
 #include "fixedvector.hh"
 #include <algorithm>
 #include <array>
