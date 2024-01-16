@@ -36,8 +36,7 @@ public:
 		controls.Start();
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
-		params.shared.internalclock.pause = true;
-		params.sequencer.phaser.Reset();
+		sequencer.Stop();
 	}
 	void Update() {
 		controls.Update();
@@ -132,8 +131,7 @@ private:
 			params.macro.SelectBank(0);
 		} else {
 			ui = &sequencer;
-			params.shared.internalclock.pause = true;
-			params.sequencer.phaser.Reset();
+			sequencer.Stop();
 		}
 	}
 };
