@@ -45,6 +45,11 @@ public:
 		const auto sp = c.ReadSlider() / 4096.f;
 
 		p.player.Update(sp + cp);
+	void Stop() {
+		p.shared.clockdivider.Reset();
+		p.shared.internalclock.Reset();
+		p.player.Reset();
+		p.shared.internalclock.Pause(true);
 	}
 
 protected:
