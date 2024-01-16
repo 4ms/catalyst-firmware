@@ -9,9 +9,10 @@
 #include <array>
 #include <optional>
 
-namespace Catalyst2::Sequencer::Settings
+namespace Catalyst2::Sequencer
 {
-
+namespace Settings
+{
 struct PlayMode {
 	using type = int8_t;
 	enum class Mode : type {
@@ -350,4 +351,12 @@ public:
 		channel[chan].mode = mode;
 	}
 };
-} // namespace Catalyst2::Sequencer::Settings
+} // namespace Settings
+inline uint32_t ActualLength(Settings::Length::type length, Settings::PlayMode::Mode pm) {
+	if (pm != Settings::PlayMode::Mode::PingPong) {
+		return length;
+	}
+	const auto out = length + length - 2;
+	return out < 2 ? 2 : out;
+}
+} // namespace Catalyst2::Sequencer
