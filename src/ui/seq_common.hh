@@ -24,13 +24,12 @@ public:
 
 		if (c.button.play.just_went_high()) {
 			if (c.button.shift.is_high()) {
-				p.shared.internalclock.pause = true;
-				p.phaser.Reset();
+				Stop();
 				p.shared.reset.Notify(true);
 			} else {
-				p.shared.internalclock.pause = !p.shared.internalclock.pause;
+				p.shared.internalclock.Pause();
 			}
-			c.SetPlayLed(!p.shared.internalclock.pause);
+			c.SetPlayLed(!p.shared.internalclock.IsPaused());
 		}
 
 		if (c.button.play.just_went_low()) {
