@@ -113,7 +113,7 @@ public:
 			const auto offset = Model::SeqStepsPerPage * page;
 
 			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-				if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep()) {
+				if (i == led && page == playheadpage) {
 					c.SetEncoderLed(led, Palette::SeqHead::color);
 				} else {
 					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], is_gate));
@@ -130,12 +130,7 @@ public:
 				}
 			}
 		} else {
-			for (auto i = 0; i < 8; i++) {
-				const auto phase = p.player.GetSequencePhase(i);
-				const auto col = Palette::off.blend(Palette::red, phase);
-				c.SetEncoderLed(i, col);
-			}
-			// EncoderDisplayOutput(outs);
+			EncoderDisplayOutput(outs);
 		}
 	}
 
