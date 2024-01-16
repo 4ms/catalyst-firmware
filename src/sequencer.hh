@@ -93,7 +93,7 @@ public:
 	void Reset() {
 		shared.internalclock.Reset();
 		shared.clockdivider.Reset();
-		phaser.Reset();
+		player.Reset();
 		time_trigged = shared.internalclock.TimeNow();
 	}
 
@@ -144,16 +144,16 @@ public:
 		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
 	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
-		const auto step = phaser.GetPlayheadStep(chan);
+		const auto step = player.GetPlayheadStep(chan);
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
 											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
 	}
 	StepModifier GetPlayheadModifier(uint8_t chan) {
-		const auto step = phaser.GetPlayheadStep(chan);
+		const auto step = player.GetPlayheadStep(chan);
 		return data.channel[chan][step].modifier;
 	}
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
-		const auto step = phaser.GetPrevStep(chan);
+		const auto step = player.GetPrevPlayheadStep(chan);
 		return data.channel[chan][step].Read(data.settings.GetRange(chan),
 											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
 	}
@@ -216,7 +216,7 @@ public:
 
 private:
 	uint8_t StepOnPageToStep(uint8_t step_on_page) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : phaser.GetPlayheadPage(cur_channel);
+		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
 		return step_on_page + (page * Model::SeqStepsPerPage);
 	}
 	//////////
