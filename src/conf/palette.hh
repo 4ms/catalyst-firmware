@@ -15,7 +15,7 @@ constexpr Color dim_grey = Color(5, 5, 5);
 constexpr Color grey = Color(100, 40, 40);
 
 constexpr Color red = Color(128, 0, 0);
-constexpr Color pink = Color(80, 20, 20);
+constexpr Color pink = Color(80, 30, 00);
 constexpr Color orange = Color(150, 0, 100);
 constexpr Color yellow = Color(150, 0, 60);
 constexpr Color dim_green = Color(0, 0, 9);
@@ -46,6 +46,7 @@ constexpr auto null = dim_grey;
 constexpr auto active = blue;
 constexpr auto playmode_fwd = blue;
 constexpr auto playmode_bck = red;
+constexpr auto slider_slew = pink;
 
 namespace Transpose
 {
