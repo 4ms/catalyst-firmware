@@ -12,14 +12,13 @@ static constexpr float MinSlew = 0.04f; // TODO: when constexpr math in gcc:  = 
 static constexpr float EncoderStepSize = 1.f / 200.f;
 
 // Converts slew amount(0..1) to a coef (1..1/MaxSlew)
-// FIXME
 inline float CalcCoef(float slew) {
-	float scaled_slew = slew * (1.f - MinSlew) + MinSlew;
-	scaled_slew = slew * slew * slew * slew * MaxTime;
-	if (scaled_slew < 1.f)
+	slew = slew * (1.f - MinSlew) + MinSlew;
+	slew = slew * slew * slew * slew * MaxTime;
+	if (slew < 1.f)
 		return 1.f;
 
-	return 1.f / scaled_slew;
+	return 1.f / slew;
 }
 
 struct Data {
