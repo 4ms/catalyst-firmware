@@ -70,12 +70,11 @@ public:
 				if (is_scene) {
 					break;
 				}
-				inc = hang.has_value() ? inc : 0;
 				if (inc > 0)
 					p.slider_slew.SetCurve(SliderSlew::Curve::Linear);
 				else if (inc < 0)
 					p.slider_slew.SetCurve(SliderSlew::Curve::Expo);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Cancel();
 				break;
 			default:
 				break;
@@ -105,20 +104,17 @@ public:
 						float num_lights = p.slider_slew.Value() * 8.f;
 						SetEncoderLedsFloat(num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
 					} break;
-
-					case Model::MacroEncoderAlts::SliderSlewCurve: {
-						auto col = p.slider_slew.GetCurve() == SliderSlew::Curve::Linear ?
-									   Palette::Setting::curve_linear :
-									   Palette::Setting::curve_expo;
-						c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlewCurve, col);
-					} break;
 				}
 			} else {
-				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::SeqHead::color);
+				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::Setting::active);
+				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlew,
+								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slider_slew.Value()));
+				auto col = p.slider_slew.GetCurve() == SliderSlew::Curve::Linear ? Palette::Setting::curve_linear :
+																				   Palette::Setting::curve_expo;
+				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlewCurve, col);
 				if (c.button.fine.is_high()) {
-					const auto col = p.bank.randompool.IsRandomized() ?
-										 Palette::Random::color(p.bank.randompool.GetSeed()) :
-										 Palette::Setting::null;
+					col = p.bank.randompool.IsRandomized() ? Palette::Random::color(p.bank.randompool.GetSeed()) :
+															 Palette::Setting::null;
 					c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
 				}
 			}
