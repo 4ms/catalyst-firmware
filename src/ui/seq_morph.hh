@@ -55,7 +55,7 @@ public:
 		const auto offset = Model::SeqStepsPerPage * page;
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			if (i == led && page == playheadpage && static_cast<int8_t>(i + offset) != p.GetHiddenStep()) {
+			if (i == led && page == playheadpage) {
 				c.SetEncoderLed(led, Palette::SeqHead::color);
 			} else {
 				auto col = Palette::Morph::color(1.f - mvals[i]);
