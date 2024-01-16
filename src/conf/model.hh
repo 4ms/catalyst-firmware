@@ -49,7 +49,7 @@ constexpr auto fader_width_mm = 60u;
 constexpr auto rec_buffer_size = 2048u;
 constexpr auto rec_buffer_prescaler = 16u;
 
-struct EncoderAlts {
+struct SeqEncoderAlts {
 	static constexpr auto StartOffset = 0u;
 	static constexpr auto PlayMode = 1u;
 	static constexpr auto SeqLength = 2u;
@@ -57,6 +57,12 @@ struct EncoderAlts {
 	static constexpr auto Range = 4u;
 	static constexpr auto ClockDiv = 5u;
 	static constexpr auto Transpose = 6u;
+	static constexpr auto Random = 7u;
+};
+struct MacroEncoderAlts {
+	static constexpr auto SliderSlewCurve = 4u;
+	static constexpr auto ClockDiv = 5u;
+	static constexpr auto SliderSlew = 6u;
 	static constexpr auto Random = 7u;
 };
 } // namespace Catalyst2::Model

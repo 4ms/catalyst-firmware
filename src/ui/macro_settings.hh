@@ -32,7 +32,7 @@ public:
 		const auto is_scene = YoungestSceneButton().has_value();
 
 		switch (encoder) {
-			case Model::EncoderAlts::Random:
+			case Model::MacroEncoderAlts::Random:
 				if (is_scene) {
 					for (auto [i, b] : countzip(c.button.scene)) {
 						if (b.is_high()) {
@@ -50,13 +50,34 @@ public:
 				}
 				p.shared.hang.Cancel();
 				break;
-			case Model::EncoderAlts::ClockDiv:
+			case Model::MacroEncoderAlts::ClockDiv:
 				if (is_scene) {
 					break;
 				}
 				inc = hang.has_value() ? inc : 0;
 				p.shared.data.clockdiv.Inc(inc);
 				p.shared.hang.Set(encoder);
+				break;
+			case Model::MacroEncoderAlts::SliderSlew:
+				if (is_scene) {
+					break;
+				}
+				inc = hang.has_value() ? inc : 0;
+				p.slider_slew.Inc(inc);
+				p.shared.hang.Set(encoder);
+				break;
+			case Model::MacroEncoderAlts::SliderSlewCurve:
+				if (is_scene) {
+					break;
+				}
+				inc = hang.has_value() ? inc : 0;
+				if (inc > 0)
+					p.slider_slew.SetCurve(SliderSlew::Curve::Linear);
+				else
+					p.slider_slew.SetCurve(SliderSlew::Curve::Expo);
+				p.shared.hang.Set(encoder);
+				break;
+			default:
 				break;
 		}
 	}
@@ -71,20 +92,34 @@ public:
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
 			auto col = Palette::off.blend(Palette::Random::set, random);
-			c.SetEncoderLed(Model::EncoderAlts::Random, col);
+			c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
 		} else {
 			const auto hang = p.shared.hang.Check();
 			if (hang.has_value()) {
-				if (hang.value() == Model::EncoderAlts::ClockDiv) {
-					SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
+				switch (hang.value()) {
+					case Model::MacroEncoderAlts::ClockDiv: {
+						SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
+					} break;
+
+					case Model::MacroEncoderAlts::SliderSlew: {
+						float num_lights = p.slider_slew.Value() * 8.f;
+						SetEncoderLedsFloat(num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
+					} break;
+
+					case Model::MacroEncoderAlts::SliderSlewCurve: {
+						auto col = p.slider_slew.GetCurve() == SliderSlew::Curve::Linear ?
+									   Palette::Setting::curve_linear :
+									   Palette::Setting::curve_expo;
+						c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlewCurve, col);
+					} break;
 				}
 			} else {
-				c.SetEncoderLed(Model::EncoderAlts::ClockDiv, Palette::SeqHead::color);
+				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::SeqHead::color);
 				if (c.button.fine.is_high()) {
 					const auto col = p.bank.randompool.IsRandomized() ?
 										 Palette::Random::color(p.bank.randompool.GetSeed()) :
 										 Palette::Setting::null;
-					c.SetEncoderLed(Model::EncoderAlts::Random, col);
+					c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
 				}
 			}
 		}

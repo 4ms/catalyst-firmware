@@ -62,11 +62,20 @@ protected:
 	}
 
 	void SetEncoderLedsCount(uint8_t count, uint8_t offset, Color col) {
-		for (auto i = 0u; i < count; i++) {
-			c.SetEncoderLed((i + offset) & 7, col);
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			auto color = (i >= offset && i < (offset + count)) ? col : Colors::off;
+			c.SetEncoderLed(i, color);
 		}
-		for (auto i = 0u; i < Model::NumChans - count; i++) {
-			c.SetEncoderLed((count + i + offset) & 7, Colors::off);
+	}
+
+	void SetEncoderLedsFloat(float value, Color col, Color bg_col = Colors::off) {
+		value = std::clamp(value, 0.f, 8.f);
+		auto fade_led = (unsigned)value;
+		float fade_amt = value - fade_led;
+
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			auto color = (i == fade_led) ? bg_col.blend(col, fade_amt) : i < fade_led ? col : bg_col;
+			c.SetEncoderLed(i, color);
 		}
 	}
 
