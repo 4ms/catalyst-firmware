@@ -29,11 +29,17 @@ struct SeqData : public std::array<int8_t, Model::MaxSeqSteps * Model::NumChans>
 	SeqData() {
 		RandomizeBuffer(*this);
 	}
+	bool Validate() const {
+		return true;
+	}
 };
 
 struct MacroData : public std::array<int8_t, Model::NumScenes * Model::NumChans> {
 	MacroData() {
 		RandomizeBuffer(*this);
+	}
+	bool Validate() const {
+		return true;
 	}
 };
 
@@ -81,6 +87,9 @@ struct Data : public std::array<std::array<uint8_t, Model::MaxSeqSteps>, Model::
 		for (auto &c : *this) {
 			RandomizeBuffer(c);
 		}
+	}
+	bool Validate() const {
+		return true;
 	}
 };
 class Interface {
