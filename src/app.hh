@@ -122,10 +122,8 @@ private:
 	Model::Output::Buffer Seq(Sequencer::Interface &p) {
 		Model::Output::Buffer buf;
 
-		const auto morph_phase = p.shared.internalclock.pause ? 0.f : p.shared.internalclock.GetPhase();
-
 		for (auto [chan, o] : countzip(buf)) {
-			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan, morph_phase);
+			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan);
 		}
 
 		return buf;
@@ -139,8 +137,8 @@ private:
 		return 0;
 	}
 
-	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan, float morph_phase) {
-		const auto stepmorph = seqmorph(morph_phase, p.GetPlayheadModifier(chan).AsMorph());
+	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadModifier(chan).AsMorph());
 		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan).AsCV());
 		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
