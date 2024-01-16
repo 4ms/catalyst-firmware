@@ -55,7 +55,6 @@ struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
 	Random::Pool::SeqData randompool;
-	Random::Steps::Data randomsteps;
 
 	bool validate() const {
 		auto ret = true;
@@ -78,16 +77,11 @@ class Interface {
 		std::array<Step, Model::SeqStepsPerPage> page;
 	} clipboard;
 	uint32_t time_trigged;
-	float phase;
-
-	static constexpr auto test = (+0u - 1) % 7;
 
 public:
 	Data &data;
 	Shared::Interface &shared;
-	Phaser::Interface phaser{data.settings.phaser};
 	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
-	Random::Steps::Interface randomsteps{data.randomsteps};
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
