@@ -7,6 +7,7 @@
 #include "sequencer_player.hh"
 #include "sequencer_settings.hh"
 #include "shared.hh"
+#include "util/countzip.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
