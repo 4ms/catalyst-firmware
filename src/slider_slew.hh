@@ -6,10 +6,31 @@
 namespace Catalyst2::Macro::SliderSlew
 {
 
-enum class Curve { Linear, Expo } curve{Curve::Linear};
+enum class Curve { Linear, Expo };
+static constexpr float MaxSlew = Model::sample_rate_hz * 120.f;
+static constexpr float EncoderStepSize = 1.f / 200.f;
+
+inline float CalcCoef(float slew) {
+	if (slew <= EncoderStepSize)
+		return 1.f;
+	if (slew >= (1.f - EncoderStepSize))
+		return 1.f / MaxSlew;
+
+	auto rate = slew * slew * slew * slew * MaxSlew;
+	if (rate > 1.f / MaxSlew)
+		return 1.f / rate;
+
+	return 1.f / MaxSlew;
+}
 
 struct Data {
 	float slew{0.f};
+	Curve curve{Curve::Linear};
+
+	bool Validate() {
+		return (slew >= 0.f && slew <= 1.f) && (static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Linear) ||
+												static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Expo));
+	}
 };
 
 class Interface {
@@ -17,22 +38,6 @@ class Interface {
 
 	float coef;
 	float current{0.f};
-
-	static constexpr float MaxSlew = Model::sample_rate_hz * 120.f;
-	static constexpr float EncoderStepSize = 1.f / 200.f;
-
-	static float CalcCoef(float slew) {
-		if (slew <= EncoderStepSize)
-			return 1.f;
-		if (slew >= (1.f - EncoderStepSize))
-			return 1.f / MaxSlew;
-
-		auto rate = slew * slew * slew * slew * MaxSlew;
-		if (rate > 1.f / MaxSlew)
-			return 1.f / rate;
-
-		return 1.f / MaxSlew;
-	}
 
 public:
 	Interface(Data &data)
@@ -51,7 +56,7 @@ public:
 	}
 
 	float Update(float new_val) {
-		return curve == Curve::Linear ? UpdateLinear(new_val) : UpdateExpo(new_val);
+		return data.curve == Curve::Linear ? UpdateLinear(new_val) : UpdateExpo(new_val);
 	}
 
 	float UpdateExpo(float new_val) {
@@ -73,11 +78,11 @@ public:
 	}
 
 	void SetCurve(Curve new_curve) {
-		curve = new_curve;
+		data.curve = new_curve;
 	}
 
 	Curve GetCurve() {
-		return curve;
+		return data.curve;
 	}
 };
 } // namespace Catalyst2::Macro::SliderSlew
