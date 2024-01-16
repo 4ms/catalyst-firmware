@@ -3,6 +3,7 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "quantizer.hh"
+#include <optional>
 
 namespace Catalyst2::Shared
 {
