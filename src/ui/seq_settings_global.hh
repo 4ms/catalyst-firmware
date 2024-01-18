@@ -15,6 +15,10 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		if (c.button.play.just_went_high()) {
+			p.player.Stop();
+			p.shared.reset.Notify(true);
+		}
 		if (!c.button.shift.is_high() || c.button.bank.is_high()) {
 			p.shared.reset.Notify(false);
 			return;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "controls.hh"
 #include "params.hh"
 #include "seq_bank.hh"
@@ -33,11 +34,35 @@ public:
 		ForEachSceneButtonPressed([this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
+		const auto ysb = YoungestSceneButton();
+		if (c.button.play.just_went_high()) {
+			if (ysb.has_value()) {
+				p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+			} else {
+				if (c.button.shift.is_high()) {
+					p.player.Stop();
+					p.shared.reset.Notify(true);
+				} else {
+					p.player.TogglePause();
+				}
+			}
+		}
+		if (!ysb.has_value()) {
+			if (c.button.play.just_went_low()) {
+				p.shared.reset.Notify(false);
+			}
+		}
+		c.SetPlayLed(!p.player.IsPaused());
+
 		if (c.button.add.just_went_high()) {
 			p.shared.internalclock.Tap();
 		}
 		if (p.IsSequenceSelected()) {
-			auto ysb = YoungestSceneButton();
+			if (ysb.has_value()) {
+				if (c.button.play.just_went_high()) {
+					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+				}
+			}
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.shared.did_copy = true;
 				p.CopyPage(ysb.value());
@@ -100,6 +125,12 @@ public:
 			return;
 		}
 		if (c.button.fine.is_high()) {
+			return;
+		}
+		if (c.button.play.just_went_low()) {
+			return;
+		}
+		if (c.button.play.is_high() || c.button.play.just_went_low()) {
 			return;
 		}
 		if (p.IsPageSelected() && button == p.GetSelectedPage()) {
