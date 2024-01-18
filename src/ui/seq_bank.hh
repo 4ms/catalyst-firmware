@@ -27,6 +27,9 @@ public:
 		if (!c.button.bank.is_high() && !YoungestSceneButton().has_value()) {
 			return;
 		}
+		if (c.button.shift.is_high()) {
+			return;
+		}
 		if (p.shared.modeswitcher.Check()) {
 			interface = nullptr;
 			p.shared.data.mode = Model::Mode::Macro;
@@ -35,18 +38,8 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
-		if (c.button.shift.is_high()) {
-			// change all channgels.
-			auto cm = p.data.settings.GetChannelMode(encoder);
-			cm.Inc(dir);
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.data.settings.SetChannelMode(i, cm);
-				p.shared.quantizer[i].Load(cm.GetScale());
-			}
-		} else {
-			p.data.settings.IncChannelMode(encoder, dir);
-			p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
-		}
+		p.data.settings.IncChannelMode(encoder, dir);
+		p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		if (scene == p.GetSelectedChannel()) {

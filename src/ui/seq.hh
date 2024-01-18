@@ -7,13 +7,15 @@
 #include "seq_morph.hh"
 #include "seq_reset.hh"
 #include "seq_settings.hh"
+#include "ui/seq_settings_global.hh"
 
 namespace Catalyst2::Sequencer::Ui
 {
 class Main : public Usual {
 	Bank bank{p, c};
 	Morph morph{p, c};
-	Settings settings{p, c};
+	Settings::Global global_settings{p, c};
+	Settings::Channel channel_settings{p, c};
 	Reset reset{p, c};
 
 public:
@@ -51,11 +53,17 @@ public:
 			interface = &reset;
 			return;
 		}
-		if (c.button.shift.is_high()) {
-			interface = &settings;
+		const auto bshift = c.button.shift.is_high();
+		const auto bbank = c.button.bank.is_high();
+		if (bshift && bbank) {
+			interface = &channel_settings;
 			return;
 		}
-		if (c.button.bank.is_high()) {
+		if (bshift) {
+			interface = &global_settings;
+			return;
+		}
+		if (bbank) {
 			interface = &bank;
 			return;
 		}
