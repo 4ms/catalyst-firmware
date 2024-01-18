@@ -24,6 +24,10 @@ maybe clipboards should reset eachother?
 bug when switch modes it will get stuck on bank mode leds or morph mode leds sometimes
 */
 
+//
+// dont call YoungestSceneButton() so much
+//
+
 void main() {
 	using namespace Catalyst2;
 
