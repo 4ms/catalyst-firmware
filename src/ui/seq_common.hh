@@ -13,27 +13,13 @@ public:
 		: Abstract{c}
 		, p{p} {
 	}
-	void Common() override final {
+	void Common() final {
 		if (c.jack.reset.just_went_high()) {
 			p.Reset();
 		}
 
 		if (c.jack.trig.just_went_high()) {
 			p.Trig();
-		}
-
-		if (c.button.play.just_went_high()) {
-			if (c.button.shift.is_high()) {
-				p.player.Stop();
-				p.shared.reset.Notify(true);
-			} else {
-				p.player.TogglePause();
-			}
-			c.SetPlayLed(!p.player.IsPaused());
-		}
-
-		if (c.button.play.just_went_low()) {
-			p.shared.reset.Notify(false);
 		}
 
 		if (!(c.button.add.is_high() && c.button.bank.is_high() && c.button.shift.is_high())) {
