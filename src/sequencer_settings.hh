@@ -1,6 +1,7 @@
 #pragma once
 
 #include "channelmode.hh"
+#include "clock.hh"
 #include "conf/model.hh"
 #include "random.hh"
 #include "transposer.hh"
@@ -54,6 +55,10 @@ class Global {
 		{
 			auto int_val = std::clamp<U>(static_cast<U>(val) + inc, static_cast<U>(min), static_cast<U>(max));
 			val = T(int_val);
+		}
+
+		void Set(T to) {
+			val = to;
 		}
 
 		T Read() {
@@ -133,6 +138,7 @@ class Channel {
 			auto int_val = std::clamp<U>(static_cast<U>(val.value()) + inc, static_cast<U>(min), static_cast<U>(max));
 			val = T(int_val);
 		}
+
 		void UpdatePivot(T pivot) {
 			if (!val.has_value())
 				return;
@@ -141,6 +147,11 @@ class Channel {
 				above_pivot = true;
 			else if (val.value() < pivot || pivot == max)
 				above_pivot = false;
+		}
+
+		void Set(T to, T pivot) {
+			val = to;
+			above_pivot = val >= pivot;
 		}
 
 		std::optional<T> Read() {
@@ -305,6 +316,15 @@ public:
 	}
 	void IncStartOffset(int32_t inc) {
 		global.startoffset.Inc(inc);
+		for (auto &c : channel) {
+			c.startoffset.UpdatePivot(global.startoffset.Read());
+		}
+	}
+	void SetStartOffset(uint8_t chan, StartOffset::type val) {
+		channel[chan].startoffset.Set(val, global.startoffset.Read());
+	}
+	void SetStartOffset(StartOffset::type val) {
+		global.startoffset.Set(val);
 		for (auto &c : channel) {
 			c.startoffset.UpdatePivot(global.startoffset.Read());
 		}
