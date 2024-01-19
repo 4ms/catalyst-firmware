@@ -26,7 +26,7 @@ set(TARGET_SOURCES
 )
 
 set(WAV_ENCODE_PYTHON_CMD
-    python3 ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 48000 -b 16 -n 8 -z 4 -p 256 -k 100 -g 16384 $<TARGET_FILE_DIR:${target}.elf>/${target}.bin
+    python3 ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 48000 -b 16 -n 8 -z 4 --packet_size 256 --blank_duration 1000 --page_size 16384 $<TARGET_FILE_DIR:${target}.elf>/${target}.bin
 )
 
 set_hal_sources(HAL_SOURCES stm32f4)
