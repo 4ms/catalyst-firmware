@@ -1,6 +1,8 @@
 #pragma once
 
 #include "clock.hh"
+#include "conf/model.hh"
+#include "page_sequencer.hh"
 #include "sequencer_settings.hh"
 #include "util/countzip.hh"
 #include <array>
@@ -27,6 +29,7 @@ class PlayerInterface {
 	float phase = 0.f;
 
 public:
+	Queue::Channel::Interface channel_queue;
 	PlayerInterface(Settings::Data &d)
 		: d{d} {
 	}
@@ -54,6 +57,12 @@ public:
 			if (last != s.playhead || s.did_step) {
 				s.new_step = true;
 				s.did_step = false;
+				if (s.step == 0) {
+					if (channel_queue.IsQueued(chan)) {
+						const auto page = channel_queue.Step(chan);
+						d.SetStartOffset(chan, page * Model::SeqStepsPerPage);
+					}
+				}
 			}
 		}
 	}
