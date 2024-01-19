@@ -37,7 +37,7 @@ public:
 		const auto ysb = YoungestSceneButton();
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
-				p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+				p.player.queue.global.Queue(ysb.value());
 			} else {
 				if (c.button.shift.is_high()) {
 					p.player.Stop();

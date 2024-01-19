@@ -2,7 +2,8 @@
 
 #include "clock.hh"
 #include "conf/model.hh"
-#include "page_sequencer.hh"
+#include "conf/palette.hh"
+#include "queue.hh"
 #include "sequencer_settings.hh"
 #include "util/countzip.hh"
 #include <array>
@@ -29,7 +30,7 @@ class PlayerInterface {
 	float phase = 0.f;
 
 public:
-	Queue::Channel::Interface channel_queue;
+	Queue::Interface queue;
 	PlayerInterface(Settings::Data &d)
 		: d{d} {
 	}
@@ -58,9 +59,17 @@ public:
 				s.new_step = true;
 				s.did_step = false;
 				if (s.step == 0) {
-					if (channel_queue.IsQueued(chan)) {
-						const auto page = channel_queue.Step(chan);
-						d.SetStartOffset(chan, page * Model::SeqStepsPerPage);
+					if (d.GetStartOffset(chan).has_value()) {
+						if (queue.channel.IsQueued(chan)) {
+							d.SetStartOffset(chan, queue.channel.Step(chan) * Model::SeqStepsPerPage);
+						}
+					} else {
+						if (queue.global.IsQueued(chan)) {
+							queue.global.Step(chan);
+							if (queue.global.HasFinished()) {
+								d.SetStartOffset(queue.global.Read() * Model::SeqStepsPerPage);
+							}
+						}
 					}
 				}
 			}
@@ -201,8 +210,13 @@ private:
 				break;
 		}
 
-		const auto so = d.GetStartOffsetOrGlobal(chan);
-		return ((s % l) + so) % Model::MaxSeqSteps;
+		if (queue.global.HasFinished() || queue.global.IsQueued(chan.value_or(0))) {
+			const auto so = d.GetStartOffsetOrGlobal(chan);
+			return ((s % l) + so) % Model::MaxSeqSteps;
+		} else {
+			const auto so = queue.global.Read() * Model::SeqStepsPerPage;
+			return ((s % l) + so) % Model::MaxSeqSteps;
+		}
 	}
 
 	uint32_t ActualLength(int8_t length, Settings::PlayMode::Mode pm) {
