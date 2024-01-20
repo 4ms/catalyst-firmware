@@ -68,11 +68,6 @@ public:
 			p.shared.internalclock.Tap();
 		}
 		if (p.IsSequenceSelected()) {
-			if (ysb.has_value()) {
-				if (c.button.play.just_went_high()) {
-					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
-				}
-			}
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.shared.did_copy = true;
 				p.CopyPage(ysb.value());
