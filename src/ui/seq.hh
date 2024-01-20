@@ -51,6 +51,9 @@ public:
 					p.shared.reset.Notify(true);
 				} else {
 					p.player.TogglePause();
+					if (p.player.IsPaused()) {
+						p.player.queue.global.Cancel();
+					}
 				}
 			}
 		}
