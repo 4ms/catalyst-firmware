@@ -25,6 +25,7 @@ public:
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
 		c.button.add.clear_events();
+		c.button.play.clear_events();
 		for (auto &b : c.button.scene) {
 			b.clear_events();
 		}
@@ -37,7 +38,13 @@ public:
 		const auto ysb = YoungestSceneButton();
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
-				p.player.queue.global.Queue(ysb.value());
+				if (!p.player.IsPaused()) {
+					p.player.queue.global.Queue(ysb.value());
+				} else {
+					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+					p.player.Reset();
+					p.player.TogglePause();
+				}
 			} else {
 				if (c.button.shift.is_high()) {
 					p.player.Stop();
