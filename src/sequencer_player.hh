@@ -63,6 +63,7 @@ public:
 						if (queue.channel.IsQueued(chan)) {
 							d.SetStartOffset(chan, queue.channel.Step(chan) * Model::SeqStepsPerPage);
 						}
+						queue.global.Step(chan);
 					} else {
 						if (queue.global.IsQueued(chan)) {
 							queue.global.Step(chan);
