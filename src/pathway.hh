@@ -86,15 +86,13 @@ public:
 		(*p)[scene_nearest] = scene;
 		prev_index = scene_nearest;
 	}
-	void InsertScene(SceneId scene, bool after_last) {
-		auto index = scene_left;
-
-		if (after_last)
-			index = prev_index++;
-		else
-			prev_index = index + 1;
-
-		p->insert(index, scene);
+	void InsertScene(SceneId scene) {
+		prev_index = scene_left + 1;
+		p->insert(scene_left, scene);
+		UpdateSceneWidth();
+	}
+	void InsertSceneAfterLast(SceneId scene) {
+		p->insert(prev_index++, scene);
 		UpdateSceneWidth();
 	}
 
