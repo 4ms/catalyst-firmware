@@ -58,21 +58,6 @@ public:
 			if (last != s.playhead || s.did_step) {
 				s.new_step = true;
 				s.did_step = false;
-				if (s.step == 0) {
-					if (d.GetStartOffset(chan).has_value()) {
-						if (queue.channel.IsQueued(chan)) {
-							d.SetStartOffset(chan, queue.channel.Step(chan) * Model::SeqStepsPerPage);
-						}
-						queue.global.Step(chan);
-					} else {
-						if (queue.global.IsQueued(chan)) {
-							queue.global.Step(chan);
-							if (queue.global.HasFinished()) {
-								d.SetStartOffset(queue.global.Read() * Model::SeqStepsPerPage);
-							}
-						}
-					}
-				}
 			}
 		}
 	}
@@ -138,22 +123,37 @@ public:
 
 private:
 	void Step(uint8_t chan) {
-		auto &channel = this->channel[chan];
+		auto &s = this->channel[chan];
 
-		channel.clockdivider.Update(d.GetClockDiv(chan));
-		if (!channel.clockdivider.Step()) {
+		s.clockdivider.Update(d.GetClockDiv(chan));
+		if (!s.clockdivider.Step()) {
 			return;
 		}
-		channel.did_step = true;
+		s.did_step = true;
 
-		channel.prev_step = channel.step;
-		channel.step = channel.counter;
+		s.prev_step = s.step;
+		s.step = s.counter;
 		const auto playmode = d.GetPlayModeOrGlobal(chan);
 		const auto length = d.GetLengthOrGlobal(chan);
 
-		channel.counter += 1;
-		if (channel.counter >= ActualLength(length, playmode)) {
-			channel.counter = 0;
+		s.counter += 1;
+		if (s.counter >= ActualLength(length, playmode)) {
+			s.counter = 0;
+		}
+		if (s.step == 0) {
+			if (d.GetStartOffset(chan).has_value()) {
+				if (queue.channel.IsQueued(chan)) {
+					d.SetStartOffset(chan, queue.channel.Step(chan) * Model::SeqStepsPerPage);
+				}
+				queue.global.Step(chan);
+			} else {
+				if (queue.global.IsQueued(chan)) {
+					queue.global.Step(chan);
+					if (queue.global.HasFinished()) {
+						d.SetStartOffset(queue.global.Read() * Model::SeqStepsPerPage);
+					}
+				}
+			}
 		}
 	}
 	void Reset(uint8_t chan) {
