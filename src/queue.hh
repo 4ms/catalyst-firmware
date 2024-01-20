@@ -51,6 +51,9 @@ public:
 	bool HasFinished() const {
 		return is_queued == 0;
 	}
+	void Cancel() {
+		is_queued = 0;
+	}
 };
 } // namespace Details
 
