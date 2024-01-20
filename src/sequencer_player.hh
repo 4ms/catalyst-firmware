@@ -210,13 +210,17 @@ private:
 				break;
 		}
 
-		if (queue.global.HasFinished() || queue.global.IsQueued(chan.value_or(0))) {
-			const auto so = d.GetStartOffsetOrGlobal(chan);
-			return ((s % l) + so) % Model::MaxSeqSteps;
+		int so;
+		if (d.GetStartOffset(chan.value_or(0)).has_value()) {
+			so = d.GetStartOffset(chan.value_or(0)).value();
 		} else {
-			const auto so = queue.global.Read() * Model::SeqStepsPerPage;
-			return ((s % l) + so) % Model::MaxSeqSteps;
+			if (queue.global.HasFinished() || queue.global.IsQueued(chan.value_or(0))) {
+				so = d.GetStartOffsetOrGlobal(chan);
+			} else {
+				so = queue.global.Read() * Model::SeqStepsPerPage;
+			}
 		}
+		return ((s % l) + so) % Model::MaxSeqSteps;
 	}
 
 	uint32_t ActualLength(int8_t length, Settings::PlayMode::Mode pm) {
