@@ -33,7 +33,7 @@ constexpr auto max_queued_start_offset_changes = 8u;
 namespace Output
 {
 using type = uint16_t;
-static_assert(std::same_as<type, uint16_t>, "type on tested with uint16_t");
+static_assert(std::same_as<type, uint16_t>, "type only tested with uint16_t");
 using Buffer = std::array<type, NumChans>;
 } // namespace Output
 
