@@ -12,6 +12,7 @@ public:
 	void Init() override {
 		c.button.fine.clear_events();
 		c.button.morph.clear_events();
+		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -42,10 +43,18 @@ public:
 		p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
-		if (scene == p.GetSelectedChannel()) {
-			p.DeselectSequence();
+		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsSequenceSelected()) {
+			const auto s = p.GetSelectedChannel();
+			if (!p.data.settings.GetStartOffset(s).has_value()) {
+				p.data.settings.SetStartOffset(s, p.data.settings.GetStartOffset());
+			}
+			p.player.queue.channel.Queue(p.GetSelectedChannel(), scene);
 		} else {
-			p.SelectChannel(scene);
+			if (scene == p.GetSelectedChannel()) {
+				p.DeselectSequence();
+			} else {
+				p.SelectChannel(scene);
+			}
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
