@@ -11,19 +11,21 @@ namespace Catalyst2::Macro::Pathway
 using SceneId = uint8_t;
 static constexpr auto MaxPoints = 64u;
 
-struct Data : FixedVector<SceneId, MaxPoints> {
+struct Data {
 	Data() {
-		insert(0, 0);
-		insert(1, 7);
+		vec.insert(0, 0);
+		vec.insert(1, 7);
 	}
 	bool Validate() {
-		for (auto &s : *this) {
+		for (auto &s : vec) {
 			if (s >= Model::NumScenes) {
 				return false;
 			}
 		}
-		return this->size() <= MaxPoints && this->size() >= 2u;
+		return vec.size() <= MaxPoints && vec.size() >= 2u;
 	}
+
+	FixedVector<SceneId, MaxPoints> vec;
 };
 
 class Interface {
@@ -59,15 +61,15 @@ public:
 	}
 
 	SceneId SceneLeft() {
-		return (*p)[scene_left];
+		return p->vec[scene_left];
 	}
 	SceneId SceneRight() {
 		auto idx = scene_left + 1;
 		idx = idx >= size() ? 0 : idx;
-		return (*p)[idx];
+		return p->vec[idx];
 	}
 	SceneId SceneNearest() {
-		return (*p)[scene_nearest];
+		return p->vec[scene_nearest];
 	}
 	bool OnAScene() {
 		return on_a_scene;
@@ -83,17 +85,17 @@ public:
 		}
 	}
 	void ReplaceScene(SceneId scene) {
-		(*p)[scene_nearest] = scene;
+		p->vec[scene_nearest] = scene;
 		prev_index = scene_nearest;
 	}
 	void InsertScene(SceneId scene) {
 		prev_index = scene_left + 1;
-		p->insert(scene_left, scene);
+		p->vec.insert(scene_left, scene);
 		UpdateSceneWidth();
 	}
 	void InsertSceneAfterLast(SceneId scene) {
 		prev_index++;
-		p->insert(prev_index, scene);
+		p->vec.insert(prev_index, scene);
 		UpdateSceneWidth();
 	}
 
@@ -101,7 +103,7 @@ public:
 		if (size() <= 2)
 			return;
 
-		p->erase(scene_nearest);
+		p->vec.erase(scene_nearest);
 		UpdateSceneWidth();
 	}
 
@@ -109,7 +111,7 @@ public:
 		if (size() <= 2)
 			return;
 
-		p->erase(scene_left);
+		p->vec.erase(scene_left);
 		UpdateSceneWidth();
 	}
 
@@ -120,14 +122,14 @@ public:
 		auto idx = scene_left + 1;
 		idx = idx >= size() ? 0 : idx;
 
-		p->erase(idx);
+		p->vec.erase(idx);
 		UpdateSceneWidth();
 	}
 
 	void ClearScenes() {
 		// erase all scenes in between first and last one.
 		while (size() > 2)
-			p->erase(1);
+			p->vec.erase(1);
 
 		UpdateSceneWidth();
 	}
@@ -137,7 +139,7 @@ public:
 	}
 
 	uint8_t size() {
-		return p->size();
+		return p->vec.size();
 	}
 
 private:
