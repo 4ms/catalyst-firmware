@@ -29,8 +29,6 @@ constexpr auto MinSeqSteps = 1;
 
 constexpr auto max_queued_start_offset_changes = 8u;
 
-constexpr auto auto_save_seconds = 10u;
-
 namespace Output
 {
 using type = uint16_t;
