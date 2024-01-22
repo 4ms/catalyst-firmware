@@ -8,12 +8,12 @@ namespace Catalyst2::Macro::Ui
 {
 
 class Add : public Usual {
-	bool first;
+	bool first_insert;
 
 public:
 	using Usual::Usual;
 	void Init() override {
-		first = true;
+		first_insert = true;
 		if (c.button.shift.is_high()) {
 			p.shared.reset.Notify(true);
 		}
@@ -36,31 +36,34 @@ public:
 		p.shared.reset.Notify(false);
 
 		if (c.button.shift.is_high()) {
+			DeleteScene(button);
+			return;
+		}
+
+		if (first_insert) {
+			first_insert = false;
+
 			if (path.OnAScene()) {
-				if (path.SceneNearest() == button) {
-					path.RemoveSceneNearest();
-				}
+				path.ReplaceScene(button);
 			} else {
-				if (path.SceneLeft() == button) {
-					path.RemoveSceneLeft();
-				} else if (path.SceneRight() == button) {
-					path.RemoveSceneRight();
-				}
+				path.InsertScene(button);
 			}
-			return;
-		}
-
-		if (!first) {
-			path.InsertScene(button, true);
-			return;
-		}
-
-		first = false;
-
-		if (path.OnAScene()) {
-			path.ReplaceScene(button);
 		} else {
-			path.InsertScene(button, false);
+			path.InsertSceneAfterLast(button);
+		}
+	}
+	void DeleteScene(uint8_t button) {
+		auto &path = p.pathway;
+		if (path.OnAScene()) {
+			if (path.SceneNearest() == button) {
+				path.RemoveSceneNearest();
+			}
+		} else {
+			if (path.SceneLeft() == button) {
+				path.RemoveSceneLeft();
+			} else if (path.SceneRight() == button) {
+				path.RemoveSceneRight();
+			}
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

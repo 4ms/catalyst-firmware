@@ -1,6 +1,6 @@
 #pragma once
 #include "conf/model.hh"
-#include "fixedvector.hh"
+#include "util/fixed_vector.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -10,7 +10,7 @@ namespace Catalyst2::Macro::Pathway
 {
 using SceneId = uint8_t;
 static constexpr auto MaxPoints = 64u;
-// using Data = FixedVector<SceneId, MaxPoints>;
+
 struct Data : FixedVector<SceneId, MaxPoints> {
 	Data() {
 		insert(0, 0);
@@ -86,15 +86,14 @@ public:
 		(*p)[scene_nearest] = scene;
 		prev_index = scene_nearest;
 	}
-	void InsertScene(SceneId scene, bool after_last) {
-		auto index = scene_left;
-
-		if (after_last)
-			index = prev_index++;
-		else
-			prev_index = index + 1;
-
-		p->insert(index, scene);
+	void InsertScene(SceneId scene) {
+		prev_index = scene_left + 1;
+		p->insert(scene_left, scene);
+		UpdateSceneWidth();
+	}
+	void InsertSceneAfterLast(SceneId scene) {
+		prev_index++;
+		p->insert(prev_index, scene);
 		UpdateSceneWidth();
 	}
 
