@@ -23,10 +23,6 @@ public:
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
-		// TODO: Cleanup the logic for reset, too many negatives is confusing
-		// TODO: If the interface needs to change (!add && !shift) then call ChangeMode() or something. Return nothing
-		// vs. setting interface = this and then returning is very subtle, hard to follow Also the reset.Check() seems
-		// unrelated... or is it?
 		if (!add || !shift) {
 			p.shared.reset.Notify(false);
 		}
