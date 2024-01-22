@@ -140,13 +140,15 @@ private:
 		if (s.counter >= ActualLength(length, playmode)) {
 			s.counter = 0;
 		}
-		if (s.step == 0) {
-			if (d.GetStartOffset(chan).has_value()) {
+		if (d.GetStartOffset(chan).has_value()) {
+			if (s.step == 0) {
 				if (queue.channel.IsQueued(chan)) {
 					d.SetStartOffset(chan, queue.channel.Step(chan) * Model::SeqStepsPerPage);
 				}
-				queue.global.Step(chan);
-			} else {
+			}
+			queue.global.Step(chan);
+		} else {
+			if (s.step == 0) {
 				if (queue.global.IsQueued(chan)) {
 					queue.global.Step(chan);
 					if (queue.global.HasFinished()) {
