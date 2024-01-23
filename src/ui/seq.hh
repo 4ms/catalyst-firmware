@@ -41,15 +41,13 @@ public:
 				if (!p.player.IsPaused()) {
 					p.player.queue.global.Queue(ysb.value(), false);
 				} else {
+					p.player.queue.global.Cancel();
 					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					p.player.Reset();
 					p.player.TogglePause();
 				}
 			} else {
 				p.player.TogglePause();
-				if (p.player.IsPaused()) {
-					p.player.queue.global.Cancel();
-				}
 			}
 		}
 
