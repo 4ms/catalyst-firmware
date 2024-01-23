@@ -39,9 +39,8 @@ public:
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
 				if (!p.player.IsPaused()) {
-					p.player.queue.global.Queue(ysb.value(), false);
+					p.player.queue.Queue(ysb.value());
 				} else {
-					p.player.queue.global.Cancel();
 					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					p.player.Reset();
 					p.player.TogglePause();

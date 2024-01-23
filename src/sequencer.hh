@@ -54,7 +54,6 @@ struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
 	Random::Pool::SeqData randompool{};
-	Queue::Data queue;
 
 	bool validate() const {
 		auto ret = true;
@@ -62,7 +61,6 @@ struct Data {
 			ret &= c.Validate();
 		}
 		ret &= settings.Validate();
-		ret &= queue.Validate();
 		return ret;
 	}
 };
@@ -81,7 +79,7 @@ class Interface {
 public:
 	Data &data;
 	Shared::Interface &shared;
-	PlayerInterface player{data.settings, data.queue};
+	PlayerInterface player{data.settings};
 	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
 
 	Interface(Data &data, Shared::Interface &shared)

@@ -20,10 +20,8 @@ public:
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
 				if (!p.player.IsPaused()) {
-					p.player.queue.global.Queue(ysb.value(), true);
 				}
 			} else {
-				p.player.queue.global.Reset();
 				p.player.Stop();
 				p.shared.reset.Notify(true);
 			}

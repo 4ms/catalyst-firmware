@@ -44,11 +44,7 @@ public:
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsSequenceSelected()) {
-			const auto s = p.GetSelectedChannel();
-			if (!p.data.settings.GetStartOffset(s).has_value()) {
-				p.data.settings.SetStartOffset(s, p.data.settings.GetStartOffset());
-			}
-			p.player.queue.channel.Queue(p.GetSelectedChannel(), scene);
+			p.player.queue.Queue(p.GetSelectedChannel(), scene);
 		} else {
 			if (scene == p.GetSelectedChannel()) {
 				p.DeselectSequence();

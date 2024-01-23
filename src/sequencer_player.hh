@@ -26,14 +26,13 @@ class PlayerInterface {
 	};
 	std::array<State, Model::NumChans> channel;
 	bool pause = false;
-	Settings::Data &d;
+	Settings::Data &settings;
 	float phase = 0.f;
 
 public:
-	Queue::Interface queue;
-	PlayerInterface(Settings::Data &d, Queue::Data &qd)
-		: d{d}
-		, queue{qd} {
+	Queue::Interface queue{settings};
+	PlayerInterface(Settings::Data &settings)
+		: settings{settings} {
 	}
 
 	void RandomizeSteps() {
@@ -116,7 +115,7 @@ public:
 		return pause;
 	}
 	float GetPhase(uint8_t chan, float phase) {
-		const auto cdiv = d.GetClockDiv(chan);
+		const auto cdiv = settings.GetClockDiv(chan);
 		phase = phase / cdiv.Read();
 		const auto cdivphase = channel[chan].clockdivider.GetPhase(cdiv);
 		return phase + cdivphase;
@@ -126,7 +125,7 @@ private:
 	void Step(uint8_t chan) {
 		auto &s = this->channel[chan];
 
-		s.clockdivider.Update(d.GetClockDiv(chan));
+		s.clockdivider.Update(settings.GetClockDiv(chan));
 		if (!s.clockdivider.Step()) {
 			return;
 		}
@@ -134,36 +133,22 @@ private:
 
 		s.prev_step = s.step;
 		s.step = s.counter;
-		const auto playmode = d.GetPlayModeOrGlobal(chan);
-		const auto length = d.GetLengthOrGlobal(chan);
+		const auto playmode = settings.GetPlayModeOrGlobal(chan);
+		const auto length = settings.GetLengthOrGlobal(chan);
 
 		s.counter += 1;
 		if (s.counter >= ActualLength(length, playmode)) {
 			s.counter = 0;
 		}
-		if (d.GetStartOffset(chan).has_value()) {
-			if (s.step == 0) {
-				if (queue.channel.IsQueued(chan)) {
-					d.SetStartOffset(chan, queue.channel.Step(chan) * Model::SeqStepsPerPage);
-				}
-			}
-			queue.global.Step(chan);
-		} else {
-			if (s.step == 0) {
-				if (queue.global.IsQueued(chan)) {
-					queue.global.Step(chan);
-					if (queue.global.HasFinished()) {
-						d.SetStartOffset(queue.global.Read() * Model::SeqStepsPerPage);
-					}
-				}
-			}
+		if (s.step == 0) {
+			queue.Step(chan);
 		}
 	}
 	void Reset(uint8_t chan) {
 		auto &c = channel[chan];
 
-		const auto playmode = d.GetPlayModeOrGlobal(chan);
-		auto length = d.GetLengthOrGlobal(chan);
+		const auto playmode = settings.GetPlayModeOrGlobal(chan);
+		auto length = settings.GetLengthOrGlobal(chan);
 		length += playmode == Settings::PlayMode::Mode::PingPong ? length - 2 : 0;
 
 		c.counter = 0;
@@ -175,11 +160,11 @@ private:
 	}
 
 	uint8_t ToStep(uint8_t chan, uint8_t step) {
-		const auto l = d.GetLengthOrGlobal(chan);
-		const auto pm = d.GetPlayModeOrGlobal(chan);
+		const auto l = settings.GetLengthOrGlobal(chan);
+		const auto pm = settings.GetPlayModeOrGlobal(chan);
 		const auto actuallength = ActualLength(l, pm);
 		const auto mpo = static_cast<uint32_t>(phase * actuallength);
-		auto po = static_cast<uint32_t>(d.GetPhaseOffsetOrGlobal(chan) * actuallength);
+		auto po = static_cast<uint32_t>(settings.GetPhaseOffsetOrGlobal(chan) * actuallength);
 		po = po >= actuallength ? actuallength - 1 : po;
 
 		auto s = step + po + mpo;
@@ -214,20 +199,7 @@ private:
 				break;
 		}
 
-		int so;
-		if (d.GetStartOffset(chan).has_value()) {
-			so = d.GetStartOffset(chan).value();
-		} else {
-			if (queue.global.IsLooping()) {
-				so = queue.global.Read(chan) * Model::SeqStepsPerPage;
-			} else {
-				if (queue.global.HasFinished() || queue.global.IsQueued(chan)) {
-					so = d.GetStartOffsetOrGlobal(chan);
-				} else {
-					so = queue.global.Read() * Model::SeqStepsPerPage;
-				}
-			}
-		}
+		const auto so = queue.Read(chan);
 		return ((s % l) + so) % Model::MaxSeqSteps;
 	}
 
