@@ -29,12 +29,11 @@ class PlayerInterface {
 	Settings::Data &d;
 	float phase = 0.f;
 
-	Queue::Data queue_data;
-
 public:
-	Queue::Interface queue{queue_data};
-	PlayerInterface(Settings::Data &d)
-		: d{d} {
+	Queue::Interface queue;
+	PlayerInterface(Settings::Data &d, Queue::Data &qd)
+		: d{d}
+		, queue{qd} {
 	}
 
 	void RandomizeSteps() {
