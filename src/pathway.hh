@@ -90,7 +90,7 @@ public:
 	}
 	void InsertScene(SceneId scene) {
 		prev_index = scene_left + 1;
-		p->vec.insert(scene_left, scene);
+		p->vec.insert(prev_index, scene);
 		UpdateSceneWidth();
 	}
 	void InsertSceneAfterLast(SceneId scene) {
