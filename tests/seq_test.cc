@@ -16,7 +16,8 @@ floating point error test. sequencer crashes if (mode == ping pong && length == 
 TEST_CASE("Pingpong length bug") {
 
 	Sequencer::Settings::Data settings;
-	Sequencer::PlayerInterface player{settings};
+	Sequencer::Queue::Data queue;
+	Sequencer::PlayerInterface player{settings, queue};
 
 	using enum Sequencer::Settings::PlayMode::Mode;
 
