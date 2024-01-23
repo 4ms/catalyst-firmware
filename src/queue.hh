@@ -114,6 +114,7 @@ public:
 		for (auto &iq : is_queued) {
 			iq = false;
 		}
+		is_looping = false;
 	}
 	void Reset() {
 		for (auto &p : pos) {
