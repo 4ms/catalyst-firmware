@@ -29,8 +29,10 @@ class PlayerInterface {
 	Settings::Data &d;
 	float phase = 0.f;
 
+	Queue::Data queue_data;
+
 public:
-	Queue::Interface queue;
+	Queue::Interface queue{queue_data};
 	PlayerInterface(Settings::Data &d)
 		: d{d} {
 	}
@@ -214,13 +216,17 @@ private:
 		}
 
 		int so;
-		if (d.GetStartOffset(chan.value_or(0)).has_value()) {
-			so = d.GetStartOffset(chan.value_or(0)).value();
+		if (d.GetStartOffset(chan).has_value()) {
+			so = d.GetStartOffset(chan).value();
 		} else {
-			if (queue.global.HasFinished() || queue.global.IsQueued(chan.value_or(0))) {
-				so = d.GetStartOffsetOrGlobal(chan);
+			if (queue.global.IsLooping()) {
+				so = queue.global.Read(chan) * Model::SeqStepsPerPage;
 			} else {
-				so = queue.global.Read() * Model::SeqStepsPerPage;
+				if (queue.global.HasFinished() || queue.global.IsQueued(chan)) {
+					so = d.GetStartOffsetOrGlobal(chan);
+				} else {
+					so = queue.global.Read() * Model::SeqStepsPerPage;
+				}
 			}
 		}
 		return ((s % l) + so) % Model::MaxSeqSteps;

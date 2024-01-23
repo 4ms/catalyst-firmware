@@ -39,24 +39,20 @@ public:
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
 				if (!p.player.IsPaused()) {
-					p.player.queue.global.Queue(ysb.value());
+					p.player.queue.global.Queue(ysb.value(), false);
 				} else {
 					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					p.player.Reset();
 					p.player.TogglePause();
 				}
 			} else {
-				if (c.button.shift.is_high()) {
-					p.player.Stop();
-					p.shared.reset.Notify(true);
-				} else {
-					p.player.TogglePause();
-					if (p.player.IsPaused()) {
-						p.player.queue.global.Cancel();
-					}
+				p.player.TogglePause();
+				if (p.player.IsPaused()) {
+					p.player.queue.global.Cancel();
 				}
 			}
 		}
+
 		if (!ysb.has_value()) {
 			if (c.button.play.just_went_low()) {
 				p.shared.reset.Notify(false);

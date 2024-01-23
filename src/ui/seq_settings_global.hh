@@ -15,10 +15,20 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+
+		const auto ysb = YoungestSceneButton();
 		if (c.button.play.just_went_high()) {
-			p.player.Stop();
-			p.shared.reset.Notify(true);
+			if (ysb.has_value()) {
+				if (!p.player.IsPaused()) {
+					p.player.queue.global.Queue(ysb.value(), true);
+				}
+			} else {
+				p.player.queue.global.Reset();
+				p.player.Stop();
+				p.shared.reset.Notify(true);
+			}
 		}
+
 		if (!c.button.shift.is_high() || c.button.bank.is_high()) {
 			p.shared.reset.Notify(false);
 			return;
