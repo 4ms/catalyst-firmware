@@ -39,7 +39,7 @@ struct Data {
 		for (auto &q : queue) {
 			ret &= q < Model::SeqPages;
 		}
-		ret &= size <= queue.size();
+		ret &= size <= Model::MaxQueuedStartOffsetPages;
 		return ret;
 	}
 };
