@@ -22,6 +22,7 @@ public:
 				if (!p.player.IsPaused()) {
 				}
 			} else {
+				p.player.queue.Stop();
 				p.player.Stop();
 				p.shared.reset.Notify(true);
 			}
