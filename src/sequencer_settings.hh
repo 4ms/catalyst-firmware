@@ -61,7 +61,7 @@ class Global {
 			val = to;
 		}
 
-		T Read() {
+		T Read() const {
 			return val;
 		}
 
@@ -154,7 +154,7 @@ class Channel {
 			above_pivot = val >= pivot;
 		}
 
-		std::optional<T> Read() {
+		std::optional<T> Read() const {
 			return val;
 		}
 
@@ -218,71 +218,71 @@ public:
 	void Paste(uint8_t chan, const Channel &d) {
 		channel[chan] = d;
 	}
-	PhaseOffset::type GetPhaseOffsetOrGlobal(std::optional<uint8_t> chan) {
+	PhaseOffset::type GetPhaseOffsetOrGlobal(std::optional<uint8_t> chan) const {
 		return chan.has_value() ? GetPhaseOffset(chan.value()).value_or(GetPhaseOffset()) : GetPhaseOffset();
 	}
-	Length::type GetLengthOrGlobal(std::optional<uint8_t> chan) {
+	Length::type GetLengthOrGlobal(std::optional<uint8_t> chan) const {
 		return chan.has_value() ? GetLength(chan.value()).value_or(GetLength()) : GetLength();
 	}
-	StartOffset::type GetStartOffsetOrGlobal(std::optional<uint8_t> chan) {
+	StartOffset::type GetStartOffsetOrGlobal(std::optional<uint8_t> chan) const {
 		return chan.has_value() ? GetStartOffset(chan.value()).value_or(GetStartOffset()) : GetStartOffset();
 	}
-	PlayMode::Mode GetPlayModeOrGlobal(std::optional<uint8_t> chan) {
+	PlayMode::Mode GetPlayModeOrGlobal(std::optional<uint8_t> chan) const {
 		return chan.has_value() ? GetPlayMode(chan.value()).value_or(GetPlayMode()) : GetPlayMode();
 	}
-	Transposer::type GetTransposeOrGlobal(std::optional<uint8_t> chan) {
+	Transposer::type GetTransposeOrGlobal(std::optional<uint8_t> chan) const {
 		return chan.has_value() ? GetTranspose(chan.value()).value_or(GetTranspose()) : GetTranspose();
 	}
-	Random::Amount::type GetRandomOrGlobal(std::optional<uint8_t> chan) {
+	Random::Amount::type GetRandomOrGlobal(std::optional<uint8_t> chan) const {
 		return chan.has_value() ? GetRandom(chan.value()).value_or(GetRandom()) : GetRandom();
 	}
-	std::optional<PhaseOffset::type> GetPhaseOffset(uint8_t chan) {
+	std::optional<PhaseOffset::type> GetPhaseOffset(uint8_t chan) const {
 		return channel[chan].phaseoffset.Read();
 	}
-	PhaseOffset::type GetPhaseOffset() {
+	PhaseOffset::type GetPhaseOffset() const {
 		return global.phaseoffset.Read();
 	}
-	std::optional<Length::type> GetLength(uint8_t chan) {
+	std::optional<Length::type> GetLength(uint8_t chan) const {
 		return channel[chan].length.Read();
 	}
-	Length::type GetLength() {
+	Length::type GetLength() const {
 		return global.length.Read();
 	}
-	std::optional<StartOffset::type> GetStartOffset(uint8_t chan) {
+	std::optional<StartOffset::type> GetStartOffset(uint8_t chan) const {
 		return channel[chan].startoffset.Read();
 	}
-	StartOffset::type GetStartOffset() {
+	StartOffset::type GetStartOffset() const {
 		return global.startoffset.Read();
 	}
-	std::optional<PlayMode::Mode> GetPlayMode(uint8_t chan) {
+	std::optional<PlayMode::Mode> GetPlayMode(uint8_t chan) const {
 		if (channel[chan].playmode.Read().has_value()) {
 			return PlayMode::Read(channel[chan].playmode.Read().value());
 		} else {
 			return std::nullopt;
 		}
 	}
-	PlayMode::Mode GetPlayMode() {
+	PlayMode::Mode GetPlayMode() const {
 		return PlayMode::Read(global.playmode.Read());
 	}
-	std::optional<Transposer::type> GetTranspose(uint8_t chan) {
+	std::optional<Transposer::type> GetTranspose(uint8_t chan) const {
 		return channel[chan].transpose.Read();
 	}
-	Transposer::type GetTranspose() {
+	Transposer::type GetTranspose() const {
 		return global.transpose.Read();
 	}
-	std::optional<Random::Amount::type> GetRandom(uint8_t chan) {
+	std::optional<Random::Amount::type> GetRandom(uint8_t chan) const {
 		return channel[chan].random.Read();
 	}
-	Random::Amount::type GetRandom() {
+	Random::Amount::type GetRandom() const {
 		return global.random.Read();
 	}
-	Catalyst2::Channel::Range GetRange(uint8_t chan) {
+	Catalyst2::Channel::Range GetRange(uint8_t chan) const {
 		return channel[chan].range;
 	}
-	Clock::Divider::type GetClockDiv(uint8_t chan) {
+	Clock::Divider::type GetClockDiv(uint8_t chan) const {
 		return channel[chan].clockdiv;
 	}
-	Catalyst2::Channel::Mode GetChannelMode(uint8_t chan) {
+	Catalyst2::Channel::Mode GetChannelMode(uint8_t chan) const {
 		return channel[chan].mode;
 	}
 	void IncPhaseOffset(uint8_t chan, int32_t inc) {

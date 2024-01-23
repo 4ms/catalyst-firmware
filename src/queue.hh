@@ -39,7 +39,7 @@ public:
 		}
 		settings.SetStartOffset(page * Model::SeqStepsPerPage);
 	}
-	type Read(uint8_t chan) {
+	type Read(uint8_t chan) const {
 		if (state[chan].is_queued) {
 			return state[chan].prev_offset;
 		} else {
