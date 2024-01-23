@@ -76,7 +76,7 @@ public:
 			Reset(i);
 		}
 	}
-	uint8_t GetFirstStep(std::optional<uint8_t> chan) {
+	uint8_t GetFirstStep(uint8_t chan) {
 		return ToStep(chan, 0);
 	}
 
@@ -173,7 +173,7 @@ private:
 		c.prev_step = c.step;
 	}
 
-	uint8_t ToStep(std::optional<uint8_t> chan, uint8_t step) {
+	uint8_t ToStep(uint8_t chan, uint8_t step) {
 		const auto l = d.GetLengthOrGlobal(chan);
 		const auto pm = d.GetPlayModeOrGlobal(chan);
 		const auto actuallength = ActualLength(l, pm);
@@ -189,7 +189,7 @@ private:
 				s = l + -1 + -s;
 				break;
 			case Random:
-				s = channel[chan.value_or(0)].randomstep[s % l];
+				s = channel[chan].randomstep[s % l];
 				break;
 			case PingPong: {
 				auto ping = true;
