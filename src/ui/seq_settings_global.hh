@@ -17,15 +17,21 @@ public:
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
 		const auto ysb = YoungestSceneButton();
-		if (c.button.play.just_went_high()) {
-			if (ysb.has_value()) {
-				if (!p.player.IsPaused()) {
-				}
-			} else {
-				p.player.queue.Stop();
-				p.player.Stop();
-				p.shared.reset.Notify(true);
-			}
+		// if (c.button.play.just_went_high()) {
+		//	if (ysb.has_value()) {
+		//		if (!p.player.IsPaused()) {
+		//			p.player.songmode.Queue(ysb.value());
+		//		}
+		//	} else {
+		//		p.player.songmode.Cancel();
+		//		p.player.queue.Stop();
+		//		p.player.Stop();
+		//		p.shared.reset.Notify(true);
+		//	}
+		// }
+
+		if (c.button.play.just_went_high() && ysb.has_value()) {
+			return;
 		}
 
 		if (!c.button.shift.is_high() || c.button.bank.is_high()) {

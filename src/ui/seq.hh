@@ -9,6 +9,7 @@
 #include "seq_reset.hh"
 #include "seq_settings.hh"
 #include "ui/seq_settings_global.hh"
+#include "ui/seq_song_mode.hh"
 
 namespace Catalyst2::Sequencer::Ui
 {
@@ -18,6 +19,7 @@ class Main : public Usual {
 	Settings::Global global_settings{p, c};
 	Settings::Channel channel_settings{p, c};
 	Reset reset{p, c};
+	Ui::SongMode songmode{p, c};
 
 public:
 	using Usual::Usual;
@@ -39,6 +41,7 @@ public:
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
 				if (!p.player.IsPaused()) {
+					p.player.songmode.Cancel();
 					p.player.queue.Queue(ysb.value());
 				} else {
 					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
@@ -78,6 +81,10 @@ public:
 		}
 		const auto bshift = c.button.shift.is_high();
 		const auto bbank = c.button.bank.is_high();
+		if (bshift && ysb.has_value() && c.button.play.is_high()) {
+			interface = &songmode;
+			return;
+		}
 		if (bshift && bbank) {
 			interface = &channel_settings;
 			return;
