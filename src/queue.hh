@@ -34,12 +34,15 @@ public:
 struct Data {
 	std::array<uint8_t, Model::MaxQueuedStartOffsetPages + 1> queue;
 	uint8_t size;
+	bool is_looping = false;
 	bool Validate() const {
 		auto ret = true;
 		for (auto &q : queue) {
 			ret &= q < Model::SeqPages;
 		}
 		ret &= size <= Model::MaxQueuedStartOffsetPages;
+		const auto il = static_cast<uint8_t>(is_looping);
+		ret &= il == true || il == false;
 		return ret;
 	}
 };
@@ -47,7 +50,6 @@ struct Data {
 class Global {
 	std::array<bool, Model::NumChans> is_queued;
 	std::array<uint8_t, Model::NumChans> pos;
-	bool is_looping = false;
 	Data &data;
 
 public:
@@ -59,9 +61,9 @@ public:
 		if (!do_loop) {
 			data.queue[Model::MaxQueuedStartOffsetPages] = page;
 			data.size = 0;
-			is_looping = false;
+			data.is_looping = false;
 		} else {
-			if (!is_looping) {
+			if (!data.is_looping) {
 				data.queue[0] = data.queue[Model::MaxQueuedStartOffsetPages];
 				data.queue[1] = page;
 				data.size = 2;
@@ -75,14 +77,14 @@ public:
 				data.queue[data.size] = page;
 				data.size += 1;
 			}
-			is_looping = true;
+			data.is_looping = true;
 		}
 		for (auto &iq : is_queued) {
 			iq = true;
 		}
 	}
 	void Step(uint8_t chan) {
-		if (is_looping) {
+		if (data.is_looping) {
 			pos[chan] += 1;
 			if (pos[chan] >= data.size) {
 				pos[chan] = 0;
@@ -101,7 +103,7 @@ public:
 		return is_queued[chan];
 	}
 	bool HasFinished() const {
-		if (is_looping) {
+		if (data.is_looping) {
 			return false;
 		}
 		auto ret = true;
@@ -114,7 +116,7 @@ public:
 		for (auto &iq : is_queued) {
 			iq = false;
 		}
-		is_looping = false;
+		data.is_looping = false;
 	}
 	void Reset() {
 		for (auto &p : pos) {
@@ -122,7 +124,7 @@ public:
 		}
 	}
 	bool IsLooping() const {
-		return is_looping;
+		return data.is_looping;
 	}
 };
 
