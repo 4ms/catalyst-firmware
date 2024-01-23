@@ -18,6 +18,10 @@ public:
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.morph.just_went_high()) {
+			p.shared.save.Notify();
+		}
+		if (p.shared.save.Check() && c.button.morph.is_high()) {
+			p.shared.save.Notify();
 			p.shared.do_save = true;
 		}
 

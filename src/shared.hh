@@ -74,6 +74,22 @@ class Interface {
 			return true;
 		}
 	};
+	class SaveDelay {
+		static constexpr auto hold_duration = Clock::MsToTicks(3000);
+		Clock::Bpm &internalclock;
+		uint32_t set_time;
+
+	public:
+		SaveDelay(Clock::Bpm &ic)
+			: internalclock{ic} {
+		}
+		void Notify() {
+			set_time = internalclock.TimeNow();
+		}
+		bool Check() {
+			return internalclock.TimeNow() - set_time >= hold_duration;
+		}
+	};
 	class ModeSwitcher {
 		static constexpr auto hold_duration = Clock::MsToTicks(3000);
 		Clock::Bpm &internalclock;
@@ -139,6 +155,7 @@ public:
 	DisplayHanger hang{internalclock};
 	ResetManager reset{internalclock};
 	ModeSwitcher modeswitcher{internalclock};
+	SaveDelay save{internalclock};
 	Blinker blinker{internalclock};
 	bool do_save = false;
 	bool did_paste = false;
