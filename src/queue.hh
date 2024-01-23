@@ -50,6 +50,7 @@ struct Data {
 class Global {
 	std::array<bool, Model::NumChans> is_queued;
 	std::array<uint8_t, Model::NumChans> pos;
+	bool next_is_last = false;
 	Data &data;
 
 public:
@@ -59,9 +60,13 @@ public:
 
 	void Queue(uint8_t page, bool do_loop) {
 		if (!do_loop) {
+			if (data.is_looping) {
+				next_is_last = true;
+			} else {
+				data.size = 0;
+				data.is_looping = false;
+			}
 			data.queue[Model::MaxQueuedStartOffsetPages] = page;
-			data.size = 0;
-			data.is_looping = false;
 		} else {
 			if (!data.is_looping) {
 				data.queue[0] = data.queue[Model::MaxQueuedStartOffsetPages];
@@ -85,9 +90,19 @@ public:
 	}
 	void Step(uint8_t chan) {
 		if (data.is_looping) {
-			pos[chan] += 1;
-			if (pos[chan] >= data.size) {
-				pos[chan] = 0;
+			if (next_is_last) {
+				pos[chan] = Model::MaxQueuedStartOffsetPages;
+				is_queued[chan] = false;
+				if (!IsQueued()) {
+					data.is_looping = false;
+					next_is_last = false;
+					data.size = 0;
+				}
+			} else {
+				pos[chan] += 1;
+				if (pos[chan] >= data.size) {
+					pos[chan] = 0;
+				}
 			}
 		} else {
 			is_queued[chan] = false;
@@ -106,11 +121,7 @@ public:
 		if (data.is_looping) {
 			return false;
 		}
-		auto ret = true;
-		for (auto &iq : is_queued) {
-			ret &= iq == false;
-		}
-		return ret;
+		return IsQueued();
 	}
 	void Cancel() {
 		for (auto &iq : is_queued) {
@@ -125,6 +136,15 @@ public:
 	}
 	bool IsLooping() const {
 		return data.is_looping;
+	}
+
+private:
+	bool IsQueued() const {
+		auto ret = true;
+		for (auto &iq : is_queued) {
+			ret &= iq == false;
+		}
+		return ret;
 	}
 };
 
