@@ -3,160 +3,57 @@
 #include "conf/model.hh"
 #include "sequencer_settings.hh"
 #include <array>
-#include <type_traits>
 
 namespace Catalyst2::Sequencer::Queue
 {
-namespace Details
-{
 
-class Channel {
+class Interface {
+	using type = Settings::StartOffset::type;
 	struct State {
-		uint8_t queued_page;
+		type prev_offset;
 		bool is_queued = false;
 	};
 	std::array<State, Model::NumChans> state;
+	Settings::Data &settings;
 
 public:
+	Interface(Settings::Data &settings)
+		: settings{settings} {
+	}
 	void Queue(uint8_t chan, uint8_t page) {
-		state[chan].queued_page = page;
-		state[chan].is_queued = true;
-	}
-	uint8_t Step(uint8_t chan) {
-		state[chan].is_queued = false;
-		return state[chan].queued_page;
-	}
-	bool IsQueued(uint8_t chan) {
-		return state[chan].is_queued;
-	}
-};
-
-struct Data {
-	std::array<uint8_t, Model::MaxQueuedStartOffsetPages + 1> queue;
-	uint8_t size;
-	bool is_looping = false;
-	bool Validate() const {
-		auto ret = true;
-		for (auto &q : queue) {
-			ret &= q < Model::SeqPages;
+		if (!state[chan].is_queued) {
+			state[chan].prev_offset = settings.GetStartOffsetOrGlobal(chan);
+			state[chan].is_queued = true;
 		}
-		ret &= size <= Model::MaxQueuedStartOffsetPages;
-		const auto il = static_cast<uint8_t>(is_looping);
-		ret &= il == true || il == false;
-		return ret;
+		settings.SetStartOffset(chan, page * Model::SeqStepsPerPage);
 	}
-};
-
-class Global {
-	std::array<bool, Model::NumChans> is_queued;
-	std::array<uint8_t, Model::NumChans> pos;
-	bool next_is_last = false;
-	Data &data;
-
-public:
-	Global(Data &data)
-		: data{data} {
-	}
-
-	void Queue(uint8_t page, bool do_loop) {
-		if (!do_loop) {
-			if (data.is_looping) {
-				next_is_last = true;
-			} else {
-				data.size = 0;
-				data.is_looping = false;
+	void Queue(uint8_t page) {
+		const auto so = settings.GetStartOffset();
+		for (auto i = 0u; i < Model::NumChans; ++i) {
+			if (state[i].is_queued || settings.GetStartOffset(i).has_value()) {
+				// if value has override ignore...
+				continue;
 			}
-			data.queue[Model::MaxQueuedStartOffsetPages] = page;
+			state[i].prev_offset = so;
+			state[i].is_queued = true;
+		}
+		settings.SetStartOffset(page * Model::SeqStepsPerPage);
+	}
+	type Read(uint8_t chan) {
+		if (state[chan].is_queued) {
+			return state[chan].prev_offset;
 		} else {
-			if (!data.is_looping) {
-				data.queue[0] = data.queue[Model::MaxQueuedStartOffsetPages];
-				data.queue[1] = page;
-				data.size = 2;
-				for (auto &p : pos) {
-					p = 0;
-				}
-			} else {
-				if (data.size >= Model::MaxQueuedStartOffsetPages) {
-					return;
-				}
-				data.queue[data.size] = page;
-				data.size += 1;
-			}
-			data.is_looping = true;
-		}
-		for (auto &iq : is_queued) {
-			iq = true;
+			return settings.GetStartOffsetOrGlobal(chan);
 		}
 	}
 	void Step(uint8_t chan) {
-		if (data.is_looping) {
-			if (next_is_last) {
-				pos[chan] = Model::MaxQueuedStartOffsetPages;
-				is_queued[chan] = false;
-				if (!IsQueued()) {
-					data.is_looping = false;
-					next_is_last = false;
-					data.size = 0;
-				}
-			} else {
-				pos[chan] += 1;
-				if (pos[chan] >= data.size) {
-					pos[chan] = 0;
-				}
-			}
-		} else {
-			is_queued[chan] = false;
+		state[chan].is_queued = false;
+	}
+	void Stop() {
+		for (auto &s : state) {
+			s.is_queued = false;
 		}
-	}
-	uint8_t Read() const {
-		return data.queue[Model::MaxQueuedStartOffsetPages];
-	}
-	uint8_t Read(uint8_t chan) const {
-		return data.queue[pos[chan]];
-	}
-	bool IsQueued(uint8_t chan) const {
-		return is_queued[chan];
-	}
-	bool HasFinished() const {
-		if (data.is_looping) {
-			return false;
-		}
-		return IsQueued();
-	}
-	void Cancel() {
-		for (auto &iq : is_queued) {
-			iq = false;
-		}
-		data.is_looping = false;
-	}
-	void Reset() {
-		for (auto &p : pos) {
-			p = 0;
-		}
-	}
-	bool IsLooping() const {
-		return data.is_looping;
-	}
-
-private:
-	bool IsQueued() const {
-		auto ret = true;
-		for (auto &iq : is_queued) {
-			ret &= iq == false;
-		}
-		return ret;
 	}
 };
 
-} // namespace Details
-
-using Data = Details::Data;
-
-struct Interface {
-	Details::Channel channel;
-	Details::Global global;
-	Interface(Data &data)
-		: global{data} {
-	}
-};
 } // namespace Catalyst2::Sequencer::Queue
