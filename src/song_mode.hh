@@ -23,7 +23,6 @@ struct Data {
 class Interface {
 	struct State {
 		uint8_t pos;
-		uint8_t prev_offset;
 		bool is_queued = false;
 	};
 	std::array<State, Model::NumChans> state;
@@ -41,6 +40,11 @@ public:
 		data.size += 1;
 	}
 	void Cancel() {
+		if (data.size) {
+			for (auto &s : state) {
+				s.is_queued = true;
+			}
+		}
 		data.size = 0;
 	}
 	uint8_t Size() const {
@@ -57,6 +61,10 @@ public:
 		if (state[chan].pos >= data.size) {
 			state[chan].pos = 0;
 		}
+		state[chan].is_queued = false;
+	}
+	bool IsQueued(uint8_t chan) {
+		return state[chan].is_queued;
 	}
 };
 
