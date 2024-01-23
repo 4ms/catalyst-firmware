@@ -9,8 +9,6 @@ namespace Catalyst2::Sequencer::Queue
 {
 namespace Details
 {
-using bit_type = std::conditional_t<Model::NumChans <= 8, uint8_t, uint32_t>;
-inline constexpr bit_type queue_mask = static_cast<bit_type>(-1);
 
 class Channel {
 	struct State {
