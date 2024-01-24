@@ -4,7 +4,7 @@
 
 namespace BootloaderConf
 {
-static constexpr uint32_t SampleRate = 48000;
+static constexpr uint32_t SampleRate = 22050;
 
 constexpr inline uint32_t ReceiveSectorSize = 16 * 1024; // -g param
 
