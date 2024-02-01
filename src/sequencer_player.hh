@@ -48,6 +48,21 @@ public:
 			if (do_step) {
 				phaser.Step(i, actual_length);
 			}
+			if (phaser.DidReset(i)) {
+				if (!songmode.IsActive()) {
+					if (songmode.IsQueued(i)) {
+						songmode.Step(i);
+					} else {
+						queue.Step(i);
+					}
+				} else {
+					if (queue.IsQueued(i)) {
+						queue.Step(i);
+					} else {
+						songmode.Step(i);
+					}
+				}
+			}
 			auto &c = channel[i];
 			c.first_step = ToStep(i, 0, l, pm);
 			c.sequence_phase = GetPhase(i, phase, internal_clock_phase, actual_length);
