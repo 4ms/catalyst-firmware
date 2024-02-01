@@ -17,37 +17,48 @@
 namespace Catalyst2::Sequencer
 {
 
-class StepModifier {
-	static constexpr uint8_t min = 0, max = 12;
-	uint8_t m = 0;
+struct Step : Channel::Value {
+	static constexpr auto morphmin = 0u, morphmax = 12u;
+	static constexpr auto probmin = 0u, probmax = 15u;
+	uint8_t morph : 4;
+	uint8_t prob : 4;
+	int8_t trig_delay;
 
 public:
-	float AsMorph() {
-		return m / static_cast<float>(max);
+	float ReatTrigDelay() const {
+		return trig_delay / ((INT8_MAX + 1) * 2.f);
 	}
-	uint8_t AsRetrig() {
-		return m >> 2;
+	float ReadMorph() const {
+		return morph / static_cast<float>(morphmax);
 	}
-	void Inc(int32_t inc, bool is_gate) {
+	uint8_t ReadRetrig() const {
+		return morph >> 2;
+	}
+	void IncModifier(int32_t inc, bool is_gate) {
 		if (is_gate) {
 			inc *= 4;
 		}
-		m = std::clamp<int32_t>(m + inc, min, max);
+		morph = std::clamp<int32_t>(morph + inc, morphmin, morphmax);
+	}
+	void IncProbability(int32_t inc) {
+		prob = std::clamp<int32_t>(prob + inc, probmin, probmax);
+	}
+	void IncTrigDelay(int32_t inc) {
+		trig_delay = std::clamp<int32_t>(trig_delay + inc, INT8_MIN, INT8_MAX);
 	}
 	bool Validate() const {
-		return m <= max;
+		auto ret = true;
+		ret &= Channel::Value::Validate();
+		// trig_Delay is always good to go... cant validate
+		ret &= morph <= morphmax && prob <= probmax;
+		return ret;
 	}
-};
-
-struct Step : Channel::Value {
-	StepModifier modifier;
 };
 
 struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 	bool Validate() const {
 		auto ret = true;
 		for (auto &s : *this) {
-			ret &= s.modifier.Validate();
 			ret &= s.Validate();
 		}
 		return ret;
