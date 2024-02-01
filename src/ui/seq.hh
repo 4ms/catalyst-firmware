@@ -38,7 +38,11 @@ public:
 			if (ysb.has_value()) {
 				if (!p.player.IsPaused()) {
 					p.player.songmode.Cancel();
-					p.player.queue.Queue(ysb.value());
+					if (p.player.songmode.IsQueued()) {
+						p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+					} else {
+						p.player.queue.Queue(ysb.value());
+					}
 				} else {
 					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					p.player.Reset();

@@ -66,6 +66,14 @@ public:
 	bool IsQueued(uint8_t chan) {
 		return state[chan].is_queued;
 	}
+	bool IsQueued() {
+		for (auto s : state) {
+			if (s.is_queued) {
+				return true;
+			}
+		}
+		return false;
+	}
 };
 
 } // namespace Catalyst2::Sequencer::SongMode
