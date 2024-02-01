@@ -66,4 +66,9 @@ struct MacroEncoderAlts {
 	static constexpr auto SliderSlew = 6u;
 	static constexpr auto Random = 7u;
 };
+namespace HoldTimes
+{
+inline constexpr auto mode_switcher = 3000u;
+inline constexpr auto reset = 3000u;
+} // namespace HoldTimes
 } // namespace Catalyst2::Model
