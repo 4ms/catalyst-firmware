@@ -20,7 +20,9 @@ class Mode {
 		Quantizer::Scale{0.f, 2.f, 4.f, 8.f, 10.f},										// wholetone
 	};
 
-	static constexpr uint8_t max = Palette::Scales::color.size() - 1;
+	// notice no -1 after size.
+	// final "scale" is gate mode
+	static constexpr uint8_t max = Scale.size();
 	static constexpr uint8_t min = 0u;
 	uint8_t val = min;
 
