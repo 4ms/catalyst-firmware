@@ -36,7 +36,7 @@ public:
 		controls.Start();
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
-		sequencer.Stop();
+		params.sequencer.Reset(true);
 	}
 	void Update() {
 		controls.Update();
@@ -131,7 +131,7 @@ private:
 			params.macro.SelectBank(0);
 		} else {
 			ui = &sequencer;
-			sequencer.Stop();
+			params.sequencer.Reset(true);
 		}
 	}
 };

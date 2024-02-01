@@ -17,7 +17,7 @@ public:
 		p.seqclock.Update();
 
 		if (c.jack.reset.just_went_high()) {
-			p.Reset();
+			p.Reset(false);
 		}
 
 		if (c.jack.trig.just_went_high()) {
@@ -25,13 +25,7 @@ public:
 		}
 
 		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.player.Update(phase, p.seqclock.GetPhase(), p.seqclock.Output());
-	}
-	void Stop() {
-		p.shared.clockdivider.Reset();
-		p.seqclock.Reset();
-		p.player.Reset();
-		p.seqclock.Pause(true);
+		p.Update(phase);
 	}
 
 protected:

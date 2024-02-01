@@ -13,7 +13,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		wait = true;
-		Stop();
+		p.Reset(true);
 	}
 	void Update(Abstract *&interface) override {
 		if (wait) {
@@ -35,7 +35,7 @@ public:
 			}
 			if (c.button.play.is_high()) {
 				p.data = Sequencer::Data{};
-				Stop();
+				p.Reset(true);
 				return;
 			}
 		}
