@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "conf/palette.hh"
 #include "controls.hh"
 
@@ -79,26 +80,23 @@ protected:
 		}
 	}
 
-	void SetEncoderLedsAddition(uint8_t num, Color col) {
-		static constexpr auto max_val = [] {
-			auto out = 0u;
-			for (auto i = 1u; i <= Model::NumChans; i++) {
-				out += i;
-			}
-			return out;
-		}();
-
-		if (num > max_val) {
-			return;
+	void SetLedsClockDiv(uint32_t div) {
+		div -= 1;
+		auto idx = 0u;
+		while (div >= 64) {
+			div -= 64;
+			idx += 1;
 		}
-		auto t = Model::NumChans;
 
-		while (num >= t) {
-			num -= t;
-			t -= 1;
-			c.SetEncoderLed(t, col);
+		auto page = 0;
+		c.SetButtonLed(page, true);
+		while (div >= Model::NumChans) {
+			div -= Model::NumChans;
+			page += 1;
+			c.SetButtonLed(page, true);
 		}
-		c.SetEncoderLed(num - 1, col);
+		const auto col = Palette::Setting::ClockDiv::color[idx];
+		c.SetEncoderLed(div, col);
 	}
 
 	std::optional<uint8_t> YoungestSceneButton() {

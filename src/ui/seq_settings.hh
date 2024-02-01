@@ -128,7 +128,7 @@ public:
 					break;
 				}
 				case SeqEncoderAlts::ClockDiv: {
-					SetEncoderLedsAddition(clockdiv.Read(), Setting::clockdiv);
+					SetLedsClockDiv(clockdiv.Read());
 					break;
 				}
 				case SeqEncoderAlts::PhaseOffset: {

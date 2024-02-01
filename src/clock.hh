@@ -156,18 +156,19 @@ class Divider {
 
 public:
 	class type {
-		static constexpr std::array<uint8_t, 12> divideroptions = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 24, 32};
+		static constexpr auto min = 0u, max = 255u;
 		uint8_t v = 0;
 
 	public:
 		void Inc(int32_t inc) {
-			v = std::clamp<int32_t>(v + inc, 0, divideroptions.size() - 1);
+			v = std::clamp<int32_t>(v + inc, min, max);
 		}
-		uint8_t Read() const {
-			return divideroptions[v];
+		uint32_t Read() const {
+			return v + 1;
 		}
 		bool Validate() const {
-			return v < divideroptions.size();
+			// uses entire integer range
+			return true;
 		}
 	};
 	void Update(type div) {
