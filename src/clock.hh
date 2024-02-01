@@ -30,6 +30,22 @@ public:
 	}
 };
 
+class Timer {
+	const uint32_t duration;
+	uint32_t set_time;
+
+public:
+	Timer(uint32_t duration_ms)
+		: duration{MsToTicks(duration_ms)} {
+	}
+	void Notify(uint32_t time_now) {
+		set_time = time_now;
+	}
+	bool Check(uint32_t time_now) {
+		return time_now - set_time >= duration;
+	}
+};
+
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm {
