@@ -2,65 +2,76 @@
 
 #include "controls.hh"
 #include "macro_common.hh"
+#include "macro_reset.hh"
 #include "params.hh"
 
 namespace Catalyst2::Macro::Ui
 {
 
 class Add : public Usual {
-	bool first;
+	Reset reset{p, c};
+	bool first_insert;
 
 public:
 	using Usual::Usual;
 	void Init() override {
-		first = true;
-		if (c.button.shift.is_high()) {
-			p.shared.reset.Notify(true);
-		}
+		first_insert = true;
+		p.shared.reset.Notify(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
-		if (!add || !shift) {
-			p.shared.reset.Notify(false);
+
+		if (!add || !shift || !first_insert) {
+			p.shared.reset.Notify(p.shared.internalclock.TimeNow());
 		}
-		if ((!add && !shift) || p.shared.reset.Check()) {
+
+		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {
+			interface = &reset;
 			return;
 		}
+
+		if (!add && !shift) {
+			return;
+		}
+
 		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t button) {
 		auto &path = p.pathway;
-		p.shared.reset.Notify(false);
 
 		if (c.button.shift.is_high()) {
+			DeleteScene(button);
+			first_insert = false;
+			return;
+		}
+
+		if (first_insert) {
+			first_insert = false;
+
 			if (path.OnAScene()) {
-				if (path.SceneNearest() == button) {
-					path.RemoveSceneNearest();
-				}
+				path.ReplaceScene(button);
 			} else {
-				if (path.SceneLeft() == button) {
-					path.RemoveSceneLeft();
-				} else if (path.SceneRight() == button) {
-					path.RemoveSceneRight();
-				}
+				path.InsertScene(button);
 			}
-			return;
-		}
-
-		if (!first) {
-			path.InsertScene(button, true);
-			return;
-		}
-
-		first = false;
-
-		if (path.OnAScene()) {
-			path.ReplaceScene(button);
 		} else {
-			path.InsertScene(button, false);
+			path.InsertSceneAfterLast(button);
+		}
+	}
+	void DeleteScene(uint8_t button) {
+		auto &path = p.pathway;
+		if (path.OnAScene()) {
+			if (path.SceneNearest() == button) {
+				path.RemoveSceneNearest();
+			}
+		} else {
+			if (path.SceneLeft() == button) {
+				path.RemoveSceneLeft();
+			} else if (path.SceneRight() == button) {
+				path.RemoveSceneRight();
+			}
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

@@ -21,14 +21,14 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t channel, int32_t inc) {
-		inc = p.shared.hang.Check().has_value() ? inc : 0;
+		inc = p.shared.hang.Check(p.shared.internalclock.TimeNow()).has_value() ? inc : 0;
 		p.bank.IncRange(channel, inc);
-		p.shared.hang.Set(channel);
+		p.shared.hang.Set(channel, p.shared.internalclock.TimeNow());
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 		ClearEncoderLeds();
-		const auto hang = p.shared.hang.Check();
+		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 		if (hang.has_value()) {
 			DisplayRange(p.bank.GetRange(hang.value()));
 			c.SetButtonLed(hang.value(), true);

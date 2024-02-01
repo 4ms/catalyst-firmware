@@ -13,7 +13,9 @@ public:
 		: Abstract{c}
 		, p{p} {
 	}
-	void Common() override final {
+	void Common() final {
+		p.seqclock.Update();
+
 		if (c.jack.reset.just_went_high()) {
 			p.Reset();
 		}
@@ -22,41 +24,43 @@ public:
 			p.Trig();
 		}
 
-		if (c.button.play.just_went_high()) {
-			if (c.button.shift.is_high()) {
-				Stop();
-				p.shared.reset.Notify(true);
-			} else {
-				p.shared.internalclock.Pause();
-			}
-			c.SetPlayLed(!p.shared.internalclock.IsPaused());
-		}
-
-		if (c.button.play.just_went_low()) {
-			p.shared.reset.Notify(false);
-		}
-
-		if (!(c.button.add.is_high() && c.button.bank.is_high() && c.button.shift.is_high())) {
-			p.shared.modeswitcher.Notify();
-		}
-
-		const auto cp = c.ReadCv() / 4096.f;
-		const auto sp = c.ReadSlider() / 4096.f;
-		p.player.Update(sp + cp, p.shared.internalclock.GetPhase(), p.shared.internalclock.Output());
-	}
-	void Stop() {
-		p.shared.clockdivider.Reset();
-		p.shared.internalclock.Reset();
-		p.player.Reset();
-		p.shared.internalclock.Pause(true);
+		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
+		p.player.Update(phase);
 	}
 
 protected:
 	void ConfirmCopy(uint8_t led) {
-		p.shared.blinker.Set(led, 8, 250);
+		p.shared.blinker.Set(led, 8, 250, p.shared.internalclock.TimeNow());
 	}
 	void ConfirmPaste(uint8_t led) {
 		ConfirmCopy(led);
+	}
+	void PlayModeLedAnnimation(Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
+		using namespace Palette::Setting;
+		static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
+		auto phase = (time_now / animation_duration);
+		phase -= static_cast<uint32_t>(phase);
+		Color col;
+
+		using enum Catalyst2::Sequencer::Settings::PlayMode::Mode;
+
+		if (pm == Forward) {
+			col = playmode_fwd.blend(Palette::off, 1.f - phase);
+		} else if (pm == Backward) {
+			col = playmode_bck.blend(Palette::off, phase);
+		} else if (pm == PingPong) {
+			if (phase < .5f) {
+				phase *= 2.f;
+				col = playmode_bck.blend(Palette::off, phase);
+			} else {
+				phase -= .5f;
+				phase *= 2.f;
+				col = playmode_fwd.blend(Palette::off, 1.f - phase);
+			}
+		} else {
+			col = Palette::Random::color(time_now >> 8);
+		}
+		c.SetEncoderLed(Model::SeqEncoderAlts::PlayMode, col);
 	}
 };
 } // namespace Catalyst2::Sequencer::Ui

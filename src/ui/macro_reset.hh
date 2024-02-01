@@ -43,9 +43,6 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds();
 		ClearButtonLeds();
-		if (wait) {
-			return;
-		}
 		if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
 			SetButtonLedsCount(Model::NumScenes, true);
 		}

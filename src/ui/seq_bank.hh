@@ -12,6 +12,7 @@ public:
 	void Init() override {
 		c.button.fine.clear_events();
 		c.button.morph.clear_events();
+		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -22,37 +23,33 @@ public:
 			ConfirmCopy(p.GetSelectedChannel());
 		}
 		if (c.button.morph.just_went_high()) {
+			p.shared.save.Notify(p.shared.internalclock.TimeNow());
+		}
+		if (p.shared.save.Check(p.shared.internalclock.TimeNow()) && c.button.morph.is_high()) {
+			p.shared.save.Notify(p.shared.internalclock.TimeNow());
 			p.shared.do_save = true;
 		}
 		if (!c.button.bank.is_high() && !YoungestSceneButton().has_value()) {
 			return;
 		}
-		if (p.shared.modeswitcher.Check()) {
-			interface = nullptr;
-			p.shared.data.mode = Model::Mode::Macro;
+		if (c.button.shift.is_high()) {
 			return;
 		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
-		if (c.button.shift.is_high()) {
-			// change all channgels.
-			auto cm = p.data.settings.GetChannelMode(encoder);
-			cm.Inc(dir);
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.data.settings.SetChannelMode(i, cm);
-				p.shared.quantizer[i].Load(cm.GetScale());
-			}
-		} else {
-			p.data.settings.IncChannelMode(encoder, dir);
-			p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
-		}
+		p.data.settings.IncChannelMode(encoder, dir);
+		p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
-		if (scene == p.GetSelectedChannel()) {
-			p.DeselectSequence();
+		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsSequenceSelected()) {
+			p.player.queue.Queue(p.GetSelectedChannel(), scene);
 		} else {
-			p.SelectChannel(scene);
+			if (scene == p.GetSelectedChannel()) {
+				p.DeselectSequence();
+			} else {
+				p.SelectChannel(scene);
+			}
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

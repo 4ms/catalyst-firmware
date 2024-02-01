@@ -20,7 +20,7 @@ public:
 				p.shared.clockdivider.Reset();
 				p.recorder.Record();
 			} else {
-				p.shared.clockdivider.Update(p.shared.data.clockdiv);
+				p.shared.clockdivider.Update(p.GetClockDiv());
 				if (p.shared.clockdivider.Step()) {
 					p.recorder.Reset();
 				}
@@ -39,10 +39,6 @@ public:
 			c.SetPlayLed(p.recorder.IsPlaying());
 		}
 
-		if (!(c.button.play.is_high() && c.button.morph.is_high() && c.button.fine.is_high())) {
-			p.shared.modeswitcher.Notify();
-		}
-
 		auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		pos = p.slider_slew.Update(pos);
 		p.shared.pos = pos;
@@ -52,7 +48,7 @@ public:
 
 protected:
 	void ConfirmCopy(uint8_t led) {
-		p.shared.blinker.Set(led, 8, 250);
+		p.shared.blinker.Set(led, 8, 250, p.shared.internalclock.TimeNow());
 	}
 	void ConfirmPaste(uint8_t led) {
 		ConfirmCopy(led);

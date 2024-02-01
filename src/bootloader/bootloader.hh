@@ -243,14 +243,14 @@ struct GateBootloader {
 
 	bool write_buffer() {
 		// Console::write("Writing\n");
-		if ((current_flash_address + kBlkSize) <= get_sector_addr(NumFlashSectors)) {
-			auto data = std::span<uint32_t>{(uint32_t *)recv_buffer, kBlkSize / 4};
-			mdrivlib::InternalFlash::write(data, current_flash_address);
-			current_flash_address += kBlkSize;
-			return true;
-		} else {
+		if ((current_flash_address + kBlkSize) > get_sector_addr(NumFlashSectors))
 			return false;
-		}
+
+		auto data = std::span<uint32_t>{(uint32_t *)recv_buffer, kBlkSize / 4};
+		mdrivlib::InternalFlash::erase_sector(current_flash_address);
+		mdrivlib::InternalFlash::write(data, current_flash_address);
+		current_flash_address += kBlkSize;
+		return true;
 	}
 
 	void copy_firmware() {
@@ -260,6 +260,7 @@ struct GateBootloader {
 			uint32_t dst_addr = AppFlashAddr;
 			while (dst_addr < kStartReceiveAddress) {
 				auto data = std::span<uint32_t>{(uint32_t *)src_addr, 16 * 1024};
+				mdrivlib::InternalFlash::erase_sector(dst_addr);
 				mdrivlib::InternalFlash::write(data, dst_addr);
 				src_addr += 16 * 1024;
 				dst_addr += 16 * 1024;

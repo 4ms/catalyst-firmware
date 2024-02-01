@@ -28,7 +28,7 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto hang = p.shared.hang.Check();
+		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 		const auto is_scene = YoungestSceneButton().has_value();
 
 		switch (encoder) {
@@ -55,8 +55,8 @@ public:
 					break;
 				}
 				inc = hang.has_value() ? inc : 0;
-				p.shared.data.clockdiv.Inc(inc);
-				p.shared.hang.Set(encoder);
+				p.IncClockDiv(inc);
+				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
 				break;
 			case Model::MacroEncoderAlts::SliderSlew:
 				if (is_scene) {
@@ -64,7 +64,7 @@ public:
 				}
 				inc = hang.has_value() ? inc : 0;
 				p.slider_slew.Inc(inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
 				break;
 			case Model::MacroEncoderAlts::SliderSlewCurve:
 				if (is_scene) {
@@ -93,11 +93,11 @@ public:
 			auto col = Palette::off.blend(Palette::Random::set, random);
 			c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
 		} else {
-			const auto hang = p.shared.hang.Check();
+			const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 			if (hang.has_value()) {
 				switch (hang.value()) {
 					case Model::MacroEncoderAlts::ClockDiv: {
-						SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
+						SetEncoderLedsAddition(p.GetClockDiv().Read(), Palette::Setting::active);
 					} break;
 
 					case Model::MacroEncoderAlts::SliderSlew: {

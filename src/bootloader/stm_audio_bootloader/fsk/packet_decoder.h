@@ -44,7 +44,7 @@ enum PacketDecoderState {
 	PACKET_DECODER_STATE_END_OF_TRANSMISSION
 };
 
-const uint16_t kMaxSyncDuration = 9000; // Was: 9167, and before that was 500 //Symbols
+const uint16_t kMaxSyncDuration = 4000; // Symbols. 1231 was longest
 const uint16_t kPreambleSize = 32;
 const uint16_t kPacketSize = 256;
 

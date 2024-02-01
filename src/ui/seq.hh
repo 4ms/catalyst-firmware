@@ -1,20 +1,21 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "controls.hh"
 #include "params.hh"
 #include "seq_bank.hh"
 #include "seq_common.hh"
 #include "seq_morph.hh"
-#include "seq_reset.hh"
 #include "seq_settings.hh"
+#include "ui/seq_settings_global.hh"
 
 namespace Catalyst2::Sequencer::Ui
 {
 class Main : public Usual {
 	Bank bank{p, c};
 	Morph morph{p, c};
-	Settings settings{p, c};
-	Reset reset{p, c};
+	Settings::Global global_settings{p, c};
+	Settings::Channel channel_settings{p, c};
 
 public:
 	using Usual::Usual;
@@ -22,6 +23,7 @@ public:
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
 		c.button.add.clear_events();
+		c.button.play.clear_events();
 		for (auto &b : c.button.scene) {
 			b.clear_events();
 		}
@@ -31,11 +33,32 @@ public:
 		ForEachSceneButtonPressed([this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
+		const auto ysb = YoungestSceneButton();
+		if (c.button.play.just_went_high()) {
+			if (ysb.has_value()) {
+				if (!p.player.IsPaused()) {
+					p.player.songmode.Cancel();
+					if (p.player.songmode.IsQueued()) {
+						p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+					} else {
+						p.player.queue.Queue(ysb.value());
+					}
+				} else {
+					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+					p.player.Reset();
+					p.player.TogglePause();
+				}
+			} else {
+				p.player.TogglePause();
+			}
+		}
+
+		c.SetPlayLed(!p.player.IsPaused());
+
 		if (c.button.add.just_went_high()) {
-			p.shared.internalclock.Tap();
+			p.seqclock.Tap(p.shared.internalclock.TimeNow());
 		}
 		if (p.IsSequenceSelected()) {
-			auto ysb = YoungestSceneButton();
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.shared.did_copy = true;
 				p.CopyPage(ysb.value());
@@ -46,16 +69,18 @@ public:
 				ConfirmPaste(p.GetSelectedChannel());
 			}
 		}
-		if (p.shared.reset.Check()) {
-			p.shared.reset.Notify(false);
-			interface = &reset;
+		const auto bshift = c.button.shift.is_high();
+		const auto bbank = c.button.bank.is_high();
+
+		if (bshift && bbank) {
+			interface = &channel_settings;
 			return;
 		}
-		if (c.button.shift.is_high()) {
-			interface = &settings;
+		if (bshift) {
+			interface = &global_settings;
 			return;
 		}
-		if (c.button.bank.is_high()) {
+		if (bbank) {
 			interface = &bank;
 			return;
 		}
@@ -92,6 +117,12 @@ public:
 			return;
 		}
 		if (c.button.fine.is_high()) {
+			return;
+		}
+		if (c.button.play.just_went_low()) {
+			return;
+		}
+		if (c.button.play.is_high() || c.button.play.just_went_low()) {
 			return;
 		}
 		if (p.IsPageSelected() && button == p.GetSelectedPage()) {

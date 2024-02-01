@@ -1,7 +1,7 @@
 #pragma once
 
 #include "controls.hh"
-#include "params.hh"
+
 #include "seq_common.hh"
 
 namespace Catalyst2::Sequencer::Ui

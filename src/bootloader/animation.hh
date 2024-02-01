@@ -53,10 +53,8 @@ struct LedAnimation {
 			case Animation::WAITING:
 				if (ctr == 0) {
 					controls.SetPlayLed(true);
-					controls.SetButtonLed(0, true);
 				} else if (ctr == 1) {
 					controls.SetPlayLed(false);
-					controls.SetButtonLed(0, false);
 				} else
 					ctr = 0;
 				break;
@@ -129,4 +127,3 @@ private:
 	uint8_t ctr = 0;
 };
 } // namespace Catalyst2::Bootloader
-

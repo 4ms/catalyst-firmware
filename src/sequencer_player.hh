@@ -31,6 +31,18 @@ public:
 	Interface(Data &data, Settings::Data &settings)
 		: data{data}
 		, settings{settings} {
+	bool pause = false;
+	Settings::Data &settings;
+	float phase = 0.f;
+
+public:
+	Queue::Interface queue{settings};
+	SongMode::Interface songmode;
+	bool songmode_set_last;
+
+	PlayerInterface(Settings::Data &settings, SongMode::Data &songmode)
+		: settings{settings}
+		, songmode{songmode} {
 	}
 	void Update(float phase, float internal_clock_phase, bool do_step) {
 		for (auto i = 0u; i < Model::NumChans; i++) {
@@ -109,8 +121,33 @@ private:
 				break;
 		}
 
-		const auto so = settings.GetStartOffsetOrGlobal(chan);
-		return ((step % length) + so) % Model::MaxSeqSteps;
+		int so;
+		if (!songmode.IsActive()) {
+			if (songmode.IsQueued(chan)) {
+				so = songmode.Read(chan);
+			} else {
+				so = queue.Read(chan);
+			}
+		} else {
+			if (queue.IsQueued(chan)) {
+				so = queue.Read(chan);
+			} else {
+				so = songmode.Read(chan);
+			}
+		}
+
+		return ((s % l) + so) % Model::MaxSeqSteps;
+	}
+
+	uint32_t ActualLength(int8_t length, Settings::PlayMode::Mode pm) {
+		if (pm == Settings::PlayMode::Mode::PingPong) {
+			auto out = length + length - 2;
+			if (out < 2) {
+				out = 2;
+			}
+			return out;
+		}
+		return length;
 	}
 };
-} // namespace Catalyst2::Sequencer::Player
+} // namespace Catalyst2::Sequencer
