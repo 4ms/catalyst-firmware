@@ -40,7 +40,6 @@ public:
 	}
 	void Update() {
 		controls.Update();
-		params.shared.seqclock.Update();
 		params.shared.internalclock.Update();
 		params.shared.blinker.Update(params.shared.internalclock.TimeNow());
 		ui->Common();

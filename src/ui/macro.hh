@@ -23,7 +23,6 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
-		p.shared.seqclock.SetExternal(true);
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });

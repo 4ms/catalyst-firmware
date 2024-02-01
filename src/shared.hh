@@ -9,15 +9,11 @@ namespace Catalyst2::Shared
 {
 
 struct Data {
-	Clock::Bpm::type bpm{};
-	Clock::Divider::type clockdiv{};
 	Model::Mode mode = Model::default_mode;
 	bool Validate() {
 		auto ret = true;
-		ret &= clockdiv.Validate();
 		ret &= static_cast<uint8_t>(mode) == static_cast<uint8_t>(Model::Mode::Macro) ||
 			   static_cast<uint8_t>(mode) == static_cast<uint8_t>(Model::Mode::Sequencer);
-		ret &= bpm.Validate();
 		return ret;
 	}
 };
@@ -88,12 +84,12 @@ public:
 		: data{data} {
 	}
 	Clock::Internal internalclock;
-	Clock::Bpm seqclock{data.bpm};
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
 	DisplayHanger hang;
 	Clock::Timer reset{Model::HoldTimes::reset};
 	Clock::Timer modeswitcher{Model::HoldTimes::mode_switcher};
+	Clock::Timer save{Model::HoldTimes::save};
 	Blinker blinker;
 	bool do_save = false;
 	bool did_paste = false;

@@ -20,7 +20,7 @@ public:
 				p.shared.clockdivider.Reset();
 				p.recorder.Record();
 			} else {
-				p.shared.clockdivider.Update(p.shared.data.clockdiv);
+				p.shared.clockdivider.Update(p.GetClockDiv());
 				if (p.shared.clockdivider.Step()) {
 					p.recorder.Reset();
 				}

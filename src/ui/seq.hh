@@ -52,7 +52,7 @@ public:
 		c.SetPlayLed(!p.player.IsPaused());
 
 		if (c.button.add.just_went_high()) {
-			p.shared.seqclock.Tap(p.shared.internalclock.TimeNow());
+			p.seqclock.Tap(p.shared.internalclock.TimeNow());
 		}
 		if (p.IsSequenceSelected()) {
 			if (c.button.fine.just_went_high() && ysb.has_value()) {

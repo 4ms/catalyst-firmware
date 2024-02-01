@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bank.hh"
+#include "clock.hh"
 #include "pathway.hh"
 #include "random.hh"
 #include "recorder.hh"
@@ -17,6 +18,7 @@ struct Data {
 	Random::Pool::MacroData randompool{};
 	Recorder::Data recorder{};
 	SliderSlew::Data slider_slew{};
+	Clock::Divider::type clockdiv{};
 
 	bool validate() {
 		auto ret = true;
@@ -26,6 +28,7 @@ struct Data {
 		for (auto &b : bank) {
 			ret &= b.Validate();
 		}
+		ret &= clockdiv.Validate();
 		ret &= recorder.Validate();
 		ret &= slider_slew.Validate();
 		return ret;
@@ -48,6 +51,12 @@ public:
 		: data{data}
 		, shared{shared} {
 		SelectBank(0);
+	}
+	void IncClockDiv(int32_t inc) {
+		data.clockdiv.Inc(inc);
+	}
+	Clock::Divider::type GetClockDiv() const {
+		return data.clockdiv;
 	}
 	void SelectBank(uint8_t bank) {
 		if (bank >= Model::NumBanks) {

@@ -55,7 +55,7 @@ public:
 					break;
 				}
 				inc = hang.has_value() ? inc : 0;
-				p.shared.data.clockdiv.Inc(inc);
+				p.IncClockDiv(inc);
 				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
 				break;
 			case Model::MacroEncoderAlts::SliderSlew:
@@ -97,7 +97,7 @@ public:
 			if (hang.has_value()) {
 				switch (hang.value()) {
 					case Model::MacroEncoderAlts::ClockDiv: {
-						SetEncoderLedsAddition(p.shared.data.clockdiv.Read(), Palette::Setting::active);
+						SetEncoderLedsAddition(p.GetClockDiv().Read(), Palette::Setting::active);
 					} break;
 
 					case Model::MacroEncoderAlts::SliderSlew: {

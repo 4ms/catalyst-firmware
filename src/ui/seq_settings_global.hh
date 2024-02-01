@@ -75,13 +75,13 @@ public:
 			case Model::SeqEncoderAlts::Range:
 				break;
 			case Model::SeqEncoderAlts::ClockDiv:
-				if (p.shared.seqclock.IsInternal()) {
-					p.shared.data.bpm.Inc(inc, c.button.fine.is_high());
+				if (p.seqclock.IsInternal()) {
+					p.data.bpm.Inc(inc, c.button.fine.is_high());
 					p.shared.hang.Cancel();
 				} else {
 					inc = hang.has_value() ? inc : 0;
 					p.shared.hang.Set(encoder, time_now);
-					p.shared.data.clockdiv.Inc(inc);
+					p.data.clockdiv.Inc(inc);
 				}
 				break;
 		}
@@ -94,7 +94,7 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
-		auto clockdiv = p.shared.data.clockdiv;
+		auto clockdiv = p.data.clockdiv;
 		auto length = p.data.settings.GetLength();
 		auto startoffset = p.data.settings.GetStartOffset();
 		auto playmode = p.data.settings.GetPlayMode();
@@ -143,8 +143,8 @@ public:
 
 			PlayModeLedAnnimation(playmode, time_now);
 
-			if (p.shared.seqclock.IsInternal()) {
-				if (p.shared.seqclock.Peek()) {
+			if (p.seqclock.IsInternal()) {
+				if (p.seqclock.Peek()) {
 					col = Setting::bpm;
 				} else {
 					col = Palette::off;

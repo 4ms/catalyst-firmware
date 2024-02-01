@@ -129,15 +129,15 @@ private:
 
 	Model::Output::Buffer Seq(Sequencer::Interface &p) {
 		Model::Output::Buffer buf;
-		if (p.shared.seqclock.Output()) {
+		if (p.seqclock.Output()) {
 			p.player.Step();
 		}
-		if (p.shared.seqclock.MultOutput()) {
+		if (p.seqclock.MultOutput()) {
 			for (auto &rt : retrigger) {
 				rt.Update();
 			}
 		}
-		const auto morph_phase = p.player.IsPaused() ? 0.f : p.shared.seqclock.GetPhase();
+		const auto morph_phase = p.player.IsPaused() ? 0.f : p.seqclock.GetPhase();
 		for (auto [chan, o] : countzip(buf)) {
 			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan, morph_phase);
 		}
