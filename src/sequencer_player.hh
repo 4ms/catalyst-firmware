@@ -149,16 +149,5 @@ private:
 
 		return ((step % length) + so) % Model::MaxSeqSteps;
 	}
-
-	uint32_t ActualLength(int8_t length, Settings::PlayMode::Mode pm) {
-		if (pm == Settings::PlayMode::Mode::PingPong) {
-			auto out = length + length - 2;
-			if (out < 2) {
-				out = 2;
-			}
-			return out;
-		}
-		return length;
-	}
 };
 } // namespace Catalyst2::Sequencer::Player
