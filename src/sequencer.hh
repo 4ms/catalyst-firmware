@@ -99,7 +99,10 @@ public:
 		, shared{shared} {
 	}
 
-	void Reset() {
+	void Update(float phase) {
+		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
+	}
+
 	void Reset(bool stop) {
 		seqclock.Reset();
 		shared.clockdivider.Reset();
