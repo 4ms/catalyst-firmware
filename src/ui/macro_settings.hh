@@ -97,7 +97,7 @@ public:
 			if (hang.has_value()) {
 				switch (hang.value()) {
 					case Model::MacroEncoderAlts::ClockDiv: {
-						SetEncoderLedsAddition(p.GetClockDiv().Read(), Palette::Setting::active);
+						SetLedsClockDiv(p.GetClockDiv().Read());
 					} break;
 
 					case Model::MacroEncoderAlts::SliderSlew: {
