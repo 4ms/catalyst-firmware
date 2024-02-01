@@ -6,7 +6,6 @@
 #include "macro_common.hh"
 #include "macro_morph.hh"
 #include "macro_range.hh"
-#include "macro_reset.hh"
 #include "macro_settings.hh"
 #include "params.hh"
 
@@ -19,13 +18,12 @@ class Main : public Usual {
 	Morph morph{p, c};
 	Settings settings{p, c};
 	Range range{p, c};
-	Reset reset{p, c};
 
 public:
 	using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
-		p.shared.internalclock.SetExternal(true);
+		p.shared.seqclock.SetExternal(true);
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -34,12 +32,6 @@ public:
 		if (c.button.fine.just_went_high() && p.override_output.has_value()) {
 			p.bank.Copy(p.override_output.value());
 			ConfirmCopy(p.override_output.value());
-		}
-
-		if (p.shared.reset.Check()) {
-			p.shared.reset.Notify(false);
-			interface = &reset;
-			return;
 		}
 
 		if (c.button.add.is_high()) {

@@ -15,16 +15,21 @@ public:
 		if (!p.IsSequenceSelected()) {
 			p.SelectChannel(0);
 		}
+		p.shared.modeswitcher.Notify(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+
+		if (!c.button.add.is_high()) {
+			p.shared.modeswitcher.Notify(p.shared.internalclock.TimeNow());
+		}
+
 		if (!c.button.shift.is_high() || !c.button.bank.is_high()) {
-			p.shared.reset.Notify(false);
 			return;
 		}
 
-		if (p.shared.modeswitcher.Check()) {
+		if (p.shared.modeswitcher.Check(p.shared.internalclock.TimeNow())) {
 			interface = nullptr;
 			p.shared.data.mode = Model::Mode::Macro;
 			return;
@@ -36,9 +41,10 @@ public:
 		p.SelectChannel(scene);
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto hang = p.shared.hang.Check();
+		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 
-		auto i = p.GetSelectedChannel();
+		const auto i = p.GetSelectedChannel();
+		const auto time_now = p.shared.internalclock.TimeNow();
 
 		switch (encoder) {
 			case Model::SeqEncoderAlts::Transpose:
@@ -57,27 +63,27 @@ public:
 			case Model::SeqEncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncStartOffset(i, inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncPhaseOffset(i, inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncLength(i, inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::Range:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncRange(i, inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::ClockDiv:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncClockDiv(i, inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 		}
 	}
@@ -87,7 +93,7 @@ public:
 		c.SetButtonLed(p.GetSelectedChannel(), true);
 
 		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check();
+		const auto hang = p.shared.hang.Check(time_now);
 
 		const auto chan = p.GetSelectedChannel();
 		const auto length = p.data.settings.GetLength(chan);

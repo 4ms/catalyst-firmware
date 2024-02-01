@@ -6,10 +6,8 @@
 #include "seq_bank.hh"
 #include "seq_common.hh"
 #include "seq_morph.hh"
-#include "seq_reset.hh"
 #include "seq_settings.hh"
 #include "ui/seq_settings_global.hh"
-#include "ui/seq_song_mode.hh"
 
 namespace Catalyst2::Sequencer::Ui
 {
@@ -18,8 +16,6 @@ class Main : public Usual {
 	Morph morph{p, c};
 	Settings::Global global_settings{p, c};
 	Settings::Channel channel_settings{p, c};
-	Reset reset{p, c};
-	Ui::SongMode songmode{p, c};
 
 public:
 	using Usual::Usual;
@@ -53,15 +49,10 @@ public:
 			}
 		}
 
-		if (!ysb.has_value()) {
-			if (c.button.play.just_went_low()) {
-				p.shared.reset.Notify(false);
-			}
-		}
 		c.SetPlayLed(!p.player.IsPaused());
 
 		if (c.button.add.just_went_high()) {
-			p.shared.internalclock.Tap();
+			p.shared.seqclock.Tap(p.shared.internalclock.TimeNow());
 		}
 		if (p.IsSequenceSelected()) {
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
@@ -74,17 +65,9 @@ public:
 				ConfirmPaste(p.GetSelectedChannel());
 			}
 		}
-		if (p.shared.reset.Check()) {
-			p.shared.reset.Notify(false);
-			interface = &reset;
-			return;
-		}
 		const auto bshift = c.button.shift.is_high();
 		const auto bbank = c.button.bank.is_high();
-		if (bshift && ysb.has_value() && c.button.play.is_high()) {
-			interface = &songmode;
-			return;
-		}
+
 		if (bshift && bbank) {
 			interface = &channel_settings;
 			return;

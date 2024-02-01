@@ -2,41 +2,49 @@
 
 #include "controls.hh"
 #include "macro_common.hh"
+#include "macro_reset.hh"
 #include "params.hh"
 
 namespace Catalyst2::Macro::Ui
 {
 
 class Add : public Usual {
+	Reset reset{p, c};
 	bool first_insert;
 
 public:
 	using Usual::Usual;
 	void Init() override {
 		first_insert = true;
-		if (c.button.shift.is_high()) {
-			p.shared.reset.Notify(true);
-		}
+		p.shared.reset.Notify(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
-		if (!add || !shift) {
-			p.shared.reset.Notify(false);
+
+		if (!add || !shift || !first_insert) {
+			p.shared.reset.Notify(p.shared.internalclock.TimeNow());
 		}
-		if ((!add && !shift) || p.shared.reset.Check()) {
+
+		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {
+			interface = &reset;
 			return;
 		}
+
+		if (!add && !shift) {
+			return;
+		}
+
 		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t button) {
 		auto &path = p.pathway;
-		p.shared.reset.Notify(false);
 
 		if (c.button.shift.is_high()) {
 			DeleteScene(button);
+			first_insert = false;
 			return;
 		}
 

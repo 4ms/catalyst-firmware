@@ -47,9 +47,6 @@ public:
 		ClearEncoderLeds();
 		ClearButtonLeds();
 		c.SetPlayLed(false);
-		if (wait) {
-			return;
-		}
 		if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
 			SetButtonLedsCount(Model::NumScenes, true);
 			c.SetPlayLed(true);

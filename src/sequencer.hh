@@ -91,7 +91,7 @@ public:
 	}
 
 	void Reset() {
-		shared.internalclock.Reset();
+		shared.seqclock.Reset();
 		shared.clockdivider.Reset();
 		player.Reset();
 		time_trigged = shared.internalclock.TimeNow();
@@ -99,12 +99,12 @@ public:
 
 	void Trig() {
 		if (shared.internalclock.TimeNow() - time_trigged >= Clock::BpmToTicks(1200)) {
-			if (shared.internalclock.IsInternal()) {
-				shared.internalclock.SetExternal(true);
+			if (shared.seqclock.IsInternal()) {
+				shared.seqclock.SetExternal(true);
 			}
 			shared.clockdivider.Update(shared.data.clockdiv);
 			if (shared.clockdivider.Step()) {
-				shared.internalclock.Input();
+				shared.seqclock.Input(shared.internalclock.TimeNow());
 			}
 		}
 	}

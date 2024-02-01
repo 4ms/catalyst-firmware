@@ -22,17 +22,13 @@ public:
 			p.Trig();
 		}
 
-		if (!(c.button.add.is_high() && c.button.bank.is_high() && c.button.shift.is_high())) {
-			p.shared.modeswitcher.Notify();
-		}
-
 		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
 		p.player.Update(phase);
 	}
 
 protected:
 	void ConfirmCopy(uint8_t led) {
-		p.shared.blinker.Set(led, 8, 250);
+		p.shared.blinker.Set(led, 8, 250, p.shared.internalclock.TimeNow());
 	}
 	void ConfirmPaste(uint8_t led) {
 		ConfirmCopy(led);
