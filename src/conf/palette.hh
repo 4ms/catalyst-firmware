@@ -56,7 +56,10 @@ constexpr auto positive = blue;
 constexpr auto negative = red;
 } // namespace Transpose
 
-constexpr auto clockdiv = blue;
+namespace ClockDiv
+{
+constexpr std::array color = {blue, pink, grey, orange};
+}
 constexpr auto bpm = yellow;
 } // namespace Setting
 
