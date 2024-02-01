@@ -28,8 +28,7 @@ public:
 
 		if (!c.button.shift.is_high()) {
 			if (!p.player.songmode.Size()) {
-				p.player.Stop();
-				p.player.queue.Stop();
+				Stop();
 			}
 			return;
 		}

@@ -36,7 +36,7 @@ public:
 		const auto ysb = YoungestSceneButton();
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
-				if (!p.player.IsPaused()) {
+				if (!p.seqclock.IsPaused()) {
 					p.player.songmode.Cancel();
 					if (p.player.songmode.IsQueued()) {
 						p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
@@ -46,14 +46,14 @@ public:
 				} else {
 					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					p.player.Reset();
-					p.player.TogglePause();
+					p.seqclock.Pause();
 				}
 			} else {
-				p.player.TogglePause();
+				p.seqclock.Pause();
 			}
 		}
 
-		c.SetPlayLed(!p.player.IsPaused());
+		c.SetPlayLed(!p.seqclock.IsPaused());
 
 		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap(p.shared.internalclock.TimeNow());

@@ -8,8 +8,8 @@
 #include "sequencer_player.hh"
 #include "sequencer_settings.hh"
 #include "shared.hh"
-#include "util/countzip.hh"
 #include "song_mode.hh"
+#include "util/countzip.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -59,7 +59,6 @@ struct Data {
 	Sequencer::Settings::Data settings;
 	Random::Pool::SeqData randompool;
 	Player::Data player;
-	Random::Pool::SeqData randompool{};
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
 	Clock::Bpm::type bpm{};
@@ -93,7 +92,7 @@ public:
 	Clock::Bpm seqclock{data.bpm};
 	Shared::Interface &shared;
 	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
-	Player::Interface player{data.player, data.settings};
+	Player::Interface player{data.player, data.settings, data.songmode};
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}

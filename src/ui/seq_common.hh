@@ -25,7 +25,13 @@ public:
 		}
 
 		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
-		p.player.Update(phase);
+		p.player.Update(phase, p.seqclock.GetPhase(), p.seqclock.Output());
+	}
+	void Stop() {
+		p.shared.clockdivider.Reset();
+		p.seqclock.Reset();
+		p.player.Reset();
+		p.seqclock.Pause(true);
 	}
 
 protected:

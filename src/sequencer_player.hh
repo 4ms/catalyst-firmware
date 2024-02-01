@@ -1,8 +1,10 @@
 #pragma once
 
 #include "conf/model.hh"
+#include "queue.hh"
 #include "sequence_phaser.hh"
 #include "sequencer_settings.hh"
+#include "song_mode.hh"
 #include <array>
 
 namespace Catalyst2::Sequencer::Player
@@ -27,23 +29,17 @@ class Interface {
 	Phaser::Interface phaser{settings.phaser};
 
 public:
-	Random::Steps::Interface randomsteps{data.randomsteps};
-	Interface(Data &data, Settings::Data &settings)
-		: data{data}
-		, settings{settings} {
-	bool pause = false;
-	Settings::Data &settings;
-	float phase = 0.f;
-
-public:
 	Queue::Interface queue{settings};
 	SongMode::Interface songmode;
-	bool songmode_set_last;
-
-	PlayerInterface(Settings::Data &settings, SongMode::Data &songmode)
-		: settings{settings}
+	Random::Steps::Interface randomsteps{data.randomsteps};
+	Interface(Data &data, Settings::Data &settings, SongMode::Data &songmode)
+		: data{data}
+		, settings{settings}
 		, songmode{songmode} {
 	}
+	bool pause = false;
+	float phase = 0.f;
+
 	void Update(float phase, float internal_clock_phase, bool do_step) {
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			const auto l = settings.GetLengthOrGlobal(i);
@@ -136,7 +132,7 @@ private:
 			}
 		}
 
-		return ((s % l) + so) % Model::MaxSeqSteps;
+		return ((step % length) + so) % Model::MaxSeqSteps;
 	}
 
 	uint32_t ActualLength(int8_t length, Settings::PlayMode::Mode pm) {
@@ -150,4 +146,4 @@ private:
 		return length;
 	}
 };
-} // namespace Catalyst2::Sequencer
+} // namespace Catalyst2::Sequencer::Player

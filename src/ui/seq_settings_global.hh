@@ -54,7 +54,7 @@ public:
 				break;
 			case Model::SeqEncoderAlts::PlayMode:
 				p.data.settings.IncPlayMode(inc);
-				p.player.RandomizeSteps();
+				p.player.randomsteps.Randomize();
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::StartOffset:

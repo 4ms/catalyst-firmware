@@ -49,7 +49,6 @@ public:
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm {
-	static constexpr auto multfactor = Model::clock_mult_factor;
 	uint32_t cnt = 0;
 	uint32_t prevtaptime;
 	bool external = false;
@@ -86,7 +85,6 @@ public:
 		: bpm{bpm} {
 	}
 	void Update() {
-		Internal::Update();
 		if (pause) {
 			return;
 		}
@@ -106,11 +104,6 @@ public:
 		bool ret = step;
 		step = false;
 		return ret;
-	}
-	bool MultOutput() {
-		const auto out = multout;
-		multout = false;
-		return out;
 	}
 	void Input(uint32_t time_now) {
 		if (IsInternal()) {
