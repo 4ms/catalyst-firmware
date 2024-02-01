@@ -4,46 +4,36 @@
 #include "controls.hh"
 #include "params.hh"
 #include "seq_common.hh"
+#include "seq_song_mode.hh"
 
 namespace Catalyst2::Sequencer::Ui::Settings
 {
 class Global : public Usual {
+	SongMode songmode{p, c};
+
 public:
 	using Usual::Usual;
 	void Init() override {
 		p.shared.hang.Cancel();
+		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		const auto ysb = YoungestSceneButton();
-		if (c.button.play.just_went_high()) {
-			if (ysb.has_value()) {
-				if (!p.player.IsPaused()) {
-				}
-			} else {
-				p.player.queue.Stop();
-				p.player.Stop();
-				p.shared.reset.Notify(true);
-			}
+		if (!c.button.shift.is_high() || c.button.bank.is_high()) {
+			return;
 		}
 
-		if (!c.button.shift.is_high() || c.button.bank.is_high()) {
-			p.shared.reset.Notify(false);
+		if (c.button.play.just_went_high()) {
+			interface = &songmode;
 			return;
 		}
-		if (p.shared.reset.Check()) {
-			return;
-		}
-		if (p.shared.modeswitcher.Check()) {
-			interface = nullptr;
-			p.shared.data.mode = Model::Mode::Macro;
-			return;
-		}
+
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto hang = p.shared.hang.Check();
+		const auto time_now = p.shared.internalclock.TimeNow();
+		const auto hang = p.shared.hang.Check(time_now);
 
 		switch (encoder) {
 			case Model::SeqEncoderAlts::Transpose:
@@ -70,27 +60,27 @@ public:
 			case Model::SeqEncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncStartOffset(inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncPhaseOffset(inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
 				p.data.settings.IncLength(inc);
-				p.shared.hang.Set(encoder);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::Range:
 				break;
 			case Model::SeqEncoderAlts::ClockDiv:
-				if (p.shared.internalclock.IsInternal()) {
+				if (p.shared.seqclock.IsInternal()) {
 					p.shared.data.bpm.Inc(inc, c.button.fine.is_high());
 					p.shared.hang.Cancel();
 				} else {
 					inc = hang.has_value() ? inc : 0;
-					p.shared.hang.Set(encoder);
+					p.shared.hang.Set(encoder, time_now);
 					p.shared.data.clockdiv.Inc(inc);
 				}
 				break;
@@ -102,7 +92,7 @@ public:
 		ClearEncoderLeds();
 
 		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check();
+		const auto hang = p.shared.hang.Check(time_now);
 
 		auto clockdiv = p.shared.data.clockdiv;
 		auto length = p.data.settings.GetLength();
@@ -153,8 +143,8 @@ public:
 
 			PlayModeLedAnnimation(playmode, time_now);
 
-			if (p.shared.internalclock.IsInternal()) {
-				if (p.shared.internalclock.Peek()) {
+			if (p.shared.seqclock.IsInternal()) {
+				if (p.shared.seqclock.Peek()) {
 					col = Setting::bpm;
 				} else {
 					col = Palette::off;

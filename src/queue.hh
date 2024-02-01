@@ -54,6 +54,9 @@ public:
 			s.is_queued = false;
 		}
 	}
+	bool IsQueued(uint8_t chan) const {
+		return state[chan].is_queued;
+	}
 };
 
 } // namespace Catalyst2::Sequencer::Queue

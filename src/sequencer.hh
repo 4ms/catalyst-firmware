@@ -6,6 +6,7 @@
 #include "sequencer_player.hh"
 #include "sequencer_settings.hh"
 #include "shared.hh"
+#include "song_mode.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -54,6 +55,7 @@ struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
 	Random::Pool::SeqData randompool{};
+	SongMode::Data songmode;
 
 	bool validate() const {
 		auto ret = true;
@@ -61,6 +63,7 @@ struct Data {
 			ret &= c.Validate();
 		}
 		ret &= settings.Validate();
+		ret &= songmode.Validate();
 		return ret;
 	}
 };
@@ -79,7 +82,7 @@ class Interface {
 public:
 	Data &data;
 	Shared::Interface &shared;
-	PlayerInterface player{data.settings};
+	PlayerInterface player{data.settings, data.songmode};
 	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
 
 	Interface(Data &data, Shared::Interface &shared)
@@ -88,7 +91,7 @@ public:
 	}
 
 	void Reset() {
-		shared.internalclock.Reset();
+		shared.seqclock.Reset();
 		shared.clockdivider.Reset();
 		player.Reset();
 		time_trigged = shared.internalclock.TimeNow();
@@ -96,12 +99,12 @@ public:
 
 	void Trig() {
 		if (shared.internalclock.TimeNow() - time_trigged >= Clock::BpmToTicks(1200)) {
-			if (shared.internalclock.IsInternal()) {
-				shared.internalclock.SetExternal(true);
+			if (shared.seqclock.IsInternal()) {
+				shared.seqclock.SetExternal(true);
 			}
 			shared.clockdivider.Update(shared.data.clockdiv);
 			if (shared.clockdivider.Step()) {
-				shared.internalclock.Input();
+				shared.seqclock.Input(shared.internalclock.TimeNow());
 			}
 		}
 	}

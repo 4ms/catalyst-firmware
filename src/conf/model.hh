@@ -11,24 +11,24 @@ namespace Catalyst2::Model
 {
 enum class Mode : bool { Sequencer, Macro };
 
-static constexpr auto default_mode = Mode::Sequencer;
+inline constexpr auto default_mode = Mode::Sequencer;
 
-constexpr auto sample_rate_hz = 3000u;
-constexpr auto clock_mult_factor = 12u;
+inline constexpr auto sample_rate_hz = 3000u;
+inline constexpr auto clock_mult_factor = 12u;
 
-constexpr auto triglengthms = 5u;
+inline constexpr auto triglengthms = 5u;
 
-constexpr auto NumChans = 8u;
-constexpr auto NumScenes = 8u;
-constexpr auto NumBanks = 8u;
+inline constexpr auto NumChans = 8u;
+inline constexpr auto NumScenes = 8u;
+inline constexpr auto NumBanks = 8u;
 
-constexpr auto SeqStepsPerPage = NumChans;
-constexpr auto SeqPages = NumScenes;
-constexpr auto MaxSeqSteps = SeqPages * SeqStepsPerPage;
-constexpr auto MinSeqSteps = 1;
-constexpr auto MaxQueuedStartOffsetPages = 16u;
+inline constexpr auto SeqStepsPerPage = NumChans;
+inline constexpr auto SeqPages = NumScenes;
+inline constexpr auto MaxSeqSteps = SeqPages * SeqStepsPerPage;
+inline constexpr auto MinSeqSteps = 1;
+inline constexpr auto MaxQueuedStartOffsetPages = 16u;
 
-constexpr auto max_queued_start_offset_changes = 8u;
+inline constexpr auto max_queued_start_offset_changes = 8u;
 
 namespace Output
 {
@@ -41,14 +41,14 @@ enum class ModeSwitch { Sequence, Macro };
 
 enum class AdcElement { Slider, CVJack };
 
-constexpr auto max_output_voltage = 10.f;
-constexpr auto min_output_voltage = -5.f;
-constexpr auto output_octave_range = max_output_voltage - min_output_voltage;
+inline constexpr auto max_output_voltage = 10.f;
+inline constexpr auto min_output_voltage = -5.f;
+inline constexpr auto output_octave_range = max_output_voltage - min_output_voltage;
 
-constexpr auto fader_width_mm = 60u;
+inline constexpr auto fader_width_mm = 60u;
 
-constexpr auto rec_buffer_size = 2048u;
-constexpr auto rec_buffer_prescaler = 16u;
+inline constexpr auto rec_buffer_size = 2048u;
+inline constexpr auto rec_buffer_prescaler = 16u;
 
 struct SeqEncoderAlts {
 	static constexpr auto StartOffset = 0u;
@@ -66,4 +66,9 @@ struct MacroEncoderAlts {
 	static constexpr auto SliderSlew = 6u;
 	static constexpr auto Random = 7u;
 };
+namespace HoldTimes
+{
+inline constexpr auto mode_switcher = 3000u;
+inline constexpr auto reset = 3000u;
+} // namespace HoldTimes
 } // namespace Catalyst2::Model

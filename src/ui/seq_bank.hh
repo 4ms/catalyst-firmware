@@ -35,11 +35,6 @@ public:
 		if (c.button.shift.is_high()) {
 			return;
 		}
-		if (p.shared.modeswitcher.Check()) {
-			interface = nullptr;
-			p.shared.data.mode = Model::Mode::Macro;
-			return;
-		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {

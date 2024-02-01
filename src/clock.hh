@@ -25,15 +25,30 @@ public:
 		return timenow;
 	}
 
-protected:
 	void Update() {
 		timenow++;
 	}
 };
 
+class Timer {
+	const uint32_t duration;
+	uint32_t set_time;
+
+public:
+	Timer(uint32_t duration_ms)
+		: duration{MsToTicks(duration_ms)} {
+	}
+	void Notify(uint32_t time_now) {
+		set_time = time_now;
+	}
+	bool Check(uint32_t time_now) {
+		return time_now - set_time >= duration;
+	}
+};
+
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
-class Bpm : public Internal {
+class Bpm {
 	static constexpr auto multfactor = Model::clock_mult_factor;
 	uint32_t cnt = 0;
 	uint32_t prevtaptime;
@@ -71,7 +86,6 @@ public:
 		: bpm{bpm} {
 	}
 	void Update() {
-		Internal::Update();
 		const auto period = bpm.Read();
 		const auto cntmult = (cnt % (period / multfactor)) + 1;
 		cnt++;
@@ -100,19 +114,18 @@ public:
 		multout = false;
 		return out;
 	}
-	void Input() {
+	void Input(uint32_t time_now) {
 		if (IsInternal()) {
 			return;
 		}
 		step = true;
 		cnt = 0;
 
-		Tap();
+		Tap(time_now);
 	}
-	void Tap() {
-		const auto tn = TimeNow();
-		bpm.Set(tn - prevtaptime);
-		prevtaptime = tn;
+	void Tap(uint32_t time_now) {
+		bpm.Set(time_now - prevtaptime);
+		prevtaptime = time_now;
 	}
 	bool IsInternal() {
 		return external == false;

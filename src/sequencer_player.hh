@@ -5,6 +5,7 @@
 #include "conf/palette.hh"
 #include "queue.hh"
 #include "sequencer_settings.hh"
+#include "song_mode.hh"
 #include "util/countzip.hh"
 #include <array>
 #include <optional>
@@ -31,8 +32,12 @@ class PlayerInterface {
 
 public:
 	Queue::Interface queue{settings};
-	PlayerInterface(Settings::Data &settings)
-		: settings{settings} {
+	SongMode::Interface songmode;
+	bool songmode_set_last;
+
+	PlayerInterface(Settings::Data &settings, SongMode::Data &songmode)
+		: settings{settings}
+		, songmode{songmode} {
 	}
 
 	void RandomizeSteps() {
@@ -141,7 +146,19 @@ private:
 			s.counter = 0;
 		}
 		if (s.step == 0) {
-			queue.Step(chan);
+			if (!songmode.IsActive()) {
+				if (songmode.IsQueued(chan)) {
+					songmode.Step(chan);
+				} else {
+					queue.Step(chan);
+				}
+			} else {
+				if (queue.IsQueued(chan)) {
+					queue.Step(chan);
+				} else {
+					songmode.Step(chan);
+				}
+			}
 		}
 	}
 	void Reset(uint8_t chan) {
@@ -199,7 +216,21 @@ private:
 				break;
 		}
 
-		const auto so = queue.Read(chan);
+		int so;
+		if (!songmode.IsActive()) {
+			if (songmode.IsQueued(chan)) {
+				so = songmode.Read(chan);
+			} else {
+				so = queue.Read(chan);
+			}
+		} else {
+			if (queue.IsQueued(chan)) {
+				so = queue.Read(chan);
+			} else {
+				so = songmode.Read(chan);
+			}
+		}
+
 		return ((s % l) + so) % Model::MaxSeqSteps;
 	}
 
