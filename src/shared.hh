@@ -51,45 +51,7 @@ class Interface {
 			return onto;
 		}
 	};
-	class ResetManager {
-		static constexpr auto hold_duration = Clock::MsToTicks(3000);
-		Clock::Bpm &internalclock;
-		uint32_t set_time;
-		bool notify = false;
 
-	public:
-		ResetManager(Clock::Bpm &ic)
-			: internalclock{ic} {
-		}
-		void Notify(bool on) {
-			notify = on;
-			if (on) {
-				set_time = internalclock.TimeNow();
-			}
-		}
-		bool Check() {
-			if (notify == false || internalclock.TimeNow() - set_time < hold_duration) {
-				return false;
-			}
-			return true;
-		}
-	};
-	class ModeSwitcher {
-		static constexpr auto hold_duration = Clock::MsToTicks(3000);
-		Clock::Bpm &internalclock;
-		uint32_t set_time;
-
-	public:
-		ModeSwitcher(Clock::Bpm &ic)
-			: internalclock{ic} {
-		}
-		void Notify() {
-			set_time = internalclock.TimeNow();
-		}
-		bool Check() {
-			return internalclock.TimeNow() - set_time >= hold_duration;
-		}
-	};
 	class Blinker {
 		Clock::Bpm &internalclock;
 		uint32_t remaining = 0;
@@ -133,13 +95,14 @@ public:
 	Interface(Data &data)
 		: data{data} {
 	}
-	Clock::Bpm internalclock{data.bpm};
+	Clock::Internal internalclock;
+	Clock::Bpm seqclock{data.bpm};
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
-	DisplayHanger hang{internalclock};
-	ResetManager reset{internalclock};
-	ModeSwitcher modeswitcher{internalclock};
-	Blinker blinker{internalclock};
+	DisplayHanger hang;
+	Clock::Timer reset{Model::HoldTimes::reset};
+	Clock::Timer modeswitcher{Model::HoldTimes::mode_switcher};
+	Blinker blinker;
 	bool do_save = false;
 	bool did_paste = false;
 	bool did_copy = false;
