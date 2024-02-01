@@ -54,7 +54,7 @@ class Bpm {
 	bool external = false;
 	bool step = false;
 	bool peek = false;
-	bool pause;
+	bool pause = false;
 
 public:
 	class type {
@@ -109,7 +109,9 @@ public:
 		if (IsInternal()) {
 			return;
 		}
-		step = true;
+		if (!pause) {
+			step = true;
+		}
 		cnt = 0;
 
 		Tap(time_now);
