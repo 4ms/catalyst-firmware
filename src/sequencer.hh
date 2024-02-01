@@ -100,9 +100,14 @@ public:
 	}
 
 	void Reset() {
+	void Reset(bool stop) {
 		seqclock.Reset();
 		shared.clockdivider.Reset();
 		player.Reset();
+		seqclock.Pause(stop);
+
+		// blocks trig for a short period of time
+		// TODO: come up with better name
 		time_trigged = shared.internalclock.TimeNow();
 	}
 
