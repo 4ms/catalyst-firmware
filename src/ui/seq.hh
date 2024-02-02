@@ -58,7 +58,7 @@ public:
 		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap(p.shared.internalclock.TimeNow());
 		}
-		if (p.IsSequenceSelected()) {
+		if (p.IsChannelSelected()) {
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.shared.did_copy = true;
 				p.CopyPage(ysb.value());
@@ -91,14 +91,14 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		if (!p.IsSequenceSelected()) {
+		if (!p.IsChannelSelected()) {
 			return;
 		}
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
 	void OnSceneButtonPress(uint8_t button) {
-		if (!p.IsSequenceSelected()) {
+		if (!p.IsChannelSelected()) {
 			p.SelectChannel(button);
 		}
 		if (c.button.fine.is_high()) {
@@ -134,7 +134,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
 
-		if (p.IsSequenceSelected()) {
+		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
 			const auto led = p.player.GetPlayheadStepOnPage(chan);
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
