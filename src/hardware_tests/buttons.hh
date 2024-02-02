@@ -9,7 +9,7 @@ namespace Catalyst2::HWTests
 
 struct TestButtons : IButtonChecker {
 	TestButtons()
-		: IButtonChecker{16} {
+		: IButtonChecker{14} {
 		reset();
 		set_allowable_noise(10);
 		set_min_steady_state_time(10);
