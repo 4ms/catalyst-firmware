@@ -2,15 +2,18 @@
 
 #include "conf/model.hh"
 #include "queue.hh"
+#include "random.hh"
 #include "sequence_phaser.hh"
 #include "sequencer_settings.hh"
 #include "song_mode.hh"
+#include "util/math.hh"
 #include <array>
+#include <cstdlib>
 
 namespace Catalyst2::Sequencer::Player
 {
 struct Data {
-	Random::Steps::Data randomsteps;
+	Random::Sequencer::Steps::Data randomsteps;
 	bool Validate() const {
 		return randomsteps.Validate();
 	}
@@ -31,7 +34,8 @@ class Interface {
 public:
 	Queue::Interface queue{settings};
 	SongMode::Interface songmode;
-	Random::Steps::Interface randomsteps{data.randomsteps};
+	Random::Sequencer::Probability::Interface randomvalue;
+	Random::Sequencer::Steps::Interface randomsteps{data.randomsteps};
 	Interface(Data &data, Settings::Data &settings, SongMode::Data &songmode)
 		: data{data}
 		, settings{settings}
@@ -65,7 +69,29 @@ public:
 			}
 			auto &c = channel[i];
 			c.first_step = ToStep(i, 0, l, pm);
-			c.sequence_phase = GetPhase(i, phase, internal_clock_phase, actual_length);
+			const auto sp = GetPhase(i, phase, internal_clock_phase, actual_length);
+
+			const auto new_ = static_cast<uint32_t>(sp);
+			const auto prev_ = static_cast<uint32_t>(c.sequence_phase);
+
+			if (new_ != prev_) {
+				// sequence has changed
+				if (new_ > prev_) {
+					if (prev_ == 0 && new_ == actual_length - 1) {
+						randomvalue.StepBackward(i);
+					} else {
+						randomvalue.Step(i);
+					}
+				} else {
+					if (new_ == 0 && prev_ == actual_length - 1) {
+						randomvalue.Step(i);
+					} else {
+						randomvalue.StepBackward(i);
+					}
+				}
+			}
+
+			c.sequence_phase = sp;
 			const auto playhead = static_cast<uint32_t>(c.sequence_phase);
 			c.playhead_step = ToStep(i, playhead, l, pm);
 			c.prev_playhead_step = ToStep(i, (playhead - 1u) % actual_length, l, pm);
@@ -75,29 +101,29 @@ public:
 	void Reset() {
 		phaser.Reset();
 	}
-	float GetStepPhase(uint8_t chan) {
+	float GetStepPhase(uint8_t chan) const {
 		return channel[chan].step_phase;
 	}
-	uint8_t GetFirstStep(uint8_t chan) {
+	uint8_t GetFirstStep(uint8_t chan) const {
 		const auto l = settings.GetLengthOrGlobal(chan);
 		const auto pm = settings.GetPlayModeOrGlobal(chan);
 		return ToStep(chan, 0, l, pm);
 	}
-	uint8_t GetPlayheadPage(uint8_t chan) {
+	uint8_t GetPlayheadPage(uint8_t chan) const {
 		return channel[chan].playhead_step / Model::SeqPages;
 	}
-	uint8_t GetPlayheadStepOnPage(uint8_t chan) {
+	uint8_t GetPlayheadStepOnPage(uint8_t chan) const {
 		return channel[chan].playhead_step % Model::SeqPages;
 	}
-	uint8_t GetPlayheadStep(uint8_t chan) {
+	uint8_t GetPlayheadStep(uint8_t chan) const {
 		return channel[chan].playhead_step;
 	}
-	uint8_t GetPrevPlayheadStep(uint8_t chan) {
+	uint8_t GetPrevPlayheadStep(uint8_t chan) const {
 		return channel[chan].prev_playhead_step;
 	}
 
 private:
-	float GetPhase(uint8_t chan, float phase, float internal_clock_phase, float actual_length) {
+	float GetPhase(uint8_t chan, float phase, float internal_clock_phase, float actual_length) const {
 		const auto phase_offset = (settings.GetPhaseOffsetOrGlobal(chan) + phase) * actual_length;
 		auto current_phase = phaser.GetPhase(chan, internal_clock_phase) + phase_offset;
 		while (current_phase >= actual_length) {
@@ -105,7 +131,7 @@ private:
 		}
 		return current_phase;
 	}
-	int32_t ToStep(uint8_t chan, uint32_t step, Settings::Length::type length, Settings::PlayMode::Mode pm) {
+	int32_t ToStep(uint8_t chan, uint32_t step, Settings::Length::type length, Settings::PlayMode::Mode pm) const {
 		switch (pm) {
 			using enum Settings::PlayMode::Mode;
 			case Backward:
