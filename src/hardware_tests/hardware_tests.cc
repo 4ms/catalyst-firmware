@@ -10,8 +10,22 @@
 namespace Catalyst2
 {
 
+static bool check_enter_hw_test() {
+	Pin{Board::MuxSelectPins[0], Board::PinMode::Output}.off();
+	Pin{Board::MuxSelectPins[1], Board::PinMode::Output}.off();
+	Pin{Board::MuxSelectPins[2], Board::PinMode::Output}.off();
+
+	Pin MuxRead0{Board::MuxInputChipPins[0], Board::PinMode::Input};
+	Pin MuxRead1{Board::MuxInputChipPins[1], Board::PinMode::Input};
+
+	return MuxRead0.read_raw() && MuxRead1.read_raw();
+}
+
 void run_hardware_test() {
 	using namespace HWTests;
+
+	if (!check_enter_hw_test())
+		return;
 
 	Controls controls;
 	UtilIF::link_controls(controls);
