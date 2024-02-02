@@ -15,7 +15,7 @@ namespace Catalyst2::Macro
 struct Data {
 	std::array<Pathway::Data, Model::NumBanks> pathway{};
 	std::array<Bank::Data, Model::NumBanks> bank{};
-	Random::Pool::MacroData randompool{};
+	Random::Macro::Pool::Data randompool{};
 	Recorder::Data recorder{};
 	SliderSlew::Data slider_slew{};
 	Clock::Divider::type clockdiv{};
