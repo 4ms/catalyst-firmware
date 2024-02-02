@@ -18,7 +18,7 @@ public:
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		if (c.button.fine.just_went_high() && p.IsSequenceSelected()) {
+		if (c.button.fine.just_went_high() && p.IsChannelSelected()) {
 			p.CopySequence();
 			ConfirmCopy(p.GetSelectedChannel());
 		}
@@ -42,11 +42,11 @@ public:
 		p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
-		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsSequenceSelected()) {
+		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
 			p.player.queue.Queue(p.GetSelectedChannel(), scene);
 		} else {
 			if (scene == p.GetSelectedChannel()) {
-				p.DeselectSequence();
+				p.DeselectChannel();
 			} else {
 				p.SelectChannel(scene);
 			}

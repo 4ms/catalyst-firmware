@@ -10,7 +10,7 @@ class Morph : public Usual {
 public:
 	using Usual::Usual;
 	void Init() override {
-		if (!p.IsSequenceSelected()) {
+		if (!p.IsChannelSelected()) {
 			p.SelectChannel(0);
 		}
 	}
@@ -28,7 +28,7 @@ public:
 	}
 
 	void OnSceneButtonRelease(uint8_t button) {
-		if (!p.IsSequenceSelected()) {
+		if (!p.IsChannelSelected()) {
 			p.SelectChannel(button);
 		} else {
 			if (c.button.fine.is_high()) {

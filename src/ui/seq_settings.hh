@@ -12,7 +12,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		p.shared.hang.Cancel();
-		if (!p.IsSequenceSelected()) {
+		if (!p.IsChannelSelected()) {
 			p.SelectChannel(0);
 		}
 		p.shared.modeswitcher.Notify(p.shared.internalclock.TimeNow());
