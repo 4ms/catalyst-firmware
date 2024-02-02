@@ -74,6 +74,7 @@ public:
 			const auto new_ = static_cast<uint32_t>(sp);
 			const auto prev_ = static_cast<uint32_t>(c.sequence_phase);
 
+			// TODO: struggles with phase input.. on reset
 			if (new_ != prev_) {
 				// sequence has changed
 				if (new_ > prev_) {
