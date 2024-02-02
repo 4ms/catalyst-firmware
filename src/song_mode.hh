@@ -63,10 +63,10 @@ public:
 		}
 		state[chan].is_queued = false;
 	}
-	bool IsQueued(uint8_t chan) {
+	bool IsQueued(uint8_t chan) const {
 		return state[chan].is_queued;
 	}
-	bool IsQueued() {
+	bool IsQueued() const {
 		for (auto s : state) {
 			if (s.is_queued) {
 				return true;
