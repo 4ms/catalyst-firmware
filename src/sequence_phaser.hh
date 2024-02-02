@@ -42,7 +42,7 @@ public:
 			}
 		}
 	}
-	float GetPhase(uint8_t chan, float clock_phase) {
+	float GetPhase(uint8_t chan, float clock_phase) const {
 		return channel[chan].counter + channel[chan].clockdivider.GetPhase(data.cdiv[chan], clock_phase);
 	}
 	void Reset() {
