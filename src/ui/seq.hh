@@ -7,6 +7,7 @@
 #include "seq_common.hh"
 #include "seq_morph.hh"
 #include "seq_settings.hh"
+#include "ui/seq_prob.hh"
 #include "ui/seq_settings_global.hh"
 
 namespace Catalyst2::Sequencer::Ui
@@ -14,6 +15,7 @@ namespace Catalyst2::Sequencer::Ui
 class Main : public Usual {
 	Bank bank{p, c};
 	Morph morph{p, c};
+	Probability probability{p, c};
 	Settings::Global global_settings{p, c};
 	Settings::Channel channel_settings{p, c};
 
@@ -71,23 +73,31 @@ public:
 		}
 		const auto bshift = c.button.shift.is_high();
 		const auto bbank = c.button.bank.is_high();
+		const auto bmorph = c.button.morph.is_high();
 
 		if (bshift && bbank) {
 			interface = &channel_settings;
 			return;
 		}
+
+		if (bshift && bmorph) {
+			interface = &probability;
+			return;
+		}
+
 		if (bshift) {
 			interface = &global_settings;
+			return;
+		}
+		if (bmorph) {
+			interface = &morph;
 			return;
 		}
 		if (bbank) {
 			interface = &bank;
 			return;
 		}
-		if (c.button.morph.is_high()) {
-			interface = &morph;
-			return;
-		}
+
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {

@@ -91,6 +91,13 @@ inline constexpr Color color(float phase) {
 }
 } // namespace Morph
 
+namespace Probability
+{
+inline constexpr Color color(float phase) {
+	return off.blend(green.blend(off, .5f), phase);
+}
+} // namespace Probability
+
 namespace Pathway
 {
 inline constexpr Color color(float phase) {

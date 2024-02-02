@@ -24,6 +24,10 @@ public:
 			return;
 		}
 
+		if (c.button.morph.is_high()) {
+			return;
+		}
+
 		if (c.button.play.just_went_high()) {
 			interface = &songmode;
 			return;

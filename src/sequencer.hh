@@ -23,7 +23,7 @@ struct Step : Channel::Value {
 	static constexpr auto morphmin = 0u, morphmax = 12u;
 	static constexpr auto probmin = Random::Sequencer::Probability::min, probmax = Random::Sequencer::Probability::max;
 	uint8_t morph_retrig : 4;
-	Random::Sequencer::Probability::type prob : Random::Sequencer::Probability::usable_bits = 15;
+	Random::Sequencer::Probability::type prob : Random::Sequencer::Probability::usable_bits;
 	int8_t trig_delay;
 
 public:
@@ -239,6 +239,14 @@ public:
 		std::array<float, Model::NumChans> out;
 		for (auto [i, o] : countzip(out)) {
 			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadMorph();
+		}
+		return out;
+	}
+	std::array<float, Model::NumChans> GetPageValuesProbability(uint8_t page) {
+		std::array<float, Model::NumChans> out;
+		for (auto [i, o] : countzip(out)) {
+			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadProbability() /
+				static_cast<float>(Step::probmax);
 		}
 		return out;
 	}
