@@ -5,6 +5,7 @@
 #include "range.hh"
 #include <algorithm>
 #include <cstdint>
+#include <numeric>
 
 namespace Catalyst2::Channel
 {
@@ -37,28 +38,26 @@ public:
 		Model::Output::type AsCV() const {
 			return val / static_cast<float>(max) * Channel::max;
 		}
-		float AsGate() const {
-			if (val < mid_point) {
-				return 0.f;
-			} else {
-				return (val - mid_point) / static_cast<float>(mid_point);
-			}
+		bool AsGate() const {
+			return val & 0x01;
 		}
 	};
+
 	constexpr Value(float volts = 0.f) {
 		auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
 		val = MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
 	}
-	void Inc(int32_t inc, bool fine, bool is_gate, Range range, Random::Pool::type offset) {
+	void IncCv(int32_t inc, bool fine, Range range) {
 		inc *= fine ? inc_step_fine : inc_step;
-
-		const auto o = offset * max;
 		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
 		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
-		val = std::clamp<int32_t>(val + inc, min_ - o, max_ - o);
+		val = std::clamp<int32_t>(val + inc, min_, max_);
 	}
-	Proxy Read(Range range, Random::Pool::type offset) const {
-		const auto t = val + (offset * max);
+	void IncGate(int32_t inc) {
+		val = std::clamp<int32_t>(val + inc, mid_point, max);
+	}
+	Proxy Read(Range range, float random) const {
+		const auto t = val + (random * max);
 		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
 		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
 		return Proxy{std::clamp<int32_t>(t, min_, max_)};
