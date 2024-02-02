@@ -170,7 +170,7 @@ public:
 
 			col = random.has_value() ? Palette::off.blend(Palette::Random::set, random.value()) : Setting::null;
 			if (c.button.fine.is_high()) {
-				col = Palette::Random::color(p.randompool.GetSeed());
+				// col = Palette::Random::color(p.randompool.GetSeed());
 			}
 			c.SetEncoderLed(SeqEncoderAlts::Random, col);
 

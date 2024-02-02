@@ -45,9 +45,9 @@ public:
 					p.data.settings.IncRandom(inc);
 				} else {
 					if (inc > 0) {
-						p.randompool.Randomize();
+						//	p.randompool.Randomize();
 					} else {
-						p.randompool.Clear();
+						//	p.randompool.Clear();
 					}
 				}
 				p.shared.hang.Cancel();
@@ -155,7 +155,7 @@ public:
 			c.SetEncoderLed(SeqEncoderAlts::ClockDiv, col);
 
 			if (c.button.fine.is_high()) {
-				col = Palette::Random::color(p.randompool.GetSeed());
+				//	col = Palette::Random::color(p.randompool.GetSeed());
 			} else {
 				col = Palette::off.blend(Palette::Random::set, random);
 			}
