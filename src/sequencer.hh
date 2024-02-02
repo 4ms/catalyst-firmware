@@ -4,6 +4,7 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "random.hh"
+#include "range.hh"
 #include "sequence_phaser.hh"
 #include "sequencer_player.hh"
 #include "sequencer_settings.hh"
@@ -13,32 +14,36 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 
 namespace Catalyst2::Sequencer
 {
 
 struct Step : Channel::Value {
 	static constexpr auto morphmin = 0u, morphmax = 12u;
-	static constexpr auto probmin = 0u, probmax = 15u;
-	uint8_t morph : 4;
-	uint8_t prob : 4;
+	static constexpr auto probmin = Random::Sequencer::Probability::min, probmax = Random::Sequencer::Probability::max;
+	uint8_t morph_retrig : 4;
+	Random::Sequencer::Probability::type prob : Random::Sequencer::Probability::usable_bits = 15;
 	int8_t trig_delay;
 
 public:
-	float ReatTrigDelay() const {
-		return trig_delay / ((INT8_MAX + 1) * 2.f);
+	float ReadTrigDelay() const {
+		return trig_delay / ((INT8_MAX + 1) * 1.f);
 	}
 	float ReadMorph() const {
-		return morph / static_cast<float>(morphmax);
+		return morph_retrig / static_cast<float>(morphmax);
 	}
 	uint8_t ReadRetrig() const {
-		return morph >> 2;
+		return morph_retrig >> 2;
+	}
+	Random::Sequencer::Probability::type ReadProbability() const {
+		return prob;
 	}
 	void IncModifier(int32_t inc, bool is_gate) {
 		if (is_gate) {
 			inc *= 4;
 		}
-		morph = std::clamp<int32_t>(morph + inc, morphmin, morphmax);
+		morph_retrig = std::clamp<int32_t>(morph_retrig + inc, morphmin, morphmax);
 	}
 	void IncProbability(int32_t inc) {
 		prob = std::clamp<int32_t>(prob + inc, probmin, probmax);
@@ -50,7 +55,7 @@ public:
 		auto ret = true;
 		ret &= Channel::Value::Validate();
 		// trig_Delay is always good to go... cant validate
-		ret &= morph <= morphmax && prob <= probmax;
+		ret &= morph_retrig <= morphmax && prob <= probmax;
 		return ret;
 	}
 };
@@ -68,7 +73,6 @@ struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 struct Data {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
-	Random::Pool::SeqData randompool;
 	Player::Data player;
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
@@ -82,7 +86,6 @@ struct Data {
 		ret &= clockdiv.Validate();
 		ret &= settings.Validate();
 		ret &= player.Validate();
-		ret &= randompool.Validate();
 		ret &= songmode.Validate();
 		return ret;
 	}
@@ -102,7 +105,6 @@ public:
 	Data &data;
 	Clock::Bpm seqclock{data.bpm};
 	Shared::Interface &shared;
-	Random::Pool::Interface<Random::Pool::SeqData> randompool{data.randompool};
 	Player::Interface player{data.player, data.settings, data.songmode};
 
 	Interface(Data &data, Shared::Interface &shared)
@@ -143,10 +145,10 @@ public:
 	uint8_t GetSelectedChannel() {
 		return cur_channel;
 	}
-	void DeselectSequence() {
+	void DeselectChannel() {
 		cur_channel = Model::NumChans;
 	}
-	bool IsSequenceSelected() {
+	bool IsChannelSelected() {
 		return cur_channel < Model::NumChans;
 	}
 	void SelectPage(uint8_t page) {
@@ -162,39 +164,73 @@ public:
 		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		step = StepOnPageToStep(step);
-		const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomOrGlobal(cur_channel));
-		data.channel[cur_channel][step].Inc(
-			inc, fine, data.settings.GetChannelMode(cur_channel).IsGate(), data.settings.GetRange(cur_channel), rand);
+		auto &c = data.channel[cur_channel][StepOnPageToStep(step)];
+		if (data.settings.GetChannelMode(cur_channel).IsGate()) {
+			if (fine) {
+				c.IncTrigDelay(inc);
+			} else {
+				c.IncGate(inc);
+			}
+		} else {
+			c.IncCv(inc, fine, data.settings.GetRange(cur_channel));
+		}
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
-		data.channel[cur_channel][step].modifier.Inc(inc, data.settings.GetChannelMode(cur_channel).IsGate());
+		data.channel[cur_channel][step].IncModifier(inc, data.settings.GetChannelMode(cur_channel).IsGate());
 	}
+	void IncStepProbability(uint8_t step, int32_t inc) {
+		step = StepOnPageToStep(step);
+		data.channel[cur_channel][step].IncProbability(inc);
+	}
+	//	int32_t TESTFUNC(uint8_t chan) const {
+	//		const auto step = player.GetPlayheadStep(chan);
+	//		const auto t = data.channel[chan][step];
+	//		const auto random =
+	//			t.ReadProbability() ? player.randomvalue.Read(chan) * data.settings.GetRandomOrGlobal(chan) : 0.f;
+	//		if (data.settings.GetChannelMode(chan).IsGate()) {
+	//			const auto temp = t.AsGate() + random;
+	//		} else {
+	//			const auto stepmorph = seqmorph(player.GetStepPhase(chan), t.ReadMorph());
+	//			auto stepval = shared.quantizer[chan].Process(prevStepValue);
+	//			const auto distance = shared.quantizer[chan].Process(t.AsCv()) - stepval;
+	//			stepval += (distance * stepmorph);
+	//			stepval = Transposer::Process(stepval, data.settings.GetTransposeOrGlobal(chan));
+	//			return data.settings.GetRange(chan).Clamp(stepval);
+	//
+	//			// scratch
+	//			const auto random_offset = random * Channel::max;
+	//			const auto out = t.AsCv() + random_offset;
+	//			return out;
+	//		}
+	//	}
+
 	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
 		const auto step = player.GetPlayheadStep(chan);
-		return data.channel[chan][step].Read(data.settings.GetRange(chan),
-											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
+		const auto &s = data.channel[chan][step];
+		const auto r = player.randomvalue.Read(chan, s.ReadProbability());
+		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
 	}
-	StepModifier GetPlayheadModifier(uint8_t chan) {
+
+	Step GetPlayheadModifier(uint8_t chan) {
 		const auto step = player.GetPlayheadStep(chan);
-		return data.channel[chan][step].modifier;
+		return data.channel[chan][step];
 	}
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
 		const auto step = player.GetPrevPlayheadStep(chan);
-		return data.channel[chan][step].Read(data.settings.GetRange(chan),
-											 randompool.Read(chan, step, data.settings.GetRandomOrGlobal(chan)));
+		const auto &s = data.channel[chan][step];
+		const auto r = player.randomvalue.ReadPrev(chan, s.ReadProbability());
+		return s.Read(data.settings.GetRange(chan), r);
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
 		const auto range = data.settings.GetRange(cur_channel);
 		for (auto [i, o] : countzip(out)) {
 			const auto step = (page * Model::SeqStepsPerPage) + i;
-			const auto rand = randompool.Read(cur_channel, step, data.settings.GetRandomOrGlobal(cur_channel));
 			if (data.settings.GetChannelMode(cur_channel).IsGate()) {
-				o = data.channel[cur_channel][step].Read(range, rand).AsGate() * Channel::range;
+				o = data.channel[cur_channel][step].Read(range, 0).AsGate() * Channel::range;
 			} else {
-				o = data.channel[cur_channel][step].Read(range, rand).AsCV();
+				o = data.channel[cur_channel][step].Read(range, 0).AsCV();
 			}
 		}
 		return out;
@@ -202,7 +238,7 @@ public:
 	std::array<float, Model::NumChans> GetPageValuesModifier(uint8_t page) {
 		std::array<float, Model::NumChans> out;
 		for (auto [i, o] : countzip(out)) {
-			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].modifier.AsMorph();
+			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadMorph();
 		}
 		return out;
 	}
