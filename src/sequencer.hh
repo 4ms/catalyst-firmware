@@ -220,7 +220,7 @@ public:
 		const auto step = player.GetPrevPlayheadStep(chan);
 		const auto &s = data.channel[chan][step];
 		const auto r = player.randomvalue.ReadPrev(chan, s.ReadProbability());
-		return s.Read(data.settings.GetRange(chan), r);
+		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
 	}
 	Model::Output::Buffer GetPageValues(uint8_t page) {
 		Model::Output::Buffer out;
