@@ -138,7 +138,7 @@ private:
 	}
 
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
-		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadModifier(chan).AsMorph());
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadModifier(chan).ReadMorph());
 		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan).AsCV());
 		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
