@@ -55,11 +55,11 @@ class Controls {
 	// Mux
 	MuxedIO<Board::MuxConf> muxio;
 
-	// LEDs (needs work)
+	// LEDs
 	mdrivlib::I2CPeriph led_driver_i2c{Board::LedDriverConf};
 	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
-	std::array<uint8_t, Model::NumChans> button_led_duty;
+	std::array<uint8_t, Model::NumChans> button_led_duty{};
 	std::array<Color, Model::NumChans> rgb_leds;
 	Color::Adjustment global_brightness{128, 128, 128}; // 64, 64, 64};
 
