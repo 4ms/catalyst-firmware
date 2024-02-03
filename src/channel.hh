@@ -38,8 +38,11 @@ public:
 		Model::Output::type AsCV() const {
 			return val / static_cast<float>(max) * Channel::max;
 		}
-		bool AsGate() const {
-			return val & 0x01;
+		float AsGate() const {
+			if (val < mid_point) {
+				return 0.f;
+			}
+			return (val - mid_point) / static_cast<float>(max - mid_point);
 		}
 	};
 
@@ -54,6 +57,7 @@ public:
 		val = std::clamp<int32_t>(val + inc, min_, max_);
 	}
 	void IncGate(int32_t inc) {
+		inc *= inc_step;
 		val = std::clamp<int32_t>(val + inc, mid_point, max);
 	}
 	Proxy Read(Range range, float random) const {
