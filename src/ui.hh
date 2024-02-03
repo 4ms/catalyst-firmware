@@ -48,15 +48,6 @@ public:
 		ui->Update(next);
 		if (next != ui) {
 			ui = next;
-			if (ui == nullptr) {
-				ui = GetUi();
-				for (auto i = 0u; i < 16; i++) {
-					for (auto l = 0u; l < Model::NumScenes; l++) {
-						controls.SetButtonLed(l, !!(i & 0b1));
-					}
-					controls.Delay(1000 / 16);
-				}
-			}
 			ui->Init();
 		}
 		Save();
