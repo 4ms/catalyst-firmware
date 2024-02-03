@@ -7,9 +7,10 @@
 #include "seq_bank.hh"
 #include "seq_common.hh"
 #include "seq_morph.hh"
+#include "seq_prob.hh"
 #include "seq_settings.hh"
-#include "ui/seq_prob.hh"
-#include "ui/seq_settings_global.hh"
+#include "seq_settings_global.hh"
+#include <complex>
 
 namespace Catalyst2::Sequencer::Ui
 {
@@ -19,9 +20,14 @@ class Main : public Usual {
 	Probability probability{p, c};
 	Settings::Global global_settings{p, c};
 	Settings::Channel channel_settings{p, c};
+	Abstract &macro;
 
 public:
-	using Usual::Usual;
+	Main(Sequencer::Interface &p, Controls &c, Abstract &macro)
+		: Usual{p, c}
+		, macro{macro} {
+	}
+	//	using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
 		c.button.bank.clear_events();
@@ -65,31 +71,32 @@ public:
 			if (c.button.fine.just_went_high() && ysb.has_value()) {
 				p.shared.did_copy = true;
 				p.CopyPage(ysb.value());
-				ConfirmCopy(ysb.value());
+				ConfirmCopy(p.shared, ysb.value());
 			}
 			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
 				p.PasteSequence();
-				ConfirmPaste(p.GetSelectedChannel());
+				ConfirmPaste(p.shared, p.GetSelectedChannel());
 			}
 		}
-		const auto bshift = c.button.shift.is_high();
-		const auto bbank = c.button.bank.is_high();
+
+		if (p.shared.data.mode == Model::Mode::Macro) {
+			interface = &macro;
+			return;
+		}
+
 		const auto bmorph = c.button.morph.is_high();
-
-		if (bshift && bbank) {
-			interface = &channel_settings;
+		const auto bbank = c.button.bank.is_high();
+		if (c.button.shift.is_high()) {
+			if (bbank) {
+				interface = &channel_settings;
+			} else if (bmorph) {
+				interface = &probability;
+			} else {
+				interface = &global_settings;
+			}
 			return;
 		}
 
-		if (bshift && bmorph) {
-			interface = &probability;
-			return;
-		}
-
-		if (bshift) {
-			interface = &global_settings;
-			return;
-		}
 		if (bmorph) {
 			interface = &morph;
 			return;
@@ -114,7 +121,7 @@ public:
 		}
 		if (c.button.fine.is_high()) {
 			p.PastePage(button);
-			ConfirmPaste(button);
+			ConfirmPaste(p.shared, button);
 			p.shared.did_paste = true;
 		}
 	}
@@ -162,15 +169,10 @@ public:
 					c.SetEncoderLed(i, display_func(pvals[i]));
 				}
 			}
-			const auto &b = p.shared.blinker;
-			if (b.IsSet()) {
-				c.SetButtonLed(b.Led(), b.IsHigh());
+			if (p.IsPageSelected()) {
+				c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
 			} else {
-				if (p.IsPageSelected()) {
-					c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
-				} else {
-					c.SetButtonLed(page, true);
-				}
+				c.SetButtonLed(page, true);
 			}
 		} else {
 			EncoderDisplayOutput(outs);

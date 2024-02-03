@@ -20,7 +20,7 @@ public:
 
 		if (c.button.fine.just_went_high() && p.IsChannelSelected()) {
 			p.CopySequence();
-			ConfirmCopy(p.GetSelectedChannel());
+			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
 		if (c.button.morph.just_went_high()) {
 			p.shared.save.Notify(p.shared.internalclock.TimeNow());
@@ -54,11 +54,7 @@ public:
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds();
-		if (p.shared.blinker.IsSet()) {
-			c.SetButtonLed(p.shared.blinker.Led(), p.shared.blinker.IsHigh());
-		} else {
-			c.SetButtonLed(p.GetSelectedChannel(), true);
-		}
+		c.SetButtonLed(p.GetSelectedChannel(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetEncoderLed(i, p.data.settings.GetChannelMode(i).GetColor());
 		}

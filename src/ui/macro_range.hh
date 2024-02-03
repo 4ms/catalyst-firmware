@@ -15,7 +15,7 @@ public:
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		if (!c.button.morph.is_high())
+		if (!c.button.morph.is_high() && !c.button.shift.is_high())
 			return;
 
 		interface = this;

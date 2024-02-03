@@ -18,9 +18,14 @@ class Main : public Usual {
 	Morph morph{p, c};
 	Settings settings{p, c};
 	Range range{p, c};
+	Abstract &sequencer;
 
 public:
-	using Usual::Usual;
+	Main(Macro::Interface &p, Controls &c, Abstract &sequencer)
+		: Usual{p, c}
+		, sequencer{sequencer} {
+	}
+	// using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
 	}
@@ -30,7 +35,12 @@ public:
 
 		if (c.button.fine.just_went_high() && p.override_output.has_value()) {
 			p.bank.Copy(p.override_output.value());
-			ConfirmCopy(p.override_output.value());
+			ConfirmCopy(p.shared, p.override_output.value());
+		}
+
+		if (p.shared.data.mode == Model::Mode::Sequencer) {
+			interface = &sequencer;
+			return;
 		}
 
 		if (c.button.add.is_high()) {
@@ -41,14 +51,16 @@ public:
 			interface = &bank;
 			return;
 		}
-		if (c.button.morph.is_high() && c.button.shift.is_high()) {
-			interface = &range;
-			return;
-		}
+
 		if (c.button.morph.is_high()) {
-			interface = &morph;
+			if (c.button.shift.is_high()) {
+				interface = &range;
+			} else {
+				interface = &morph;
+			}
 			return;
 		}
+
 		if (c.button.shift.is_high()) {
 			interface = &settings;
 			return;
@@ -58,7 +70,7 @@ public:
 	void OnSceneButtonRelease(uint8_t button) {
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
-			ConfirmPaste(button);
+			ConfirmPaste(p.shared, button);
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
@@ -104,9 +116,6 @@ public:
 					c.SetButtonLed(r, pos);
 				}
 			}
-		}
-		if (p.shared.blinker.IsSet()) {
-			c.SetButtonLed(p.shared.blinker.Led(), p.shared.blinker.IsHigh());
 		}
 	}
 
