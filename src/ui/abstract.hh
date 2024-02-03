@@ -50,7 +50,7 @@ protected:
 			}
 		}
 	}
-	void ClearButtonLeds() {
+	void ClearButtonLeds() const {
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetButtonLed(i, false);
 		}
