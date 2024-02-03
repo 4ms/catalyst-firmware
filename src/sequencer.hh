@@ -222,16 +222,21 @@ public:
 		const auto r = player.randomvalue.ReadPrev(chan, s.ReadProbability());
 		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
 	}
-	Model::Output::Buffer GetPageValues(uint8_t page) {
+	Model::Output::Buffer GetPageValuesGate(uint8_t page) {
 		Model::Output::Buffer out;
 		const auto range = data.settings.GetRange(cur_channel);
 		for (auto [i, o] : countzip(out)) {
 			const auto step = (page * Model::SeqStepsPerPage) + i;
-			if (data.settings.GetChannelMode(cur_channel).IsGate()) {
-				o = data.channel[cur_channel][step].Read(range, 0).AsGate() * Channel::range;
-			} else {
-				o = data.channel[cur_channel][step].Read(range, 0).AsCV();
-			}
+			o = data.channel[cur_channel][step].Read(range, 0).AsGate() * Channel::range;
+		}
+		return out;
+	}
+	Model::Output::Buffer GetPageValuesCv(uint8_t page) {
+		Model::Output::Buffer out;
+		const auto range = data.settings.GetRange(cur_channel);
+		for (auto [i, o] : countzip(out)) {
+			const auto step = (page * Model::SeqStepsPerPage) + i;
+			o = data.channel[cur_channel][step].Read(range, 0).AsCV();
 		}
 		return out;
 	}
