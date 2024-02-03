@@ -30,8 +30,10 @@ public:
 		}
 
 		if (p.shared.modeswitcher.Check(p.shared.internalclock.TimeNow())) {
-			interface = nullptr;
 			p.shared.data.mode = Model::Mode::Macro;
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				p.shared.blinker.Set(i, 1, 200, p.shared.internalclock.TimeNow(), 100 * i + 250);
+			}
 			return;
 		}
 		interface = this;
