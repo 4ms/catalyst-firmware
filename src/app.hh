@@ -1,5 +1,6 @@
 #pragma once
 
+#include "channel.hh"
 #include "conf/model.hh"
 #include "params.hh"
 #include "trigger.hh"
@@ -130,11 +131,11 @@ private:
 	}
 
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
-		const auto stepval = p.GetPlayheadValue(chan);
-		const auto armed = stepval.AsGate();
-		const auto time_now = p.shared.internalclock.TimeNow();
-
-		return 0;
+		const auto gateval = p.GetPlayheadValue(chan).AsGate();
+		const auto retrig = p.GetPlayheadModifier(chan).ReadRetrig() + 1;
+		auto step_phase = p.player.GetStepPhase(chan) * retrig;
+		step_phase -= static_cast<uint32_t>(step_phase);
+		return gateval < step_phase ? Channel::gateoff : Channel::gatehigh;
 	}
 
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
