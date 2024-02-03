@@ -87,6 +87,7 @@ struct Data {
 		ret &= settings.Validate();
 		ret &= player.Validate();
 		ret &= songmode.Validate();
+		ret &= bpm.Validate();
 		return ret;
 	}
 };

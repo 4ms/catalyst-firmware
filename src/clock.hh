@@ -77,7 +77,7 @@ public:
 		void Set(uint32_t ticks) {
 			val = ticks;
 		}
-		bool Validate() {
+		bool Validate() const {
 			return val <= BpmToTicks(min) && val >= BpmToTicks(max);
 		}
 	};
