@@ -29,12 +29,6 @@ public:
 	}
 
 protected:
-	void ConfirmCopy(uint8_t led) {
-		p.shared.blinker.Set(led, 8, 250, p.shared.internalclock.TimeNow());
-	}
-	void ConfirmPaste(uint8_t led) {
-		ConfirmCopy(led);
-	}
 	void PlayModeLedAnnimation(Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
 		using namespace Palette::Setting;
 		static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));

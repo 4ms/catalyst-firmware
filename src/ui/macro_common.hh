@@ -45,14 +45,6 @@ public:
 		p.pathway.Update(pos);
 		p.override_output = YoungestSceneButton();
 	}
-
-protected:
-	void ConfirmCopy(uint8_t led) {
-		p.shared.blinker.Set(led, 8, 250, p.shared.internalclock.TimeNow());
-	}
-	void ConfirmPaste(uint8_t led) {
-		ConfirmCopy(led);
-	}
 };
 
 } // namespace Catalyst2::Macro::Ui

@@ -22,6 +22,12 @@ public:
 	}
 
 protected:
+	void ConfirmCopy(Shared::Interface &p, uint8_t led) const {
+		p.blinker.Set(led, 8, 250, p.internalclock.TimeNow());
+	}
+	void ConfirmPaste(Shared::Interface &p, uint8_t led) const {
+		ConfirmCopy(p, led);
+	}
 	void ForEachEncoderInc(auto func) {
 		for (auto [i, enc] : countzip(c.encoders)) {
 			const auto inc = enc.read();
