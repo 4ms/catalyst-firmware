@@ -22,8 +22,8 @@ class Interface {
 
 	Abstract *ui;
 
-	Macro::Ui::Main macro{params.macro, controls};
-	Sequencer::Ui::Main sequencer{params.sequencer, controls};
+	Macro::Ui::Main macro{params.macro, controls, sequencer};
+	Sequencer::Ui::Main sequencer{params.sequencer, controls, macro};
 
 	Controls::SavedSettings<SequencerData, MacroData> settings;
 
