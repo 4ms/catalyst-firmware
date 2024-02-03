@@ -3,6 +3,7 @@
 #include "conf/model.hh"
 #include "conf/palette.hh"
 #include "controls.hh"
+#include "shared.hh"
 
 namespace Catalyst2::Ui
 {
@@ -19,6 +20,13 @@ public:
 	virtual void Update(Abstract *&interface) = 0;
 	virtual void Common() = 0;
 	virtual void PaintLeds(const Model::Output::Buffer &outs) {
+	}
+
+	void LedBlinker(const Shared::Blinker &b) const {
+		ClearButtonLeds();
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			c.SetButtonLed(i, b.IsHigh(i));
+		}
 	}
 
 protected:

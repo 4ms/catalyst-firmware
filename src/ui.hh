@@ -67,6 +67,9 @@ public:
 
 		if (controls.LedsReady()) {
 			ui->PaintLeds(outs);
+			if (params.shared.blinker.IsSet()) {
+				ui->LedBlinker(params.shared.blinker);
+			}
 		}
 	}
 
