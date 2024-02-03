@@ -44,7 +44,6 @@ public:
 	Bank::Interface bank{data.randompool};
 	Recorder::Interface recorder{data.recorder};
 	SliderSlew::Interface slider_slew{data.slider_slew};
-	std::optional<uint8_t> override_output;
 	Shared::Interface &shared;
 
 	Interface(Data &data, Shared::Interface &shared)
