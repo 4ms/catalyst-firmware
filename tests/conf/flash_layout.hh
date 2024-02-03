@@ -10,10 +10,14 @@
 
 #include <cstdint>
 
-//#include "drivers/flash_sectors.hh"
+// #include "drivers/flash_sectors.hh"
 
 namespace Catalyst2
 {
+
+inline constexpr uint32_t get_sector_addr(uint32_t c) {
+	return APP_FLASH_ADDR;
+}
 
 // constexpr inline uint32_t BootloaderFlashAddr = get_sector_addr(0);	  // 32k Bootloader
 constexpr inline uint32_t AppFlashAddr = get_sector_addr(0); // 208k = 128k+64k+16k app
