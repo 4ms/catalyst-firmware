@@ -15,6 +15,10 @@ struct TestEncoders {
 	}
 
 	void run_test() {
+		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+			controls.SetEncoderLed(i, Palette::black);
+		}
+
 		while (true) {
 			for (auto i = 0u; i < controls.encoders.size(); i++) {
 				const auto dir = controls.encoders[i].read();

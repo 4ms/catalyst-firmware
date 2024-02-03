@@ -2,6 +2,7 @@
 #include "conf/palette.hh"
 #include "controls.hh"
 #include "hardware_tests/util.hh"
+#include "libhwtests/CodecCallbacks.hh"
 #include "outputs.hh"
 #include "util/countzip.hh"
 
@@ -10,34 +11,47 @@ namespace Catalyst2::HWTests
 
 struct TestDac {
 	Controls &controls;
-	Outputs outputs;
-	std::array<uint8_t, Model::NumChans> rotvals{0};
 	Model::Output::Buffer outs;
+	std::array<SkewedTriOsc, Model::NumChans> oscs;
+	static constexpr auto SampleRate = 10000u;
 
 	TestDac(Controls &controls)
 		: controls{controls} {
+
+		for (auto [i, osc] : enumerate(oscs)) {
+			osc.init(20 + i * 20, 0.3f, 65535.f, 0.f, 0.f, SampleRate);
+		}
 	}
 
 	void run_test() {
-		while (true) {
-
-			for (auto [i, r] : countzip(rotvals)) {
-
-				bool x = i == (controls.ReadSlider() >> 9);
-				controls.SetButtonLed(i, x);
-				r = 255 * x;
-				controls.SetEncoderLed(i, Palette::red.blend(Palette::blue, r));
-				outs[i] = r << 8;
-				outputs.write(outs);
-			}
-
-			HAL_Delay(10);
-
-			if (Util::main_button_pressed())
-				break;
+		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+			controls.SetButtonLed(i, false);
+			controls.SetEncoderLed(i, Palette::red.blend(Palette::blue, (float)i / ((float)Model::NumChans - 1.f)));
 		}
-		while (Util::main_button_pressed())
-			;
+
+		mdrivlib::Timekeeper dac_update_task{
+			{
+				.TIMx = TIM9,
+				.period_ns = mdrivlib::TimekeeperConfig::Hz(SampleRate),
+				.priority1 = 1,
+				.priority2 = 1,
+			},
+			[this]() {
+				for (auto [i, osc] : enumerate(oscs)) {
+					outs[i] = osc.update();
+				}
+				controls.Write(outs);
+			},
+		};
+		dac_update_task.start();
+
+		Util::flash_mainbut_until_pressed();
+
+		dac_update_task.stop();
+
+		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+			controls.SetEncoderLed(i, Palette::black);
+		}
 	}
 };
 

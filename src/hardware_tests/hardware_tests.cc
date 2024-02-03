@@ -4,6 +4,7 @@
 #include "hardware_tests/buttons.hh"
 #include "hardware_tests/dac.hh"
 #include "hardware_tests/encoders.hh"
+#include "hardware_tests/jacks.hh"
 #include "hardware_tests/leds.hh"
 #include "hardware_tests/util.hh"
 
@@ -49,17 +50,20 @@ void run_hardware_test() {
 	TestLEDs ledtester;
 	ledtester.run_test();
 
-	TestButtons buttontester;
-	buttontester.run_test();
+	// TestButtons buttontester;
+	// buttontester.run_test();
+
+	auto dac_test = TestDac{controls};
+	dac_test.run_test();
 
 	auto adc_test = TestAdc{controls};
 	adc_test.run_test();
 
+	auto jack_test = TestJacks{controls};
+	jack_test.run_test();
+
 	auto enc_test = TestEncoders{controls};
 	enc_test.run_test();
-
-	auto dac_test = TestDac{controls};
-	dac_test.run_test();
 
 	while (true)
 		;

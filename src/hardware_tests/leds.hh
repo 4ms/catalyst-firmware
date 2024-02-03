@@ -8,19 +8,22 @@ namespace Catalyst2::HWTests
 
 struct TestLEDs : ILEDTester {
 	TestLEDs()
-		: ILEDTester{Model::NumChans + 4} {
+		: ILEDTester{Model::NumChans + 5} {
 	}
 
 	void set_led(int led_id, bool turn_on) override {
 		if (led_id < (int)Model::NumChans) {
 			UtilIF::controls->SetButtonLed(led_id, turn_on);
+		} else if (led_id == Model::NumChans) {
+			UtilIF::controls->SetPlayLed(turn_on);
 		} else {
 			// all encoder leds same color
-			Color color = turn_on == false ? Palette::black :
-						  led_id == 8	   ? Palette::red :
-						  led_id == 9	   ? Palette::green :
-						  led_id == 10	   ? Palette::blue :
-											 Palette::full_white;
+			int first = Model::NumChans + 1;
+			Color color = turn_on == false	  ? Palette::black :
+						  led_id == first + 0 ? Palette::red :
+						  led_id == first + 1 ? Palette::green :
+						  led_id == first + 2 ? Palette::blue :
+												Palette::full_white;
 
 			for (unsigned i = 0; i < Model::NumChans; i++)
 				UtilIF::controls->SetEncoderLed(i, color);
@@ -28,7 +31,7 @@ struct TestLEDs : ILEDTester {
 	}
 
 	void pause_between_steps() override {
-		HAL_Delay(300);
+		HAL_Delay(200);
 	}
 };
 } // namespace Catalyst2::HWTests

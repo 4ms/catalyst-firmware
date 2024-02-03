@@ -25,11 +25,11 @@ struct TestButtons : IButtonChecker {
 		if (channel == 10)
 			return UtilIF::controls->button.morph.is_high();
 		if (channel == 11)
-			return UtilIF::controls->button.add.is_high();
-		if (channel == 12)
 			return UtilIF::controls->button.shift.is_high();
-		if (channel == 13)
+		if (channel == 12)
 			return UtilIF::controls->button.bank.is_high();
+		if (channel == 13)
+			return UtilIF::controls->button.add.is_high();
 		return false;
 	}
 
