@@ -50,7 +50,7 @@ public:
 	}
 
 	auto Update() {
-		return params.shared.data.mode == Model::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
+		return params.shared.data.saved_mode == Model::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
 	}
 
 private:
@@ -63,18 +63,18 @@ private:
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 
-		if (p.override_output.has_value()) {
-			if (p.override_output.value() != prev) {
-				prev = p.override_output.value();
+		if (p.shared.youngest_scene_button.has_value()) {
+			if (p.shared.youngest_scene_button.value() != prev) {
+				prev = p.shared.youngest_scene_button.value();
 				do_trigs = true;
 			}
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					const auto gate_armed = p.bank.GetChannel(p.override_output.value(), chan).AsGate();
+					const auto gate_armed = p.bank.GetChannel(p.shared.youngest_scene_button.value(), chan).AsGate();
 					if (do_trigs && gate_armed) {
 					}
 				} else {
-					out = p.bank.GetChannel(p.override_output.value(), chan).AsCV();
+					out = p.bank.GetChannel(p.shared.youngest_scene_button.value(), chan).AsCV();
 					out = p.bank.GetRange(chan).Clamp(out);
 				}
 			}

@@ -33,12 +33,12 @@ public:
 
 class Blinker {
 	struct State {
-		uint32_t remaining;
-		uint32_t blink_duration;
-		uint32_t set_time;
-		uint32_t delay;
+		uint32_t remaining{};
+		uint32_t blink_duration{};
+		uint32_t set_time{};
+		uint32_t delay{};
 	};
-	std::array<State, Model::NumChans> state;
+	std::array<State, Model::NumChans> state{};
 
 public:
 	void Set(uint8_t led, uint32_t num_blinks, uint32_t duration_ms, uint32_t time_now, uint32_t delay_ms = 0) {
@@ -78,11 +78,11 @@ public:
 };
 
 struct Data {
-	Model::Mode mode = Model::default_mode;
-	bool Validate() {
+	Model::Mode saved_mode = Model::default_mode;
+	bool Validate() const {
 		auto ret = true;
-		ret &= static_cast<uint8_t>(mode) == static_cast<uint8_t>(Model::Mode::Macro) ||
-			   static_cast<uint8_t>(mode) == static_cast<uint8_t>(Model::Mode::Sequencer);
+		ret &= static_cast<uint8_t>(saved_mode) == static_cast<uint8_t>(Model::Mode::Macro) ||
+			   static_cast<uint8_t>(saved_mode) == static_cast<uint8_t>(Model::Mode::Sequencer);
 		return ret;
 	}
 };
@@ -107,6 +107,8 @@ public:
 	bool did_paste = false;
 	bool did_copy = false;
 	float pos;
+	std::optional<uint8_t> youngest_scene_button;
+	Model::Mode mode = Model::default_mode;
 };
 
 } // namespace Catalyst2::Shared

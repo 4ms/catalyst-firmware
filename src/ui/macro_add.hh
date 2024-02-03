@@ -1,11 +1,12 @@
 #pragma once
 
+#include "conf/flash_layout.hh"
 #include "controls.hh"
 #include "macro_common.hh"
 #include "macro_reset.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 
 class Add : public Usual {
@@ -19,7 +20,7 @@ public:
 		p.shared.reset.Notify(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
@@ -75,15 +76,15 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
+		ClearButtonLeds(c);
 
 		auto count = p.pathway.size();
-		const auto phase = 1.f / (Pathway::MaxPoints / static_cast<float>(count));
+		const auto phase = 1.f / (Catalyst2::Macro::Pathway::MaxPoints / static_cast<float>(count));
 
 		while (count > 8) {
 			count -= 8;
 		}
-		SetEncoderLedsCount(count, 0, Palette::Pathway::color(phase));
+		SetEncoderLedsCount(c, count, 0, Palette::Pathway::color(phase));
 
 		if (p.pathway.OnAScene()) {
 			c.SetButtonLed(p.pathway.SceneNearest(), true);
@@ -93,4 +94,4 @@ public:
 		}
 	}
 };
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

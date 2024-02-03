@@ -9,7 +9,7 @@
 #include "macro_settings.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 
 class Main : public Usual {
@@ -21,7 +21,7 @@ class Main : public Usual {
 	Abstract &sequencer;
 
 public:
-	Main(Macro::Interface &p, Controls &c, Abstract &sequencer)
+	Main(Catalyst2::Macro::Interface &p, Controls &c, Abstract &sequencer)
 		: Usual{p, c}
 		, sequencer{sequencer} {
 	}
@@ -30,15 +30,15 @@ public:
 		c.button.fine.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		if (c.button.fine.just_went_high() && p.override_output.has_value()) {
-			p.bank.Copy(p.override_output.value());
-			ConfirmCopy(p.shared, p.override_output.value());
+		if (c.button.fine.just_went_high() && p.shared.youngest_scene_button.has_value()) {
+			p.bank.Copy(p.shared.youngest_scene_button.value());
+			ConfirmCopy(p.shared, p.shared.youngest_scene_button.value());
 		}
 
-		if (p.shared.data.mode == Model::Mode::Sequencer) {
+		if (p.shared.mode == Model::Mode::Sequencer) {
 			interface = &sequencer;
 			return;
 		}
@@ -74,7 +74,7 @@ public:
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto scenebdown = YoungestSceneButton().has_value();
+		const auto scenebdown = p.shared.youngest_scene_button.has_value();
 		const auto fine = c.button.fine.is_high();
 
 		if (scenebdown) {
@@ -92,8 +92,8 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
-		auto ysb = YoungestSceneButton();
+		ClearButtonLeds(c);
+		auto ysb = p.shared.youngest_scene_button;
 		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high())
@@ -120,7 +120,7 @@ public:
 	}
 
 private:
-	void EncoderDisplayScene(Pathway::SceneId scene) {
+	void EncoderDisplayScene(Catalyst2::Macro::Pathway::SceneId scene) {
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
 			const auto temp = p.bank.GetChannel(scene, chan);
 			const auto isgate = p.bank.GetChannelMode(chan).IsGate();
@@ -141,4 +141,4 @@ private:
 		}
 	}
 };
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

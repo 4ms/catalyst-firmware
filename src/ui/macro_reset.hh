@@ -4,7 +4,7 @@
 #include "macro_common.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 
 class Reset : public Usual {
@@ -41,11 +41,11 @@ public:
 		interface = this;
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearEncoderLeds();
-		ClearButtonLeds();
+		ClearEncoderLeds(c);
+		ClearButtonLeds(c);
 		if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
-			SetButtonLedsCount(Model::NumScenes, true);
+			SetButtonLedsCount(c, Model::NumScenes, true);
 		}
 	}
 };
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

@@ -12,7 +12,7 @@
 #include "seq_settings_global.hh"
 #include <complex>
 
-namespace Catalyst2::Sequencer::Ui
+namespace Catalyst2::Ui::Sequencer
 {
 class Main : public Usual {
 	Bank bank{p, c};
@@ -23,7 +23,7 @@ class Main : public Usual {
 	Abstract &macro;
 
 public:
-	Main(Sequencer::Interface &p, Controls &c, Abstract &macro)
+	Main(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract &macro)
 		: Usual{p, c}
 		, macro{macro} {
 	}
@@ -38,11 +38,11 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonPressed([this](uint8_t button) { OnSceneButtonPress(button); });
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		const auto ysb = YoungestSceneButton();
+		const auto ysb = p.shared.youngest_scene_button;
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
 				if (!p.seqclock.IsPaused()) {
@@ -79,7 +79,7 @@ public:
 			}
 		}
 
-		if (p.shared.data.mode == Model::Mode::Macro) {
+		if (p.shared.mode == Model::Mode::Macro) {
 			interface = &macro;
 			return;
 		}
@@ -121,7 +121,7 @@ public:
 		}
 		if (c.button.fine.is_high()) {
 			p.PastePage(button);
-			ConfirmPaste(p.shared, button);
+			Catalyst2::Ui::ConfirmPaste(p.shared, button);
 			p.shared.did_paste = true;
 		}
 	}
@@ -137,10 +137,7 @@ public:
 		if (c.button.fine.is_high()) {
 			return;
 		}
-		if (c.button.play.just_went_low()) {
-			return;
-		}
-		if (c.button.play.is_high() || c.button.play.just_went_low()) {
+		if (c.button.play.just_went_low() || c.button.play.is_high()) {
 			return;
 		}
 		if (p.IsPageSelected() && button == p.GetSelectedPage()) {
@@ -150,7 +147,7 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
+		ClearButtonLeds(c);
 
 		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
@@ -187,4 +184,4 @@ public:
 	}
 };
 
-} // namespace Catalyst2::Sequencer::Ui
+} // namespace Catalyst2::Ui::Sequencer

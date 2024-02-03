@@ -4,7 +4,7 @@
 #include "macro_common.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 
 class Settings : public Usual {
@@ -14,7 +14,7 @@ public:
 		p.shared.hang.Cancel();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
 		if (!c.button.shift.is_high()) {
 			return;
@@ -29,7 +29,7 @@ public:
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
-		const auto is_scene = YoungestSceneButton().has_value();
+		const auto is_scene = p.shared.youngest_scene_button.has_value();
 
 		switch (encoder) {
 			case Model::MacroEncoderAlts::Random:
@@ -71,9 +71,9 @@ public:
 					break;
 				}
 				if (inc > 0)
-					p.slider_slew.SetCurve(SliderSlew::Curve::Linear);
+					p.slider_slew.SetCurve(Catalyst2::Macro::SliderSlew::Curve::Linear);
 				else if (inc < 0)
-					p.slider_slew.SetCurve(SliderSlew::Curve::Expo);
+					p.slider_slew.SetCurve(Catalyst2::Macro::SliderSlew::Curve::Expo);
 				p.shared.hang.Cancel();
 				break;
 			default:
@@ -81,10 +81,10 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
-		ClearEncoderLeds();
+		ClearButtonLeds(c);
+		ClearEncoderLeds(c);
 
-		auto ysb = YoungestSceneButton();
+		auto ysb = p.shared.youngest_scene_button;
 		const auto is_scene = ysb.has_value();
 		const auto scene = ysb.value_or(0);
 
@@ -97,20 +97,21 @@ public:
 			if (hang.has_value()) {
 				switch (hang.value()) {
 					case Model::MacroEncoderAlts::ClockDiv: {
-						SetLedsClockDiv(p.GetClockDiv().Read());
+						SetLedsClockDiv(c, p.GetClockDiv().Read());
 					} break;
 
 					case Model::MacroEncoderAlts::SliderSlew: {
 						float num_lights = p.slider_slew.Value() * 8.f;
-						SetEncoderLedsFloat(num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
+						SetEncoderLedsFloat(c, num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
 					} break;
 				}
 			} else {
 				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::Setting::active);
 				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlew,
 								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slider_slew.Value()));
-				auto col = p.slider_slew.GetCurve() == SliderSlew::Curve::Linear ? Palette::Setting::curve_linear :
-																				   Palette::Setting::curve_expo;
+				auto col = p.slider_slew.GetCurve() == Catalyst2::Macro::SliderSlew::Curve::Linear ?
+							   Palette::Setting::curve_linear :
+							   Palette::Setting::curve_expo;
 				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlewCurve, col);
 				if (c.button.fine.is_high()) {
 					col = p.bank.randompool.IsRandomized() ? Palette::Random::color(p.bank.randompool.GetSeed()) :
@@ -122,4 +123,4 @@ public:
 	}
 };
 
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

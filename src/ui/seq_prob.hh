@@ -4,7 +4,7 @@
 
 #include "seq_common.hh"
 
-namespace Catalyst2::Sequencer::Ui
+namespace Catalyst2::Ui::Sequencer
 {
 class Probability : public Usual {
 public:
@@ -15,8 +15,8 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.morph.is_high() && !c.button.shift.is_high()) {
 			return;
@@ -36,8 +36,8 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearEncoderLeds();
-		ClearButtonLeds();
+		ClearEncoderLeds(c);
+		ClearButtonLeds(c);
 
 		const auto chan = p.GetSelectedChannel();
 		const uint8_t led = p.player.GetPlayheadStepOnPage(chan);
@@ -61,4 +61,4 @@ public:
 	}
 };
 
-} // namespace Catalyst2::Sequencer::Ui
+} // namespace Catalyst2::Ui::Sequencer

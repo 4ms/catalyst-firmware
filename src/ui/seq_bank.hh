@@ -4,7 +4,7 @@
 #include "params.hh"
 #include "seq_common.hh"
 
-namespace Catalyst2::Sequencer::Ui
+namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
 public:
@@ -15,8 +15,8 @@ public:
 		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.fine.just_went_high() && p.IsChannelSelected()) {
 			p.CopySequence();
@@ -29,7 +29,7 @@ public:
 			p.shared.save.Notify(p.shared.internalclock.TimeNow());
 			p.shared.do_save = true;
 		}
-		if (!c.button.bank.is_high() && !YoungestSceneButton().has_value()) {
+		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {
 			return;
 		}
 		if (c.button.shift.is_high()) {
@@ -53,7 +53,7 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
+		ClearButtonLeds(c);
 		c.SetButtonLed(p.GetSelectedChannel(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetEncoderLed(i, p.data.settings.GetChannelMode(i).GetColor());
@@ -61,4 +61,4 @@ public:
 	}
 };
 
-} // namespace Catalyst2::Sequencer::Ui
+} // namespace Catalyst2::Ui::Sequencer
