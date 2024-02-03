@@ -1,6 +1,7 @@
 #pragma once
 
 #include "conf/model.hh"
+#include "conf/palette.hh"
 #include "controls.hh"
 #include "params.hh"
 #include "seq_bank.hh"
@@ -149,15 +150,16 @@ public:
 			const auto led = p.player.GetPlayheadStepOnPage(chan);
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-			const auto pvals = p.GetPageValues(page);
 			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
-			const auto offset = Model::SeqStepsPerPage * page;
+			const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
+			auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
+										  [](Model::Output::type v) { return Palette::CvBlend(v); };
 
 			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 				if (i == led && page == playheadpage) {
 					c.SetEncoderLed(led, Palette::SeqHead::color);
 				} else {
-					c.SetEncoderLed(i, Palette::EncoderBlend(pvals[i], is_gate));
+					c.SetEncoderLed(i, display_func(pvals[i]));
 				}
 			}
 			const auto &b = p.shared.blinker;
