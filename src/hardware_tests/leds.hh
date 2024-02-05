@@ -31,7 +31,7 @@ struct TestLEDs : ILEDTester {
 	}
 
 	void pause_between_steps() override {
-		HAL_Delay(200);
+		HAL_Delay(350);
 	}
 };
 } // namespace Catalyst2::HWTests
