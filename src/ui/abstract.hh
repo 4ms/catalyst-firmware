@@ -133,7 +133,11 @@ inline void SetLedsClockDiv(Controls &c, uint32_t div) {
 	const auto col = Palette::Setting::ClockDiv::color[idx];
 	c.SetEncoderLed(div, col);
 }
+
 inline void StartupAnimation(Controls &c) {
+	if constexpr (Model::skip_startup_animation) {
+		return;
+	}
 	const auto duration = 1000;
 	auto remaining = duration;
 	ClearButtonLeds(c);
