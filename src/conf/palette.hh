@@ -124,6 +124,12 @@ inline constexpr Color color(uint8_t val) {
 }
 } // namespace Random
 
+inline constexpr Color TrigDelayBlend(float val) {
+	const auto col = val < 0.f ? Voltage::Negative : Voltage::Positive;
+	val *= val < 0.f ? -1.f : 1.f;
+	return off.blend(col, val);
+}
+
 inline constexpr Color CvBlend(uint16_t level) {
 	using namespace Channel;
 	constexpr auto neg = from_volts(0.f);
