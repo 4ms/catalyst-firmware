@@ -5,10 +5,10 @@
 
 namespace Catalyst2::HWTests
 {
+std::array<volatile int32_t, 8> rotvals{0};
 
 struct TestEncoders {
 	Controls &controls;
-	std::array<int32_t, 8> rotvals{0};
 	enum class State { Initial, CheckingCCW, CheckingCW, Done } state = State::Initial;
 
 	TestEncoders(Controls &controls)
@@ -26,28 +26,41 @@ struct TestEncoders {
 
 		while (state != Done) {
 			for (auto i = 0u; i < controls.encoders.size(); i++) {
-				const auto dir = controls.encoders[i].read();
+				auto dir = controls.encoders[i].read();
 				rotvals[i] += dir;
+				if (state == CheckingCW) {
+					if (rotvals[i] < 0)
+						rotvals[i] = 0;
+				}
 
-				if (state == CheckingCCW && (rotvals[i] < 0)) {
+				if (dir < 0) {
 					controls.SetEncoderLed(i, Palette::red);
-				} else if (state == CheckingCW && (rotvals[i] > 0)) {
+				} else if (dir > 0) {
 					controls.SetEncoderLed(i, Palette::blue);
 				}
 			}
 
 			if (state == CheckingCCW) {
-				auto num_ccw = std::count_if(rotvals.begin(), rotvals.end(), [](auto rot) { return rot < 0; });
-				if (num_ccw == rotvals.size()) {
+				auto sum = 0u;
+				for (auto [i, rot] : enumerate(rotvals)) {
+					if (rot < 0)
+						sum++;
+				}
+				if (sum == rotvals.size()) {
 					state = CheckingCW;
-					for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
-						rotvals[i] = 0;
+					for (auto [i, rot] : enumerate(rotvals)) {
+						rot = 0;
 						controls.SetEncoderLed(i, Palette::yellow);
 					}
 				}
+
 			} else if (state == CheckingCW) {
-				auto num_cw = std::count_if(rotvals.begin(), rotvals.end(), [](auto rot) { return rot > 0; });
-				if (num_cw == rotvals.size())
+				auto sum = 0u;
+				for (auto [i, rot] : enumerate(rotvals)) {
+					if (rot > 0)
+						sum++;
+				}
+				if (sum == rotvals.size())
 					state = Done;
 			}
 
