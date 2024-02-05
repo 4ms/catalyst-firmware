@@ -9,7 +9,7 @@ namespace Catalyst2::HWTests
 
 struct TestButtons : IButtonChecker {
 	TestButtons()
-		: IButtonChecker{14} {
+		: IButtonChecker{15} {
 		reset();
 		set_allowable_noise(10);
 		set_min_steady_state_time(10);
@@ -30,6 +30,8 @@ struct TestButtons : IButtonChecker {
 			return UtilIF::controls->button.bank.is_high();
 		if (channel == 13)
 			return UtilIF::controls->button.add.is_high();
+		if (channel == 14)
+			return UtilIF::controls->button.clocksense.is_high();
 		return false;
 	}
 

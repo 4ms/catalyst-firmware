@@ -50,8 +50,8 @@ void run_hardware_test() {
 	TestLEDs ledtester;
 	ledtester.run_test();
 
-	// TestButtons buttontester;
-	// buttontester.run_test();
+	TestButtons buttontester;
+	buttontester.run_test();
 
 	auto dac_test = TestDac{controls};
 	dac_test.run_test();
