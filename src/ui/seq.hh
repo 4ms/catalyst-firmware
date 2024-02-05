@@ -151,19 +151,34 @@ public:
 
 		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
-			const auto led = p.player.GetPlayheadStepOnPage(chan);
+			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
-			const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
-			auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
-										  [](Model::Output::type v) { return Palette::CvBlend(v); };
+			if (is_gate && c.button.fine.is_high()) {
+				// display gate timing offset
+				const auto led = p.player.GetPlayheadStepOnPage(chan);
+				const auto pvals = p.GetPageValuesTrigDelay(page);
 
-			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-				if (i == led && page == playheadpage) {
-					c.SetEncoderLed(led, Palette::SeqHead::color);
-				} else {
-					c.SetEncoderLed(i, display_func(pvals[i]));
+				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+					if (i == led && page == playheadpage) {
+						c.SetEncoderLed(led, Palette::SeqHead::color);
+					} else {
+						c.SetEncoderLed(i, Palette::TrigDelayBlend(pvals[i]));
+					}
+				}
+
+			} else {
+				const auto led = p.player.GetPlayheadStepOnPage(chan);
+				const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
+				auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
+											  [](Model::Output::type v) { return Palette::CvBlend(v); };
+
+				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+					if (i == led && page == playheadpage) {
+						c.SetEncoderLed(led, Palette::SeqHead::color);
+					} else {
+						c.SetEncoderLed(i, display_func(pvals[i]));
+					}
 				}
 			}
 			if (p.IsPageSelected()) {
