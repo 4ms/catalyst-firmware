@@ -137,9 +137,10 @@ private:
 		auto step_phase = p.player.GetStepPhase(chan);
 		if (delay <= step_phase) {
 			step_phase -= delay;
+			const auto do_gate = step_phase < 1.f;
 			step_phase *= retrig;
 			step_phase -= static_cast<uint32_t>(step_phase);
-			return gateval < step_phase && step_phase >= 0.f ? Channel::gateoff : Channel::gatehigh;
+			return gateval >= step_phase && do_gate ? Channel::gatehigh : Channel::gateoff;
 		}
 		return Channel::gateoff;
 	}
