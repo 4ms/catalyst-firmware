@@ -130,47 +130,50 @@ private:
 		return buf;
 	}
 
-	// woah this should be a loop!
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
+		auto get_step_func = [&p, chan](uint8_t idx) {
+			if (idx == 0) {
+				return p.GetPrevStep(chan);
+			} else if (idx == 1) {
+				return p.GetPlayheadStep(chan);
+			} else {
+				return p.GetNextStep(chan);
+			}
+		};
+
+		auto get_value_func = [&p, chan](uint8_t idx) {
+			if (idx == 0) {
+				return p.GetPrevStepValue(chan).AsGate();
+			} else if (idx == 1) {
+				return p.GetPlayheadValue(chan).AsGate();
+			} else {
+				return p.GetNextStepValue(chan).AsGate();
+			}
+		};
+
 		bool out = false;
 
 		const auto step_phase = p.player.GetStepPhase(chan);
 
-		auto s = p.GetPrevStep(chan);
-		auto s_phase = step_phase - s.ReadTrigDelay() + 1.f;
-		if (s_phase >= 0.f && s_phase < 1.f) {
-			s_phase *= s.ReadRetrig() + 1;
-			s_phase -= static_cast<uint32_t>(s_phase);
-			if constexpr (Model::seq_gate_overrides_prev_step) {
-				out = p.GetPrevStepValue(chan).AsGate() >= s_phase;
-			} else {
-				out |= p.GetPrevStepValue(chan).AsGate() >= s_phase;
+		for (auto i = 0; i < 3; i++) {
+			auto s = get_step_func(i);
+			auto s_phase = step_phase - s.ReadTrigDelay() + ((i - 1) * -1);
+			if (s_phase >= 0.f && s_phase < 1.f) {
+				s_phase *= s.ReadRetrig() + 1;
+				s_phase -= static_cast<uint32_t>(s_phase);
+				const auto gate_val = get_value_func(i);
+				if (gate_val <= 0.f) {
+					continue;
+				}
+				const auto temp = gate_val >= s_phase;
+				if constexpr (Model::seq_gate_overrides_prev_step) {
+					out = temp;
+				} else {
+					out |= temp;
+				}
 			}
 		}
 
-		s = p.GetPlayheadStep(chan);
-		s_phase = step_phase - s.ReadTrigDelay();
-		if (s_phase >= 0.f && s_phase < 1.f) {
-			s_phase *= s.ReadRetrig() + 1;
-			s_phase -= static_cast<uint32_t>(s_phase);
-			if constexpr (Model::seq_gate_overrides_prev_step) {
-				out = p.GetPlayheadValue(chan).AsGate() >= s_phase;
-			} else {
-				out |= p.GetPlayheadValue(chan).AsGate() >= s_phase;
-			}
-		}
-
-		s = p.GetNextStep(chan);
-		s_phase = step_phase - s.ReadTrigDelay() - 1.f;
-		if (s_phase >= 0.f && s_phase < 1.f) {
-			s_phase *= s.ReadRetrig() + 1;
-			s_phase -= static_cast<uint32_t>(s_phase);
-			if constexpr (Model::seq_gate_overrides_prev_step) {
-				out = p.GetNextStepValue(chan).AsGate() >= s_phase;
-			} else {
-				out |= p.GetNextStepValue(chan).AsGate() >= s_phase;
-			}
-		}
 		return out ? Channel::gatehigh : Channel::gateoff;
 	}
 
