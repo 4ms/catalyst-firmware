@@ -47,8 +47,10 @@ struct TestEncoders {
 						sum++;
 				}
 				if (sum == rotvals.size()) {
+					HAL_Delay(500);
 					state = CheckingCW;
 					for (auto [i, rot] : enumerate(rotvals)) {
+						controls.encoders[i].read();
 						rot = 0;
 						controls.SetEncoderLed(i, Palette::yellow);
 					}
