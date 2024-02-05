@@ -31,6 +31,8 @@ bug when switch modes it will get stuck on bank mode leds or morph mode leds som
 void main() {
 	using namespace Catalyst2;
 
+	run_hardware_test();
+
 	Params params;
 	Ui::Interface ui{params};
 	MacroSeq macroseq{params};

@@ -47,6 +47,8 @@ struct Buttons {
 	static constexpr uint8_t Fine = 14;
 	static constexpr uint8_t Add = 0;
 	static constexpr uint8_t Play = 15;
+	static constexpr uint8_t ClockJackSense = 13;
+	static constexpr uint8_t UnusedMuxInput = 3;
 };
 
 //////////////// Encoders
