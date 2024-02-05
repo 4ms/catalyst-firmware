@@ -170,7 +170,6 @@ public:
 	}
 
 	void Update() {
-		Debug::Pin0::high();
 		// TODO: double-check if this is concurrency-safe:
 		// - update() might interrupt the read-modify-write that happens in set_button_led()
 		// - update_buttons() might interrupt a button being read
@@ -179,7 +178,6 @@ public:
 		for (auto &enc : encoders) {
 			enc.update();
 		}
-		Debug::Pin0::low();
 	}
 	bool LedsReady() {
 		const auto ret = leds_ready_flag;
