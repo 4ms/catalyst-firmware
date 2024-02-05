@@ -22,13 +22,14 @@ namespace Catalyst2::Sequencer
 struct Step : Channel::Value {
 	static constexpr auto morphmin = 0u, morphmax = 12u;
 	static constexpr auto probmin = Random::Sequencer::Probability::min, probmax = Random::Sequencer::Probability::max;
+	static constexpr auto trig_delay_min = -32, trig_delay_max = 32;
 	uint8_t morph_retrig : 4;
 	Random::Sequencer::Probability::type prob : Random::Sequencer::Probability::usable_bits;
 	int8_t trig_delay;
 
 public:
 	float ReadTrigDelay() const {
-		return trig_delay / ((INT8_MAX + 1) * 1.f);
+		return trig_delay / static_cast<float>(trig_delay_max);
 	}
 	float ReadMorph() const {
 		return morph_retrig / static_cast<float>(morphmax);
@@ -49,7 +50,7 @@ public:
 		prob = std::clamp<int32_t>(prob + inc, probmin, probmax);
 	}
 	void IncTrigDelay(int32_t inc) {
-		trig_delay = std::clamp<int32_t>(trig_delay + inc, INT8_MIN, INT8_MAX);
+		trig_delay = std::clamp<int32_t>(trig_delay + inc, trig_delay_min, trig_delay_max - 1);
 	}
 	bool Validate() const {
 		auto ret = true;
@@ -207,6 +208,14 @@ public:
 		const auto &s = data.channel[chan][step];
 		const auto r = player.randomvalue.ReadPrev(chan, s.ReadProbability());
 		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
+	}
+	std::array<float, Model::SeqStepsPerPage> GetPageValuesTrigDelay(uint8_t page) {
+		std::array<float, Model::SeqStepsPerPage> out;
+		for (auto [i, o] : countzip(out)) {
+			const auto step = (page * Model::SeqStepsPerPage) + i;
+			o = data.channel[cur_channel][step].ReadTrigDelay();
+		}
+		return out;
 	}
 	Model::Output::Buffer GetPageValuesGate(uint8_t page) {
 		Model::Output::Buffer out;
