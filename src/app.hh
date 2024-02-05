@@ -133,9 +133,15 @@ private:
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
 		const auto gateval = p.GetPlayheadValue(chan).AsGate();
 		const auto retrig = p.GetPlayheadModifier(chan).ReadRetrig() + 1;
-		auto step_phase = p.player.GetStepPhase(chan) * retrig;
-		step_phase -= static_cast<uint32_t>(step_phase);
-		return gateval < step_phase ? Channel::gateoff : Channel::gatehigh;
+		const auto delay = p.GetPlayheadTrigDelay(chan);
+		auto step_phase = p.player.GetStepPhase(chan);
+		if (delay <= step_phase) {
+			step_phase -= delay;
+			step_phase *= retrig;
+			step_phase -= static_cast<uint32_t>(step_phase);
+			return gateval < step_phase && step_phase >= 0.f ? Channel::gateoff : Channel::gatehigh;
+		}
+		return Channel::gateoff;
 	}
 
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
