@@ -184,27 +184,6 @@ public:
 		step = StepOnPageToStep(step);
 		data.channel[cur_channel][step].IncProbability(inc);
 	}
-	//	int32_t TESTFUNC(uint8_t chan) const {
-	//		const auto step = player.GetPlayheadStep(chan);
-	//		const auto t = data.channel[chan][step];
-	//		const auto random =
-	//			t.ReadProbability() ? player.randomvalue.Read(chan) * data.settings.GetRandomOrGlobal(chan) : 0.f;
-	//		if (data.settings.GetChannelMode(chan).IsGate()) {
-	//			const auto temp = t.AsGate() + random;
-	//		} else {
-	//			const auto stepmorph = seqmorph(player.GetStepPhase(chan), t.ReadMorph());
-	//			auto stepval = shared.quantizer[chan].Process(prevStepValue);
-	//			const auto distance = shared.quantizer[chan].Process(t.AsCv()) - stepval;
-	//			stepval += (distance * stepmorph);
-	//			stepval = Transposer::Process(stepval, data.settings.GetTransposeOrGlobal(chan));
-	//			return data.settings.GetRange(chan).Clamp(stepval);
-	//
-	//			// scratch
-	//			const auto random_offset = random * Channel::max;
-	//			const auto out = t.AsCv() + random_offset;
-	//			return out;
-	//		}
-	//	}
 
 	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
 		const auto step = player.GetPlayheadStep(chan);
@@ -217,6 +196,12 @@ public:
 		const auto step = player.GetPlayheadStep(chan);
 		return data.channel[chan][step];
 	}
+
+	float GetPlayheadTrigDelay(uint8_t chan) {
+		const auto step = player.GetPlayheadStep(chan);
+		return data.channel[chan][step].ReadTrigDelay();
+	}
+
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
 		const auto step = player.GetPrevPlayheadStep(chan);
 		const auto &s = data.channel[chan][step];
