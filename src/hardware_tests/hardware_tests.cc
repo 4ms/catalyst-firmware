@@ -65,8 +65,23 @@ void run_hardware_test() {
 	auto enc_test = TestEncoders{controls};
 	enc_test.run_test();
 
-	while (true)
-		;
+	uint32_t animtm = 0;
+	uint32_t anim_step = 0;
+	constexpr float Chans = Model::NumChans - 1.f;
+	while (true) {
+		if (HAL_GetTick() - animtm > 100) {
+			animtm = HAL_GetTick();
+			controls.SetButtonLed(anim_step % Model::NumChans, false);
+			anim_step++;
+
+			for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+				float offset = (i + anim_step) % Model::NumChans;
+				controls.SetEncoderLed(i, Palette::yellow.blend(Palette::blue, offset / Chans));
+			}
+
+			controls.SetButtonLed(anim_step % Model::NumChans, true);
+		};
+	}
 
 	controls_update_task.stop();
 }
