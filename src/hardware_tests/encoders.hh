@@ -8,23 +8,47 @@ namespace Catalyst2::HWTests
 
 struct TestEncoders {
 	Controls &controls;
-	std::array<uint8_t, 8> rotvals{0};
+	std::array<int32_t, 8> rotvals{0};
+	enum class State { Initial, CheckingCCW, CheckingCW, Done } state = State::Initial;
 
 	TestEncoders(Controls &controls)
 		: controls{controls} {
 	}
 
 	void run_test() {
+
 		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
 			controls.SetEncoderLed(i, Palette::yellow);
 		}
 
-		while (true) {
+		using enum State;
+		state = CheckingCCW;
+
+		while (state != Done) {
 			for (auto i = 0u; i < controls.encoders.size(); i++) {
 				const auto dir = controls.encoders[i].read();
-				if (dir) {
-					controls.SetEncoderLed(i, dir > 0 ? Palette::blue : Palette::red);
+				rotvals[i] += dir;
+
+				if (state == CheckingCCW && (rotvals[i] < 0)) {
+					controls.SetEncoderLed(i, Palette::red);
+				} else if (state == CheckingCW && (rotvals[i] > 0)) {
+					controls.SetEncoderLed(i, Palette::blue);
 				}
+			}
+
+			if (state == CheckingCCW) {
+				auto num_ccw = std::count_if(rotvals.begin(), rotvals.end(), [](auto rot) { return rot < 0; });
+				if (num_ccw == rotvals.size()) {
+					state = CheckingCW;
+					for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+						rotvals[i] = 0;
+						controls.SetEncoderLed(i, Palette::yellow);
+					}
+				}
+			} else if (state == CheckingCW) {
+				auto num_cw = std::count_if(rotvals.begin(), rotvals.end(), [](auto rot) { return rot > 0; });
+				if (num_cw == rotvals.size())
+					state = Done;
 			}
 
 			HAL_Delay(10);
@@ -35,6 +59,10 @@ struct TestEncoders {
 
 		while (Util::main_button_pressed())
 			;
+
+		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+			controls.SetEncoderLed(i, Palette::green);
+		}
 	}
 };
 
