@@ -229,6 +229,7 @@ private:
 		button.fine.update(raw_mux_read);
 		button.add.update(raw_mux_read);
 		button.play.update(raw_mux_read);
+		button.clocksense.update(raw_mux_read);
 	}
 };
 } // namespace Catalyst2
