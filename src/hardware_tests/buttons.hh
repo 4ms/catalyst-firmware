@@ -42,8 +42,20 @@ struct TestButtons : IButtonChecker {
 	void _set_indicator(uint8_t indicator_num, bool newstate) override {
 		if (indicator_num < 8)
 			UtilIF::controls->SetButtonLed(indicator_num, newstate);
-		else
-			UtilIF::controls->SetEncoderLed(indicator_num - 8, newstate ? Palette::green : Palette::off);
+		else if (indicator_num == 8)
+			UtilIF::controls->SetPlayLed(newstate);
+		else if (indicator_num == 9)
+			UtilIF::controls->SetEncoderLed(1, newstate ? Palette::green : Palette::off);
+		else if (indicator_num == 10)
+			UtilIF::controls->SetEncoderLed(2, newstate ? Palette::green : Palette::off);
+		else if (indicator_num == 11)
+			UtilIF::controls->SetEncoderLed(5, newstate ? Palette::green : Palette::off);
+		else if (indicator_num == 12)
+			UtilIF::controls->SetEncoderLed(6, newstate ? Palette::green : Palette::off);
+		else if (indicator_num == 13)
+			UtilIF::controls->SetEncoderLed(7, newstate ? Palette::green : Palette::off);
+		else if (indicator_num == 14)
+			UtilIF::controls->SetEncoderLed(0, newstate ? Palette::green : Palette::off);
 	}
 
 	void _check_max_one_pin_changed() override {
