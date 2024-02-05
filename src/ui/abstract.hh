@@ -136,6 +136,7 @@ inline void SetLedsClockDiv(Controls &c, uint32_t div) {
 
 inline void StartupAnimation(Controls &c) {
 	if constexpr (Model::skip_startup_animation) {
+#warning "Remember to turn the startup animation on!"
 		return;
 	}
 	const auto duration = 1000;
