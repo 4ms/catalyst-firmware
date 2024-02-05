@@ -13,15 +13,21 @@ struct TestJacks : IGateInChecker {
 	ManualValue pulse;
 	Model::Output::Buffer outs;
 	static constexpr auto SampleRate = 2000u;
+	static constexpr auto NumJacks = 2u;
 
-	uint8_t enc_map[2]{0, 3};
+	uint8_t enc_map[NumJacks]{0, 3};
 
 	TestJacks(Controls &controls)
-		: IGateInChecker{2}
+		: IGateInChecker{NumJacks}
 		, controls{controls} {
 		reset();
 		set_num_toggles(10);
 		pulse.set_val(0);
+
+		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
+			controls.SetButtonLed(i, false);
+			controls.SetEncoderLed(i, Palette::off);
+		}
 
 		mdrivlib::Timekeeper dac_update_task{
 			{
@@ -49,7 +55,9 @@ struct TestJacks : IGateInChecker {
 	}
 
 	void set_test_signal(bool newstate) override {
+		HAL_Delay(2);
 		pulse.set_val(newstate ? Channel::from_volts(5.f) : Channel::from_volts(0.f));
+		HAL_Delay(2);
 	}
 
 	void set_error_indicator(uint8_t channel, ErrorType err) override {
@@ -57,13 +65,13 @@ struct TestJacks : IGateInChecker {
 	}
 
 	void set_indicator(uint8_t indicator_num, bool newstate) override {
-		if (indicator_num >= 2)
+		if (indicator_num >= NumJacks)
 			return;
 		UtilIF::controls->SetEncoderLed(enc_map[indicator_num], newstate ? Palette::green : Palette::off);
 	}
 
 	void signal_jack_done(uint8_t chan) override {
-		if (chan >= 2)
+		if (chan >= NumJacks)
 			return;
 		UtilIF::controls->SetEncoderLed(enc_map[chan], Palette::blue);
 	}
