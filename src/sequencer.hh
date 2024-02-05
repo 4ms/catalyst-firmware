@@ -186,29 +186,39 @@ public:
 		data.channel[cur_channel][step].IncProbability(inc);
 	}
 
-	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
-		const auto step = player.GetPlayheadStep(chan);
-		const auto &s = data.channel[chan][step];
-		const auto r = player.randomvalue.Read(chan, s.ReadProbability());
-		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
-	}
-
-	Step GetPlayheadModifier(uint8_t chan) {
+	Step GetPlayheadStep(uint8_t chan) {
 		const auto step = player.GetPlayheadStep(chan);
 		return data.channel[chan][step];
 	}
 
-	float GetPlayheadTrigDelay(uint8_t chan) {
-		const auto step = player.GetPlayheadStep(chan);
-		return data.channel[chan][step].ReadTrigDelay();
+	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
+		const auto s = GetPlayheadStep(chan);
+		const auto r = player.randomvalue.Read(chan, s.ReadProbability());
+		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
+	}
+
+	Step GetPrevStep(uint8_t chan) {
+		const auto step = player.GetPrevPlayheadStep(chan);
+		return data.channel[chan][step];
 	}
 
 	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
-		const auto step = player.GetPrevPlayheadStep(chan);
-		const auto &s = data.channel[chan][step];
+		const auto s = GetPrevStep(chan);
 		const auto r = player.randomvalue.ReadPrev(chan, s.ReadProbability());
 		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
 	}
+
+	Step GetNextStep(uint8_t chan) {
+		const auto step = player.GetNextPlayheadStep(chan);
+		return data.channel[chan][step];
+	}
+
+	Channel::Value::Proxy GetNextStepValue(uint8_t chan) {
+		const auto s = GetNextStep(chan);
+		const auto r = player.randomvalue.ReadNext(chan, s.ReadProbability());
+		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
+	}
+
 	std::array<float, Model::SeqStepsPerPage> GetPageValuesTrigDelay(uint8_t page) {
 		std::array<float, Model::SeqStepsPerPage> out;
 		for (auto [i, o] : countzip(out)) {

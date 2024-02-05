@@ -22,6 +22,7 @@ class Interface {
 	struct State {
 		uint8_t playhead_step;
 		uint8_t prev_playhead_step;
+		uint8_t next_playhead_step;
 		uint8_t first_step;
 		float step_phase;
 		float sequence_phase;
@@ -96,6 +97,7 @@ public:
 			const auto playhead = static_cast<uint32_t>(c.sequence_phase);
 			c.playhead_step = ToStep(i, playhead, l, pm);
 			c.prev_playhead_step = ToStep(i, (playhead - 1u) % actual_length, l, pm);
+			c.next_playhead_step = ToStep(i, (playhead + 1u) % actual_length, l, pm);
 			c.step_phase = c.sequence_phase - static_cast<int32_t>(c.sequence_phase);
 		}
 	}
@@ -121,6 +123,9 @@ public:
 	}
 	uint8_t GetPrevPlayheadStep(uint8_t chan) const {
 		return channel[chan].prev_playhead_step;
+	}
+	uint8_t GetNextPlayheadStep(uint8_t chan) const {
+		return channel[chan].next_playhead_step;
 	}
 
 private:
