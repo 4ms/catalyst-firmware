@@ -75,6 +75,8 @@ struct TestDac {
 			controls.SetEncoderLed(i, Palette::black);
 			outs[i] = Channel::from_volts(0.f);
 		}
+
+		Util::pause_until_button_released();
 	}
 };
 
