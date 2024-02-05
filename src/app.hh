@@ -130,23 +130,52 @@ private:
 		return buf;
 	}
 
+	// woah this should be a loop!
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
-		const auto gateval = p.GetPlayheadValue(chan).AsGate();
-		const auto retrig = p.GetPlayheadModifier(chan).ReadRetrig() + 1;
-		const auto delay = p.GetPlayheadTrigDelay(chan);
-		auto step_phase = p.player.GetStepPhase(chan);
-		if (delay <= step_phase) {
-			step_phase -= delay;
-			const auto do_gate = step_phase < 1.f;
-			step_phase *= retrig;
-			step_phase -= static_cast<uint32_t>(step_phase);
-			return gateval >= step_phase && do_gate ? Channel::gatehigh : Channel::gateoff;
+		bool out = false;
+
+		const auto step_phase = p.player.GetStepPhase(chan);
+
+		auto s = p.GetPrevStep(chan);
+		auto s_phase = step_phase - s.ReadTrigDelay() + 1.f;
+		if (s_phase >= 0.f && s_phase < 1.f) {
+			s_phase *= s.ReadRetrig() + 1;
+			s_phase -= static_cast<uint32_t>(s_phase);
+			if constexpr (Model::seq_gate_overrides_prev_step) {
+				out = p.GetPrevStepValue(chan).AsGate() >= s_phase;
+			} else {
+				out |= p.GetPrevStepValue(chan).AsGate() >= s_phase;
+			}
 		}
-		return Channel::gateoff;
+
+		s = p.GetPlayheadStep(chan);
+		s_phase = step_phase - s.ReadTrigDelay();
+		if (s_phase >= 0.f && s_phase < 1.f) {
+			s_phase *= s.ReadRetrig() + 1;
+			s_phase -= static_cast<uint32_t>(s_phase);
+			if constexpr (Model::seq_gate_overrides_prev_step) {
+				out = p.GetPlayheadValue(chan).AsGate() >= s_phase;
+			} else {
+				out |= p.GetPlayheadValue(chan).AsGate() >= s_phase;
+			}
+		}
+
+		s = p.GetNextStep(chan);
+		s_phase = step_phase - s.ReadTrigDelay() - 1.f;
+		if (s_phase >= 0.f && s_phase < 1.f) {
+			s_phase *= s.ReadRetrig() + 1;
+			s_phase -= static_cast<uint32_t>(s_phase);
+			if constexpr (Model::seq_gate_overrides_prev_step) {
+				out = p.GetNextStepValue(chan).AsGate() >= s_phase;
+			} else {
+				out |= p.GetNextStepValue(chan).AsGate() >= s_phase;
+			}
+		}
+		return out ? Channel::gatehigh : Channel::gateoff;
 	}
 
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
-		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadModifier(chan).ReadMorph());
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadStep(chan).ReadMorph());
 		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan).AsCV());
 		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
