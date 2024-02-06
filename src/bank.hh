@@ -50,9 +50,9 @@ class Interface {
 	Data *b;
 
 public:
-	Random::Pool::Interface<Random::Pool::MacroData> randompool;
+	Random::Macro::Pool::Interface randompool;
 
-	Interface(Random::Pool::MacroData &r)
+	Interface(Random::Macro::Pool::Data &r)
 		: randompool{r} {
 	}
 	void Load(Data &d) {
@@ -88,8 +88,11 @@ public:
 		b->scene[scene].random_amount = std::clamp(t, Random::Amount::min, Random::Amount::max);
 	}
 	void IncChan(uint8_t scene, uint8_t channel, int32_t inc, bool fine) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
-		b->scene[scene].channel[channel].Inc(inc, fine, GetChannelMode(channel).IsGate(), b->range[channel], rand);
+		if (GetChannelMode(channel).IsGate()) {
+			b->scene[scene].channel[channel].IncGate(inc);
+		} else {
+			b->scene[scene].channel[channel].IncCv(inc, fine, GetRange(channel));
+		}
 	}
 	float GetMorph(uint8_t channel) {
 		return 1.f - b->morph[channel];

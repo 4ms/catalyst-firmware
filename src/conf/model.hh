@@ -9,6 +9,9 @@
 // Configuration for everything that might change if we make a version with more or less user-facing features
 namespace Catalyst2::Model
 {
+inline constexpr auto skip_startup_animation = true;
+inline constexpr auto seq_gate_overrides_prev_step = true;
+
 enum class Mode : bool { Sequencer, Macro };
 
 inline constexpr auto default_mode = Mode::Sequencer;

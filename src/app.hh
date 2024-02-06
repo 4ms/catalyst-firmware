@@ -1,5 +1,6 @@
 #pragma once
 
+#include "channel.hh"
 #include "conf/model.hh"
 #include "params.hh"
 #include "trigger.hh"
@@ -42,8 +43,6 @@ namespace Catalyst2
 
 class MacroSeq {
 	Params &params;
-	std::array<Trigger, Model::NumChans> trigger;
-	std::array<Retrigger, Model::NumChans> retrigger;
 
 public:
 	MacroSeq(Params &params)
@@ -51,7 +50,7 @@ public:
 	}
 
 	auto Update() {
-		return params.shared.data.mode == Model::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
+		return params.shared.data.saved_mode == Model::Mode::Macro ? Macro(params.macro) : Seq(params.sequencer);
 	}
 
 private:
@@ -64,22 +63,18 @@ private:
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 
-		if (p.override_output.has_value()) {
-			if (p.override_output.value() != prev) {
-				prev = p.override_output.value();
+		if (p.shared.youngest_scene_button.has_value()) {
+			if (p.shared.youngest_scene_button.value() != prev) {
+				prev = p.shared.youngest_scene_button.value();
 				do_trigs = true;
 			}
 			for (auto [chan, out] : countzip(buf)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					const auto gate_armed = p.bank.GetChannel(p.override_output.value(), chan).AsGate();
+					const auto gate_armed = p.bank.GetChannel(p.shared.youngest_scene_button.value(), chan).AsGate();
 					if (do_trigs && gate_armed) {
-						trigger[chan].Trig(time_now);
 					}
-					out = trigger[chan].Read(time_now) ? Channel::gatehigh :
-						  gate_armed				   ? Channel::gatearmed :
-														 Channel::gateoff;
 				} else {
-					out = p.bank.GetChannel(p.override_output.value(), chan).AsCV();
+					out = p.bank.GetChannel(p.shared.youngest_scene_button.value(), chan).AsCV();
 					out = p.bank.GetRange(chan).Clamp(out);
 				}
 			}
@@ -108,10 +103,8 @@ private:
 					}
 
 					if (do_trigs && is_primed) {
-						trigger[chan].Trig(time_now);
 					}
 
-					out = trigger[chan].Read(time_now) ? Channel::gatehigh : level;
 				} else {
 					const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
 					const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan).AsCV());
@@ -129,37 +122,63 @@ private:
 
 	Model::Output::Buffer Seq(Sequencer::Interface &p) {
 		Model::Output::Buffer buf;
-		if (p.seqclock.Output()) {
-			p.player.Step();
-		}
-		if (p.seqclock.MultOutput()) {
-			for (auto &rt : retrigger) {
-				rt.Update();
-			}
-		}
-		const auto morph_phase = p.player.IsPaused() ? 0.f : p.seqclock.GetPhase();
+
 		for (auto [chan, o] : countzip(buf)) {
-			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan, morph_phase);
+			o = p.data.settings.GetChannelMode(chan).IsGate() ? SeqTrig(p, chan) : SeqCv(p, chan);
 		}
+
 		return buf;
 	}
 
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
-		const auto stepval = p.GetPlayheadValue(chan);
-		const auto armed = stepval.AsGate();
-		const auto time_now = p.shared.internalclock.TimeNow();
-		if (armed && p.player.IsCurrentStepNew(chan)) {
-			retrigger[chan].Trig(p.GetPlayheadModifier(chan).AsRetrig(), p.data.settings.GetClockDiv(chan).Read());
+		auto get_step_func = [&p, chan](uint8_t idx) {
+			if (idx == 0) {
+				return p.GetPrevStep(chan);
+			} else if (idx == 1) {
+				return p.GetPlayheadStep(chan);
+			} else {
+				return p.GetNextStep(chan);
+			}
+		};
+
+		auto get_value_func = [&p, chan](uint8_t idx) {
+			if (idx == 0) {
+				return p.GetPrevStepValue(chan).AsGate();
+			} else if (idx == 1) {
+				return p.GetPlayheadValue(chan).AsGate();
+			} else {
+				return p.GetNextStepValue(chan).AsGate();
+			}
+		};
+
+		bool out = false;
+
+		const auto step_phase = p.player.GetStepPhase(chan);
+
+		for (auto i = 0; i < 3; i++) {
+			auto s = get_step_func(i);
+			auto s_phase = step_phase - s.ReadTrigDelay() + ((i - 1) * -1);
+			if (s_phase >= 0.f && s_phase < 1.f) {
+				s_phase *= s.ReadRetrig() + 1;
+				s_phase -= static_cast<uint32_t>(s_phase);
+				const auto gate_val = get_value_func(i);
+				if (gate_val <= 0.f) {
+					continue;
+				}
+				const auto temp = gate_val >= s_phase;
+				if constexpr (Model::seq_gate_overrides_prev_step) {
+					out = temp;
+				} else {
+					out |= temp;
+				}
+			}
 		}
-		if (retrigger[chan].Read()) {
-			trigger[chan].Trig(time_now);
-		}
-		return trigger[chan].Read(time_now) ? Channel::gatehigh : armed ? Channel::gatearmed : Channel::gateoff;
+
+		return out ? Channel::gatehigh : Channel::gateoff;
 	}
 
-	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan, float morph_phase) {
-		morph_phase = p.player.GetPhase(chan, morph_phase);
-		const auto stepmorph = seqmorph(morph_phase, p.GetPlayheadModifier(chan).AsMorph());
+	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadStep(chan).ReadMorph());
 		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan).AsCV());
 		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan).AsCV()) - stepval;
 		stepval += (distance * stepmorph);

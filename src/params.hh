@@ -18,10 +18,16 @@ namespace Catalyst2
 inline constexpr auto seqsize = sizeof(Sequencer::Data);
 inline constexpr auto macrosize = sizeof(Macro::Data);
 inline constexpr auto macro_is_smaller = macrosize < seqsize;
-using DataWithGlobalNonVolatileState = std::conditional<macro_is_smaller, Macro::Data, Sequencer::Data>::type;
+// using DataWithGlobalNonVolatileState = std::conditional<macro_is_smaller, Macro::Data, Sequencer::Data>::type;
 
 struct SequencerData : public Sequencer::Data {
 	Shared::Data shared;
+	bool validate() const {
+		auto ret = true;
+		ret &= shared.Validate();
+		ret &= Sequencer::Data::validate();
+		return ret;
+	}
 };
 
 struct MacroData : public Macro::Data {

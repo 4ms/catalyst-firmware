@@ -4,7 +4,7 @@
 #include "macro_common.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 class Range : public Usual {
 public:
@@ -13,9 +13,9 @@ public:
 		p.shared.hang.Cancel();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		if (!c.button.morph.is_high())
+		if (!c.button.morph.is_high() && !c.button.shift.is_high())
 			return;
 
 		interface = this;
@@ -26,11 +26,11 @@ public:
 		p.shared.hang.Set(channel, p.shared.internalclock.TimeNow());
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
-		ClearEncoderLeds();
+		ClearButtonLeds(c);
+		ClearEncoderLeds(c);
 		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 		if (hang.has_value()) {
-			DisplayRange(p.bank.GetRange(hang.value()));
+			DisplayRange(c, p.bank.GetRange(hang.value()));
 			c.SetButtonLed(hang.value(), true);
 		} else {
 			for (auto i = 0u; i < Model::NumChans; i++) {
@@ -45,4 +45,4 @@ public:
 		}
 	}
 };
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

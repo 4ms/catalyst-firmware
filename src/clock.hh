@@ -49,13 +49,12 @@ public:
 // Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm {
-	static constexpr auto multfactor = Model::clock_mult_factor;
 	uint32_t cnt = 0;
 	uint32_t prevtaptime;
-	bool peek = false;
 	bool external = false;
 	bool step = false;
-	bool multout = false;
+	bool peek = false;
+	bool pause = false;
 
 public:
 	class type {
@@ -78,7 +77,7 @@ public:
 		void Set(uint32_t ticks) {
 			val = ticks;
 		}
-		bool Validate() {
+		bool Validate() const {
 			return val <= BpmToTicks(min) && val >= BpmToTicks(max);
 		}
 	};
@@ -86,39 +85,33 @@ public:
 		: bpm{bpm} {
 	}
 	void Update() {
+		if (pause) {
+			return;
+		}
 		const auto period = bpm.Read();
-		const auto cntmult = (cnt % (period / multfactor)) + 1;
 		cnt++;
 
 		if (cnt >= period) {
 			if (IsInternal() || cnt >= period * 2) {
 				cnt = 0;
 				step = true;
+				peek = !peek;
 				SetExternal(false);
 			}
-			peek = !peek;
-			multout = true;
-		}
-		if (cntmult >= period / multfactor) {
-			multout = true;
 		}
 	}
-
 	bool Output() {
 		bool ret = step;
 		step = false;
 		return ret;
 	}
-	bool MultOutput() {
-		const auto out = multout;
-		multout = false;
-		return out;
-	}
 	void Input(uint32_t time_now) {
 		if (IsInternal()) {
 			return;
 		}
-		step = true;
+		if (!pause) {
+			step = true;
+		}
 		cnt = 0;
 
 		Tap(time_now);
@@ -127,22 +120,30 @@ public:
 		bpm.Set(time_now - prevtaptime);
 		prevtaptime = time_now;
 	}
-	bool IsInternal() {
+	bool IsInternal() const {
 		return external == false;
 	}
 	void SetExternal(bool on) {
 		external = on;
 	}
-	bool Peek() {
-		return peek;
-	}
-	float GetPhase() {
+	float GetPhase() const {
 		auto out = static_cast<float>(cnt) / bpm.Read();
-		return std::clamp(out, 0.f, 1.f);
+		return std::clamp(out, 0.f, .9999f);
 	}
 	void Reset() {
 		cnt = 0;
-		peek = false;
+	}
+	bool Peek() const {
+		return peek;
+	}
+	void Pause() {
+		pause = !pause;
+	}
+	void Pause(bool pause) {
+		this->pause = pause;
+	}
+	bool IsPaused() {
+		return pause;
 	}
 
 private:
@@ -177,15 +178,15 @@ public:
 			counter = 0;
 		}
 	}
-	float GetPhase(type div) {
+	float GetPhase(type div) const {
 		return static_cast<float>(counter) / div.Read();
 	}
+	float GetPhase(type div, float phase) const {
+		return (phase / div.Read()) + GetPhase(div);
+	}
 	bool Step() {
-		bool ret = false;
-		if (step) {
-			ret = true;
-			step = false;
-		}
+		bool ret = step;
+		step = false;
 		return ret;
 	}
 	void Reset() {

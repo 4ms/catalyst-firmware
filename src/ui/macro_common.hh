@@ -4,13 +4,13 @@
 #include "controls.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 
-class Usual : public Catalyst2::Ui::Abstract {
+class Usual : public Abstract {
 public:
-	Macro::Interface &p;
-	Usual(Macro::Interface &p, Controls &c)
+	Catalyst2::Macro::Interface &p;
+	Usual(Catalyst2::Macro::Interface &p, Controls &c)
 		: Abstract{c}
 		, p{p} {
 	}
@@ -43,16 +43,7 @@ public:
 		pos = p.slider_slew.Update(pos);
 		p.shared.pos = pos;
 		p.pathway.Update(pos);
-		p.override_output = YoungestSceneButton();
-	}
-
-protected:
-	void ConfirmCopy(uint8_t led) {
-		p.shared.blinker.Set(led, 8, 250, p.shared.internalclock.TimeNow());
-	}
-	void ConfirmPaste(uint8_t led) {
-		ConfirmCopy(led);
 	}
 };
 
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

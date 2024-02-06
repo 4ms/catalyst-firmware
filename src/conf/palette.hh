@@ -4,6 +4,7 @@
 #include "channel.hh"
 #include "model.hh"
 #include <array>
+#include <cstdint>
 
 namespace Catalyst2::Palette
 {
@@ -17,7 +18,7 @@ inline constexpr Color grey = Color(100, 40, 40);
 inline constexpr Color red = Color(128, 0, 0);
 inline constexpr Color pink = Color(150, 70, 20);
 inline constexpr Color orange = Color(150, 0, 100);
-inline constexpr Color yellow = Color(150, 0, 60);
+inline constexpr Color yellow = Color(60, 0, 60);
 inline constexpr Color dim_green = Color(0, 0, 9);
 inline constexpr Color green = Color(0, 0, 90);
 inline constexpr Color cyan = Color(0, 90, 90);
@@ -91,6 +92,13 @@ inline constexpr Color color(float phase) {
 }
 } // namespace Morph
 
+namespace Probability
+{
+inline constexpr Color color(float phase) {
+	return off.blend(green.blend(off, .5f), phase);
+}
+} // namespace Probability
+
 namespace Pathway
 {
 inline constexpr Color color(float phase) {
@@ -116,6 +124,12 @@ inline constexpr Color color(uint8_t val) {
 }
 } // namespace Random
 
+inline constexpr Color TrigDelayBlend(float val) {
+	const auto col = val < 0.f ? Voltage::Negative : Voltage::Positive;
+	val *= val < 0.f ? -1.f : 1.f;
+	return off.blend(col, val);
+}
+
 inline constexpr Color CvBlend(uint16_t level) {
 	using namespace Channel;
 	constexpr auto neg = from_volts(0.f);
@@ -129,8 +143,11 @@ inline constexpr Color CvBlend(uint16_t level) {
 	return off.blend(c, phase);
 }
 
-inline constexpr Color GateBlend(bool level) {
-	return level == true ? Gate::color : off;
+inline constexpr Color GateBlend(uint16_t level) {
+	if (level == UINT16_MAX) {
+		return cyan;
+	}
+	return off.blend(green, static_cast<uint8_t>(level >> 8));
 }
 
 inline constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {

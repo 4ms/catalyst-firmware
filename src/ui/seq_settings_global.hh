@@ -6,7 +6,7 @@
 #include "seq_common.hh"
 #include "seq_song_mode.hh"
 
-namespace Catalyst2::Sequencer::Ui::Settings
+namespace Catalyst2::Ui::Sequencer::Settings
 {
 class Global : public Usual {
 	SongMode songmode{p, c};
@@ -18,9 +18,13 @@ public:
 		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
 		if (!c.button.shift.is_high() || c.button.bank.is_high()) {
+			return;
+		}
+
+		if (c.button.morph.is_high()) {
 			return;
 		}
 
@@ -45,16 +49,16 @@ public:
 					p.data.settings.IncRandom(inc);
 				} else {
 					if (inc > 0) {
-						p.randompool.Randomize();
+						//	p.randompool.Randomize();
 					} else {
-						p.randompool.Clear();
+						//	p.randompool.Clear();
 					}
 				}
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::PlayMode:
 				p.data.settings.IncPlayMode(inc);
-				p.player.RandomizeSteps();
+				p.player.randomsteps.Randomize();
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::StartOffset:
@@ -88,8 +92,8 @@ public:
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
-		ClearEncoderLeds();
+		ClearButtonLeds(c);
+		ClearEncoderLeds(c);
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
@@ -113,13 +117,13 @@ public:
 				}
 				case SeqEncoderAlts::SeqLength: {
 					auto led = length % SeqStepsPerPage;
-					SetEncoderLedsCount(led == 0 ? SeqStepsPerPage : led, 0, Setting::active);
+					SetEncoderLedsCount(c, led == 0 ? SeqStepsPerPage : led, 0, Setting::active);
 					led = (length - 1) / SeqStepsPerPage;
-					SetButtonLedsCount(led + 1, true);
+					SetButtonLedsCount(c, led + 1, true);
 					break;
 				}
 				case SeqEncoderAlts::ClockDiv: {
-					SetLedsClockDiv(clockdiv.Read());
+					SetLedsClockDiv(c, clockdiv.Read());
 					break;
 				}
 				case SeqEncoderAlts::PhaseOffset: {
@@ -141,7 +145,7 @@ public:
 										  std::abs(tpose / static_cast<float>(Transposer::max)));
 			c.SetEncoderLed(SeqEncoderAlts::Transpose, col);
 
-			PlayModeLedAnnimation(playmode, time_now);
+			PlayModeLedAnnimation(c, playmode, time_now);
 
 			if (p.seqclock.IsInternal()) {
 				if (p.seqclock.Peek()) {
@@ -155,7 +159,7 @@ public:
 			c.SetEncoderLed(SeqEncoderAlts::ClockDiv, col);
 
 			if (c.button.fine.is_high()) {
-				col = Palette::Random::color(p.randompool.GetSeed());
+				//	col = Palette::Random::color(p.randompool.GetSeed());
 			} else {
 				col = Palette::off.blend(Palette::Random::set, random);
 			}
@@ -164,4 +168,4 @@ public:
 	}
 };
 
-} // namespace Catalyst2::Sequencer::Ui::Settings
+} // namespace Catalyst2::Ui::Sequencer::Settings

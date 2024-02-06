@@ -15,7 +15,7 @@ namespace Catalyst2::Macro
 struct Data {
 	std::array<Pathway::Data, Model::NumBanks> pathway{};
 	std::array<Bank::Data, Model::NumBanks> bank{};
-	Random::Pool::MacroData randompool{};
+	Random::Macro::Pool::Data randompool{};
 	Recorder::Data recorder{};
 	SliderSlew::Data slider_slew{};
 	Clock::Divider::type clockdiv{};
@@ -44,7 +44,6 @@ public:
 	Bank::Interface bank{data.randompool};
 	Recorder::Interface recorder{data.recorder};
 	SliderSlew::Interface slider_slew{data.slider_slew};
-	std::optional<uint8_t> override_output;
 	Shared::Interface &shared;
 
 	Interface(Data &data, Shared::Interface &shared)

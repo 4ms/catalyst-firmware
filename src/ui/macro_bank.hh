@@ -4,7 +4,7 @@
 #include "macro_common.hh"
 #include "params.hh"
 
-namespace Catalyst2::Macro::Ui
+namespace Catalyst2::Ui::Macro
 {
 
 class Bank : public Usual {
@@ -14,8 +14,8 @@ public:
 		c.button.morph.clear_events();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc([this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.morph.just_went_high()) {
 			p.shared.save.Notify(p.shared.internalclock.TimeNow());
@@ -50,7 +50,7 @@ public:
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
+		ClearButtonLeds(c);
 		c.SetButtonLed(p.GetSelectedBank(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			const auto col = p.bank.GetChannelMode(i).GetColor();
@@ -58,4 +58,4 @@ public:
 		}
 	}
 };
-} // namespace Catalyst2::Macro::Ui
+} // namespace Catalyst2::Ui::Macro

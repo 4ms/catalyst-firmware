@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <span>
 
 namespace Catalyst2::Random
@@ -14,62 +15,134 @@ namespace Amount
 using type = float;
 inline constexpr auto min = 0.f, max = 1.f, def = 0.f, inc = (max / (Model::output_octave_range * 12)) * 2;
 } // namespace Amount
+template<typename T>
+inline void RandomizeBuffer(T &d) {
+	for (auto &r : d) {
+		r = std::rand();
+	}
+}
 
-namespace Pool
+namespace Macro::Pool
 {
 
 using type = float;
 
-template<typename T>
-void RandomizeBuffer(T &d) {
-	for (auto &r : d) {
-		r = std::rand();
-		r = r == 0 ? 1 : r;
-	}
-}
-
-struct SeqData : public std::array<int8_t, Model::MaxSeqSteps * Model::NumChans> {
-	SeqData() {
+struct Data : public std::array<int8_t, Model::NumScenes * Model::NumChans> {
+	Data() {
 		RandomizeBuffer(*this);
+	}
+	bool Validate() const {
+		return true;
 	}
 };
 
-struct MacroData : public std::array<int8_t, Model::NumScenes * Model::NumChans> {
-	MacroData() {
-		RandomizeBuffer(*this);
-	}
-};
-
-template<typename T>
 class Interface {
+	using T = Data;
 	T &data;
+	bool is_random = true;
 
 public:
 	Interface(T &data)
 		: data{data} {
 	}
 	uint8_t GetSeed() const {
-		return data[0] + 128;
+		return is_random ? data[0] + 128 : 0;
 	}
 	void Clear() {
-		std::fill(data.begin(), data.end(), 0);
+		is_random = false;
 	}
 	void Randomize() {
+		is_random = true;
 		RandomizeBuffer(data);
 	}
 	bool IsRandomized() const {
-		return data[0] != 0;
+		return is_random;
 	}
 	type Read(uint8_t channel, uint8_t step_or_scene, float amnt) const {
-		float t;
-		if constexpr (std::same_as<T, SeqData>) {
-			t = data[(channel * Model::MaxSeqSteps) + step_or_scene];
-		} else if (std::same_as<T, MacroData>) {
-			t = data[(channel * Model::NumChans) + step_or_scene];
+		if (!is_random) {
+			return 0.f;
 		}
+		float t;
+		t = data[(channel * Model::NumChans) + step_or_scene];
 		t /= 128.f;
 		return t * amnt;
 	}
 };
-} // namespace Pool
+} // namespace Macro::Pool
+namespace Sequencer
+{
+namespace Probability
+{
+using type = uint8_t;
+inline constexpr type min = 0, max = 15;
+inline constexpr auto usable_bits = 4;
+
+class Interface {
+	struct details {
+		int8_t val, prob;
+	};
+	struct Buffer {
+		details pp, prev, cur, next;
+	};
+	std::array<Buffer, Model::NumChans> buffer;
+
+public:
+	float Read(uint8_t chan, type prob) const {
+		return prob > buffer[chan].cur.prob ? buffer[chan].cur.val / static_cast<float>(INT8_MAX) : 0.f;
+	}
+	float ReadPrev(uint8_t chan, float prob) const {
+		return prob > buffer[chan].prev.prob ? buffer[chan].prev.val / static_cast<float>(INT8_MAX) : 0.f;
+	}
+	float ReadNext(uint8_t chan, float prob) const {
+		return prob > buffer[chan].next.prob ? buffer[chan].next.val / static_cast<float>(INT8_MAX) : 0.f;
+	}
+	void Step(uint8_t chan) {
+		buffer[chan].pp = buffer[chan].prev;
+		buffer[chan].prev = buffer[chan].cur;
+		buffer[chan].cur = buffer[chan].next;
+		const auto r = std::rand();
+		buffer[chan].next.prob = r & 0x0f;
+		buffer[chan].next.val = r >> 8u;
+	}
+	void StepBackward(uint8_t chan) {
+		buffer[chan].next = buffer[chan].cur;
+		buffer[chan].cur = buffer[chan].prev;
+		buffer[chan].prev = buffer[chan].pp;
+		const auto r = std::rand();
+		buffer[chan].pp.prob = r & 0x0f;
+		buffer[chan].pp.val = r >> 8u;
+	}
+};
+} // namespace Probability
+namespace Steps
+{
+struct Data : public std::array<std::array<uint8_t, Model::MaxSeqSteps>, Model::NumChans> {
+	Data() {
+		for (auto &c : *this) {
+			RandomizeBuffer(c);
+		}
+	}
+	bool Validate() const {
+		return true;
+	}
+};
+class Interface {
+	Data &data;
+
+public:
+	Interface(Data &data)
+		: data{data} {
+	}
+	void Randomize(uint8_t chan) {
+		RandomizeBuffer(data[chan]);
+	}
+	void Randomize() {
+		data = Data{};
+	}
+	uint8_t Read(uint8_t channel, uint8_t step) const {
+		return data[channel][step];
+	}
+};
+} // namespace Steps
+} // namespace Sequencer
 } // namespace Catalyst2::Random

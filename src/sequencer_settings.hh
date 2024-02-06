@@ -4,14 +4,16 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "random.hh"
+#include "sequencer_player.hh"
 #include "transposer.hh"
 #include <algorithm>
 #include <array>
 #include <optional>
 
-namespace Catalyst2::Sequencer::Settings
+namespace Catalyst2::Sequencer
 {
-
+namespace Settings
+{
 struct PlayMode {
 	using type = int8_t;
 	enum class Mode : type {
@@ -177,7 +179,6 @@ public:
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max};
 	Setting<Random::Amount::type> random{Random::Amount::min, Random::Amount::max};
 	Catalyst2::Channel::Range range;
-	Clock::Divider::type clockdiv;
 	Catalyst2::Channel::Mode mode;
 
 	bool Validate() const {
@@ -189,7 +190,6 @@ public:
 		ret &= transpose.Validate();
 		ret &= random.Validate();
 		ret &= range.Validate();
-		ret &= clockdiv.Validate();
 		ret &= random.Validate();
 		ret &= mode.Validate();
 		return ret;
@@ -201,6 +201,7 @@ class Data {
 	Global global;
 
 public:
+	Phaser::Data phaser;
 	void Clear(uint8_t chan) {
 		channel[chan] = Channel{};
 	}
@@ -210,6 +211,7 @@ public:
 			ret &= c.Validate();
 		}
 		ret &= global.Validate();
+		ret &= phaser.Validate();
 		return ret;
 	}
 	const Channel &Copy(uint8_t chan) const {
@@ -279,8 +281,8 @@ public:
 	Catalyst2::Channel::Range GetRange(uint8_t chan) const {
 		return channel[chan].range;
 	}
-	Clock::Divider::type GetClockDiv(uint8_t chan) const {
-		return channel[chan].clockdiv;
+	Clock::Divider::type GetClockDiv(uint8_t chan) {
+		return phaser.cdiv[chan];
 	}
 	Catalyst2::Channel::Mode GetChannelMode(uint8_t chan) const {
 		return channel[chan].mode;
@@ -360,7 +362,7 @@ public:
 		channel[chan].range.Inc(inc);
 	}
 	void IncClockDiv(uint8_t chan, int32_t inc) {
-		channel[chan].clockdiv.Inc(inc);
+		phaser.cdiv[chan].Inc(inc);
 	}
 	void IncChannelMode(uint8_t chan, int32_t inc) {
 		channel[chan].mode.Inc(inc);
@@ -369,4 +371,12 @@ public:
 		channel[chan].mode = mode;
 	}
 };
-} // namespace Catalyst2::Sequencer::Settings
+} // namespace Settings
+inline uint32_t ActualLength(Settings::Length::type length, Settings::PlayMode::Mode pm) {
+	if (pm != Settings::PlayMode::Mode::PingPong) {
+		return length;
+	}
+	const auto out = length + length - 2;
+	return out < 2 ? 2 : out;
+}
+} // namespace Catalyst2::Sequencer

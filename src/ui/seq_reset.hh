@@ -4,7 +4,7 @@
 #include "params.hh"
 #include "seq_common.hh"
 
-namespace Catalyst2::Sequencer::Ui
+namespace Catalyst2::Ui::Sequencer
 {
 class Reset : public Usual {
 	bool wait = true;
@@ -13,7 +13,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		wait = true;
-		p.player.Stop();
+		p.Reset(true);
 	}
 	void Update(Abstract *&interface) override {
 		if (wait) {
@@ -28,14 +28,14 @@ public:
 			}
 			for (auto [chan, butt, sequence] : countzip(c.button.scene, p.data.channel)) {
 				if (butt.is_high()) {
-					sequence = Sequencer::ChannelData{};
+					sequence = Catalyst2::Sequencer::ChannelData{};
 					p.data.settings.Clear(chan);
 					return;
 				}
 			}
 			if (c.button.play.is_high()) {
-				p.data = Sequencer::Data{};
-				p.player.Stop();
+				p.data = Catalyst2::Sequencer::Data{};
+				p.Reset(true);
 				return;
 			}
 		}
@@ -44,14 +44,14 @@ public:
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearEncoderLeds();
-		ClearButtonLeds();
+		ClearEncoderLeds(c);
+		ClearButtonLeds(c);
 		c.SetPlayLed(false);
 		if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
-			SetButtonLedsCount(Model::NumScenes, true);
+			SetButtonLedsCount(c, Model::NumScenes, true);
 			c.SetPlayLed(true);
 		}
 	}
 };
 
-} // namespace Catalyst2::Sequencer::Ui
+} // namespace Catalyst2::Ui::Sequencer

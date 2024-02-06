@@ -6,7 +6,7 @@
 
 namespace Catalyst2::Ui::Sequencer
 {
-class Morph : public Usual {
+class Probability : public Usual {
 public:
 	using Usual::Usual;
 	void Init() override {
@@ -18,28 +18,21 @@ public:
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		if (!c.button.morph.is_high()) {
-			return;
-		}
-		if (c.button.shift.is_high()) {
+		if (!c.button.morph.is_high() && !c.button.shift.is_high()) {
 			return;
 		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		p.IncStepModifier(encoder, inc);
+		p.IncStepProbability(encoder, inc);
 	}
 
 	void OnSceneButtonRelease(uint8_t button) {
-		if (c.button.fine.is_high()) {
-			p.PastePage(button);
-		} else {
-			if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
-				if (p.IsPageSelected() && button == p.GetSelectedPage())
-					p.DeselectPage();
-				else
-					p.SelectPage(button);
-			}
+		if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
+			if (p.IsPageSelected() && button == p.GetSelectedPage())
+				p.DeselectPage();
+			else
+				p.SelectPage(button);
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
@@ -50,13 +43,13 @@ public:
 		const uint8_t led = p.player.GetPlayheadStepOnPage(chan);
 		const auto playheadpage = p.player.GetPlayheadPage(chan);
 		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-		const auto mvals = p.GetPageValuesModifier(page);
+		const auto mvals = p.GetPageValuesProbability(page);
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			if (i == led && page == playheadpage) {
 				c.SetEncoderLed(led, Palette::SeqHead::color);
 			} else {
-				auto col = Palette::Morph::color(1.f - mvals[i]);
+				auto col = Palette::Probability::color(mvals[i]);
 				c.SetEncoderLed(i, col);
 			}
 		}

@@ -5,7 +5,7 @@
 #include "seq_common.hh"
 #include "seq_reset.hh"
 
-namespace Catalyst2::Sequencer::Ui
+namespace Catalyst2::Ui::Sequencer
 {
 class SongMode : public Usual {
 	Reset reset{p, c};
@@ -20,7 +20,7 @@ public:
 		p.player.songmode.Cancel();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachSceneButtonReleased([this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.play.is_high() || p.player.songmode.Size()) {
 			p.shared.reset.Notify(p.shared.internalclock.TimeNow());
@@ -28,8 +28,7 @@ public:
 
 		if (!c.button.shift.is_high()) {
 			if (!p.player.songmode.Size()) {
-				p.player.Stop();
-				p.player.queue.Stop();
+				p.Reset(true);
 			}
 			return;
 		}
@@ -45,14 +44,14 @@ public:
 		p.player.songmode.Queue(scene);
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearButtonLeds();
+		ClearButtonLeds(c);
 		auto count = p.player.songmode.Size();
 		const auto phase = 1.f / (Model::MaxQueuedStartOffsetPages / static_cast<float>(count));
 		while (count > 8) {
 			count -= 8;
 		}
-		SetEncoderLedsCount(count, 0, Palette::Pathway::color(phase));
+		SetEncoderLedsCount(c, count, 0, Palette::Pathway::color(phase));
 	}
 };
 
-} // namespace Catalyst2::Sequencer::Ui
+} // namespace Catalyst2::Ui::Sequencer
