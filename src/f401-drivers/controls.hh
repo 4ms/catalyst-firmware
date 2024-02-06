@@ -12,6 +12,7 @@
 #include "drivers/muxed_io.hh"
 #include "muxed_button.hh"
 #include "outputs.hh"
+#include "range.hh"
 #include "util/colors.hh"
 #include "util/filter.hh"
 #include "util/wear_level.hh"
@@ -110,6 +111,9 @@ public:
 	Jacks jack;
 
 	Controls() {
+		Model::Output::Buffer zeros{Channel::from_volts(0)};
+		outputs.write(zeros);
+
 		// 3.8%: 60Hz
 		encoder_led_update_task.init(Board::encoder_led_task, [this]() {
 			WriteToEncoderLeds();
