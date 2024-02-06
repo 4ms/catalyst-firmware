@@ -10,7 +10,7 @@ namespace Catalyst2::Sequencer::Phaser
 struct Data {
 	std::array<Clock::Divider::type, Model::NumChans> cdiv;
 	bool Validate() const {
-		auto ret = false;
+		auto ret = true;
 		for (auto &c : cdiv) {
 			ret &= c.Validate();
 		}
