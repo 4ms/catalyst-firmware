@@ -55,7 +55,7 @@ public:
 	bool Validate() const {
 		auto ret = true;
 		ret &= Channel::Value::Validate();
-		// trig_Delay is always good to go... cant validate
+		ret &= trig_delay < trig_delay_max && trig_delay >= trig_delay_min;
 		ret &= morph_retrig <= morphmax && prob <= probmax;
 		return ret;
 	}
