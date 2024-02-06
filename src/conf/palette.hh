@@ -17,7 +17,7 @@ inline constexpr Color grey = Color(100, 40, 40);
 
 inline constexpr Color red = Color(128, 0, 0);
 inline constexpr Color pink = Color(150, 70, 20);
-inline constexpr Color orange = Color(150, 0, 100);
+inline constexpr Color orange = Color(250, 0, 25);
 inline constexpr Color yellow = Color(60, 0, 60);
 inline constexpr Color dim_green = Color(0, 0, 9);
 inline constexpr Color green = Color(0, 0, 90);
@@ -95,7 +95,10 @@ inline constexpr Color color(float phase) {
 namespace Probability
 {
 inline constexpr Color color(float phase) {
-	return off.blend(green.blend(off, .5f), phase);
+	if (phase < 0.5f)
+		return off.blend(orange, phase * 2.f);
+	else
+		return orange.blend(cyan, phase * 2.f - 1.f);
 }
 } // namespace Probability
 
@@ -132,15 +135,15 @@ inline constexpr Color TrigDelayBlend(float val) {
 
 inline constexpr Color CvBlend(uint16_t level) {
 	using namespace Channel;
-	constexpr auto neg = from_volts(0.f);
-	auto temp = level - neg;
-	auto c = Voltage::Positive;
+	constexpr auto zero = from_volts(0.f);
+	int temp = level - zero;
+	auto color = Voltage::Positive;
 	if (temp < 0) {
 		temp *= -2;
-		c = Voltage::Negative;
+		color = Voltage::Negative;
 	}
-	const auto phase = (temp / (neg * 2.f));
-	return off.blend(c, phase);
+	const auto phase = (temp / (zero * 2.f));
+	return off.blend(color, phase);
 }
 
 inline constexpr Color GateBlend(uint16_t level) {
@@ -153,5 +156,17 @@ inline constexpr Color GateBlend(uint16_t level) {
 inline constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {
 	return isgate ? GateBlend(val >= Channel::gatearmed) : CvBlend(val);
 }
+
+inline constexpr Color ManualRGB(Model::Output::type r, Model::Output::type g, Model::Output::type b) {
+	float R = (float)r / (float)Channel::max;
+	float G = (float)g / (float)Channel::max;
+	float B = (float)b / (float)Channel::max;
+
+	return Color{off.blend(full_red, R).red(), off.blend(full_blue, G).green(), off.blend(full_green, B).blue()};
+}
+
+static_assert(ManualRGB(16384, 32768, 49152).red() == 63);
+static_assert(ManualRGB(16384, 32768, 49152).green() == 127);
+static_assert(ManualRGB(16384, 32768, 49152).blue() == 191);
 
 } // namespace Catalyst2::Palette

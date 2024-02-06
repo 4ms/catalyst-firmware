@@ -146,6 +146,9 @@ public:
 			p.SelectPage(button);
 		}
 	}
+
+	static constexpr bool ManualColorMode = false;
+
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
 
@@ -154,6 +157,11 @@ public:
 			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
+
+			if constexpr (ManualColorMode) {
+				ManualColorTestMode(page);
+				return;
+			}
 			if (is_gate && c.button.fine.is_high()) {
 				// display gate timing offset
 				const auto led = p.player.GetPlayheadStepOnPage(chan);
@@ -196,6 +204,19 @@ public:
 			Color col = Palette::EncoderBlend(val, p.data.settings.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);
 		}
+	}
+
+	void ManualColorTestMode(uint8_t page) {
+		auto pagevals = p.GetPageValuesCv(page);
+		c.SetEncoderLed(0, Palette::red);
+		c.SetEncoderLed(1, Palette::green);
+		c.SetEncoderLed(2, Palette::blue);
+		Color col = Palette::ManualRGB(pagevals[0], pagevals[1], pagevals[2]);
+		c.SetEncoderLed(3, col);
+		c.SetEncoderLed(4, col);
+		c.SetEncoderLed(5, col);
+		c.SetEncoderLed(6, col);
+		c.SetEncoderLed(7, col);
 	}
 };
 
