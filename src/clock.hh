@@ -85,17 +85,14 @@ public:
 		: bpm{bpm} {
 	}
 	void Update() {
-		if (pause) {
-			return;
-		}
 		const auto period = bpm.Read();
 		cnt++;
 
 		if (cnt >= period) {
 			if (IsInternal() || cnt >= period * 2) {
 				cnt = 0;
-				step = true;
 				peek = !peek;
+				step = !pause;
 				SetExternal(false);
 			}
 		}
