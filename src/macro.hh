@@ -75,6 +75,7 @@ public:
 	void Reset() {
 		data.bank[cur_bank] = Bank::Data{};
 		data.pathway[cur_bank] = Pathway::Data{};
+		SelectBank(0);
 	}
 	void Reset(uint8_t scene) {
 		data.bank[cur_bank].scene[scene] = Bank::Data::Scene{};
