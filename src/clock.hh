@@ -50,6 +50,7 @@ public:
 // Step period (no ratchet), mean 42.8ms = 23.3Hz
 class Bpm {
 	uint32_t cnt = 0;
+	uint32_t phase_cnt = 0;
 	uint32_t prevtaptime;
 	bool external = false;
 	bool step = false;
@@ -96,6 +97,9 @@ public:
 				SetExternal(false);
 			}
 		}
+		if (!pause) {
+			phase_cnt = cnt;
+		}
 	}
 	bool Output() {
 		bool ret = step;
@@ -106,9 +110,8 @@ public:
 		if (IsInternal()) {
 			return;
 		}
-		if (!pause) {
-			step = true;
-		}
+		step = !pause;
+
 		cnt = 0;
 
 		Tap(time_now);
@@ -124,7 +127,7 @@ public:
 		external = on;
 	}
 	float GetPhase() const {
-		auto out = static_cast<float>(cnt) / bpm.Read();
+		auto out = static_cast<float>(phase_cnt) / bpm.Read();
 		return std::clamp(out, 0.f, .9999f);
 	}
 	void Reset() {
