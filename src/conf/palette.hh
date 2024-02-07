@@ -98,7 +98,7 @@ inline constexpr Color color(float phase) {
 	if (phase < 0.5f)
 		return off.blend(orange, phase * 2.f);
 	else
-		return orange.blend(cyan, phase * 2.f - 1.f);
+		return orange.blend(green, phase * 2.f - 1.f);
 }
 } // namespace Probability
 
