@@ -113,6 +113,7 @@ public:
 		step = !pause;
 
 		cnt = 0;
+		phase_cnt = 0;
 
 		Tap(time_now);
 	}
@@ -132,15 +133,19 @@ public:
 	}
 	void Reset() {
 		cnt = 0;
+		phase_cnt = 0;
 	}
 	bool Peek() const {
 		return peek;
 	}
 	void Pause() {
-		pause = !pause;
+		Pause(!pause);
 	}
 	void Pause(bool pause) {
 		this->pause = pause;
+		if (!pause) {
+			cnt = phase_cnt;
+		}
 	}
 	bool IsPaused() {
 		return pause;
