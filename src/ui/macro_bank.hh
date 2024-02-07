@@ -25,7 +25,7 @@ public:
 			p.shared.do_save = true;
 		}
 
-		if (!c.button.bank.is_high()) {
+		if (!c.button.bank.is_high() && p.shared.youngest_scene_button == std::nullopt) {
 			return;
 		}
 		interface = this;
