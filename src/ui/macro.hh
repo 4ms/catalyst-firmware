@@ -84,10 +84,10 @@ public:
 			}
 		} else {
 			if (p.pathway.OnAScene()) {
-				p.bank.IncChan(p.pathway.SceneNearest(), encoder, inc, fine);
+				p.bank.IncChan(p.pathway.SceneRelative(), encoder, inc, fine);
 			} else {
-				p.bank.IncChan(p.pathway.SceneLeft(), encoder, inc, fine);
-				p.bank.IncChan(p.pathway.SceneRight(), encoder, inc, fine);
+				p.bank.IncChan(p.pathway.SceneRelative(-1), encoder, inc, fine);
+				p.bank.IncChan(p.pathway.SceneRelative(1), encoder, inc, fine);
 			}
 		}
 	}
@@ -106,8 +106,8 @@ public:
 			if (p.recorder.IsRecording())
 				SceneButtonDisplayRecording();
 			else {
-				const auto l = p.pathway.SceneLeft();
-				const auto r = p.pathway.SceneRight();
+				const auto l = p.pathway.SceneRelative(-1);
+				const auto r = p.pathway.SceneRelative(1);
 				if (l == r)
 					c.SetButtonLed(l, true);
 				else {

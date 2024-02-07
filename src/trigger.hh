@@ -17,12 +17,10 @@ public:
 		trig_time = time_now;
 		is_trigged = true;
 	}
-	bool Read(uint8_t time_now) {
-		if (!is_trigged)
-			return false;
-		const uint8_t elapsed = time_now - trig_time;
-		if (elapsed >= trig_length) {
-			is_trigged = false;
+
+	bool Read(uint8_t chan, uint32_t time_now) const {
+		auto &s = state[chan];
+		if (time_now - s.trig_time >= s.length) {
 			return false;
 		}
 		return true;
@@ -35,26 +33,9 @@ class Retrigger {
 	uint8_t remaining = 0;
 	bool out = false;
 
-public:
-	void Trig(uint8_t retrig_cnt, uint8_t clock_div) {
-		remaining = retrig_cnt;
-		period = (Model::clock_mult_factor * clock_div) / (retrig_cnt + 1);
-		cnt = 0;
-		out = true;
-	}
-	void Update() {
-		cnt++;
-		if (remaining && cnt >= period) {
-			cnt = 0;
-			remaining -= 1;
-			out = true;
-		}
-	}
-	bool Read() {
-		const auto o = out;
-		out = false;
-		return o;
+private:
+	uint32_t CalculateLength(float pw) const {
+		return Clock::MsToTicks(pw * pw * pw * 500 + 1);
 	}
 };
 
-} // namespace Catalyst2
