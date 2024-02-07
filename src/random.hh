@@ -88,13 +88,13 @@ class Interface {
 
 public:
 	float Read(uint8_t chan, type prob) const {
-		return prob > buffer[chan].cur.prob ? buffer[chan].cur.val / static_cast<float>(INT8_MAX) : 0.f;
+		return prob > buffer[chan].cur.prob ? buffer[chan].cur.val / static_cast<float>(INT8_MIN) : 0.f;
 	}
 	float ReadPrev(uint8_t chan, float prob) const {
-		return prob > buffer[chan].prev.prob ? buffer[chan].prev.val / static_cast<float>(INT8_MAX) : 0.f;
+		return prob > buffer[chan].prev.prob ? buffer[chan].prev.val / static_cast<float>(INT8_MIN) : 0.f;
 	}
 	float ReadNext(uint8_t chan, float prob) const {
-		return prob > buffer[chan].next.prob ? buffer[chan].next.val / static_cast<float>(INT8_MAX) : 0.f;
+		return prob > buffer[chan].next.prob ? buffer[chan].next.val / static_cast<float>(INT8_MIN) : 0.f;
 	}
 	void Step(uint8_t chan) {
 		buffer[chan].pp = buffer[chan].prev;
