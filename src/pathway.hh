@@ -34,6 +34,7 @@ class Interface {
 	Data *p;
 	float scene_width;
 	SceneId scene_left;
+	SceneId scene_right;
 	SceneId scene_nearest;
 	SceneId prev_index = 0;
 	bool on_a_scene;
@@ -50,6 +51,7 @@ public:
 		last_scene_on = CurrentScene();
 		on_a_scene = SceneIsNear(point);
 		scene_left = PhaseToIndex(point);
+		scene_right = scene_left + 1 >= size() ? 0 : scene_left + 1;
 		auto n = PhaseToIndex(point + (scene_width * .5f));
 		scene_nearest = n >= size() ? 0 : n;
 		phase = point / scene_width;
@@ -59,17 +61,8 @@ public:
 	float GetPhase() {
 		return phase;
 	}
-
-	SceneId SceneLeft() {
-		return p->vec[scene_left];
-	}
-	SceneId SceneRight() {
-		auto idx = scene_left + 1;
-		idx = idx >= size() ? 0 : idx;
-		return p->vec[idx];
-	}
-	SceneId SceneNearest() {
-		return p->vec[scene_nearest];
+	SceneId SceneRelative(int8_t pos = 0) {
+		return p->vec[Relative(pos)];
 	}
 	bool OnAScene() {
 		return on_a_scene;
@@ -79,7 +72,7 @@ public:
 	}
 	std::optional<SceneId> CurrentScene() {
 		if (on_a_scene) {
-			return SceneNearest();
+			return SceneRelative();
 		} else {
 			return std::nullopt;
 		}
@@ -99,30 +92,12 @@ public:
 		UpdateSceneWidth();
 	}
 
-	void RemoveSceneNearest() {
-		if (size() <= 2)
+	void RemoveSceneRelative(int8_t pos = 0) {
+		if (size() <= 2) {
 			return;
+		}
 
-		p->vec.erase(scene_nearest);
-		UpdateSceneWidth();
-	}
-
-	void RemoveSceneLeft() {
-		if (size() <= 2)
-			return;
-
-		p->vec.erase(scene_left);
-		UpdateSceneWidth();
-	}
-
-	void RemoveSceneRight() {
-		if (size() <= 2)
-			return;
-
-		auto idx = scene_left + 1;
-		idx = idx >= size() ? 0 : idx;
-
-		p->vec.erase(idx);
+		p->vec.erase(Relative(pos));
 		UpdateSceneWidth();
 	}
 
@@ -143,6 +118,9 @@ public:
 	}
 
 private:
+	SceneId Relative(int8_t pos) {
+		return pos == 0 ? scene_nearest : pos == -1 ? scene_left : scene_right;
+	}
 	bool SceneIsNear(float point) {
 		while (point >= scene_width)
 			point -= scene_width;

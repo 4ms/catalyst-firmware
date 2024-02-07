@@ -8,53 +8,29 @@
 namespace Catalyst2
 {
 class Trigger {
-	static constexpr auto trig_length = Clock::MsToTicks(Model::triglengthms);
-	uint8_t trig_time;
-	bool is_trigged = false;
+	static constexpr auto min_gate_length = 2u, max_gate_length = 500u;
+	struct State {
+		uint32_t length;
+		uint32_t time_trigged;
+	};
+	std::array<State, Model::NumChans> state;
 
 public:
-	void Trig(uint8_t time_now) {
-		trig_time = time_now;
-		is_trigged = true;
+	void Trig(uint8_t chan, uint32_t time_now, float pulse_width) {
+		state[chan].length = CalcTime(pulse_width);
+		state[chan].time_trigged = time_now;
 	}
-	bool Read(uint8_t time_now) {
-		if (!is_trigged)
-			return false;
-		const uint8_t elapsed = time_now - trig_time;
-		if (elapsed >= trig_length) {
-			is_trigged = false;
+	bool Read(uint8_t chan, uint32_t time_now) {
+		if (time_now - state[chan].time_trigged >= state[chan].length) {
 			return false;
 		}
 		return true;
 	}
-};
 
-class Retrigger {
-	uint16_t period;
-	uint16_t cnt;
-	uint8_t remaining = 0;
-	bool out = false;
-
-public:
-	void Trig(uint8_t retrig_cnt, uint8_t clock_div) {
-		remaining = retrig_cnt;
-		period = (Model::clock_mult_factor * clock_div) / (retrig_cnt + 1);
-		cnt = 0;
-		out = true;
-	}
-	void Update() {
-		cnt++;
-		if (remaining && cnt >= period) {
-			cnt = 0;
-			remaining -= 1;
-			out = true;
-		}
-	}
-	bool Read() {
-		const auto o = out;
-		out = false;
-		return o;
+private:
+	uint32_t CalcTime(float pulse_width) {
+		const auto x = pulse_width;
+		return Clock::MsToTicks((max_gate_length - min_gate_length) * x * x * x + min_gate_length);
 	}
 };
-
 } // namespace Catalyst2

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/palette.hh"
 #include "controls.hh"
 #include "macro_add.hh"
 #include "macro_bank.hh"
@@ -8,6 +9,7 @@
 #include "macro_range.hh"
 #include "macro_settings.hh"
 #include "params.hh"
+#include "range.hh"
 
 namespace Catalyst2::Ui::Macro
 {
@@ -84,10 +86,10 @@ public:
 			}
 		} else {
 			if (p.pathway.OnAScene()) {
-				p.bank.IncChan(p.pathway.SceneNearest(), encoder, inc, fine);
+				p.bank.IncChan(p.pathway.SceneRelative(), encoder, inc, fine);
 			} else {
-				p.bank.IncChan(p.pathway.SceneLeft(), encoder, inc, fine);
-				p.bank.IncChan(p.pathway.SceneRight(), encoder, inc, fine);
+				p.bank.IncChan(p.pathway.SceneRelative(-1), encoder, inc, fine);
+				p.bank.IncChan(p.pathway.SceneRelative(1), encoder, inc, fine);
 			}
 		}
 	}
@@ -102,12 +104,27 @@ public:
 			const auto scene_to_display = ysb.value();
 			EncoderDisplayScene(scene_to_display);
 		} else {
-			EncoderDisplayOutput(outs);
+
+			for (auto [chan, val] : countzip(outs)) {
+				Color col;
+				if (p.bank.GetChannelMode(chan).IsGate()) {
+					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
+					// to.
+					col = p.pathway.OnAScene() ?
+							  Palette::GateBlend(p.bank.GetChannel(p.pathway.SceneRelative(), chan).AsGate() *
+												 Channel::range) :
+							  Palette::off;
+				} else {
+					col = Palette::CvBlend(val);
+				}
+				c.SetEncoderLed(chan, col);
+			}
+
 			if (p.recorder.IsRecording())
 				SceneButtonDisplayRecording();
 			else {
-				const auto l = p.pathway.SceneLeft();
-				const auto r = p.pathway.SceneRight();
+				const auto l = p.pathway.SceneRelative(-1);
+				const auto r = p.pathway.SceneRelative(1);
 				if (l == r)
 					c.SetButtonLed(l, true);
 				else {
@@ -124,7 +141,8 @@ private:
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
 			const auto temp = p.bank.GetChannel(scene, chan);
 			const auto isgate = p.bank.GetChannelMode(chan).IsGate();
-			c.SetEncoderLed(chan, isgate ? Palette::GateBlend(temp.AsGate()) : Palette::CvBlend(temp.AsCV()));
+			c.SetEncoderLed(
+				chan, isgate ? Palette::GateBlend(temp.AsGate() * Channel::range) : Palette::CvBlend(temp.AsCV()));
 		}
 	}
 
@@ -132,13 +150,6 @@ private:
 		const auto led = static_cast<unsigned>(p.recorder.CapacityFilled() * 8u);
 		const auto level = (p.recorder.size() & 0x10) > 0;
 		c.SetButtonLed(led, level);
-	}
-
-	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
-		for (auto [chan, val] : countzip(buf)) {
-			const auto col = Palette::EncoderBlend(val, p.bank.GetChannelMode(chan).IsGate());
-			c.SetEncoderLed(chan, col);
-		}
 	}
 };
 } // namespace Catalyst2::Ui::Macro

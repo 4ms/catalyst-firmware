@@ -1,6 +1,7 @@
 #include "../src/clock.hh"
 
 #include "doctest.h"
+#include <cstdio>
 
 using namespace Catalyst2;
 

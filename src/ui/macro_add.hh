@@ -64,14 +64,14 @@ public:
 	void DeleteScene(uint8_t button) {
 		auto &path = p.pathway;
 		if (path.OnAScene()) {
-			if (path.SceneNearest() == button) {
-				path.RemoveSceneNearest();
+			if (path.SceneRelative() == button) {
+				path.RemoveSceneRelative();
 			}
 		} else {
-			if (path.SceneLeft() == button) {
-				path.RemoveSceneLeft();
-			} else if (path.SceneRight() == button) {
-				path.RemoveSceneRight();
+			if (path.SceneRelative(-1) == button) {
+				path.RemoveSceneRelative(-1);
+			} else if (path.SceneRelative(1) == button) {
+				path.RemoveSceneRelative(1);
 			}
 		}
 	}
@@ -87,10 +87,10 @@ public:
 		SetEncoderLedsCount(c, count, 0, Palette::Pathway::color(phase));
 
 		if (p.pathway.OnAScene()) {
-			c.SetButtonLed(p.pathway.SceneNearest(), true);
+			c.SetButtonLed(p.pathway.SceneRelative(), true);
 		} else {
-			c.SetButtonLed(p.pathway.SceneLeft(), true);
-			c.SetButtonLed(p.pathway.SceneRight(), true);
+			c.SetButtonLed(p.pathway.SceneRelative(-1), true);
+			c.SetButtonLed(p.pathway.SceneRelative(1), true);
 		}
 	}
 };
