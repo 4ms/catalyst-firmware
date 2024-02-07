@@ -78,23 +78,21 @@ inline constexpr type min = 0, max = 15;
 inline constexpr auto usable_bits = 4;
 
 class Interface {
-	struct details {
-		int8_t val, prob;
+	struct ProbStep {
+		int8_t val;
+		int8_t prob;
 	};
 	struct Buffer {
-		details pp, prev, cur, next;
+		ProbStep pp, prev, cur, next;
 	};
 	std::array<Buffer, Model::NumChans> buffer;
+	// TODO: std::array<std::array<ProbStep, 4>, Model::NumChans> buffer;
 
 public:
-	float Read(uint8_t chan, type prob) const {
-		return prob > buffer[chan].cur.prob ? buffer[chan].cur.val / static_cast<float>(INT8_MIN) : 0.f;
-	}
-	float ReadPrev(uint8_t chan, float prob) const {
-		return prob > buffer[chan].prev.prob ? buffer[chan].prev.val / static_cast<float>(INT8_MIN) : 0.f;
-	}
-	float ReadNext(uint8_t chan, float prob) const {
-		return prob > buffer[chan].next.prob ? buffer[chan].next.val / static_cast<float>(INT8_MIN) : 0.f;
+	float ReadRelative(uint8_t chan, int8_t relative_pos, type prob) const {
+		// TODO: auto step = buffer[chan][std::clamp(relative_pos+1, -1, 1)];
+		auto step = relative_pos == -1 ? buffer[chan].prev : relative_pos == 1 ? buffer[chan].next : buffer[chan].cur;
+		return prob > step.prob ? step.val / static_cast<float>(INT8_MAX) : 0.f;
 	}
 	void Step(uint8_t chan) {
 		buffer[chan].pp = buffer[chan].prev;
@@ -102,7 +100,7 @@ public:
 		buffer[chan].cur = buffer[chan].next;
 		const auto r = std::rand();
 		buffer[chan].next.prob = r & 0x0f;
-		buffer[chan].next.val = r >> 8u;
+		buffer[chan].next.val = r / 256;
 	}
 	void StepBackward(uint8_t chan) {
 		buffer[chan].next = buffer[chan].cur;
@@ -110,7 +108,7 @@ public:
 		buffer[chan].prev = buffer[chan].pp;
 		const auto r = std::rand();
 		buffer[chan].pp.prob = r & 0x0f;
-		buffer[chan].pp.val = r >> 8u;
+		buffer[chan].pp.val = r / 256;
 	}
 };
 } // namespace Probability

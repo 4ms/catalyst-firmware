@@ -118,14 +118,11 @@ public:
 	uint8_t GetPlayheadStepOnPage(uint8_t chan) const {
 		return channel[chan].playhead_step % Model::SeqPages;
 	}
-	uint8_t GetPlayheadStep(uint8_t chan) const {
-		return channel[chan].playhead_step;
-	}
-	uint8_t GetPrevPlayheadStep(uint8_t chan) const {
-		return channel[chan].prev_playhead_step;
-	}
-	uint8_t GetNextPlayheadStep(uint8_t chan) const {
-		return channel[chan].next_playhead_step;
+	uint8_t GetRelativeStep(uint8_t chan, int8_t position) const {
+		return position == -1 ? channel[chan].prev_playhead_step :
+			   position == 1  ? channel[chan].next_playhead_step :
+								channel[chan].playhead_step;
+		;
 	}
 
 private:

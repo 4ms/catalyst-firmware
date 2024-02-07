@@ -186,36 +186,13 @@ public:
 		data.channel[cur_channel][step].IncProbability(inc);
 	}
 
-	Step GetPlayheadStep(uint8_t chan) {
-		const auto step = player.GetPlayheadStep(chan);
+	Step GetRelativeStep(uint8_t chan, int8_t relative_pos) {
+		const auto step = player.GetRelativeStep(chan, relative_pos);
 		return data.channel[chan][step];
 	}
-
-	Channel::Value::Proxy GetPlayheadValue(uint8_t chan) {
-		const auto s = GetPlayheadStep(chan);
-		const auto r = player.randomvalue.Read(chan, s.ReadProbability());
-		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
-	}
-
-	Step GetPrevStep(uint8_t chan) {
-		const auto step = player.GetPrevPlayheadStep(chan);
-		return data.channel[chan][step];
-	}
-
-	Channel::Value::Proxy GetPrevStepValue(uint8_t chan) {
-		const auto s = GetPrevStep(chan);
-		const auto r = player.randomvalue.ReadPrev(chan, s.ReadProbability());
-		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
-	}
-
-	Step GetNextStep(uint8_t chan) {
-		const auto step = player.GetNextPlayheadStep(chan);
-		return data.channel[chan][step];
-	}
-
-	Channel::Value::Proxy GetNextStepValue(uint8_t chan) {
-		const auto s = GetNextStep(chan);
-		const auto r = player.randomvalue.ReadNext(chan, s.ReadProbability());
+	auto GetRelativeStepValue(uint8_t chan, int8_t relative_pos) {
+		const auto s = GetRelativeStep(chan, relative_pos);
+		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
 		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
 	}
 

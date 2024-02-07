@@ -131,37 +131,17 @@ private:
 	}
 
 	Model::Output::type SeqTrig(Sequencer::Interface &p, uint8_t chan) {
-		auto get_step_func = [&p, chan](uint8_t idx) {
-			if (idx == 0) {
-				return p.GetPrevStep(chan);
-			} else if (idx == 1) {
-				return p.GetPlayheadStep(chan);
-			} else {
-				return p.GetNextStep(chan);
-			}
-		};
-
-		auto get_value_func = [&p, chan](uint8_t idx) {
-			if (idx == 0) {
-				return p.GetPrevStepValue(chan).AsGate();
-			} else if (idx == 1) {
-				return p.GetPlayheadValue(chan).AsGate();
-			} else {
-				return p.GetNextStepValue(chan).AsGate();
-			}
-		};
-
 		bool out = false;
 
 		const auto step_phase = p.player.GetStepPhase(chan);
 
-		for (auto i = 0; i < 3; i++) {
-			auto s = get_step_func(i);
-			auto s_phase = step_phase - s.ReadTrigDelay() + ((i - 1) * -1);
+		for (int i = -1; i <= 1; i++) {
+			auto s = p.GetRelativeStep(chan, i);
+			auto s_phase = step_phase - s.ReadTrigDelay() - i;
 			if (s_phase >= 0.f && s_phase < 1.f) {
 				s_phase *= s.ReadRetrig() + 1;
 				s_phase -= static_cast<uint32_t>(s_phase);
-				const auto gate_val = get_value_func(i);
+				const auto gate_val = p.GetRelativeStepValue(chan, i).AsGate();
 				if (gate_val <= 0.f) {
 					continue;
 				}
@@ -178,9 +158,9 @@ private:
 	}
 
 	Model::Output::type SeqCv(Sequencer::Interface &p, uint8_t chan) {
-		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetPlayheadStep(chan).ReadMorph());
-		auto stepval = p.shared.quantizer[chan].Process(p.GetPrevStepValue(chan).AsCV());
-		const auto distance = p.shared.quantizer[chan].Process(p.GetPlayheadValue(chan).AsCV()) - stepval;
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetRelativeStep(chan, 0).ReadMorph());
+		auto stepval = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, -1).AsCV());
+		const auto distance = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, 0).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
 		return p.data.settings.GetRange(chan).Clamp(stepval);
