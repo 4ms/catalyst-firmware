@@ -29,7 +29,7 @@ struct Data {
 	float coef{CalcCoef(slew)};
 	Curve curve{Curve::Linear};
 
-	bool Validate() {
+	bool Validate() const {
 		auto ret = true;
 		ret &= std::abs(CalcCoef(slew) - coef) < 0.0001f;
 		ret &= slew >= 0.f && slew <= 1.f;
