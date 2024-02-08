@@ -3,6 +3,7 @@
 #include "../src/muxed_button.hh"
 #include "conf/board_conf.hh"
 #include "outputs.hh"
+#include "saved_settings.hh"
 #include "util/colors.hh"
 #include <cmath>
 #include <optional>
@@ -49,27 +50,6 @@ class Controls {
 	Outputs outputs;
 
 public:
-	template<typename SeqModeData, typename MacroModeData>
-	class SavedSettings {
-
-		// WearLevel<mdrivlib::FlashBlock<SeqModeData, SeqSettingsFlashAddr, SettingsSectorSize>> seq_settings_flash;
-		// WearLevel<mdrivlib::FlashBlock<MacroModeData, MacroSettingsFlashAddr, SettingsSectorSize>>
-		// macro_settings_flash;
-
-	public:
-		bool read(SeqModeData &data) {
-			return true;
-		}
-		bool write(SeqModeData const &data) {
-			return true;
-		}
-		bool read(MacroModeData &data) {
-			return true;
-		}
-		bool write(MacroModeData const &data) {
-			return true;
-		}
-	};
 	// Encoders
 	struct RotaryEncoder {
 		int32_t read() {

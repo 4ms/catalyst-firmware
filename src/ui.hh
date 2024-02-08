@@ -26,7 +26,7 @@ class Interface {
 	Macro::Main macro{params.macro, controls, sequencer};
 	Sequencer::Main sequencer{params.sequencer, controls, macro};
 
-	Controls::SavedSettings<SequencerData, MacroData> settings;
+	SavedSettings<SequencerData, MacroData> settings;
 
 public:
 	Interface(Params &params)
@@ -56,7 +56,11 @@ public:
 			ui = next;
 			ui->Init();
 		}
-		Save();
+
+		if (params.shared.do_save) {
+			params.shared.do_save = false;
+			Save();
+		}
 	}
 
 	void SetOutputs(const Model::Output::Buffer &outs) {
@@ -78,25 +82,21 @@ private:
 			return &sequencer;
 		}
 	}
-	void Save(bool force = false) {
-		if (params.shared.do_save || force) {
-			params.shared.do_save = false;
+	void Save() {
+		auto result = settings.write(params.data.macro);
+		result &= settings.write(params.data.sequencer);
 
-			auto result = settings.write(params.data.macro);
-			result &= settings.write(params.data.sequencer);
-
-			if (!result) {
-				for (auto i = 0u; i < 48; i++) {
-					for (auto but = 0u; but < 8; but++) {
-						controls.SetButtonLed(but, !!(i & 0b1));
-					}
-					controls.Delay(3000 / 48);
+		if (!result) {
+			for (auto i = 0u; i < 48; i++) {
+				for (auto but = 0u; but < 8; but++) {
+					controls.SetButtonLed(but, !!(i & 0b1));
 				}
-			} else {
-				for (auto i = 0u; i < 16; i++) {
-					controls.SetButtonLed(0, !!(i & 0x01));
-					controls.Delay(1000 / 16);
-				}
+				controls.Delay(3000 / 48);
+			}
+		} else {
+			for (auto i = 0u; i < 16; i++) {
+				controls.SetButtonLed(0, !!(i & 0x01));
+				controls.Delay(1000 / 16);
 			}
 		}
 	}
@@ -119,7 +119,7 @@ private:
 		}
 
 		if (saved_mode != params.shared.data.saved_mode) {
-			Save(true);
+			Save();
 		}
 		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
 			   b.shift.is_high())
