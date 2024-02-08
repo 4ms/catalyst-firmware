@@ -57,9 +57,17 @@ public:
 			ui->Init();
 		}
 
+		// TODO: make a UI where you can pick the slot to save into
 		if (params.shared.do_save) {
 			params.shared.do_save = false;
-			Save();
+			// Test without making a UI;
+			// if current chan = 0-3: save into slots 0-3
+			// if current chan = 4-8: load from slots 0-3
+			unsigned test_slot_num = params.sequencer.GetSelectedChannel();
+			if (test_slot_num >= 4)
+				LoadSeqSlot(test_slot_num - 4);
+			else
+				SaveSeqSlot(test_slot_num);
 		}
 	}
 
@@ -94,21 +102,31 @@ private:
 				controls.Delay(3000 / 48);
 			}
 		} else {
+
 			for (auto i = 0u; i < 16; i++) {
 				controls.SetButtonLed(0, !!(i & 0x01));
 				controls.Delay(1000 / 16);
 			}
 		}
 	}
+	void SaveSeqSlot(unsigned slot_num) {
+		params.data.sequencer.slots[slot_num] = params.sequencer.slot;
+		params.data.sequencer.startup_slot = slot_num;
+		Save();
+	}
+	void LoadSeqSlot(unsigned slot_num) {
+		// Copy the requested slot into the active slot
+		params.sequencer.slot = params.data.sequencer.slots[slot_num];
+	}
 	void Load() {
 		if (!settings.read(params.data.sequencer)) {
 			params.data.sequencer = SequencerData{};
 		}
-
 		if (!settings.read(params.data.macro)) {
 			params.data.macro = MacroData{};
 		}
 
+		LoadSeqSlot(params.data.sequencer.startup_slot);
 		const auto saved_mode = params.shared.data.saved_mode;
 
 		auto &b = controls.button;
@@ -119,8 +137,10 @@ private:
 		}
 
 		if (saved_mode != params.shared.data.saved_mode) {
-			Save();
+			// Because seq data contains the shared data, we have to write it:
+			settings.write(params.data.sequencer);
 		}
+
 		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
 			   b.shift.is_high())
 		{
