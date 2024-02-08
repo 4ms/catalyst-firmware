@@ -32,7 +32,7 @@ struct TestDac {
 		mdrivlib::TimekeeperConfig task_conf{
 			.TIMx = TIM9,
 			.period_ns = mdrivlib::TimekeeperConfig::Hz(SampleRate),
-			.priority1 = 1,
+			.priority1 = 0,
 			.priority2 = 1,
 		};
 		mdrivlib::Timekeeper dac_update_task{

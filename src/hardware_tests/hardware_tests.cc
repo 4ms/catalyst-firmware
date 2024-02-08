@@ -37,7 +37,7 @@ void run_hardware_test() {
 		{
 			.TIMx = TIM3,
 			.period_ns = mdrivlib::TimekeeperConfig::Hz(500),
-			.priority1 = 1,
+			.priority1 = 2,
 			.priority2 = 0,
 		},
 		[&]() { controls.Update(); },

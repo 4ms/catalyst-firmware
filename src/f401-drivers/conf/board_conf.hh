@@ -164,7 +164,7 @@ struct DacSpiConf : mdrivlib::DefaultSpiConf {
 const TimekeeperConfig cv_stream_conf{
 	.TIMx = TIM3,
 	.period_ns = TimekeeperConfig::Hz(Model::sample_rate_hz),
-	.priority1 = 1,
+	.priority1 = 2,
 	.priority2 = 2,
 };
 
@@ -172,8 +172,8 @@ inline constexpr unsigned encoder_led_hz = 60;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
 	.period_ns = TimekeeperConfig::Hz(encoder_led_hz),
-	.priority1 = 2,
-	.priority2 = 2,
+	.priority1 = 1,
+	.priority2 = 3,
 };
 
 inline constexpr unsigned muxio_update_hz = 16000;
