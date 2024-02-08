@@ -19,6 +19,7 @@ struct Data {
 	Recorder::Data recorder{};
 	SliderSlew::Data slider_slew{};
 	Clock::Divider::type clockdiv{};
+	bool override_outputs = false;
 
 	bool validate() {
 		auto ret = true;
@@ -50,6 +51,12 @@ public:
 		: data{data}
 		, shared{shared} {
 		SelectBank(0);
+	}
+	void IncOutputOverride(int32_t inc) {
+		data.override_outputs = inc > 0 ? true : false;
+	}
+	bool GetOutputOverride() const {
+		return data.override_outputs;
 	}
 	void IncClockDiv(int32_t inc) {
 		data.clockdiv.Inc(inc);
