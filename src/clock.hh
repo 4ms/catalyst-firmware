@@ -46,11 +46,23 @@ public:
 	}
 };
 
-// Eloquencer can do BPM of 350 max, ratchet x 3 max -> 14.2ms pulses
-// Step period (no ratchet), mean 42.8ms = 23.3Hz
-class Bpm {
+namespace Bpm
+{
+inline constexpr auto min = 8u, max = 1200u;
+struct Data {
+	uint32_t bpm_in_ticks = BpmToTicks(120u);
+
+	bool Validate() const {
+		return bpm_in_ticks <= BpmToTicks(min) && bpm_in_ticks >= BpmToTicks(max);
+	}
+};
+
+class Interface {
+	Data &data;
+
+	uint32_t peek_cnt = 0;
 	uint32_t cnt = 0;
-	uint32_t phase_cnt = 0;
+
 	uint32_t prevtaptime;
 	bool external = false;
 	bool step = false;
@@ -58,47 +70,32 @@ class Bpm {
 	bool pause = false;
 
 public:
-	class type {
-		static constexpr auto min = 1u, max = 1200u;
-		uint32_t val;
-
-	public:
-		type()
-			: val{BpmToTicks(120u)} {
-		}
-		void Inc(int32_t inc, bool fine) {
-			auto temp = TicksToBpm(val);
-			inc = fine ? inc : inc * 10;
-			temp = std::clamp<int32_t>(temp + inc, min, max);
-			val = BpmToTicks(temp);
-		}
-		uint32_t Read() {
-			return val;
-		}
-		void Set(uint32_t ticks) {
-			val = ticks;
-		}
-		bool Validate() const {
-			return val <= BpmToTicks(min) && val >= BpmToTicks(max);
-		}
-	};
-	Bpm(type &bpm)
-		: bpm{bpm} {
+	Interface(Data &data)
+		: data{data} {
+	}
+	void Inc(int32_t inc, bool fine) {
+		auto temp = TicksToBpm(data.bpm_in_ticks);
+		inc = fine ? inc : inc * 10;
+		temp = std::clamp<int32_t>(temp + inc, min, max);
+		data.bpm_in_ticks = BpmToTicks(temp);
 	}
 	void Update() {
-		const auto period = bpm.Read();
-		cnt++;
+		const auto period = data.bpm_in_ticks;
+
+		peek_cnt++;
+		if (peek_cnt >= period) {
+			peek = !peek;
+			peek_cnt = 0;
+		}
+
+		cnt += !pause;
 
 		if (cnt >= period) {
 			if (IsInternal() || cnt >= period * 2) {
 				cnt = 0;
-				peek = !peek;
-				step = !pause;
+				step = true;
 				SetExternal(false);
 			}
-		}
-		if (!pause) {
-			phase_cnt = cnt;
 		}
 	}
 	bool Output() {
@@ -113,12 +110,11 @@ public:
 		step = !pause;
 
 		cnt = 0;
-		phase_cnt = 0;
 
 		Tap(time_now);
 	}
 	void Tap(uint32_t time_now) {
-		bpm.Set(time_now - prevtaptime);
+		data.bpm_in_ticks = time_now - prevtaptime;
 		prevtaptime = time_now;
 	}
 	bool IsInternal() const {
@@ -128,12 +124,11 @@ public:
 		external = on;
 	}
 	float GetPhase() const {
-		auto out = static_cast<float>(phase_cnt) / bpm.Read();
+		auto out = static_cast<float>(cnt) / data.bpm_in_ticks;
 		return std::clamp(out, 0.f, .9999f);
 	}
 	void Reset() {
 		cnt = 0;
-		phase_cnt = 0;
 	}
 	bool Peek() const {
 		return peek;
@@ -143,18 +138,12 @@ public:
 	}
 	void Pause(bool pause) {
 		this->pause = pause;
-		if (!pause) {
-			cnt = phase_cnt;
-		}
 	}
-	bool IsPaused() {
+	bool IsPaused() const {
 		return pause;
 	}
-
-private:
-	type &bpm;
 };
-
+} // namespace Bpm
 class Divider {
 	uint32_t counter = 0;
 	bool step = false;
