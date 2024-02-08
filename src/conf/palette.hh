@@ -51,6 +51,11 @@ inline constexpr auto slider_slew = pink;
 inline constexpr auto curve_linear = grey.blend(off, 0.3f);
 inline constexpr auto curve_expo = yellow;
 
+namespace OutputOverride
+{
+inline constexpr auto on = green, off = red;
+}
+
 namespace Transpose
 {
 inline constexpr auto positive = blue;
