@@ -1,5 +1,7 @@
 #pragma once
 
+#include "conf/model.hh"
+#include "conf/palette.hh"
 #include "controls.hh"
 #include "macro_common.hh"
 #include "params.hh"
@@ -48,6 +50,13 @@ public:
 						}
 					}
 				}
+				p.shared.hang.Cancel();
+				break;
+			case Model::MacroEncoderAlts::OutputOverride:
+				if (is_scene) {
+					break;
+				}
+				p.IncOutputOverride(inc);
 				p.shared.hang.Cancel();
 				break;
 			case Model::MacroEncoderAlts::ClockDiv:
@@ -106,6 +115,9 @@ public:
 					} break;
 				}
 			} else {
+				c.SetEncoderLed(Model::MacroEncoderAlts::OutputOverride,
+								p.GetOutputOverride() ? Palette::Setting::OutputOverride::on :
+														Palette::Setting::OutputOverride::off);
 				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::Setting::active);
 				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlew,
 								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slider_slew.Value()));
