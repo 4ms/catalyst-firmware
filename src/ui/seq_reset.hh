@@ -26,15 +26,15 @@ public:
 			{
 				return;
 			}
-			for (auto [chan, butt, sequence] : countzip(c.button.scene, p.data.channel)) {
+			for (auto [chan, butt, sequence] : countzip(c.button.scene, p.slot.channel)) {
 				if (butt.is_high()) {
 					sequence = Catalyst2::Sequencer::ChannelData{};
-					p.data.settings.Clear(chan);
+					p.slot.settings.Clear(chan);
 					return;
 				}
 			}
 			if (c.button.play.is_high()) {
-				p.data = Catalyst2::Sequencer::Data{};
+				p.slot = Catalyst2::Sequencer::Data{};
 				p.Reset(true);
 				return;
 			}

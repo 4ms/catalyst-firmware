@@ -50,41 +50,41 @@ public:
 
 		switch (encoder) {
 			case Model::SeqEncoderAlts::Transpose:
-				p.data.settings.IncTranspose(i, inc);
+				p.slot.settings.IncTranspose(i, inc);
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::Random:
-				p.data.settings.IncRandom(i, inc);
+				p.slot.settings.IncRandom(i, inc);
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::PlayMode:
-				p.data.settings.IncPlayMode(i, inc);
+				p.slot.settings.IncPlayMode(i, inc);
 				p.player.randomsteps.Randomize(i);
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncStartOffset(i, inc);
+				p.slot.settings.IncStartOffset(i, inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncPhaseOffset(i, inc);
+				p.slot.settings.IncPhaseOffset(i, inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncLength(i, inc);
+				p.slot.settings.IncLength(i, inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::Range:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncRange(i, inc);
+				p.slot.settings.IncRange(i, inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::ClockDiv:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncClockDiv(i, inc);
+				p.slot.settings.IncClockDiv(i, inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 		}
@@ -98,14 +98,14 @@ public:
 		const auto hang = p.shared.hang.Check(time_now);
 
 		const auto chan = p.GetSelectedChannel();
-		const auto length = p.data.settings.GetLength(chan);
-		const auto phaseoffset = p.data.settings.GetPhaseOffset(chan);
-		const auto startoffset = p.data.settings.GetStartOffset(chan);
-		const auto playmode = p.data.settings.GetPlayMode(chan);
-		const auto clockdiv = p.data.settings.GetClockDiv(chan);
-		const auto tpose = p.data.settings.GetTranspose(chan);
-		const auto random = p.data.settings.GetRandom(chan);
-		const auto range = p.data.settings.GetRange(chan);
+		const auto length = p.slot.settings.GetLength(chan);
+		const auto phaseoffset = p.slot.settings.GetPhaseOffset(chan);
+		const auto startoffset = p.slot.settings.GetStartOffset(chan);
+		const auto playmode = p.slot.settings.GetPlayMode(chan);
+		const auto clockdiv = p.slot.settings.GetClockDiv(chan);
+		const auto tpose = p.slot.settings.GetTranspose(chan);
+		const auto random = p.slot.settings.GetRandom(chan);
+		const auto range = p.slot.settings.GetRange(chan);
 
 		using namespace Model;
 		namespace Setting = Palette::Setting;
@@ -114,14 +114,14 @@ public:
 			ClearButtonLeds(c);
 			switch (hang.value()) {
 				case SeqEncoderAlts::StartOffset: {
-					const auto l = startoffset.value_or(p.data.settings.GetStartOffset());
+					const auto l = startoffset.value_or(p.slot.settings.GetStartOffset());
 					const auto col = startoffset.has_value() ? Setting::active : Setting::null;
 					c.SetEncoderLed(l % SeqStepsPerPage, col);
 					c.SetButtonLed(l / SeqStepsPerPage, true);
 					break;
 				}
 				case SeqEncoderAlts::SeqLength: {
-					const auto l = length.value_or(p.data.settings.GetLength());
+					const auto l = length.value_or(p.slot.settings.GetLength());
 					const auto col = length.has_value() ? Setting::active : Setting::null;
 					auto led = l % SeqStepsPerPage;
 					SetEncoderLedsCount(c, led == 0 ? SeqStepsPerPage : led, 0, col);

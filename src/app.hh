@@ -137,7 +137,7 @@ public:
 		Model::Output::Buffer buf;
 
 		for (auto [chan, o] : countzip(buf)) {
-			o = p.data.settings.GetChannelMode(chan).IsGate() ? Gate(chan) : Cv(chan);
+			o = p.slot.settings.GetChannelMode(chan).IsGate() ? Gate(chan) : Cv(chan);
 		}
 
 		return buf;
@@ -175,8 +175,8 @@ private:
 		auto stepval = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, -1).AsCV());
 		const auto distance = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, 0).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
-		stepval = Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
-		return p.data.settings.GetRange(chan).Clamp(stepval);
+		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
+		return p.slot.settings.GetRange(chan).Clamp(stepval);
 	}
 };
 } // namespace Sequencer

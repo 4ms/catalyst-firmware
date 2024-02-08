@@ -38,8 +38,8 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
-		p.data.settings.IncChannelMode(encoder, dir);
-		p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
+		p.slot.settings.IncChannelMode(encoder, dir);
+		p.shared.quantizer[encoder].Load(p.slot.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
@@ -56,7 +56,7 @@ public:
 		ClearButtonLeds(c);
 		c.SetButtonLed(p.GetSelectedChannel(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetEncoderLed(i, p.data.settings.GetChannelMode(i).GetColor());
+			c.SetEncoderLed(i, p.slot.settings.GetChannelMode(i).GetColor());
 		}
 	}
 };

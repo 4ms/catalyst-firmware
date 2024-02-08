@@ -48,12 +48,12 @@ public:
 				if (!p.seqclock.IsPaused()) {
 					p.player.songmode.Cancel();
 					if (p.player.songmode.IsQueued()) {
-						p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+						p.slot.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					} else {
 						p.player.queue.Queue(ysb.value());
 					}
 				} else {
-					p.data.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+					p.slot.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
 					p.player.Reset();
 					p.seqclock.Pause();
 				}
@@ -154,7 +154,7 @@ public:
 
 		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
-			const auto is_gate = p.data.settings.GetChannelMode(chan).IsGate();
+			const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
 			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
 
@@ -201,7 +201,7 @@ public:
 
 	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
-			Color col = Palette::EncoderBlend(val, p.data.settings.GetChannelMode(chan).IsGate());
+			Color col = Palette::EncoderBlend(val, p.slot.settings.GetChannelMode(chan).IsGate());
 			c.SetEncoderLed(chan, col);
 		}
 	}
