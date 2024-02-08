@@ -80,7 +80,7 @@ public:
 				break;
 			case Model::SeqEncoderAlts::ClockDiv:
 				if (p.seqclock.IsInternal()) {
-					p.data.bpm.Inc(inc, c.button.fine.is_high());
+					p.seqclock.Inc(inc, c.button.fine.is_high());
 					p.shared.hang.Cancel();
 				} else {
 					inc = hang.has_value() ? inc : 0;

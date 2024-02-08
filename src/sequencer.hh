@@ -77,7 +77,7 @@ struct Data {
 	Player::Data player;
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
-	Clock::Bpm::type bpm{};
+	Clock::Bpm::Data bpm{};
 
 	bool validate() const {
 		auto ret = true;
@@ -105,7 +105,7 @@ class Interface {
 
 public:
 	Data &data;
-	Clock::Bpm seqclock{data.bpm};
+	Clock::Bpm::Interface seqclock{data.bpm};
 	Shared::Interface &shared;
 	Player::Interface player{data.player, data.settings, data.songmode};
 
