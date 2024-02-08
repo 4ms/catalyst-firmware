@@ -8,6 +8,7 @@
 #include "shared.hh"
 #include "slider_slew.hh"
 #include "util/countzip.hh"
+#include "validate.hh"
 
 namespace Catalyst2::Macro
 {
@@ -32,6 +33,7 @@ struct Data {
 		ret &= clockdiv.Validate();
 		ret &= recorder.Validate();
 		ret &= slider_slew.Validate();
+		ret &= validateBool(override_outputs);
 		return ret;
 	}
 };

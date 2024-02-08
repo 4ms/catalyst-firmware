@@ -3,7 +3,9 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "quantizer.hh"
+#include "validate.hh"
 #include <optional>
+#include <utility>
 
 namespace Catalyst2::Shared
 {
@@ -81,8 +83,7 @@ struct Data {
 	Model::Mode saved_mode = Model::default_mode;
 	bool Validate() const {
 		auto ret = true;
-		ret &= static_cast<uint8_t>(saved_mode) == static_cast<uint8_t>(Model::Mode::Macro) ||
-			   static_cast<uint8_t>(saved_mode) == static_cast<uint8_t>(Model::Mode::Sequencer);
+		ret &= validateBool(std::to_underlying(saved_mode));
 		return ret;
 	}
 };

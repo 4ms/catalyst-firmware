@@ -1,12 +1,15 @@
 #pragma once
 #include "conf/model.hh"
+#include "validate.hh"
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include <utility>
 
 namespace Catalyst2::Macro::SliderSlew
 {
 
-enum class Curve : uint8_t { Linear, Expo };
+enum class Curve : bool { Linear, Expo };
 static constexpr float MaxTime = Model::sample_rate_hz * 120.f;
 static constexpr float MinSlew = 0.04f; // TODO: when constexpr math in gcc:  = std::powf(MaxTime, 0.25);
 static constexpr float EncoderStepSize = 1.f / 200.f;
@@ -27,9 +30,11 @@ struct Data {
 	Curve curve{Curve::Linear};
 
 	bool Validate() {
-		return (std::abs(CalcCoef(slew) - coef) < 0.0001f) && (slew >= 0.f && slew <= 1.f) &&
-			   (static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Linear) ||
-				static_cast<uint8_t>(curve) == static_cast<uint8_t>(Curve::Expo));
+		auto ret = true;
+		ret &= std::abs(CalcCoef(slew) - coef) < 0.0001f;
+		ret &= slew >= 0.f && slew <= 1.f;
+		ret &= validateBool(std::to_underlying(curve));
+		return ret;
 	}
 };
 
