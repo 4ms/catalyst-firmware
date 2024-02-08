@@ -131,7 +131,9 @@ public:
 					break;
 				}
 				case SeqEncoderAlts::PhaseOffset: {
-					const auto o = p.player.GetFirstStep(p.GetSelectedChannel());
+					auto chan = p.GetSelectedChannel();
+					auto o = p.player.GetFirstStep(chan);
+					o += p.slot.settings.GetPhaseOffsetOrGlobal(chan) * (p.slot.settings.GetLengthOrGlobal(chan) - 1);
 					c.SetEncoderLed(o % SeqStepsPerPage, Setting::active);
 					c.SetButtonLed((o / SeqStepsPerPage) % SeqPages, true);
 					break;
