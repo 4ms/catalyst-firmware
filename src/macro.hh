@@ -22,7 +22,7 @@ struct Data {
 	Clock::Divider::type clockdiv{};
 	bool override_outputs = false;
 
-	bool validate() {
+	bool validate() const {
 		auto ret = true;
 		for (auto &p : pathway) {
 			ret &= p.Validate();
