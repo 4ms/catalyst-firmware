@@ -54,7 +54,7 @@ public:
 	}
 
 	Model::Output::Buffer Update() {
-		return p.shared.youngest_scene_button.has_value() ? Override() : Morph();
+		return p.shared.youngest_scene_button.has_value() && p.GetOutputOverride() ? Override() : Morph();
 	}
 
 private:
