@@ -17,7 +17,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		first_insert = true;
-		p.shared.reset.Notify(p.shared.internalclock.TimeNow());
+		p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
@@ -26,7 +26,7 @@ public:
 		const auto shift = c.button.shift.is_high();
 
 		if (!add || !shift || !first_insert) {
-			p.shared.reset.Notify(p.shared.internalclock.TimeNow());
+			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 		}
 
 		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {

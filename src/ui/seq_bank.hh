@@ -23,10 +23,10 @@ public:
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
 		if (c.button.morph.just_went_high()) {
-			p.shared.save.Notify(p.shared.internalclock.TimeNow());
+			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
 		}
 		if (p.shared.save.Check(p.shared.internalclock.TimeNow()) && c.button.morph.is_high()) {
-			p.shared.save.Notify(p.shared.internalclock.TimeNow());
+			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
 			p.shared.do_save = true;
 		}
 		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {

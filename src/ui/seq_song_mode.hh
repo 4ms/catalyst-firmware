@@ -16,14 +16,14 @@ public:
 		for (auto &s : c.button.scene) {
 			s.clear_events();
 		}
-		p.shared.reset.Notify(p.shared.internalclock.TimeNow());
+		p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 		p.player.songmode.Cancel();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.play.is_high() || p.player.songmode.Size()) {
-			p.shared.reset.Notify(p.shared.internalclock.TimeNow());
+			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 		}
 
 		if (!c.button.shift.is_high()) {

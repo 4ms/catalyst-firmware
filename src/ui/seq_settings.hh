@@ -15,14 +15,14 @@ public:
 		if (!p.IsChannelSelected()) {
 			p.SelectChannel(0);
 		}
-		p.shared.modeswitcher.Notify(p.shared.internalclock.TimeNow());
+		p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.add.is_high()) {
-			p.shared.modeswitcher.Notify(p.shared.internalclock.TimeNow());
+			p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
 		}
 
 		if (!c.button.shift.is_high() || !c.button.bank.is_high()) {

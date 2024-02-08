@@ -38,7 +38,7 @@ public:
 	Timer(uint32_t duration_ms)
 		: duration{MsToTicks(duration_ms)} {
 	}
-	void Notify(uint32_t time_now) {
+	void SetAlarm(uint32_t time_now) {
 		set_time = time_now;
 	}
 	bool Check(uint32_t time_now) {
