@@ -19,11 +19,6 @@ Catalyst2::System _init;
 maybe clipboards should reset eachother?
 */
 
-/*
-12/19
-bug when switch modes it will get stuck on bank mode leds or morph mode leds sometimes
-*/
-
 void main() {
 	using namespace Catalyst2;
 

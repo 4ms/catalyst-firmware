@@ -22,6 +22,7 @@ inline constexpr auto macro_is_smaller = macrosize < seqsize;
 
 struct SequencerData : public Sequencer::Data {
 	Shared::Data shared;
+
 	bool validate() const {
 		auto ret = true;
 		ret &= shared.Validate();
@@ -38,6 +39,8 @@ struct Data {
 	MacroData macro;
 	SequencerData sequencer;
 };
+
+inline constexpr auto data_size = sizeof(Data);
 
 struct Params {
 	Data data;

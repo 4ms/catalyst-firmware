@@ -3,10 +3,13 @@
 #include "controls.hh"
 #include "params.hh"
 #include "seq_common.hh"
+#include "seq_save.hh"
 
 namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
+	Save save{p, c};
+
 public:
 	using Usual::Usual;
 	void Init() override {
@@ -22,24 +25,26 @@ public:
 			p.CopySequence();
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
-		if (c.button.morph.just_went_high()) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
-		}
-		if (p.shared.save.Check(p.shared.internalclock.TimeNow()) && c.button.morph.is_high()) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
-			p.shared.do_save = true;
-		}
 		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {
 			return;
 		}
 		if (c.button.shift.is_high()) {
 			return;
 		}
+		const auto time_now = p.shared.internalclock.TimeNow();
+		if (c.button.morph.just_went_high()) {
+			p.shared.save.SetAlarm(time_now);
+		}
+		if (p.shared.save.Check(time_now) && c.button.morph.is_high()) {
+			interface = &save;
+			return;
+			// p.shared.do_save = true;
+		}
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
-		p.data.settings.IncChannelMode(encoder, dir);
-		p.shared.quantizer[encoder].Load(p.data.settings.GetChannelMode(encoder).GetScale());
+		p.slot.settings.IncChannelMode(encoder, dir);
+		p.shared.quantizer[encoder].Load(p.slot.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
@@ -56,7 +61,7 @@ public:
 		ClearButtonLeds(c);
 		c.SetButtonLed(p.GetSelectedChannel(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetEncoderLed(i, p.data.settings.GetChannelMode(i).GetColor());
+			c.SetEncoderLed(i, p.slot.settings.GetChannelMode(i).GetColor());
 		}
 	}
 };

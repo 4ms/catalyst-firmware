@@ -10,6 +10,8 @@
 namespace Catalyst2::Model
 {
 
+inline constexpr auto NumSeqSlots = 8u;
+
 enum class Mode : bool { Sequencer, Macro };
 
 inline constexpr auto default_mode = Mode::Sequencer;

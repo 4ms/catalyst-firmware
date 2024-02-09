@@ -50,6 +50,19 @@ public:
 		s.blink_duration = Clock::MsToTicks(duration_ms) / num_blinks;
 		s.set_time = time_now;
 	}
+	void Set(uint32_t num_blinks, uint32_t duration_ms, uint32_t time_now, uint32_t delay_ms = 0) {
+		for (auto i = 0u; i < state.size(); i++) {
+			Set(i, num_blinks, duration_ms, time_now, delay_ms);
+		}
+	}
+	void Cancel(uint8_t led) {
+		state[led].remaining = 0;
+	}
+	void Cancel() {
+		for (auto i = 0u; i < state.size(); i++) {
+			Cancel(i);
+		}
+	}
 	void Update(uint32_t time_now) {
 		const auto t = time_now;
 		for (auto &s : state) {
