@@ -52,22 +52,13 @@ public:
 
 		auto next = GetUi();
 		ui->Update(next);
+		if (params.shared.do_save) {
+			params.shared.do_save = false;
+			Save();
+		}
 		if (next != ui) {
 			ui = next;
 			ui->Init();
-		}
-
-		// TODO: make a UI where you can pick the slot to save into
-		if (params.shared.do_save) {
-			params.shared.do_save = false;
-			// Test without making a UI;
-			// if current chan = 0-3: save into slots 0-3
-			// if current chan = 4-8: load from slots 0-3
-			unsigned test_slot_num = params.sequencer.GetSelectedChannel();
-			if (test_slot_num >= 4)
-				LoadSeqSlot(test_slot_num - 4);
-			else
-				SaveSeqSlot(test_slot_num);
 		}
 	}
 
@@ -95,28 +86,14 @@ private:
 		result &= settings.write(params.data.sequencer);
 
 		if (!result) {
+			// save failure
 			for (auto i = 0u; i < 48; i++) {
 				for (auto but = 0u; but < 8; but++) {
 					controls.SetButtonLed(but, !!(i & 0b1));
 				}
 				controls.Delay(3000 / 48);
 			}
-		} else {
-
-			for (auto i = 0u; i < 16; i++) {
-				controls.SetButtonLed(0, !!(i & 0x01));
-				controls.Delay(1000 / 16);
-			}
 		}
-	}
-	void SaveSeqSlot(unsigned slot_num) {
-		params.data.sequencer.slots[slot_num] = params.sequencer.slot;
-		params.data.sequencer.startup_slot = slot_num;
-		Save();
-	}
-	void LoadSeqSlot(unsigned slot_num) {
-		// Copy the requested slot into the active slot
-		params.sequencer.slot = params.data.sequencer.slots[slot_num];
 	}
 	void Load() {
 		if (!settings.read(params.data.sequencer)) {
@@ -126,7 +103,8 @@ private:
 			params.data.macro = MacroData{};
 		}
 
-		LoadSeqSlot(params.data.sequencer.startup_slot);
+		params.sequencer.Load();
+
 		const auto saved_mode = params.shared.data.saved_mode;
 
 		auto &b = controls.button;
