@@ -12,6 +12,8 @@ namespace Catalyst2::Model
 inline constexpr auto skip_startup_animation = true;
 inline constexpr auto seq_gate_overrides_prev_step = true;
 
+inline constexpr auto NumSeqSlots = 8u;
+
 enum class Mode : bool { Sequencer, Macro };
 
 inline constexpr auto default_mode = Mode::Sequencer;
