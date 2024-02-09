@@ -34,7 +34,7 @@ public:
 				}
 			}
 			if (c.button.play.is_high()) {
-				p.slot = Catalyst2::Sequencer::Data{};
+				p.slot = Catalyst2::Sequencer::Slot{};
 				p.Reset(true);
 				return;
 			}
