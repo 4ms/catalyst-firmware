@@ -3,10 +3,13 @@
 #include "controls.hh"
 #include "params.hh"
 #include "seq_common.hh"
+#include "seq_save.hh"
 
 namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
+	Save save{p, c};
+
 public:
 	using Usual::Usual;
 	void Init() override {
@@ -22,18 +25,20 @@ public:
 			p.CopySequence();
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
-		if (c.button.morph.just_went_high()) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
-		}
-		if (p.shared.save.Check(p.shared.internalclock.TimeNow()) && c.button.morph.is_high()) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
-			p.shared.do_save = true;
-		}
 		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {
 			return;
 		}
 		if (c.button.shift.is_high()) {
 			return;
+		}
+		const auto time_now = p.shared.internalclock.TimeNow();
+		if (c.button.morph.just_went_high()) {
+			p.shared.save.SetAlarm(time_now);
+		}
+		if (p.shared.save.Check(time_now) && c.button.morph.is_high()) {
+			interface = &save;
+			return;
+			// p.shared.do_save = true;
 		}
 		interface = this;
 	}
