@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clock.hh"
+#include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "conf/palette.hh"
 #include "conf/version.hh"
@@ -136,8 +137,7 @@ inline void SetLedsClockDiv(Controls &c, uint32_t div) {
 }
 
 inline void StartupAnimation(Controls &c) {
-	if constexpr (Model::skip_startup_animation) {
-#warning "Remember to turn the startup animation on!"
+	if constexpr (BuildOptions::skip_startup_animation) {
 		return;
 	}
 	const auto duration = 1000;

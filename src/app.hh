@@ -1,6 +1,7 @@
 #pragma once
 
 #include "channel.hh"
+#include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "macro.hh"
 #include "params.hh"
@@ -160,7 +161,7 @@ private:
 					continue;
 				}
 				const auto temp = gate_val >= s_phase;
-				if constexpr (Model::seq_gate_overrides_prev_step) {
+				if constexpr (BuildOptions::seq_gate_overrides_prev_step) {
 					out = temp;
 				} else {
 					out |= temp;
