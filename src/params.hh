@@ -20,24 +20,13 @@ inline constexpr auto macrosize = sizeof(Macro::Data);
 inline constexpr auto macro_is_smaller = macrosize < seqsize;
 // using DataWithGlobalNonVolatileState = std::conditional<macro_is_smaller, Macro::Data, Sequencer::Data>::type;
 
-inline constexpr auto NumSeqSlots = 8u;
-
-struct SequencerData {
+struct SequencerData : public Sequencer::Data {
 	Shared::Data shared;
-
-	unsigned startup_slot = 0;
-	std::array<Sequencer::Data, NumSeqSlots> slots;
 
 	bool validate() const {
 		auto ret = true;
-
 		ret &= shared.Validate();
-
-		for (auto &slot : slots)
-			ret &= slot.validate();
-
-		ret &= (startup_slot < NumSeqSlots);
-
+		ret &= Sequencer::Data::validate();
 		return ret;
 	}
 };
@@ -51,10 +40,12 @@ struct Data {
 	SequencerData sequencer;
 };
 
+inline constexpr auto data_size = sizeof(Data);
+
 struct Params {
 	Data data;
 	Shared::Interface shared{data.sequencer.shared};
-	Sequencer::Interface sequencer{data.sequencer.slots[data.sequencer.startup_slot], shared};
+	Sequencer::Interface sequencer{data.sequencer, shared};
 	Macro::Interface macro{data.macro, shared};
 };
 

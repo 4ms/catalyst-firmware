@@ -71,7 +71,7 @@ struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 	}
 };
 
-struct Data {
+struct Slot {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
 	Player::Data player;
@@ -93,7 +93,22 @@ struct Data {
 	}
 };
 
+struct Data {
+	std::array<Slot, Model::NumSeqSlots> slot;
+	uint8_t startup_slot;
+
+	bool validate() const {
+		auto ret = true;
+		for (auto &s : slot) {
+			ret &= s.validate();
+		}
+		ret &= startup_slot < Model::NumSeqSlots;
+		return ret;
+	}
+};
+
 class Interface {
+	Data &data;
 	uint8_t cur_channel = 0;
 	uint8_t cur_page = Model::SeqPages;
 	struct Clipboard {
@@ -104,16 +119,28 @@ class Interface {
 	uint32_t time_trigged;
 
 public:
-	Data slot;
+	Slot slot;
 	Clock::Bpm::Interface seqclock{slot.bpm};
 	Shared::Interface &shared;
 	Player::Interface player{slot.player, slot.settings, slot.songmode};
 
-	Interface(Data const &data, Shared::Interface &shared)
-		: slot{data}
+	Interface(Data &data, Shared::Interface &shared)
+		: data{data}
 		, shared{shared} {
 	}
-
+	void Load() {
+		Load(data.startup_slot);
+	}
+	void Load(uint8_t slot) {
+		this->slot = data.slot[slot];
+	}
+	void Save(uint8_t slot) {
+		data.startup_slot = slot;
+		data.slot[slot] = this->slot;
+	}
+	uint8_t GetStartupSlot() {
+		return data.startup_slot;
+	}
 	void Update(float phase) {
 		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
 	}
