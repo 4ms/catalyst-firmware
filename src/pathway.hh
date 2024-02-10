@@ -48,13 +48,9 @@ struct Data {
 
 namespace Normal
 {
-static constexpr auto MaxPoints = 64u;
+inline constexpr auto MaxPoints = 64u;
 
 struct Data : Abstract::Data {
-	Data() {
-		vec.insert(0, 0);
-		vec.insert(1, 7);
-	}
 	SceneId Read(uint32_t idx) const override {
 		return vec[idx];
 	}
@@ -70,18 +66,20 @@ struct Data : Abstract::Data {
 	uint32_t size() const override {
 		return vec.size();
 	}
-
 	bool Validate() const {
-		auto ret = true;
-		for (auto &s : vec) {
-			ret &= s < Model::NumScenes;
+		if (vec.size() > MaxPoints || vec.size() < 2u) {
+			return false;
 		}
-		ret &= vec.size() <= MaxPoints && vec.size() >= 2u;
-		return ret;
+		for (auto &i : vec) {
+			if (i >= Model::NumScenes) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 private:
-	FixedVector<SceneId, MaxPoints> vec{};
+	FixedVector<SceneId, MaxPoints> vec{SceneId{0}, SceneId{7}};
 };
 } // namespace Normal
 
@@ -136,7 +134,7 @@ private:
 };
 
 class Interface {
-	Abstract::Data *p;
+	Abstract::Data *data;
 	SceneId scene_left = 0;
 	SceneId scene_right = 0;
 	SceneId scene_nearest = 0;
@@ -147,7 +145,7 @@ class Interface {
 
 public:
 	void Load(Abstract::Data &d) {
-		p = &d;
+		data = &d;
 	}
 
 	void Update(float point) {
@@ -164,17 +162,17 @@ public:
 	}
 	// classic fucntions
 	void ReplaceSceneA(SceneId scene) {
-		p->Set(0, scene);
+		data->Set(0, scene);
 	}
 	void ReplaceSceneB(SceneId scene) {
-		p->Set(1, scene);
+		data->Set(1, scene);
 	}
 
 	float GetPhase() const {
 		return phase;
 	}
 	SceneId SceneRelative(int8_t pos = 0) const {
-		return p->Read(Relative(pos));
+		return data->Read(Relative(pos));
 	}
 	bool OnAScene() const {
 		return on_a_scene;
@@ -190,16 +188,16 @@ public:
 		}
 	}
 	void ReplaceScene(SceneId scene) {
-		p->Set(scene_nearest, scene);
+		data->Set(scene_nearest, scene);
 		prev_index = scene_nearest;
 	}
 	void InsertScene(SceneId scene) {
 		prev_index = scene_left + 1;
-		p->Insert(prev_index, scene);
+		data->Insert(prev_index, scene);
 	}
 	void InsertSceneAfterLast(SceneId scene) {
 		prev_index++;
-		p->Insert(prev_index, scene);
+		data->Insert(prev_index, scene);
 	}
 
 	void RemoveSceneRelative(int8_t pos = 0) {
@@ -207,18 +205,18 @@ public:
 			return;
 		}
 
-		p->Erase(Relative(pos));
+		data->Erase(Relative(pos));
 	}
 
 	void ClearScenes() {
 		// erase all scenes in between first and last one.
 		while (size() > 2) {
-			p->Erase(1);
+			data->Erase(1);
 		}
 	}
 
 	uint8_t size() {
-		return p->size();
+		return data->size();
 	}
 
 private:
