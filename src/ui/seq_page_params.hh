@@ -8,8 +8,6 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class PageParams : public Usual {
-	uint8_t page{};
-
 public:
 	using Usual::Usual;
 	void Init() override {
@@ -27,16 +25,19 @@ public:
 		if (!p.IsChannelSelected())
 			return;
 
-		// TODO: handle multiple page buttons, apply to all of them
-		page = p.shared.youngest_scene_button.value();
-
-		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) {
+			for (auto [page, b] : countzip(c.button.scene)) {
+				if (b.is_high()) {
+					OnEncoderInc(encoder, inc, page);
+				}
+			}
+		});
 
 		// Stay in PageParams mode
 		interface = this;
 	}
 
-	void OnEncoderInc(uint8_t encoder, int32_t inc) {
+	void OnEncoderInc(uint8_t encoder, int32_t inc, uint32_t page) {
 		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 
 		const auto chan = p.GetSelectedChannel();
@@ -89,7 +90,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
-		c.SetButtonLed(page, true);
+		c.SetButtonLed(p.shared.youngest_scene_button.value(), true);
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
