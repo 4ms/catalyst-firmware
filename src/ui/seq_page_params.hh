@@ -50,7 +50,7 @@ public:
 				for (auto step = 0u; step < Model::SeqStepsPerPage; step++) {
 					p.IncStepInSequence(step + page_start, inc, fine);
 				}
-				p.shared.hang.Cancel();
+				p.shared.hang.Set(encoder, time_now);
 			} break;
 
 			case Model::SeqEncoderAlts::Random: {
@@ -65,24 +65,24 @@ public:
 					float random_inc = int8_t(std::rand() / 256) / float(-INT8_MIN);
 					p.IncStepInSequence(step + page_start, random_range * random_inc, false);
 				}
-				p.shared.hang.Cancel();
+				p.shared.hang.Set(encoder, time_now);
 			} break;
 
 			case Model::SeqEncoderAlts::PlayMode:
-				// inc > 0 => reverse
-				// inc < 0 => randomize order of steps
-				p.shared.hang.Cancel();
+				if (inc > 0)
+					p.ReverseStepOrder(page_start, page_start + Model::SeqStepsPerPage - 1);
+				else if (inc < 0)
+					p.RandomShuffleStepOrder(page_start, page_start + Model::SeqStepsPerPage - 1);
+				p.shared.hang.Set(encoder, time_now);
 				break;
 
 			case Model::SeqEncoderAlts::PhaseOffset: {
 				if (inc > 0)
-					p.RotateStepsRight(page_start, page_start + Model::SeqStepsPerPage);
+					p.RotateStepsRight(page_start, page_start + Model::SeqStepsPerPage - 1);
 				else if (inc < 0)
-					p.RotateStepsLeft(page_start, page_start + Model::SeqStepsPerPage);
+					p.RotateStepsLeft(page_start, page_start + Model::SeqStepsPerPage - 1);
 
-				// TODO: some display to show the rotation?
-				// p.shared.hang.Set(encoder, time_now);
-				p.shared.hang.Cancel();
+				p.shared.hang.Set(encoder, time_now);
 			} break;
 		}
 	}
@@ -97,14 +97,22 @@ public:
 		using namespace Model;
 		namespace Setting = Palette::Setting;
 
-		// if (hang.has_value()) {
-		// } else {
-		// TODO: what do we display? Maybe the hang display could be the steps as we change them?
-		c.SetEncoderLed(SeqEncoderAlts::Transpose, Setting::active);
-		c.SetEncoderLed(SeqEncoderAlts::Random, Setting::active);
-		c.SetEncoderLed(SeqEncoderAlts::PhaseOffset, Setting::active);
-		c.SetEncoderLed(SeqEncoderAlts::PlayMode, Setting::active);
-		// }
+		if (hang.has_value()) {
+			const auto chan = p.GetSelectedChannel();
+			const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
+			const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
+			auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
+										  [](Model::Output::type v) { return Palette::CvBlend(v); };
+			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+				c.SetEncoderLed(i, display_func(pvals[i]));
+			}
+
+		} else {
+			c.SetEncoderLed(SeqEncoderAlts::Transpose, Setting::active);
+			c.SetEncoderLed(SeqEncoderAlts::Random, Setting::active);
+			c.SetEncoderLed(SeqEncoderAlts::PhaseOffset, Setting::active);
+			c.SetEncoderLed(SeqEncoderAlts::PlayMode, Setting::active);
+		}
 	}
 };
 } // namespace Catalyst2::Ui::Sequencer

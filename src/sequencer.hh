@@ -4,6 +4,7 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "random.hh"
+#include "random_shuffle.hh"
 #include "range.hh"
 #include "sequence_phaser.hh"
 #include "sequencer_player.hh"
@@ -209,15 +210,25 @@ public:
 			c.IncCv(inc, fine, slot.settings.GetRange(cur_channel));
 		}
 	}
-	void RotateStepsLeft(uint8_t begin_step, uint8_t end_step) {
-		auto &steps = slot.channel[cur_channel];
-		auto span = end_step - begin_step + 1;
-		std::rotate(steps.begin(), steps.begin() + 1, steps.begin() + span);
+	void RotateStepsLeft(uint8_t first_step, uint8_t last_step) {
+		auto &all_steps = slot.channel[cur_channel];
+		auto steps = std::span<Step>{&all_steps[first_step], &all_steps[last_step + 1]};
+		std::rotate(steps.begin(), steps.begin() + 1, steps.end());
 	}
-	void RotateStepsRight(uint8_t begin_step, uint8_t end_step) {
-		auto &steps = slot.channel[cur_channel];
-		auto span = end_step - begin_step + 1;
-		std::rotate(steps.begin(), steps.begin() + span - 1, steps.begin() + span);
+	void RotateStepsRight(uint8_t first_step, uint8_t last_step) {
+		auto &all_steps = slot.channel[cur_channel];
+		auto steps = std::span<Step>{&all_steps[first_step], &all_steps[last_step + 1]};
+		std::rotate(steps.rbegin(), steps.rbegin() + 1, steps.rend());
+	}
+	void RandomShuffleStepOrder(uint8_t first_step, uint8_t last_step) {
+		auto &all_steps = slot.channel[cur_channel];
+		auto steps = std::span<Step>{&all_steps[first_step], &all_steps[last_step + 1]};
+		Catalyst2::random_shuffle(steps.begin(), steps.end());
+	}
+	void ReverseStepOrder(uint8_t first_step, uint8_t last_step) {
+		auto &all_steps = slot.channel[cur_channel];
+		auto steps = std::span<Step>{&all_steps[first_step], &all_steps[last_step + 1]};
+		std::reverse(steps.begin(), steps.end());
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
