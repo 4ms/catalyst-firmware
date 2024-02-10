@@ -15,8 +15,6 @@ public:
 		if (!p.IsChannelSelected()) {
 			p.SelectChannel(0);
 		}
-		// TODO: do we need this
-		//  p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		if (!c.button.shift.is_high() || !p.shared.youngest_scene_button.has_value())
