@@ -72,13 +72,7 @@ public:
 		interface = this;
 	}
 	void OnSceneButtonPress(uint8_t button) {
-		if (!p.bank.IsBankClassic()) {
-			return;
-		}
-		if (c.button.shift.is_high()) {
-			p.bank.pathway.ReplaceSceneA(button);
-		}
-		if (c.button.add.is_high()) {
+		if (p.bank.IsBankClassic() && c.button.add.is_high()) {
 			p.bank.pathway.ReplaceSceneB(button);
 		}
 	}

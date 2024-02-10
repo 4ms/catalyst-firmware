@@ -4,6 +4,7 @@
 #include "controls.hh"
 #include "macro_common.hh"
 #include "params.hh"
+#include "ui/abstract.hh"
 
 namespace Catalyst2::Ui::Macro
 {
@@ -16,6 +17,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
 
 		if (!c.button.morph.is_high()) {
 			return;
@@ -34,6 +36,11 @@ public:
 			return;
 		}
 		interface = this;
+	}
+	void OnSceneButtonPress(uint8_t button) {
+		if (p.bank.IsBankClassic()) {
+			p.bank.pathway.ReplaceSceneA(button);
+		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		p.bank.IncMorph(encoder, inc);
