@@ -76,9 +76,9 @@ public:
 
 			case Model::SeqEncoderAlts::PhaseOffset: {
 				if (inc > 0)
-					p.RotateStepsForward(page_start, page_start + Model::SeqStepsPerPage);
+					p.RotateStepsRight(page_start, page_start + Model::SeqStepsPerPage);
 				else if (inc < 0)
-					p.RotateStepsBackward(page_start, page_start + Model::SeqStepsPerPage);
+					p.RotateStepsLeft(page_start, page_start + Model::SeqStepsPerPage);
 
 				// TODO: some display to show the rotation?
 				// p.shared.hang.Set(encoder, time_now);

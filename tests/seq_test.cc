@@ -4,38 +4,6 @@
 
 using namespace Catalyst2;
 
-/*
-floating point error test. sequencer crashes if (mode == ping pong && length == 1)
-
-// bug: e8296861a9850b32b98ac56c21036c35b36c2f3a
-// unit test passes: b3e5aacc1990699af8339e83406d95f9228d49a6
-// hardware doesn't crash anymore ^^
-
-*/
-
-TEST_CASE("Pingpong length bug") {
-
-	// Sequencer::Settings::Data settings;
-	// Sequencer::PlayerInterface player{settings};
-
-	// using enum Sequencer::Settings::PlayMode::Mode;
-
-	// while (settings.GetPlayMode() != PingPong)
-	//	settings.IncPlayMode(1);
-
-	// CHECK(settings.GetPlayMode() == PingPong);
-
-	// while (settings.GetLength() != Model::MinSeqSteps)
-	//	settings.IncLength(-1);
-
-	// CHECK(settings.GetLength() == Model::MinSeqSteps);
-
-	// for (auto i = 0u; i < 1000u; i++) {
-	//	player.Step();
-	//	player.GetPlayheadStep(0);
-	// }
-}
-
 TEST_CASE("Rotate steps") {
 
 	Shared::Data shared_data;
@@ -56,7 +24,7 @@ TEST_CASE("Rotate steps") {
 
 	SUBCASE("Forwards") {
 		auto original_vals = seq.GetPageValuesCv(0);
-		seq.RotateStepsForward(0, 7);
+		seq.RotateStepsRight(0, 7);
 		auto rotated_vals = seq.GetPageValuesCv(0);
 
 		CHECK(rotated_vals[0] == original_vals[7]);
@@ -67,20 +35,11 @@ TEST_CASE("Rotate steps") {
 		CHECK(rotated_vals[5] == original_vals[4]);
 		CHECK(rotated_vals[6] == original_vals[5]);
 		CHECK(rotated_vals[7] == original_vals[6]);
-
-		// CHECK(original_vals[0] == fwd_rotated_vals[1]);
-		for (auto o : original_vals)
-			printf("%d ", o);
-		printf("\n");
-
-		for (auto o : rotated_vals)
-			printf("%d ", o);
-		printf("\n");
 	}
 
 	SUBCASE("Backwards") {
 		auto original_vals = seq.GetPageValuesCv(0);
-		seq.RotateStepsBackward(0, 7);
+		seq.RotateStepsLeft(0, 7);
 		auto rotated_vals = seq.GetPageValuesCv(0);
 
 		CHECK(original_vals[0] == rotated_vals[7]);

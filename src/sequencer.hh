@@ -209,17 +209,15 @@ public:
 			c.IncCv(inc, fine, slot.settings.GetRange(cur_channel));
 		}
 	}
-	void RotateStepsBackward(uint8_t begin_step, uint8_t end_step) {
+	void RotateStepsLeft(uint8_t begin_step, uint8_t end_step) {
 		auto &steps = slot.channel[cur_channel];
-		auto first = steps[begin_step];
-		std::move(&steps[begin_step + 1], &steps[end_step + 1], &steps[begin_step]);
-		steps[end_step] = first;
+		auto span = end_step - begin_step + 1;
+		std::rotate(steps.begin(), steps.begin() + 1, steps.begin() + span);
 	}
-	void RotateStepsForward(uint8_t begin_step, uint8_t end_step) {
+	void RotateStepsRight(uint8_t begin_step, uint8_t end_step) {
 		auto &steps = slot.channel[cur_channel];
-		auto last = steps[end_step];
-		std::move(&steps[begin_step], &steps[end_step], &steps[begin_step + 1]);
-		steps[begin_step] = last;
+		auto span = end_step - begin_step + 1;
+		std::rotate(steps.begin(), steps.begin() + span - 1, steps.begin() + span);
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
