@@ -50,6 +50,11 @@ public:
 			} break;
 
 			case Model::SeqEncoderAlts::Random: {
+				// idea: a page of random values is created with the amount set to 0
+				// turning right increases random amount for the page
+				// turning left decreases amount
+				// once decreased to 0, turing left ( erases the page and ??) generates a new set of random values
+				// then turning right will once again increase the amount
 
 				auto random_range = p.slot.settings.GetRandomOrGlobal(p.GetSelectedChannel());
 				if (random_range == 0)
