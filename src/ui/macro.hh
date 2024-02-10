@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "conf/palette.hh"
 #include "controls.hh"
 #include "macro_add.hh"
@@ -33,6 +34,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		ForEachSceneButtonPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.fine.just_went_high() && p.shared.youngest_scene_button.has_value()) {
@@ -69,6 +71,17 @@ public:
 		}
 		interface = this;
 	}
+	void OnSceneButtonPress(uint8_t button) {
+		if (!p.bank.IsBankClassic()) {
+			return;
+		}
+		if (c.button.shift.is_high()) {
+			p.bank.pathway.ReplaceSceneA(button);
+		}
+		if (c.button.add.is_high()) {
+			p.bank.pathway.ReplaceSceneB(button);
+		}
+	}
 	void OnSceneButtonRelease(uint8_t button) {
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
@@ -85,11 +98,12 @@ public:
 					p.bank.IncChan(i, encoder, inc, fine);
 			}
 		} else {
-			if (p.pathway.OnAScene()) {
-				p.bank.IncChan(p.pathway.SceneRelative(), encoder, inc, fine);
+			const auto cscene = p.bank.pathway.CurrentScene();
+			if (cscene.has_value()) {
+				p.bank.IncChan(cscene.value(), encoder, inc, fine);
 			} else {
-				p.bank.IncChan(p.pathway.SceneRelative(-1), encoder, inc, fine);
-				p.bank.IncChan(p.pathway.SceneRelative(1), encoder, inc, fine);
+				p.bank.IncChan(p.bank.pathway.SceneRelative(-1), encoder, inc, fine);
+				p.bank.IncChan(p.bank.pathway.SceneRelative(1), encoder, inc, fine);
 			}
 		}
 	}
@@ -110,9 +124,9 @@ public:
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
 					// to.
-					col = p.pathway.OnAScene() ?
-							  Palette::GateBlend(p.bank.GetChannel(p.pathway.SceneRelative(), chan).AsGate() *
-												 Channel::range) :
+					const auto cscene = p.bank.pathway.CurrentScene();
+					col = cscene.has_value() ?
+							  Palette::GateBlend(p.bank.GetChannel(cscene.value(), chan).AsGate() * Channel::range) :
 							  Palette::off;
 				} else {
 					col = Palette::CvBlend(val);
@@ -123,12 +137,12 @@ public:
 			if (p.recorder.IsRecording())
 				SceneButtonDisplayRecording();
 			else {
-				const auto l = p.pathway.SceneRelative(-1);
-				const auto r = p.pathway.SceneRelative(1);
+				const auto l = p.bank.pathway.SceneRelative(-1);
+				const auto r = p.bank.pathway.SceneRelative(1);
 				if (l == r)
 					c.SetButtonLed(l, true);
 				else {
-					const auto pos = p.pathway.GetPhase();
+					const auto pos = p.bank.pathway.GetPhase();
 					c.SetButtonLed(l, 1.f - pos);
 					c.SetButtonLed(r, pos);
 				}

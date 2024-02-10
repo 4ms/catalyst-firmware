@@ -29,12 +29,12 @@ public:
 			}
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high()) {
-					p.Reset(i);
+					p.bank.ClearScene(i);
 					return;
 				}
 			}
 			if (c.button.add.is_high()) {
-				p.Reset();
+				p.bank.Clear();
 				return;
 			}
 		}

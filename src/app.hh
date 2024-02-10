@@ -95,14 +95,14 @@ private:
 		Model::Output::Buffer out;
 
 		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto left = p.pathway.SceneRelative(-1);
-		const auto right = p.pathway.SceneRelative(1);
+		const auto left = p.bank.pathway.SceneRelative(-1);
+		const auto right = p.bank.pathway.SceneRelative(1);
 
 		auto do_trigs = false;
 
-		const auto current_scene = p.pathway.CurrentScene();
+		const auto current_scene = p.bank.pathway.CurrentScene();
 
-		if (current_scene != p.pathway.LastSceneOn() && current_scene.has_value()) {
+		if (current_scene != p.bank.pathway.LastSceneOn() && current_scene.has_value()) {
 			do_trigs = true;
 		}
 
@@ -112,7 +112,7 @@ private:
 					current_scene.has_value() ? p.bank.GetChannel(current_scene.value(), chan).AsGate() : 0.f;
 				o = Trig(do_trigs, chan, time_now, level);
 			} else {
-				const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
+				const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
 				const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan).AsCV());
 				const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan).AsCV());
 				o = MathTools::interpolate(a, b, phs);

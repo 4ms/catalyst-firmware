@@ -51,7 +51,7 @@ public:
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
-		c.SetButtonLed(p.GetSelectedBank(), true);
+		c.SetButtonLed(p.bank.GetSelectedBank(), true);
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			const auto col = p.bank.GetChannelMode(i).GetColor();
 			c.SetEncoderLed(i, col);

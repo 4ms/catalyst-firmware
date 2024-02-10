@@ -41,7 +41,7 @@ public:
 		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t button) {
-		auto &path = p.pathway;
+		auto &path = p.bank.pathway;
 
 		if (c.button.shift.is_high()) {
 			DeleteScene(button);
@@ -62,7 +62,7 @@ public:
 		}
 	}
 	void DeleteScene(uint8_t button) {
-		auto &path = p.pathway;
+		auto &path = p.bank.pathway;
 		if (path.OnAScene()) {
 			if (path.SceneRelative() == button) {
 				path.RemoveSceneRelative();
@@ -78,19 +78,19 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
 
-		auto count = p.pathway.size();
-		const auto phase = 1.f / (Catalyst2::Macro::Pathway::MaxPoints / static_cast<float>(count));
+		auto count = p.bank.pathway.size();
+		const auto phase = 1.f / (Catalyst2::Macro::Pathway::Normal::MaxPoints / static_cast<float>(count));
 
 		while (count > 8) {
 			count -= 8;
 		}
 		SetEncoderLedsCount(c, count, 0, Palette::Pathway::color(phase));
 
-		if (p.pathway.OnAScene()) {
-			c.SetButtonLed(p.pathway.SceneRelative(), true);
+		if (p.bank.pathway.OnAScene()) {
+			c.SetButtonLed(p.bank.pathway.SceneRelative(), true);
 		} else {
-			c.SetButtonLed(p.pathway.SceneRelative(-1), true);
-			c.SetButtonLed(p.pathway.SceneRelative(1), true);
+			c.SetButtonLed(p.bank.pathway.SceneRelative(-1), true);
+			c.SetButtonLed(p.bank.pathway.SceneRelative(1), true);
 		}
 	}
 };

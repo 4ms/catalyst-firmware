@@ -42,7 +42,7 @@ public:
 		auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		pos = p.slider_slew.Update(pos);
 		p.shared.pos = pos;
-		p.pathway.Update(pos);
+		p.bank.pathway.Update(pos);
 	}
 };
 
