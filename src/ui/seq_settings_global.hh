@@ -41,12 +41,12 @@ public:
 
 		switch (encoder) {
 			case Model::SeqEncoderAlts::Transpose:
-				p.data.settings.IncTranspose(inc);
+				p.slot.settings.IncTranspose(inc);
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::Random:
 				if (!c.button.fine.is_high()) {
-					p.data.settings.IncRandom(inc);
+					p.slot.settings.IncRandom(inc);
 				} else {
 					if (inc > 0) {
 						//	p.randompool.Randomize();
@@ -57,23 +57,23 @@ public:
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::PlayMode:
-				p.data.settings.IncPlayMode(inc);
+				p.slot.settings.IncPlayMode(inc);
 				p.player.randomsteps.Randomize();
 				p.shared.hang.Cancel();
 				break;
 			case Model::SeqEncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncStartOffset(inc);
+				p.slot.settings.IncStartOffset(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncPhaseOffset(inc);
+				p.slot.settings.IncPhaseOffset(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
-				p.data.settings.IncLength(inc);
+				p.slot.settings.IncLength(inc);
 				p.shared.hang.Set(encoder, time_now);
 				break;
 			case Model::SeqEncoderAlts::Range:
@@ -85,7 +85,7 @@ public:
 				} else {
 					inc = hang.has_value() ? inc : 0;
 					p.shared.hang.Set(encoder, time_now);
-					p.data.clockdiv.Inc(inc);
+					p.slot.clockdiv.Inc(inc);
 				}
 				break;
 		}
@@ -98,12 +98,12 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
-		auto clockdiv = p.data.clockdiv;
-		auto length = p.data.settings.GetLength();
-		auto startoffset = p.data.settings.GetStartOffset();
-		auto playmode = p.data.settings.GetPlayMode();
-		auto tpose = p.data.settings.GetTranspose();
-		auto random = p.data.settings.GetRandom();
+		auto clockdiv = p.slot.clockdiv;
+		auto length = p.slot.settings.GetLength();
+		auto startoffset = p.slot.settings.GetStartOffset();
+		auto playmode = p.slot.settings.GetPlayMode();
+		auto tpose = p.slot.settings.GetTranspose();
+		auto random = p.slot.settings.GetRandom();
 
 		using namespace Model;
 		namespace Setting = Palette::Setting;

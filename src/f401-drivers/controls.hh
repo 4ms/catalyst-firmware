@@ -1,24 +1,21 @@
 #pragma once
 
 #include "conf/board_conf.hh"
-#include "conf/flash_layout.hh"
 #include "conf/model.hh"
 #include "debug.hh"
 #include "drivers/adc_builtin.hh"
 #include "drivers/debounced_switch.hh"
-#include "drivers/flash_block.hh"
-#include "drivers/flash_sectors.hh"
 #include "drivers/led_driver_lp5024.hh"
 #include "drivers/muxed_io.hh"
 #include "muxed_button.hh"
 #include "outputs.hh"
 #include "range.hh"
+#include "saved_settings.hh"
 #include "util/colors.hh"
+#include "util/countzip.hh"
 #include "util/filter.hh"
-#include "util/wear_level.hh"
 #include <cmath>
 #include <optional>
-#include <util/countzip.hh>
 
 namespace Catalyst2
 {
@@ -73,29 +70,6 @@ class Controls {
 	Outputs outputs;
 
 public:
-	template<typename SeqModeData, typename MacroModeData>
-	class SavedSettings {
-
-		WearLevel<mdrivlib::FlashBlock<SeqModeData, SeqSettingsFlashAddr, SettingsSectorSize>> seq_settings_flash;
-		WearLevel<mdrivlib::FlashBlock<MacroModeData, MacroSettingsFlashAddr, SettingsSectorSize>> macro_settings_flash;
-
-	public:
-		bool read(SeqModeData &data) {
-			return seq_settings_flash.read(data);
-		}
-
-		bool write(SeqModeData const &data) {
-			return seq_settings_flash.write(data);
-		}
-
-		bool read(MacroModeData &data) {
-			return macro_settings_flash.read(data);
-		}
-
-		bool write(MacroModeData const &data) {
-			return macro_settings_flash.write(data);
-		}
-	};
 	// Encoders
 	std::array<mdrivlib::RotaryEncoder, Model::NumChans> encoders{{
 		{Board::Enc1A, Board::Enc1B, Board::EncStepSize},

@@ -39,6 +39,8 @@ struct Data {
 	SequencerData sequencer{};
 };
 
+inline constexpr auto data_size = sizeof(Data);
+
 struct Params {
 	Data data{};
 	Shared::Interface shared{data.sequencer.shared};

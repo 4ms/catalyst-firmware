@@ -1,8 +1,10 @@
 #pragma once
 
 #include "clock.hh"
+#include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "conf/palette.hh"
+#include "conf/version.hh"
 #include "controls.hh"
 #include "shared.hh"
 
@@ -135,19 +137,40 @@ inline void SetLedsClockDiv(Controls &c, uint32_t div) {
 }
 
 inline void StartupAnimation(Controls &c) {
-	if constexpr (Model::skip_startup_animation) {
-#warning "Remember to turn the startup animation on!"
+	if constexpr (BuildOptions::skip_startup_animation) {
 		return;
 	}
 	const auto duration = 1000;
 	auto remaining = duration;
-	ClearButtonLeds(c);
+
+	auto DisplayVersion = [&c](unsigned version) {
+		ClearButtonLeds(c);
+
+		// Display units digit only
+		if (version >= 10)
+			version = version % 10;
+
+		// 0 = All buttons off
+		if (version == 0)
+			return;
+
+		// 9 = Buttons 1 + 8
+		if (version == 9) {
+			c.SetButtonLed(7, true);
+			c.SetButtonLed(0, true);
+		}
+
+		c.SetButtonLed(version - 1, true);
+	};
+
+	DisplayVersion(FirmwareMajorVersion);
+
 	while (remaining--) {
+		if (remaining == duration / 2)
+			DisplayVersion(FirmwareMinorVersion);
+
 		ClearEncoderLeds(c);
 		auto phase = (duration - remaining + 0.f) / duration;
-		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetButtonLed(i, phase);
-		}
 		phase *= 8;
 		const auto idx = static_cast<uint8_t>(phase);
 		const auto cphase = phase - idx;

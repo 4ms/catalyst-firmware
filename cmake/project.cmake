@@ -157,14 +157,6 @@ function(create_target target driver_arch)
   )
 
   add_custom_target(
-    ${target}-jflash-combo
-    DEPENDS ${target}.elf ${target}-bootloader.elf
-    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit
-    COMMENT "Flashing app+bootloader. Requires JFlashExe on your PATH"
-    USES_TERMINAL
-  )
-
-  add_custom_target(
     ${target}-oflash-app
     DEPENDS ${target}.elf
     COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.hex verify reset exit"
@@ -172,13 +164,6 @@ function(create_target target driver_arch)
     USES_TERMINAL
   )
 
-  add_custom_target(
-    ${target}-oflash-combo
-    DEPENDS ${target}.elf ${target}-bootloader.elf
-    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}-combo.hex verify reset exit"
-    COMMENT "Flashing app+bootloader. Only for F4xx chips"
-    USES_TERMINAL
-  )
 
 endfunction()
 
@@ -227,15 +212,41 @@ function(create_bootloader_target target driver_arch)
     COMMAND export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && ${WAV_ENCODE_PYTHON_CMD}
   )
 
-  set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
+  #Cannot use generator expressions because this is used in add_custom_command(OUTPUT ...)
+  set(TARGET_BASE ${CMAKE_BINARY_DIR}/${target}/${target})
 
   # Target: XXX-combo: Create a hex file containing bootloader and app
-  add_custom_target(
-    ${target}-combo
-    DEPENDS ${TARGET_BASE}.hex ${TARGET_BASE}-bootloader.elf
+  add_custom_command(
+    OUTPUT ${TARGET_BASE}-combo.hex
     COMMAND cat ${TARGET_BASE}-bootloader.hex ${TARGET_BASE}.hex | awk -f ${CMAKE_SOURCE_DIR}/scripts/merge_hex.awk >
             ${TARGET_BASE}-combo.hex
+    # DEPENDS ${TARGET_BASE}.hex ${TARGET_BASE}-bootloader.hex
+    DEPENDS ${target}.elf ${target}-bootloader.elf
+    COMMENT "Merging bootloader and app hex files into a combo hex file"
+    VERBATIM
+    USES_TERMINAL
   )
-  set_target_properties(${target}-combo PROPERTIES ADDITIONAL_CLEAN_FILES "${TARGET_BASE}-combo.hex")
+
+  add_custom_target(
+    ${target}-combo
+    DEPENDS ${TARGET_BASE}-combo.hex 
+  )
+
+  add_custom_target(
+    ${target}-jflash-combo
+    DEPENDS ${target}-combo
+    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit
+    COMMENT "Flashing app+bootloader. Requires JFlashExe on your PATH"
+    USES_TERMINAL
+  )
+
+  add_custom_target(
+    ${target}-oflash-combo
+    DEPENDS ${target}-combo
+    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}-combo.hex verify reset exit"
+    COMMENT "Flashing app+bootloader. Only for F4xx chips"
+    USES_TERMINAL
+  )
+
 
 endfunction()

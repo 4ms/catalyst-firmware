@@ -71,7 +71,7 @@ struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 	}
 };
 
-struct Data {
+struct Slot {
 	std::array<Sequencer::ChannelData, Model::NumChans> channel;
 	Sequencer::Settings::Data settings;
 	Player::Data player;
@@ -93,7 +93,22 @@ struct Data {
 	}
 };
 
+struct Data {
+	std::array<Slot, Model::NumSeqSlots> slot;
+	uint8_t startup_slot;
+
+	bool validate() const {
+		auto ret = true;
+		for (auto &s : slot) {
+			ret &= s.validate();
+		}
+		ret &= startup_slot < Model::NumSeqSlots;
+		return ret;
+	}
+};
+
 class Interface {
+	Data &data;
 	uint8_t cur_channel = 0;
 	uint8_t cur_page = Model::SeqPages;
 	struct Clipboard {
@@ -104,16 +119,28 @@ class Interface {
 	uint32_t time_trigged;
 
 public:
-	Data &data;
-	Clock::Bpm::Interface seqclock{data.bpm};
+	Slot slot;
+	Clock::Bpm::Interface seqclock{slot.bpm};
 	Shared::Interface &shared;
-	Player::Interface player{data.player, data.settings, data.songmode};
+	Player::Interface player{slot.player, slot.settings, slot.songmode};
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
 		, shared{shared} {
 	}
-
+	void Load() {
+		Load(data.startup_slot);
+	}
+	void Load(uint8_t slot) {
+		this->slot = data.slot[slot];
+	}
+	void Save(uint8_t slot) {
+		data.startup_slot = slot;
+		data.slot[slot] = this->slot;
+	}
+	uint8_t GetStartupSlot() {
+		return data.startup_slot;
+	}
 	void Update(float phase) {
 		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
 	}
@@ -134,7 +161,7 @@ public:
 			if (seqclock.IsInternal()) {
 				seqclock.SetExternal(true);
 			}
-			shared.clockdivider.Update(data.clockdiv);
+			shared.clockdivider.Update(slot.clockdiv);
 			if (shared.clockdivider.Step()) {
 				seqclock.Input(shared.internalclock.TimeNow());
 			}
@@ -166,93 +193,93 @@ public:
 		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		auto &c = data.channel[cur_channel][StepOnPageToStep(step)];
-		if (data.settings.GetChannelMode(cur_channel).IsGate()) {
+		auto &c = slot.channel[cur_channel][StepOnPageToStep(step)];
+		if (slot.settings.GetChannelMode(cur_channel).IsGate()) {
 			if (fine) {
 				c.IncTrigDelay(inc);
 			} else {
 				c.IncGate(inc);
 			}
 		} else {
-			c.IncCv(inc, fine, data.settings.GetRange(cur_channel));
+			c.IncCv(inc, fine, slot.settings.GetRange(cur_channel));
 		}
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
-		data.channel[cur_channel][step].IncModifier(inc, data.settings.GetChannelMode(cur_channel).IsGate());
+		slot.channel[cur_channel][step].IncModifier(inc, slot.settings.GetChannelMode(cur_channel).IsGate());
 	}
 	void IncStepProbability(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
-		data.channel[cur_channel][step].IncProbability(inc);
+		slot.channel[cur_channel][step].IncProbability(inc);
 	}
 
 	Step GetRelativeStep(uint8_t chan, int8_t relative_pos) {
 		const auto step = player.GetRelativeStep(chan, relative_pos);
-		return data.channel[chan][step];
+		return slot.channel[chan][step];
 	}
 	auto GetRelativeStepValue(uint8_t chan, int8_t relative_pos) {
 		const auto s = GetRelativeStep(chan, relative_pos);
 		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
-		return s.Read(data.settings.GetRange(chan), r * data.settings.GetRandomOrGlobal(chan));
+		return s.Read(slot.settings.GetRange(chan), r * slot.settings.GetRandomOrGlobal(chan));
 	}
 
 	std::array<float, Model::SeqStepsPerPage> GetPageValuesTrigDelay(uint8_t page) {
 		std::array<float, Model::SeqStepsPerPage> out;
 		for (auto [i, o] : countzip(out)) {
 			const auto step = (page * Model::SeqStepsPerPage) + i;
-			o = data.channel[cur_channel][step].ReadTrigDelay();
+			o = slot.channel[cur_channel][step].ReadTrigDelay();
 		}
 		return out;
 	}
 	Model::Output::Buffer GetPageValuesGate(uint8_t page) {
 		Model::Output::Buffer out;
-		const auto range = data.settings.GetRange(cur_channel);
+		const auto range = slot.settings.GetRange(cur_channel);
 		for (auto [i, o] : countzip(out)) {
 			const auto step = (page * Model::SeqStepsPerPage) + i;
-			o = data.channel[cur_channel][step].Read(range, 0).AsGate() * Channel::range;
+			o = slot.channel[cur_channel][step].Read(range, 0).AsGate() * Channel::range;
 		}
 		return out;
 	}
 	Model::Output::Buffer GetPageValuesCv(uint8_t page) {
 		Model::Output::Buffer out;
-		const auto range = data.settings.GetRange(cur_channel);
+		const auto range = slot.settings.GetRange(cur_channel);
 		for (auto [i, o] : countzip(out)) {
 			const auto step = (page * Model::SeqStepsPerPage) + i;
-			o = data.channel[cur_channel][step].Read(range, 0).AsCV();
+			o = slot.channel[cur_channel][step].Read(range, 0).AsCV();
 		}
 		return out;
 	}
 	std::array<float, Model::NumChans> GetPageValuesModifier(uint8_t page) {
 		std::array<float, Model::NumChans> out;
 		for (auto [i, o] : countzip(out)) {
-			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadMorph();
+			o = slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadMorph();
 		}
 		return out;
 	}
 	std::array<float, Model::NumChans> GetPageValuesProbability(uint8_t page) {
 		std::array<float, Model::NumChans> out;
 		for (auto [i, o] : countzip(out)) {
-			o = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadProbability() /
+			o = slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadProbability() /
 				static_cast<float>(Step::probmax);
 		}
 		return out;
 	}
 	void CopySequence() {
-		clipboard.cd = data.channel[cur_channel];
-		clipboard.cs = data.settings.Copy(cur_channel);
+		clipboard.cd = slot.channel[cur_channel];
+		clipboard.cs = slot.settings.Copy(cur_channel);
 	}
 	void PasteSequence() {
-		data.channel[cur_channel] = clipboard.cd;
-		data.settings.Paste(cur_channel, clipboard.cs);
+		slot.channel[cur_channel] = clipboard.cd;
+		slot.settings.Paste(cur_channel, clipboard.cs);
 	}
 	void CopyPage(uint8_t page) {
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-			clipboard.page[i] = data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i];
+			clipboard.page[i] = slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i];
 		}
 	}
 	void PastePage(uint8_t page) {
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-			data.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
+			slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
 		}
 	}
 

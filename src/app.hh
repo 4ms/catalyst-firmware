@@ -1,6 +1,7 @@
 #pragma once
 
 #include "channel.hh"
+#include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "macro.hh"
 #include "params.hh"
@@ -137,7 +138,7 @@ public:
 		Model::Output::Buffer buf;
 
 		for (auto [chan, o] : countzip(buf)) {
-			o = p.data.settings.GetChannelMode(chan).IsGate() ? Gate(chan) : Cv(chan);
+			o = p.slot.settings.GetChannelMode(chan).IsGate() ? Gate(chan) : Cv(chan);
 		}
 
 		return buf;
@@ -160,7 +161,7 @@ private:
 					continue;
 				}
 				const auto temp = gate_val >= s_phase;
-				if constexpr (Model::seq_gate_overrides_prev_step) {
+				if constexpr (BuildOptions::seq_gate_overrides_prev_step) {
 					out = temp;
 				} else {
 					out |= temp;
@@ -175,8 +176,8 @@ private:
 		auto stepval = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, -1).AsCV());
 		const auto distance = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, 0).AsCV()) - stepval;
 		stepval += (distance * stepmorph);
-		stepval = Transposer::Process(stepval, p.data.settings.GetTransposeOrGlobal(chan));
-		return p.data.settings.GetRange(chan).Clamp(stepval);
+		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
+		return p.slot.settings.GetRange(chan).Clamp(stepval);
 	}
 };
 } // namespace Sequencer

@@ -33,7 +33,7 @@ struct TestJacks : IGateInChecker {
 			{
 				.TIMx = TIM9,
 				.period_ns = mdrivlib::TimekeeperConfig::Hz(SampleRate),
-				.priority1 = 1,
+				.priority1 = 0,
 				.priority2 = 1,
 			},
 			[this]() {
