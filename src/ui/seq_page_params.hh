@@ -20,9 +20,6 @@ public:
 		if (!c.button.shift.is_high() || !p.shared.youngest_scene_button.has_value())
 			return; // exit PageParams mode
 
-		if (!p.IsChannelSelected())
-			return;
-
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) {
 			for (auto [page, b] : countzip(c.button.scene)) {
 				if (b.is_high()) {
