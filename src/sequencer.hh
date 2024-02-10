@@ -209,10 +209,17 @@ public:
 			c.IncCv(inc, fine, slot.settings.GetRange(cur_channel));
 		}
 	}
-	Sequencer::Step GetRawStepInSequence(uint8_t step) {
-		if (step >= Model::MaxSeqSteps)
-			return {};
-		return slot.channel[cur_channel][step];
+	void RotateStepsBackward(uint8_t begin_step, uint8_t end_step) {
+		auto &steps = slot.channel[cur_channel];
+		auto first = steps[begin_step];
+		std::move(&steps[begin_step + 1], &steps[end_step + 1], &steps[begin_step]);
+		steps[end_step] = first;
+	}
+	void RotateStepsForward(uint8_t begin_step, uint8_t end_step) {
+		auto &steps = slot.channel[cur_channel];
+		auto last = steps[end_step];
+		std::move(&steps[begin_step], &steps[end_step], &steps[begin_step + 1]);
+		steps[begin_step] = last;
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);

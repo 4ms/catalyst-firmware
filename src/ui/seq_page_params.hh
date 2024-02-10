@@ -27,6 +27,7 @@ public:
 		if (!p.IsChannelSelected())
 			return;
 
+		// TODO: handle multiple page buttons, apply to all of them
 		page = p.shared.youngest_scene_button.value();
 
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -68,17 +69,19 @@ public:
 			} break;
 
 			case Model::SeqEncoderAlts::PlayMode:
+				// inc > 0 => reverse
+				// inc < 0 => randomize order of steps
 				p.shared.hang.Cancel();
 				break;
-			case Model::SeqEncoderAlts::PhaseOffset: {
-				// inc = hang.has_value() ? inc : 0;
-				// p.shared.hang.Set(encoder, time_now);
-				for (auto step = 0u; step < Model::SeqStepsPerPage; step++) {
-					float random_inc = int8_t(std::rand() / 256) / float(-INT8_MIN);
-					auto s = p.GetStepInSequence(step + page_start + inc);
-					p.SetStepInSequence(step + page_start, s);
-				}
 
+			case Model::SeqEncoderAlts::PhaseOffset: {
+				if (inc > 0)
+					p.RotateStepsForward(page_start, page_start + Model::SeqStepsPerPage);
+				else if (inc < 0)
+					p.RotateStepsBackward(page_start, page_start + Model::SeqStepsPerPage);
+
+				// TODO: some display to show the rotation?
+				// p.shared.hang.Set(encoder, time_now);
 				p.shared.hang.Cancel();
 			} break;
 		}
