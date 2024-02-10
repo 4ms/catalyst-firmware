@@ -103,6 +103,7 @@ public:
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
+		c.SetPlayLed(p.recorder.IsPlaying());
 		auto ysb = p.shared.youngest_scene_button;
 		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {
