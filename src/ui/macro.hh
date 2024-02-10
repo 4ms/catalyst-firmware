@@ -47,7 +47,7 @@ public:
 			return;
 		}
 
-		if (c.button.add.is_high()) {
+		if (c.button.add.is_high() && !p.bank.IsBankClassic()) {
 			interface = &add;
 			return;
 		}
