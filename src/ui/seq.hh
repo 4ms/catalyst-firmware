@@ -7,6 +7,7 @@
 #include "seq_bank.hh"
 #include "seq_common.hh"
 #include "seq_morph.hh"
+#include "seq_page_params.hh"
 #include "seq_prob.hh"
 #include "seq_settings.hh"
 #include "seq_settings_global.hh"
@@ -20,6 +21,7 @@ class Main : public Usual {
 	Probability probability{p, c};
 	Settings::Global global_settings{p, c};
 	Settings::Channel channel_settings{p, c};
+	PageParams page_params{p, c};
 	Abstract &macro;
 
 public:
@@ -43,6 +45,7 @@ public:
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto ysb = p.shared.youngest_scene_button;
+
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
 				if (!p.seqclock.IsPaused()) {
@@ -91,6 +94,8 @@ public:
 				interface = &channel_settings;
 			} else if (bmorph) {
 				interface = &probability;
+			} else if (ysb) {
+				interface = &page_params;
 			} else {
 				interface = &global_settings;
 			}

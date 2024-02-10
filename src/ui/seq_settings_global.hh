@@ -24,6 +24,10 @@ public:
 			return;
 		}
 
+		if (p.shared.youngest_scene_button.has_value()) {
+			return;
+		}
+
 		if (c.button.morph.is_high()) {
 			return;
 		}

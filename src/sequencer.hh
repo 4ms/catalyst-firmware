@@ -193,7 +193,12 @@ public:
 		return cur_page < Model::SeqPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
-		auto &c = slot.channel[cur_channel][StepOnPageToStep(step)];
+		IncStepInSequence(StepOnPageToStep(step), inc, fine);
+	}
+	void IncStepInSequence(uint8_t step, int32_t inc, bool fine) {
+		if (step >= Model::MaxSeqSteps)
+			return;
+		auto &c = slot.channel[cur_channel][step];
 		if (slot.settings.GetChannelMode(cur_channel).IsGate()) {
 			if (fine) {
 				c.IncTrigDelay(inc);
@@ -203,6 +208,11 @@ public:
 		} else {
 			c.IncCv(inc, fine, slot.settings.GetRange(cur_channel));
 		}
+	}
+	Sequencer::Step GetRawStepInSequence(uint8_t step) {
+		if (step >= Model::MaxSeqSteps)
+			return {};
+		return slot.channel[cur_channel][step];
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
