@@ -74,7 +74,6 @@ public:
 
 	Interface(Data &data)
 		: data{data} {
-		pathway.Load(data.pathway[data.cur_bank]);
 	}
 	void Clear() {
 		data.bank[data.cur_bank] = BankData{};
