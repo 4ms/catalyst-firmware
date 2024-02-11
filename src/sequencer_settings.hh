@@ -4,6 +4,7 @@
 #include "clock.hh"
 #include "conf/model.hh"
 #include "random.hh"
+#include "range.hh"
 #include "sequencer_player.hh"
 #include "transposer.hh"
 #include <algorithm>
@@ -178,7 +179,7 @@ public:
 	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max};
 	Setting<Transposer::type> transpose{Transposer::min, Transposer::max};
 	Setting<Random::Amount::type> random{Random::Amount::min, Random::Amount::max};
-	Catalyst2::Channel::Range range;
+	Catalyst2::Channel::Cv::Range range;
 	Catalyst2::Channel::Mode mode;
 
 	bool Validate() const {
@@ -278,7 +279,7 @@ public:
 	Random::Amount::type GetRandom() const {
 		return global.random.Read();
 	}
-	Catalyst2::Channel::Range GetRange(uint8_t chan) const {
+	Catalyst2::Channel::Cv::Range GetRange(uint8_t chan) const {
 		return channel[chan].range;
 	}
 	Clock::Divider::type GetClockDiv(uint8_t chan) {
