@@ -1,75 +1,81 @@
 #pragma once
 
 #include "conf/model.hh"
-#include "random.hh"
 #include "range.hh"
+#include "util/math.hh"
 #include <algorithm>
 #include <cstdint>
 #include <numeric>
 
 namespace Catalyst2::Channel
 {
+namespace Cv
+{
+using type = uint16_t;
+inline constexpr auto notes_in_octave = 12u;
+inline constexpr type inc_step_fine = 1u, inc_step = 25u;
+inline constexpr type min = 0u, max = static_cast<uint32_t>(Model::output_octave_range * notes_in_octave * inc_step),
+					  bits = std::bit_width(max);
+inline constexpr type zero = MathTools::map_value(0.f, Model::min_output_voltage, Model::max_output_voltage, min, max);
 
-constexpr auto gatehigh = from_volts(5.f);
-constexpr auto gatearmed = from_volts(0.f) + 1u;
-constexpr auto gateoff = gatearmed - 1u;
+inline constexpr type octave = max / Model::output_octave_range;
+inline constexpr type note = octave / notes_in_octave;
 
-constexpr auto octave = range / Model::output_octave_range;
-constexpr auto note = octave / 12;
+inline type RangeToMin(Range range) {
+	return MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
+}
+inline type RangeToMax(Range range) {
+	return MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
+}
 
-class Value {
-	static constexpr auto inc_step_fine_cv = 1;
-	static constexpr auto inc_step_cv = inc_step_fine_cv * 25;
-	static constexpr auto min = 0, max = static_cast<int>(inc_step_cv * 12 * Model::output_octave_range);
-	static constexpr auto inc_step_gate = max / 36;
-	static constexpr auto zero =
-		MathTools::map_value(0.f, Model::min_output_voltage, Model::max_output_voltage, min, max);
-	static constexpr auto mid_point = max / 2;
-	static_assert(min == 0, "mid_point will be wrong if min != 0");
-	int16_t val;
+inline type Inc(type val, int32_t inc, bool fine, Range range) {
+	inc *= fine ? inc_step_fine : inc_step;
+	return std::clamp<int32_t>(val + inc, RangeToMin(range), RangeToMax(range));
+}
+inline type Read(type val, Range range, float random) {
+	const auto t = val + (random * max);
+	return std::clamp<int32_t>(t, RangeToMin(range), RangeToMax(range));
+}
+inline bool Validate(type val) {
+	return val < max;
+}
 
-public:
-	class Proxy {
-		const int32_t val;
+}; // namespace Cv
+namespace Gate
+{
+using internal_type = uint8_t;
+using type = float;
+inline constexpr internal_type min = 0u, max = 15u, bits = std::bit_width(max);
+inline internal_type Inc(internal_type val, int32_t inc) {
+	return std::clamp<int32_t>(val + inc, min, max);
+}
+inline type Read(internal_type val, float random) {
+	const auto t = val + (random * max);
+	return std::clamp(t / static_cast<type>(max), 0.f, 1.f);
+}
+inline bool Validate(internal_type val) {
+	return val < max;
+}
+}; // namespace Gate
+namespace Output
+{
+inline constexpr Model::Output::type max = UINT16_MAX;
+inline constexpr Model::Output::type min = 0;
+inline constexpr Model::Output::type range = max - min;
 
-	public:
-		Proxy(int32_t offset)
-			: val{offset} {
-		}
-		Model::Output::type AsCV() const {
-			return val / static_cast<float>(max) * Channel::max;
-		}
-		float AsGate() const {
-			if (val < mid_point) {
-				return 0.f;
-			}
-			return (val - mid_point) / static_cast<float>(max - mid_point);
-		}
-	};
+inline constexpr Model::Output::type from_volts(const float volts) {
+	auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
+	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
+}
 
-	constexpr Value(float volts = 0.f) {
-		auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
-		val = MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
-	}
-	void IncCv(int32_t inc, bool fine, Range range) {
-		inc *= fine ? inc_step_fine_cv : inc_step_cv;
-		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
-		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
-		val = std::clamp<int32_t>(val + inc, min_, max_);
-	}
-	void IncGate(int32_t inc) {
-		val -= val % inc_step_gate;
-		inc *= inc_step_gate;
-		val = std::clamp<int32_t>(val + inc, mid_point, max);
-	}
-	Proxy Read(Range range, float random) const {
-		const auto t = val + (random * max);
-		const auto min_ = MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
-		const auto max_ = MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
-		return Proxy{std::clamp<int32_t>(t, min_, max_)};
-	}
-	bool Validate() const {
-		return val >= min && val <= max;
-	}
-};
+inline constexpr Model::Output::type gate_armed = from_volts(0.f);
+inline constexpr Model::Output::type gate_off = gate_armed - 1;
+inline constexpr Model::Output::type gate_high = from_volts(5.f);
+
+inline constexpr Model::Output::type Scale(Cv::type val, float min_voltage, float max_voltage) {
+	const auto t = val / static_cast<float>(Cv::max);
+	return std::clamp<int32_t>(t * max, from_volts(min_voltage), from_volts(max_voltage));
+}
+
+} // namespace Output
 } // namespace Catalyst2::Channel
