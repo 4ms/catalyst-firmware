@@ -63,7 +63,9 @@ private:
 		if (do_trig && level > 0.f) {
 			trigger.Trig(chan, time_now, level);
 		}
-		return trigger.Read(chan, time_now) ? Channel::gatehigh : level > 0.f ? Channel::gatearmed : Channel::gateoff;
+		return trigger.Read(chan, time_now) ? Channel::Output::gate_high :
+			   level > 0.f					? Channel::Output::gate_armed :
+											  Channel::Output::gate_off;
 	}
 
 	Model::Output::Buffer Override() {
@@ -81,11 +83,12 @@ private:
 
 		for (auto [chan, o] : countzip(out)) {
 			if (p.bank.GetChannelMode(chan).IsGate()) {
-				const auto level = p.bank.GetChannel(scene, chan).AsGate();
+				const auto level = p.bank.GetGate(scene, chan);
 				o = Trig(do_trigs, chan, time_now, level);
 			} else {
-				o = p.bank.GetChannel(scene, chan).AsCV();
-				o = p.bank.GetRange(chan).Clamp(o);
+				o = p.bank.GetCv(scene, chan);
+				const auto r = p.bank.GetRange(chan);
+				o = Channel::Output::Scale(o, r.Min(), r.Max());
 			}
 		}
 		return out;
@@ -109,15 +112,15 @@ private:
 
 		for (auto [chan, o] : countzip(out)) {
 			if (p.bank.GetChannelMode(chan).IsGate()) {
-				const auto level =
-					current_scene.has_value() ? p.bank.GetChannel(current_scene.value(), chan).AsGate() : 0.f;
+				const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
 				o = Trig(do_trigs, chan, time_now, level);
 			} else {
 				const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
-				const auto a = p.shared.quantizer[chan].Process(p.bank.GetChannel(left, chan).AsCV());
-				const auto b = p.shared.quantizer[chan].Process(p.bank.GetChannel(right, chan).AsCV());
+				const auto a = p.shared.quantizer[chan].Process(p.bank.GetCv(left, chan));
+				const auto b = p.shared.quantizer[chan].Process(p.bank.GetCv(right, chan));
 				o = MathTools::interpolate(a, b, phs);
-				o = p.bank.GetRange(chan).Clamp(o);
+				const auto r = p.bank.GetRange(chan);
+				o = Channel::Output::Scale(o, r.Min(), r.Max());
 			}
 		}
 		return out;
@@ -156,7 +159,7 @@ private:
 			if (s_phase >= 0.f && s_phase < 1.f) {
 				s_phase *= s.ReadRetrig() + 1;
 				s_phase -= static_cast<uint32_t>(s_phase);
-				const auto gate_val = p.GetRelativeStepValue(chan, i).AsGate();
+				const auto gate_val = p.GetRelativeStepGate(chan, i);
 				if (gate_val <= 0.f) {
 					continue;
 				}
@@ -169,15 +172,16 @@ private:
 			}
 		}
 
-		return out ? Channel::gatehigh : Channel::gateoff;
+		return out ? Channel::Output::gate_high : Channel::Output::gate_off;
 	}
 	Model::Output::type Cv(uint8_t chan) {
 		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetRelativeStep(chan, 0).ReadMorph());
-		auto stepval = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, -1).AsCV());
-		const auto distance = p.shared.quantizer[chan].Process(p.GetRelativeStepValue(chan, 0).AsCV()) - stepval;
+		auto stepval = p.shared.quantizer[chan].Process(p.GetRelativeStepCv(chan, -1));
+		const auto distance = p.shared.quantizer[chan].Process(p.GetRelativeStepCv(chan, 0)) - stepval;
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
-		return p.slot.settings.GetRange(chan).Clamp(stepval);
+		const auto r = p.slot.settings.GetRange(chan);
+		return Channel::Output::Scale(stepval, r.Min(), r.Max());
 	}
 };
 } // namespace Sequencer
