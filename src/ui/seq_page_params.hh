@@ -96,13 +96,16 @@ public:
 		namespace Setting = Palette::Setting;
 
 		if (hang.has_value()) {
-			const auto chan = p.GetSelectedChannel();
-			const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
-			const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
-			auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
-										  [](Model::Output::type v) { return Palette::CvBlend(v); };
-			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-				c.SetEncoderLed(i, display_func(pvals[i]));
+			if (p.shared.youngest_scene_button.has_value()) {
+				const auto chan = p.GetSelectedChannel();
+				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
+				const auto page = p.shared.youngest_scene_button.value();
+				const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
+				auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
+											  [](Model::Output::type v) { return Palette::CvBlend(v); };
+				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+					c.SetEncoderLed(i, display_func(pvals[i]));
+				}
 			}
 
 		} else {
