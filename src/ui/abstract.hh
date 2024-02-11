@@ -99,7 +99,7 @@ inline void SetEncoderLedsFloat(Controls &c, float value, Color col, Color bg_co
 	}
 }
 
-void DisplayRange(Controls &c, Catalyst2::Channel::Range range) {
+void DisplayRange(Controls &c, Channel::Cv::Range range) {
 	const auto half = Model::NumChans / 2u;
 	const auto pos = range.PosAmount();
 	const auto neg = range.NegAmount();
