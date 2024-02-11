@@ -17,7 +17,7 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
-		if (!c.button.shift.is_high() || !p.shared.youngest_scene_button.has_value())
+		if (!c.button.shift.is_high() && !p.shared.youngest_scene_button.has_value())
 			return; // exit PageParams mode
 
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) {
@@ -97,14 +97,19 @@ public:
 
 		if (hang.has_value()) {
 			if (p.shared.youngest_scene_button.has_value()) {
-				const auto chan = p.GetSelectedChannel();
-				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
-				const auto page = p.shared.youngest_scene_button.value();
-				const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
-				auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
-											  [](Model::Output::type v) { return Palette::CvBlend(v); };
+
+				auto step_value_colors = [this](unsigned i) {
+					const auto chan = p.GetSelectedChannel();
+					const auto page = p.shared.youngest_scene_button.value();
+					const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
+					if (is_gate)
+						return Palette::GateBlend(p.GetPageValuesGate(page)[i]);
+					else
+						return Palette::CvBlend(p.GetPageValuesCv(page)[i]);
+				};
+
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					c.SetEncoderLed(i, display_func(pvals[i]));
+					c.SetEncoderLed(i, step_value_colors(i));
 				}
 			}
 
