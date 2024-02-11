@@ -10,6 +10,8 @@
 #include "seq_prob.hh"
 #include "seq_settings.hh"
 #include "seq_settings_global.hh"
+#include "sequencer.hh"
+#include "sequencer_step.hh"
 #include <complex>
 
 namespace Catalyst2::Ui::Sequencer
@@ -151,48 +153,42 @@ public:
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
-
 		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
 			const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
-			const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
+			uint8_t page;
+			if (p.IsPageSelected()) {
+				page = p.GetSelectedPage();
+				BlinkSelectedPage(page);
+			} else {
+				page = playheadpage;
+				c.SetButtonLed(playheadpage, true);
+			}
+			const uint8_t step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 
 			if constexpr (ManualColorMode) {
-				ManualColorTestMode(page);
+				// ManualColorTestMode(page);
 				return;
 			}
-			if (is_gate && c.button.fine.is_high()) {
-				// display gate timing offset
-				const auto led = p.player.GetPlayheadStepOnPage(chan);
-				const auto pvals = p.GetPageValuesTrigDelay(page);
 
+			if (is_gate) {
+				auto gate_display_func =
+					c.button.fine.is_high() ?
+						[](Catalyst2::Sequencer::Step step) { return Palette::fromTrigDelay(step.ReadTrigDelay()); } :
+						[](Catalyst2::Sequencer::Step step) { return Palette::fromGate(step.ReadGate()); };
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					if (i == led && page == playheadpage) {
-						c.SetEncoderLed(led, Palette::SeqHead::color);
-					} else {
-						c.SetEncoderLed(i, Palette::TrigDelayBlend(pvals[i]));
-					}
+					c.SetEncoderLed(i, gate_display_func(p.GetStep(step_offset + i)));
 				}
-
 			} else {
-				const auto led = p.player.GetPlayheadStepOnPage(chan);
-				const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
-				auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
-											  [](Model::Output::type v) { return Palette::CvBlend(v); };
-
+				const auto range = p.slot.settings.GetRange(chan);
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					if (i == led && page == playheadpage) {
-						c.SetEncoderLed(led, Palette::SeqHead::color);
-					} else {
-						c.SetEncoderLed(i, display_func(pvals[i]));
-					}
+					const auto s = p.GetStep(step_offset + i);
+					c.SetEncoderLed(i, Palette::fromCv(s.ReadCv(range)));
 				}
 			}
-			if (p.IsPageSelected()) {
-				c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
-			} else {
-				c.SetButtonLed(page, true);
+			if (page == playheadpage) {
+				SetPlayheadLed();
 			}
 		} else {
 			EncoderDisplayOutput(outs);
@@ -201,22 +197,22 @@ public:
 
 	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
-			Color col = Palette::EncoderBlend(val, p.slot.settings.GetChannelMode(chan).IsGate());
-			c.SetEncoderLed(chan, col);
+			// Color col = Palette::EncoderBlend(val, p.slot.settings.GetChannelMode(chan).IsGate());
+			// c.SetEncoderLed(chan, col);
 		}
 	}
 
 	void ManualColorTestMode(uint8_t page) {
-		auto pagevals = p.GetPageValuesCv(page);
-		c.SetEncoderLed(0, Palette::red);
-		c.SetEncoderLed(1, Palette::green);
-		c.SetEncoderLed(2, Palette::blue);
-		Color col = Palette::ManualRGB(pagevals[0], pagevals[1], pagevals[2]);
-		c.SetEncoderLed(3, col);
-		c.SetEncoderLed(4, col);
-		c.SetEncoderLed(5, col);
-		c.SetEncoderLed(6, col);
-		c.SetEncoderLed(7, col);
+		// auto pagevals = p.GetPageValuesCv(page);
+		// c.SetEncoderLed(0, Palette::red);
+		// c.SetEncoderLed(1, Palette::green);
+		// c.SetEncoderLed(2, Palette::blue);
+		// Color col = Palette::ManualRGB(pagevals[0], pagevals[1], pagevals[2]);
+		// c.SetEncoderLed(3, col);
+		// c.SetEncoderLed(4, col);
+		// c.SetEncoderLed(5, col);
+		// c.SetEncoderLed(6, col);
+		// c.SetEncoderLed(7, col);
 	}
 };
 

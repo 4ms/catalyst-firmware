@@ -57,5 +57,11 @@ public:
 	}
 
 protected:
+	void BlinkSelectedPage(uint8_t page) {
+		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
+	}
+	void SetPlayheadLed() {
+		c.SetEncoderLed(p.player.GetPlayheadStepOnPage(p.GetSelectedChannel()), Palette::SeqHead::color);
+	}
 };
 } // namespace Catalyst2::Ui::Sequencer

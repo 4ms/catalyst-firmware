@@ -43,27 +43,24 @@ public:
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
 
-		const auto chan = p.GetSelectedChannel();
-		const uint8_t led = p.player.GetPlayheadStepOnPage(chan);
-		const auto playheadpage = p.player.GetPlayheadPage(chan);
-		const auto page = p.IsPageSelected() ? p.GetSelectedPage() : playheadpage;
-		const auto mvals = p.GetPageValuesModifier(page);
+		const auto playheadpage = p.player.GetPlayheadPage(p.GetSelectedChannel());
+		uint8_t page;
+		if (p.IsPageSelected()) {
+			page = p.GetSelectedPage();
+			BlinkSelectedPage(page);
+		} else {
+			page = playheadpage;
+			c.SetButtonLed(playheadpage, true);
+		}
+		const uint8_t step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			if (i == led && page == playheadpage) {
-				c.SetEncoderLed(led, Palette::SeqHead::color);
-			} else {
-				auto col = Palette::Morph::color(1.f - mvals[i]);
-				c.SetEncoderLed(i, col);
-			}
+			c.SetEncoderLed(i, Palette::Morph::color(p.GetStep(step_offset + i).ReadMorph()));
 		}
-		if (p.IsPageSelected()) {
-			c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
-		} else {
-			c.SetButtonLed(page, true);
+		if (page == playheadpage) {
+			SetPlayheadLed();
 		}
 	}
 };
