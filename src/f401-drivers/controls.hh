@@ -1,5 +1,6 @@
 #pragma once
 
+#include "channel.hh"
 #include "conf/board_conf.hh"
 #include "conf/model.hh"
 #include "debug.hh"
@@ -9,7 +10,6 @@
 #include "drivers/muxed_io.hh"
 #include "muxed_button.hh"
 #include "outputs.hh"
-#include "range.hh"
 #include "saved_settings.hh"
 #include "util/colors.hh"
 #include "util/countzip.hh"
@@ -85,7 +85,7 @@ public:
 	Jacks jack;
 
 	Controls() {
-		Model::Output::Buffer zeros{Channel::from_volts(0)};
+		Model::Output::Buffer zeros{Channel::Output::from_volts(0)};
 		outputs.write(zeros);
 
 		// 3.8%: 60Hz
