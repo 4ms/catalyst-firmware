@@ -3,6 +3,7 @@
 #include "../../lib/cpputil/util/colors.hh"
 #include "channel.hh"
 #include "model.hh"
+#include "sequencer_step.hh"
 #include <array>
 #include <cstdint>
 
@@ -91,6 +92,7 @@ inline constexpr auto color = magenta;
 namespace Morph
 {
 inline constexpr Color color(float phase) {
+	phase = 1.f - phase;
 	constexpr auto linear = grey.blend(off, 0.3f);
 	constexpr auto chop = red.blend(off, 0.3f);
 	return linear.blend(chop, phase);
@@ -99,7 +101,8 @@ inline constexpr Color color(float phase) {
 
 namespace Probability
 {
-inline constexpr Color color(float phase) {
+inline constexpr Color color(Catalyst2::Sequencer::Probability::type p) {
+	const auto phase = Catalyst2::Sequencer::Probability::toFloat(p);
 	if (phase < 0.5f)
 		return off.blend(orange, phase * 2.f);
 	else
@@ -132,40 +135,47 @@ inline constexpr Color color(uint8_t val) {
 }
 } // namespace Random
 
-inline constexpr Color TrigDelayBlend(float val) {
+inline constexpr Color fromTrigDelay(float val) {
 	const auto col = val < 0.f ? Voltage::Negative : Voltage::Positive;
 	val *= val < 0.f ? -1.f : 1.f;
 	return off.blend(col, val);
 }
 
-inline constexpr Color CvBlend(uint16_t level) {
-	using namespace Channel;
-	constexpr auto zero = from_volts(0.f);
+inline constexpr Color fromCv(Channel::Cv::type level) {
+	using namespace Channel::Cv;
 	int temp = level - zero;
 	auto color = Voltage::Positive;
 	if (temp < 0) {
 		temp *= -2;
 		color = Voltage::Negative;
 	}
-	const auto phase = (temp / (zero * 2.f));
+	const auto phase = (temp / static_cast<float>(zero));
 	return off.blend(color, phase);
 }
 
-inline constexpr Color GateBlend(uint16_t level) {
-	if (level == UINT16_MAX) {
-		return cyan;
+inline constexpr Color fromCvOutput(Model::Output::type level) {
+	constexpr auto zero = Channel::Output::from_volts(0.f);
+	int temp = level - zero;
+	auto color = Voltage::Positive;
+	if (temp < 0) {
+		temp *= -2;
+		color = Voltage::Negative;
 	}
-	return off.blend(green, static_cast<uint8_t>(level >> 8));
+	const auto phase = (temp / static_cast<float>(zero));
+	return off.blend(color, phase);
 }
 
-inline constexpr Color EncoderBlend(Model::Output::type val, bool isgate) {
-	return isgate ? GateBlend(val >= Channel::gatearmed) : CvBlend(val);
+inline constexpr Color fromGate(Channel::Gate::type level) {
+	if (level >= 1.f) {
+		return cyan;
+	}
+	return off.blend(green, level);
 }
 
 inline constexpr Color ManualRGB(Model::Output::type r, Model::Output::type g, Model::Output::type b) {
-	float R = (float)r / (float)Channel::max;
-	float G = (float)g / (float)Channel::max;
-	float B = (float)b / (float)Channel::max;
+	float R = (float)r / (float)Channel::Output::max;
+	float G = (float)g / (float)Channel::Output::max;
+	float B = (float)b / (float)Channel::Output::max;
 
 	return Color{off.blend(full_red, R).red(), off.blend(full_blue, G).green(), off.blend(full_green, B).blue()};
 }
