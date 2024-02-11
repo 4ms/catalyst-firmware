@@ -1,7 +1,7 @@
 #pragma once
 
 #include "conf/model.hh"
-#include "range.hh"
+#include "sequencer_step.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -73,14 +73,12 @@ namespace Sequencer
 {
 namespace Probability
 {
-using type = uint8_t;
-inline constexpr type min = 0, max = 15;
-inline constexpr auto usable_bits = 4;
+using type = Catalyst2::Sequencer::Probability::type;
 
 class Interface {
 	struct ProbStep {
 		int8_t val;
-		int8_t prob;
+		type prob : Catalyst2::Sequencer::Probability::bits;
 	};
 	struct Buffer {
 		ProbStep pp, prev, cur, next;
