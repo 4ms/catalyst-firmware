@@ -38,28 +38,28 @@ class Interface {
 	Scale scale{};
 
 public:
-	Model::Output::type Process(const Model::Output::type input) {
+	Channel::Cv::type Process(Channel::Cv::type input) {
 		if (!scale.size()) {
 			return input;
 		}
-		auto value = static_cast<float>(input);
+		using namespace Channel;
 		uint8_t octave = 0;
-		while (value >= Channel::octave) {
-			value -= Channel::octave;
+		while (input >= Cv::octave) {
+			input -= Cv::octave;
 			octave += 1;
 		}
 		uint8_t note = 0;
-		while (value >= Channel::note) {
-			value -= Channel::note;
+		while (input >= Cv::note) {
+			input -= Cv::note;
 			note += 1;
 		}
 
-		value = note + (value / Channel::note);
+		auto value = note + (static_cast<float>(input) / Cv::note);
 		auto lb = std::lower_bound(scale.begin(), scale.end(), value);
 		if (lb == scale.end()) {
 			lb -= 1;
 		}
-		return (*lb * Channel::note) + (octave * Channel::octave);
+		return (*lb * Cv::note) + (octave * Cv::octave);
 	}
 	void Load(const Scale &scl) {
 		scale = scl;
