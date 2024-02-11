@@ -4,18 +4,8 @@
 #include <algorithm>
 #include <cstdint>
 
-namespace Catalyst2::Channel
+namespace Catalyst2::Channel::Cv
 {
-
-constexpr Model::Output::type max = UINT16_MAX;
-constexpr Model::Output::type min = 0;
-constexpr Model::Output::type range = max - min;
-
-constexpr Model::Output::type from_volts(const float volts) {
-	auto v = std::clamp(volts, Model::min_output_voltage, Model::max_output_voltage);
-	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
-}
-
 class Range {
 	struct Option {
 		float min, max;
@@ -57,21 +47,15 @@ public:
 	float PosAmount() const {
 		return options[val].max / absmaxv;
 	}
-	Model::Output::type Min() const {
-		return from_volts(options[val].min);
+	float Min() const {
+		return options[val].min;
 	}
-	Model::Output::type Max() const {
-		return from_volts(options[val].max);
-	}
-	Model::Output::type Clamp(Model::Output::type in) {
-		return std::clamp(in, Min(), Max());
-	}
-	float GetOctaveRange() const {
-		return options[val].max - options[val].min;
+	float Max() const {
+		return options[val].max;
 	}
 	bool Validate() const {
 		return val <= max;
 	}
 };
+} // namespace Catalyst2::Channel::Cv
 
-} // namespace Catalyst2::Channel
