@@ -17,15 +17,15 @@ struct TestAdc {
 	unsigned slider_map[4] = {0, 2, 5, 7};
 	unsigned cv_map[4] = {1, 3, 4, 6};
 
-	SinOsc osc{0.5, Channel::from_volts(5.f) - Channel::from_volts(0.f), 0.f, SampleRate};
+	SinOsc osc{0.5, Channel::Output::from_volts(5.f) - Channel::Output::from_volts(0.f), 0.f, SampleRate};
 	Model::Output::Buffer outs;
 	static constexpr auto SampleRate = 2000u;
 
 	TestAdc(Controls &controls)
 		: controls{controls} {
-		// osc.init(0.5, 0.25f, Channel::from_volts(5.f), Channel::from_volts(0.f), 0.f, SampleRate);
+		// osc.init(0.5, 0.25f, Channel::Output::from_volts(5.f), Channel::Output::from_volts(0.f), 0.f, SampleRate);
 		for (auto &out : outs)
-			out = Channel::from_volts(0.f);
+			out = Channel::Output::from_volts(0.f);
 	}
 
 	void run_test() {
@@ -37,7 +37,7 @@ struct TestAdc {
 				.priority2 = 1,
 			},
 			[this]() {
-				outs[0] = osc.update() + Channel::from_volts(7.5f) - Channel::from_volts(0.f);
+				outs[0] = osc.update() + Channel::Output::from_volts(7.5f) - Channel::Output::from_volts(0.f);
 				controls.Write(outs);
 			},
 		};

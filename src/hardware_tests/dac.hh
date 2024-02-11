@@ -59,13 +59,13 @@ struct TestDac {
 
 			if (controls.button.add.just_went_high()) {
 				for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
-					outs[i] = Channel::from_volts(0.f);
+					outs[i] = Channel::Output::from_volts(0.f);
 				}
 				controls.Write(outs);
 			}
 			if (controls.button.add.just_went_low()) {
 				for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
-					outs[i] = Channel::from_volts(5.f);
+					outs[i] = Channel::Output::from_volts(5.f);
 				}
 				controls.Write(outs);
 			}
@@ -73,7 +73,7 @@ struct TestDac {
 
 		for (auto i : {0, 1, 2, 3, 4, 5, 6, 7}) {
 			controls.SetEncoderLed(i, Palette::black);
-			outs[i] = Channel::from_volts(0.f);
+			outs[i] = Channel::Output::from_volts(0.f);
 		}
 
 		Util::pause_until_button_released();

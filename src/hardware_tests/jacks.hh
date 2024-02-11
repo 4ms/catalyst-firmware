@@ -56,7 +56,7 @@ struct TestJacks : IGateInChecker {
 
 	void set_test_signal(bool newstate) override {
 		HAL_Delay(2);
-		pulse.set_val(newstate ? Channel::from_volts(5.f) : Channel::from_volts(0.f));
+		pulse.set_val(newstate ? Channel::Output::from_volts(5.f) : Channel::Output::from_volts(0.f));
 		HAL_Delay(2);
 	}
 
