@@ -8,58 +8,18 @@
 #include "sequence_phaser.hh"
 #include "sequencer_player.hh"
 #include "sequencer_settings.hh"
+#include "sequencer_step.hh"
 #include "shared.hh"
 #include "song_mode.hh"
 #include "util/countzip.hh"
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <cstdlib>
 
 namespace Catalyst2::Sequencer
 {
-
-struct Step : Channel::Value {
-	static constexpr auto morphmin = 0u, morphmax = 12u;
-	static constexpr auto probmin = Random::Sequencer::Probability::min, probmax = Random::Sequencer::Probability::max;
-	static constexpr auto trig_delay_min = -32, trig_delay_max = 32;
-	uint8_t morph_retrig : 4;
-	Random::Sequencer::Probability::type prob : Random::Sequencer::Probability::usable_bits;
-	int8_t trig_delay;
-
-public:
-	float ReadTrigDelay() const {
-		return trig_delay / static_cast<float>(trig_delay_max);
-	}
-	float ReadMorph() const {
-		return morph_retrig / static_cast<float>(morphmax);
-	}
-	uint8_t ReadRetrig() const {
-		return morph_retrig >> 2;
-	}
-	Random::Sequencer::Probability::type ReadProbability() const {
-		return prob;
-	}
-	void IncModifier(int32_t inc, bool is_gate) {
-		if (is_gate) {
-			inc *= 4;
-		}
-		morph_retrig = std::clamp<int32_t>(morph_retrig + inc, morphmin, morphmax);
-	}
-	void IncProbability(int32_t inc) {
-		prob = std::clamp<int32_t>(prob + inc, probmin, probmax);
-	}
-	void IncTrigDelay(int32_t inc) {
-		trig_delay = std::clamp<int32_t>(trig_delay + inc, trig_delay_min, trig_delay_max - 1);
-	}
-	bool Validate() const {
-		auto ret = true;
-		ret &= Channel::Value::Validate();
-		ret &= trig_delay < trig_delay_max && trig_delay >= trig_delay_min;
-		ret &= morph_retrig <= morphmax && prob <= probmax;
-		return ret;
-	}
-};
 
 struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
 	bool Validate() const {
@@ -106,6 +66,10 @@ struct Data {
 		return ret;
 	}
 };
+
+inline uint8_t SeqPageToStep(uint8_t chan) {
+	return chan * Model::SeqStepsPerPage;
+}
 
 class Interface {
 	Data &data;
@@ -206,7 +170,7 @@ public:
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
-		slot.channel[cur_channel][step].IncModifier(inc, slot.settings.GetChannelMode(cur_channel).IsGate());
+		slot.channel[cur_channel][step].IncMorphRetrig(inc);
 	}
 	void IncStepProbability(uint8_t step, int32_t inc) {
 		step = StepOnPageToStep(step);
@@ -217,12 +181,16 @@ public:
 		const auto step = player.GetRelativeStep(chan, relative_pos);
 		return slot.channel[chan][step];
 	}
-	auto GetRelativeStepValue(uint8_t chan, int8_t relative_pos) {
+	auto GetRelativeStepCv(uint8_t chan, int8_t relative_pos) {
 		const auto s = GetRelativeStep(chan, relative_pos);
 		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
-		return s.Read(slot.settings.GetRange(chan), r * slot.settings.GetRandomOrGlobal(chan));
+		return s.ReadCv(slot.settings.GetRange(chan), r * slot.settings.GetRandomOrGlobal(chan));
 	}
-
+	auto GetRelativeStepGate(uint8_t chan, int8_t relative_pos) {
+		const auto s = GetRelativeStep(chan, relative_pos);
+		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
+		return s.ReadGate(r * slot.settings.GetRandomOrGlobal(chan));
+	}
 	std::array<float, Model::SeqStepsPerPage> GetPageValuesTrigDelay(uint8_t page) {
 		std::array<float, Model::SeqStepsPerPage> out;
 		for (auto [i, o] : countzip(out)) {
@@ -231,38 +199,8 @@ public:
 		}
 		return out;
 	}
-	Model::Output::Buffer GetPageValuesGate(uint8_t page) {
-		Model::Output::Buffer out;
-		const auto range = slot.settings.GetRange(cur_channel);
-		for (auto [i, o] : countzip(out)) {
-			const auto step = (page * Model::SeqStepsPerPage) + i;
-			o = slot.channel[cur_channel][step].Read(range, 0).AsGate() * Channel::range;
-		}
-		return out;
-	}
-	Model::Output::Buffer GetPageValuesCv(uint8_t page) {
-		Model::Output::Buffer out;
-		const auto range = slot.settings.GetRange(cur_channel);
-		for (auto [i, o] : countzip(out)) {
-			const auto step = (page * Model::SeqStepsPerPage) + i;
-			o = slot.channel[cur_channel][step].Read(range, 0).AsCV();
-		}
-		return out;
-	}
-	std::array<float, Model::NumChans> GetPageValuesModifier(uint8_t page) {
-		std::array<float, Model::NumChans> out;
-		for (auto [i, o] : countzip(out)) {
-			o = slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadMorph();
-		}
-		return out;
-	}
-	std::array<float, Model::NumChans> GetPageValuesProbability(uint8_t page) {
-		std::array<float, Model::NumChans> out;
-		for (auto [i, o] : countzip(out)) {
-			o = slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i].ReadProbability() /
-				static_cast<float>(Step::probmax);
-		}
-		return out;
+	Step GetStep(uint8_t step) {
+		return slot.channel[cur_channel][step];
 	}
 	void CopySequence() {
 		clipboard.cd = slot.channel[cur_channel];
