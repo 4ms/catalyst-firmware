@@ -3,6 +3,7 @@
 #include "channel.hh"
 #include "channelmode.hh"
 #include "conf/model.hh"
+#include "macro_value.hh"
 #include "random.hh"
 #include <algorithm>
 #include <array>
@@ -12,12 +13,12 @@ namespace Catalyst2::Macro::Bank
 
 struct Data {
 	struct Scene {
-		std::array<Channel::Value, Model::NumChans> channel{};
+		std::array<Macro::Value, Model::NumChans> channel{};
 		Random::Amount::type random_amount;
 	};
 	std::array<Scene, Model::NumScenes> scene{};
 	std::array<Channel::Mode, Model::NumChans> channelmode{};
-	std::array<Channel::Range, Model::NumChans> range{};
+	std::array<Channel::Cv::Range, Model::NumChans> range{};
 	std::array<float, Model::NumChans> morph{};
 	Data() {
 		for (auto &m : morph) {
@@ -70,7 +71,7 @@ public:
 	void IncRange(uint8_t channel, int32_t inc) {
 		b->range[channel].Inc(inc);
 	}
-	Channel::Range GetRange(uint8_t channel) {
+	Channel::Cv::Range GetRange(uint8_t channel) {
 		return b->range[channel];
 	}
 	Channel::Mode GetChannelMode(uint8_t channel) {
@@ -101,9 +102,13 @@ public:
 		const auto i = (1.f / 100.f) * inc;
 		b->morph[channel] = std::clamp(b->morph[channel] + i, 0.f, 1.f);
 	}
-	Channel::Value::Proxy GetChannel(uint8_t scene, uint8_t channel) {
+	Channel::Cv::type GetCv(uint8_t scene, uint8_t channel) {
 		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
-		return b->scene[scene].channel[channel].Read(b->range[channel], rand);
+		return b->scene[scene].channel[channel].ReadCv(b->range[channel], rand);
+	}
+	Channel::Gate::internal_type GetGate(uint8_t scene, uint8_t channel) {
+		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
+		return b->scene[scene].channel[channel].ReadGate(rand);
 	}
 };
 
