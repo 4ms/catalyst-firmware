@@ -19,7 +19,7 @@ public:
 		p.Reset(true);
 	}
 	void Update(Abstract *&interface) override {
-		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!p.shared.youngest_scene_button) {
 			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());

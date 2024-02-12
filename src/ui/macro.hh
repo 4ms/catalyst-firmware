@@ -34,8 +34,8 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
-		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.fine.just_went_high() && p.shared.youngest_scene_button.has_value()) {
 			p.bank.Copy(p.shared.youngest_scene_button.value());

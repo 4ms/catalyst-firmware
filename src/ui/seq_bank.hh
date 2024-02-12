@@ -19,7 +19,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (c.button.fine.just_went_high() && p.IsChannelSelected()) {
 			p.CopySequence();

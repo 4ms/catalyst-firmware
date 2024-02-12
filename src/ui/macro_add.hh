@@ -20,7 +20,7 @@ public:
 		p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
-		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();

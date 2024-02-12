@@ -20,7 +20,7 @@ public:
 		p.player.songmode.Cancel();
 	}
 	void Update(Abstract *&interface) override {
-		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.play.is_high() || p.player.songmode.Size()) {
 			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());

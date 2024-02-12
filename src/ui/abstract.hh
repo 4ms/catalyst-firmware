@@ -43,7 +43,7 @@ inline void ForEachEncoderInc(Controls &c, auto func) {
 		}
 	}
 }
-inline void ForEachSceneButtonReleased(Controls &c, auto func) {
+inline void ForEachSceneButtonJustReleased(Controls &c, auto func) {
 	for (auto [i, b] : countzip(c.button.scene)) {
 		if (b.just_went_low()) {
 			func(i);

@@ -17,7 +17,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
+		ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
 
 		if (!c.button.morph.is_high()) {
 			return;
