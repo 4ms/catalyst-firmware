@@ -21,10 +21,10 @@ inline constexpr type zero = MathTools::map_value(0.f, Model::min_output_voltage
 inline constexpr type octave = max / Model::output_octave_range;
 inline constexpr type note = octave / notes_in_octave;
 
-inline type RangeToMin(Range range) {
+inline constexpr type RangeToMin(Range range) {
 	return MathTools::map_value(range.NegAmount(), .5f, 0.f, min, zero);
 }
-inline type RangeToMax(Range range) {
+inline constexpr type RangeToMax(Range range) {
 	return MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
 }
 
@@ -32,9 +32,9 @@ inline type Inc(type val, int32_t inc, bool fine, Range range) {
 	inc *= fine ? inc_step_fine : inc_step;
 	return std::clamp<int32_t>(val + inc, RangeToMin(range), RangeToMax(range));
 }
-inline type Read(type val, Range range, float random) {
+inline type Read(type val, float random) {
 	const auto t = val + (random * max);
-	return std::clamp<int32_t>(t, RangeToMin(range), RangeToMax(range));
+	return std::clamp<int32_t>(t, min, max);
 }
 inline bool Validate(type val) {
 	return val < max;

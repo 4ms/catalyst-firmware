@@ -17,8 +17,8 @@ public:
 	void IncGate(int32_t inc) {
 		gate = Channel::Gate::Inc(gate, inc);
 	}
-	Channel::Cv::type ReadCv(Channel::Cv::Range range, float random = 0.f) {
-		return Channel::Cv::Read(cv, range, random);
+	Channel::Cv::type ReadCv(float random = 0.f) {
+		return Channel::Cv::Read(cv, random);
 	};
 	float ReadGate(float random = 0.f) {
 		return Channel::Gate::Read(gate, random);

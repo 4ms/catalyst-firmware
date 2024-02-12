@@ -30,8 +30,8 @@ struct Step {
 	uint32_t probability : Probability::bits = 0;
 
 public:
-	Channel::Cv::type ReadCv(Channel::Cv::Range range, float random = 0.f) const {
-		return Channel::Cv::Read(cv, range, random);
+	Channel::Cv::type ReadCv(float random = 0.f) const {
+		return Channel::Cv::Read(cv, random);
 	}
 	void IncCv(int32_t inc, bool fine, Channel::Cv::Range range) {
 		cv = Channel::Cv::Inc(cv, inc, fine, range);
