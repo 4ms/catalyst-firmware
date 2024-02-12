@@ -181,16 +181,15 @@ public:
 				}
 
 			} else {
-				const auto led = p.player.GetPlayheadStepOnPage(chan);
-				const auto pvals = is_gate ? p.GetPageValuesGate(page) : p.GetPageValuesCv(page);
-				auto display_func = is_gate ? [](Model::Output::type v) { return Palette::GateBlend(v); } :
-											  [](Model::Output::type v) { return Palette::CvBlend(v); };
+				const auto playhead = p.player.GetPlayheadStepOnPage(chan);
 
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					if (i == led && page == playheadpage) {
-						c.SetEncoderLed(led, Palette::SeqHead::color);
+					if (i == playhead && page == playheadpage) {
+						c.SetEncoderLed(playhead, Palette::SeqHead::color);
 					} else {
-						c.SetEncoderLed(i, display_func(pvals[i]));
+						auto color = is_gate ? Palette::GateBlend(p.GetPageValuesGate(page)[i]) :
+											   Palette::CvBlend(p.GetPageValuesCv(page)[i]);
+						c.SetEncoderLed(i, color);
 					}
 				}
 			}

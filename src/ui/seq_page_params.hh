@@ -98,18 +98,14 @@ public:
 		if (hang.has_value()) {
 			if (p.shared.youngest_scene_button.has_value()) {
 
-				auto step_value_colors = [this](unsigned i) {
-					const auto chan = p.GetSelectedChannel();
-					const auto page = p.shared.youngest_scene_button.value();
-					const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
-					if (is_gate)
-						return Palette::GateBlend(p.GetPageValuesGate(page)[i]);
-					else
-						return Palette::CvBlend(p.GetPageValuesCv(page)[i]);
-				};
+				const auto chan = p.GetSelectedChannel();
+				const auto page = p.shared.youngest_scene_button.value();
+				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
 
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					c.SetEncoderLed(i, step_value_colors(i));
+					auto color = is_gate ? Palette::GateBlend(p.GetPageValuesGate(page)[i]) :
+										   Palette::CvBlend(p.GetPageValuesCv(page)[i]);
+					c.SetEncoderLed(i, color);
 				}
 			}
 
