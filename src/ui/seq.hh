@@ -12,6 +12,7 @@
 #include "seq_settings_global.hh"
 #include "sequencer.hh"
 #include "sequencer_step.hh"
+#include "util/countzip.hh"
 #include <complex>
 
 namespace Catalyst2::Ui::Sequencer
@@ -63,8 +64,6 @@ public:
 				p.seqclock.Pause();
 			}
 		}
-
-		c.SetPlayLed(!p.seqclock.IsPaused());
 
 		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap(p.shared.internalclock.TimeNow());
@@ -152,6 +151,7 @@ public:
 	static constexpr bool ManualColorMode = false;
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
+		c.SetPlayLed(!p.seqclock.IsPaused());
 		ClearButtonLeds(c);
 		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
@@ -165,26 +165,27 @@ public:
 				page = playheadpage;
 				c.SetButtonLed(playheadpage, true);
 			}
-			const uint8_t step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 
 			if constexpr (ManualColorMode) {
 				// ManualColorTestMode(page);
 				return;
 			}
 
+			const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 			if (is_gate) {
 				auto gate_display_func =
 					c.button.fine.is_high() ?
-						[](Catalyst2::Sequencer::Step step) { return Palette::fromTrigDelay(step.ReadTrigDelay()); } :
-						[](Catalyst2::Sequencer::Step step) { return Palette::fromGate(step.ReadGate()); };
+						[](Catalyst2::Sequencer::Step step) {
+							return Palette::Gate::fromTrigDelay(step.ReadTrigDelay());
+						} :
+						[](Catalyst2::Sequencer::Step step) { return Palette::Gate::fromLevel(step.ReadGate()); };
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
 					c.SetEncoderLed(i, gate_display_func(p.GetStep(step_offset + i)));
 				}
 			} else {
 				const auto range = p.slot.settings.GetRange(chan);
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					const auto s = p.GetStep(step_offset + i);
-					c.SetEncoderLed(i, Palette::fromCv(s.ReadCv(range)));
+					c.SetEncoderLed(i, Palette::Cv::fromLevel(p.GetStep(step_offset + i).ReadCv(), range));
 				}
 			}
 			if (page == playheadpage) {
@@ -197,8 +198,9 @@ public:
 
 	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
-			// Color col = Palette::EncoderBlend(val, p.slot.settings.GetChannelMode(chan).IsGate());
-			// c.SetEncoderLed(chan, col);
+			const auto col = p.slot.settings.GetChannelMode(chan).IsGate() ? Palette::Gate::fromOutput(val) :
+																			 Palette::Cv::fromOutput(val);
+			c.SetEncoderLed(chan, col);
 		}
 	}
 

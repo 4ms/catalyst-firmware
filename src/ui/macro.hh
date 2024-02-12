@@ -110,10 +110,11 @@ public:
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
 					// to.
-					col = p.pathway.OnAScene() ? Palette::fromGate(p.bank.GetGate(p.pathway.SceneRelative(), chan)) :
-												 Palette::off;
+					col = p.pathway.OnAScene() ?
+							  Palette::Gate::fromLevel(p.bank.GetGate(p.pathway.SceneRelative(), chan)) :
+							  Palette::off;
 				} else {
-					col = Palette::fromCvOutput(val);
+					col = Palette::Cv::fromOutput(val);
 				}
 				c.SetEncoderLed(chan, col);
 			}
@@ -137,10 +138,10 @@ public:
 private:
 	void EncoderDisplayScene(Catalyst2::Macro::Pathway::SceneId scene) {
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
-			const auto isgate = p.bank.GetChannelMode(chan).IsGate();
-			c.SetEncoderLed(chan,
-							isgate ? Palette::fromGate(p.bank.GetGate(scene, chan)) :
-									 Palette::fromCv(p.bank.GetCv(scene, chan)));
+			const auto col = p.bank.GetChannelMode(chan).IsGate() ?
+								 Palette::Gate::fromLevel(p.bank.GetGate(scene, chan)) :
+								 Palette::Cv::fromLevel(p.bank.GetCv(scene, chan), p.bank.GetRange(chan));
+			c.SetEncoderLed(chan, col);
 		}
 	}
 
