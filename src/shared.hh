@@ -101,6 +101,12 @@ struct Data {
 	}
 };
 
+struct Dummy {
+	bool Validate() const {
+		return true;
+	}
+};
+
 class Interface {
 	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 
