@@ -3,9 +3,11 @@
 #include "../../lib/cpputil/util/colors.hh"
 #include "channel.hh"
 #include "model.hh"
+#include "range.hh"
 #include "sequencer_step.hh"
 #include <array>
 #include <cstdint>
+#include <type_traits>
 
 namespace Catalyst2::Palette
 {
@@ -33,13 +35,7 @@ inline constexpr Color full_blue = Color(0, 255, 0);
 
 namespace Voltage
 {
-inline constexpr auto Negative = full_red;
-inline constexpr auto Positive = blue;
-} // namespace Voltage
-
-namespace Gate
-{
-inline constexpr auto color = dim_green;
+inline constexpr auto Negative = full_red, Positive = blue;
 }
 
 namespace Setting
@@ -135,42 +131,44 @@ inline constexpr Color color(uint8_t val) {
 }
 } // namespace Random
 
-inline constexpr Color fromTrigDelay(float val) {
+namespace Cv
+{
+namespace Details
+{
+inline Color pimpl(int level, uint16_t zero) {
+	level -= zero;
+	const auto color = level < 0 ? Voltage::Negative : Voltage::Positive;
+	const auto phase = (std::abs(level) / static_cast<float>(zero));
+	return off.blend(color, phase);
+}
+} // namespace Details
+inline Color fromLevel(Channel::Cv::type level, Channel::Cv::Range range) {
+	level = std::clamp<int32_t>(level, RangeToMin(range), RangeToMax(range));
+	return Details::pimpl(level, Channel::Cv::zero);
+}
+
+inline Color fromOutput(Model::Output::type level) {
+	return Details::pimpl(level, Channel::Output::from_volts(0.f));
+}
+} // namespace Cv
+
+namespace Gate
+{
+inline constexpr auto color = dim_green;
+inline Color fromLevel(Channel::Gate::type level) {
+	return level >= 1.f ? cyan : off.blend(color, level);
+}
+
+inline Color fromOutput(Model::Output::type level) {
+	return level == Channel::Output::gate_off ? off : color;
+}
+
+inline Color fromTrigDelay(float val) {
 	const auto col = val < 0.f ? Voltage::Negative : Voltage::Positive;
 	val *= val < 0.f ? -1.f : 1.f;
 	return off.blend(col, val);
 }
-
-inline constexpr Color fromCv(Channel::Cv::type level) {
-	using namespace Channel::Cv;
-	int temp = level - zero;
-	auto color = Voltage::Positive;
-	if (temp < 0) {
-		temp *= -2;
-		color = Voltage::Negative;
-	}
-	const auto phase = (temp / static_cast<float>(zero));
-	return off.blend(color, phase);
-}
-
-inline constexpr Color fromCvOutput(Model::Output::type level) {
-	constexpr auto zero = Channel::Output::from_volts(0.f);
-	int temp = level - zero;
-	auto color = Voltage::Positive;
-	if (temp < 0) {
-		temp *= -2;
-		color = Voltage::Negative;
-	}
-	const auto phase = (temp / static_cast<float>(zero));
-	return off.blend(color, phase);
-}
-
-inline constexpr Color fromGate(Channel::Gate::type level) {
-	if (level >= 1.f) {
-		return cyan;
-	}
-	return off.blend(green, level);
-}
+} // namespace Gate
 
 inline constexpr Color ManualRGB(Model::Output::type r, Model::Output::type g, Model::Output::type b) {
 	float R = (float)r / (float)Channel::Output::max;
