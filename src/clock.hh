@@ -48,7 +48,8 @@ public:
 
 namespace Bpm
 {
-inline constexpr auto min = 8u, max = 1200u;
+inline constexpr auto min = 10u;
+inline constexpr auto max = 1200u;
 struct Data {
 	uint32_t bpm_in_ticks = BpmToTicks(120u);
 
@@ -150,7 +151,8 @@ class Divider {
 
 public:
 	class type {
-		static constexpr auto min = 0u, max = 255u;
+		static constexpr auto min = 0u;
+		static constexpr auto max = 255u;
 		uint8_t v = 0;
 
 	public:

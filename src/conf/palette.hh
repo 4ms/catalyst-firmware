@@ -35,8 +35,9 @@ inline constexpr Color full_blue = Color(0, 255, 0);
 
 namespace Voltage
 {
-inline constexpr auto Negative = full_red, Positive = blue;
-}
+inline constexpr auto Negative = full_red;
+inline constexpr auto Positive = blue;
+} // namespace Voltage
 
 namespace Setting
 {
@@ -50,8 +51,9 @@ inline constexpr auto curve_expo = yellow;
 
 namespace OutputOverride
 {
-inline constexpr auto on = green, off = red;
-}
+inline constexpr auto on = green;
+inline constexpr auto off = red;
+} // namespace OutputOverride
 
 namespace Transpose
 {
@@ -61,7 +63,12 @@ inline constexpr auto negative = red;
 
 namespace ClockDiv
 {
-inline constexpr std::array color = {blue, pink, grey, orange};
+inline constexpr std::array color = {
+	blue,
+	pink,
+	grey,
+	orange,
+};
 }
 inline constexpr auto bpm = yellow;
 } // namespace Setting

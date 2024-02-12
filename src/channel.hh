@@ -13,9 +13,11 @@ namespace Cv
 {
 using type = uint16_t;
 inline constexpr auto notes_in_octave = 12u;
-inline constexpr type inc_step_fine = 1u, inc_step = 25u;
-inline constexpr type min = 0u, max = static_cast<uint32_t>(Model::output_octave_range * notes_in_octave * inc_step),
-					  bits = std::bit_width(max);
+inline constexpr type inc_step_fine = 1u;
+inline constexpr type inc_step = 25u;
+inline constexpr type min = 0u;
+inline constexpr type max = static_cast<uint32_t>(Model::output_octave_range * notes_in_octave * inc_step);
+inline constexpr type bits = std::bit_width(max);
 inline constexpr type zero = MathTools::map_value(0.f, Model::min_output_voltage, Model::max_output_voltage, min, max);
 
 inline constexpr type octave = max / Model::output_octave_range;
@@ -45,7 +47,11 @@ namespace Gate
 {
 using internal_type = uint8_t;
 using type = float;
-inline constexpr internal_type min = 0u, max = 15u, bits = std::bit_width(max);
+
+inline constexpr internal_type min = 0u;
+inline constexpr internal_type max = 15u;
+inline constexpr internal_type bits = std::bit_width(max);
+
 inline internal_type Inc(internal_type val, int32_t inc) {
 	return std::clamp<int32_t>(val + inc, min, max);
 }

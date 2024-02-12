@@ -13,7 +13,10 @@ namespace Catalyst2::Random
 namespace Amount
 {
 using type = float;
-inline constexpr auto min = 0.f, max = 1.f, def = 0.f, inc = (max / (Model::output_octave_range * 12)) * 2;
+inline constexpr auto min = 0.f;
+inline constexpr auto max = 1.f;
+inline constexpr auto def = 0.f;
+inline constexpr auto inc = (max / (Model::output_octave_range * 12)) * 2;
 } // namespace Amount
 template<typename T>
 inline void RandomizeBuffer(T &d) {
@@ -81,7 +84,10 @@ class Interface {
 		type prob : Catalyst2::Sequencer::Probability::bits;
 	};
 	struct Buffer {
-		ProbStep pp, prev, cur, next;
+		ProbStep pp;
+		ProbStep prev;
+		ProbStep cur;
+		ProbStep next;
 	};
 	std::array<Buffer, Model::NumChans> buffer;
 	// TODO: std::array<std::array<ProbStep, 4>, Model::NumChans> buffer;

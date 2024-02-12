@@ -8,7 +8,8 @@ namespace Catalyst2::Channel::Cv
 {
 class Range {
 	struct Option {
-		float min, max;
+		float min;
+		float max;
 	};
 	static constexpr std::array options = {
 		Option{Model::min_output_voltage, Model::max_output_voltage},

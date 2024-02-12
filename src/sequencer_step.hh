@@ -8,16 +8,21 @@ namespace Catalyst2::Sequencer
 {
 struct TrigDelay {
 	using type = int8_t;
-	static constexpr type min = -31, max = 31;
+	static constexpr type min = -31;
+	static constexpr type max = 31;
 	static constexpr type bits = std::bit_width(static_cast<uint32_t>(max - min));
 };
 struct MorphRetrig {
 	using type = uint8_t;
-	static constexpr type min = 0u, max = 15u, bits = std::bit_width(max);
+	static constexpr type min = 0u;
+	static constexpr type max = 15u;
+	static constexpr type bits = std::bit_width(max);
 };
 struct Probability {
 	using type = uint8_t;
-	static constexpr type min = 0u, max = 15u, bits = std::bit_width(max);
+	static constexpr type min = 0u;
+	static constexpr type max = 15u;
+	static constexpr type bits = std::bit_width(max);
 	static constexpr float toFloat(type p) {
 		return p / static_cast<float>(max);
 	}

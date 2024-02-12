@@ -23,22 +23,30 @@ struct PlayMode {
 		PingPong,
 		Random,
 	};
-	static constexpr type min = static_cast<type>(Mode::Forward), max = static_cast<type>(Mode::Random), def = min;
+	static constexpr type min = static_cast<type>(Mode::Forward);
+	static constexpr type max = static_cast<type>(Mode::Random);
+	static constexpr type def = min;
 	static Mode Read(type val) {
 		return static_cast<Mode>(val);
 	}
 };
 struct Length {
 	using type = int8_t;
-	static constexpr type min = Model::MinSeqSteps, max = Model::MaxSeqSteps, def = Model::SeqStepsPerPage;
+	static constexpr type min = Model::MinSeqSteps;
+	static constexpr type max = Model::MaxSeqSteps;
+	static constexpr type def = Model::SeqStepsPerPage;
 };
 struct StartOffset {
 	using type = int8_t;
-	static constexpr type min = Length::min - 1, max = Length::max - 1, def = min;
+	static constexpr type min = Length::min - 1;
+	static constexpr type max = Length::max - 1;
+	static constexpr type def = min;
 };
 struct PhaseOffset {
 	using type = float;
-	static constexpr type min = 0.f, max = 1.f, def = min;
+	static constexpr type min = 0.f;
+	static constexpr type max = 1.f;
+	static constexpr type def = min;
 };
 
 class Global {
