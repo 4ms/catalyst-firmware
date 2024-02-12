@@ -50,9 +50,16 @@ inline void ForEachSceneButtonReleased(Controls &c, auto func) {
 		}
 	}
 }
-inline void ForEachSceneButtonPressed(Controls &c, auto func) {
+inline void ForEachSceneButtonJustPressed(Controls &c, auto func) {
 	for (auto [i, b] : countzip(c.button.scene)) {
 		if (b.just_went_high()) {
+			func(i);
+		}
+	}
+}
+inline void ForEachSceneButtonPressed(Controls &c, auto func) {
+	for (auto [i, b] : countzip(c.button.scene)) {
+		if (b.is_pressed()) {
 			func(i);
 		}
 	}
