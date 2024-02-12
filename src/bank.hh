@@ -3,6 +3,7 @@
 #include "channel.hh"
 #include "channelmode.hh"
 #include "conf/model.hh"
+#include "conf/palette.hh"
 #include "macro_value.hh"
 #include "random.hh"
 #include <algorithm>
@@ -104,9 +105,9 @@ public:
 	}
 	Channel::Cv::type GetCv(uint8_t scene, uint8_t channel) {
 		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
-		return b->scene[scene].channel[channel].ReadCv(b->range[channel], rand);
+		return b->scene[scene].channel[channel].ReadCv(rand);
 	}
-	Channel::Gate::internal_type GetGate(uint8_t scene, uint8_t channel) {
+	Channel::Gate::type GetGate(uint8_t scene, uint8_t channel) {
 		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
 		return b->scene[scene].channel[channel].ReadGate(rand);
 	}
