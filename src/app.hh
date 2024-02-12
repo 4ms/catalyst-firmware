@@ -99,14 +99,14 @@ private:
 		Model::Output::Buffer out;
 
 		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto left = p.pathway.SceneRelative(-1);
-		const auto right = p.pathway.SceneRelative(1);
+		const auto left = p.bank.pathway.SceneRelative(-1);
+		const auto right = p.bank.pathway.SceneRelative(1);
 
 		auto do_trigs = false;
 
-		const auto current_scene = p.pathway.CurrentScene();
+		const auto current_scene = p.bank.pathway.CurrentScene();
 
-		if (current_scene != p.pathway.LastSceneOn() && current_scene.has_value()) {
+		if (current_scene != p.bank.pathway.LastSceneOn() && current_scene.has_value()) {
 			do_trigs = true;
 		}
 

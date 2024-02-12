@@ -38,10 +38,10 @@ public:
 		StartupAnimation(controls);
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
-		ui = GetUi();
-		ui->Init();
 		params.macro.SelectBank(0);
 		params.sequencer.Reset(true);
+		ui = GetUi();
+		ui->Init();
 	}
 	void Update() {
 		controls.Update();

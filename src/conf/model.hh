@@ -23,7 +23,9 @@ inline constexpr auto triglengthms = 5u;
 
 inline constexpr auto NumChans = 8u;
 inline constexpr auto NumScenes = 8u;
-inline constexpr auto NumBanks = 8u;
+inline constexpr auto NumNormalBanks = 8u;
+inline constexpr auto NumClassicBanks = 1u;
+inline constexpr auto TotalBanks = NumNormalBanks + NumClassicBanks;
 
 inline constexpr auto SeqStepsPerPage = NumChans;
 inline constexpr auto SeqPages = NumScenes;

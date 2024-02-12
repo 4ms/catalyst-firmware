@@ -21,8 +21,7 @@ inline constexpr auto macro_is_smaller = macrosize < seqsize;
 // using DataWithGlobalNonVolatileState = std::conditional<macro_is_smaller, Macro::Data, Sequencer::Data>::type;
 
 struct SequencerData : public Sequencer::Data {
-	Shared::Data shared;
-
+	Shared::Data shared{};
 	bool validate() const {
 		auto ret = true;
 		ret &= shared.Validate();
@@ -36,14 +35,14 @@ struct MacroData : public Macro::Data {
 };
 
 struct Data {
-	MacroData macro;
-	SequencerData sequencer;
+	MacroData macro{};
+	SequencerData sequencer{};
 };
 
 inline constexpr auto data_size = sizeof(Data);
 
 struct Params {
-	Data data;
+	Data data{};
 	Shared::Interface shared{data.sequencer.shared};
 	Sequencer::Interface sequencer{data.sequencer, shared};
 	Macro::Interface macro{data.macro, shared};

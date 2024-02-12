@@ -24,7 +24,6 @@ public:
 				if (p.shared.clockdivider.Step()) {
 					p.recorder.Reset();
 				}
-				c.SetPlayLed(p.recorder.IsPlaying());
 			}
 		}
 
@@ -36,13 +35,12 @@ public:
 			} else {
 				p.recorder.Reset();
 			}
-			c.SetPlayLed(p.recorder.IsPlaying());
 		}
 
 		auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		pos = p.slider_slew.Update(pos);
 		p.shared.pos = pos;
-		p.pathway.Update(pos);
+		p.bank.pathway.Update(pos);
 	}
 };
 
