@@ -26,7 +26,7 @@ class Interface {
 	Macro::Main macro{params.macro, controls, sequencer};
 	Sequencer::Main sequencer{params.sequencer, controls, macro};
 
-	SavedSettings<SequencerData, MacroData> settings;
+	SavedSettings<Data::Sequencer, Data::Macro> settings;
 
 public:
 	Interface(Params &params)
@@ -97,10 +97,10 @@ private:
 	}
 	void Load() {
 		if (!settings.read(params.data.sequencer)) {
-			params.data.sequencer = SequencerData{};
+			params.data.sequencer = Data::Sequencer{};
 		}
 		if (!settings.read(params.data.macro)) {
-			params.data.macro = MacroData{};
+			params.data.macro = Data::Macro{};
 		}
 
 		params.sequencer.Load();
