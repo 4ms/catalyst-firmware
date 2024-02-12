@@ -119,8 +119,8 @@ public:
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
 					// to.
-					col = p.pathway.OnAScene() ?
-							  Palette::Gate::fromLevel(p.bank.GetGate(p.pathway.SceneRelative(), chan)) :
+					col = p.bank.pathway.OnAScene() ?
+							  Palette::Gate::fromLevel(p.bank.GetGate(p.bank.pathway.SceneRelative(), chan)) :
 							  Palette::off;
 				} else {
 					col = Palette::Cv::fromOutput(val);

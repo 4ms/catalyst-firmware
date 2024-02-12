@@ -115,7 +115,7 @@ private:
 				const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
 				o = Trig(do_trigs, chan, time_now, level);
 			} else {
-				const auto phs = MathTools::crossfade_ratio(p.pathway.GetPhase(), p.bank.GetMorph(chan));
+				const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
 				const auto a = p.shared.quantizer[chan].Process(p.bank.GetCv(left, chan));
 				const auto b = p.shared.quantizer[chan].Process(p.bank.GetCv(right, chan));
 				o = MathTools::interpolate(a, b, phs);

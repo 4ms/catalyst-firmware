@@ -107,7 +107,7 @@ public:
 		data.bank[data.cur_bank].range[channel].Inc(inc);
 	}
 	Channel::Cv::Range GetRange(uint8_t channel) {
-		return b->range[channel];
+		return data.bank[data.cur_bank].range[channel];
 	}
 	Channel::Mode GetChannelMode(uint8_t channel) {
 		return data.bank[data.cur_bank].channelmode[channel];
@@ -138,12 +138,12 @@ public:
 		data.bank[data.cur_bank].morph[channel] = std::clamp(data.bank[data.cur_bank].morph[channel] + i, 0.f, 1.f);
 	}
 	Channel::Cv::type GetCv(uint8_t scene, uint8_t channel) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
-		return b->scene[scene].channel[channel].ReadCv(rand);
+		const auto rand = randompool.Read(channel, scene, data.bank[data.cur_bank].scene[scene].random_amount);
+		return data.bank[data.cur_bank].scene[scene].channel[channel].ReadCv(rand);
 	}
 	Channel::Gate::type GetGate(uint8_t scene, uint8_t channel) {
-		const auto rand = randompool.Read(channel, scene, b->scene[scene].random_amount);
-		return b->scene[scene].channel[channel].ReadGate(rand);
+		const auto rand = randompool.Read(channel, scene, data.bank[data.cur_bank].scene[scene].random_amount);
+		return data.bank[data.cur_bank].scene[scene].channel[channel].ReadGate(rand);
 	}
 };
 
