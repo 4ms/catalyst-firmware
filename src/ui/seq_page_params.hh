@@ -8,6 +8,9 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class PageParams : public Usual {
+	std::array<bool, Model::SeqPages> selected_pages{};
+	bool is_latching_scene_buts = false;
+
 public:
 	using Usual::Usual;
 	void Init() override {
@@ -15,16 +18,40 @@ public:
 		if (!p.IsChannelSelected()) {
 			p.SelectChannel(0);
 		}
+
+		is_latching_scene_buts = false;
+		for (auto [page, selected] : enumerate(selected_pages)) {
+			selected = c.button.scene[page].is_pressed();
+		}
 	}
 	void Update(Abstract *&interface) override {
 		if (!c.button.shift.is_high() && !p.shared.youngest_scene_button.has_value())
 			return; // exit PageParams mode
 
+		auto num_pressed = 0u;
+		ForEachSceneButtonPressed(c, [&, this](auto page) {
+			if (!selected_pages[page])
+				p.shared.hang.Set({}, p.shared.internalclock.TimeNow());
+
+			selected_pages[page] = true;
+			num_pressed++;
+		});
+
+		// When no scene buttons are down, latch the previously held buttons
+		if (num_pressed == 0)
+			is_latching_scene_buts = true;
+
+		// The first time a button is pressed while latching, clear the latched buttons
+		if (is_latching_scene_buts && num_pressed > 0) {
+			is_latching_scene_buts = false;
+			for (auto &is_selected : selected_pages)
+				is_selected = false;
+		}
+
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) {
-			for (auto [page, b] : countzip(c.button.scene)) {
-				if (b.is_high()) {
+			for (auto [page, is_selected] : enumerate(selected_pages)) {
+				if (is_selected)
 					OnEncoderInc(encoder, inc, page);
-				}
 			}
 		});
 
@@ -35,6 +62,7 @@ public:
 	void OnEncoderInc(uint8_t encoder, int32_t inc, uint32_t page) {
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto page_start = page * Model::SeqStepsPerPage;
+		p.shared.hang.Set(encoder, time_now);
 
 		switch (encoder) {
 			case Model::SeqEncoderAlts::Transpose: {
@@ -43,7 +71,6 @@ public:
 				for (auto step = 0u; step < Model::SeqStepsPerPage; step++) {
 					p.IncStepInSequence(step + page_start, inc, fine);
 				}
-				p.shared.hang.Set(encoder, time_now);
 			} break;
 
 			case Model::SeqEncoderAlts::Random: {
@@ -63,7 +90,6 @@ public:
 					float random_inc = int8_t(std::rand() / 256) / float(-INT8_MIN);
 					p.IncStepInSequence(step + page_start, random_range * random_inc, false);
 				}
-				p.shared.hang.Set(encoder, time_now);
 			} break;
 
 			case Model::SeqEncoderAlts::PlayMode:
@@ -71,7 +97,6 @@ public:
 					p.ReverseStepOrder(page_start, page_start + Model::SeqStepsPerPage - 1);
 				else if (inc < 0)
 					p.RandomShuffleStepOrder(page_start, page_start + Model::SeqStepsPerPage - 1);
-				p.shared.hang.Set(encoder, time_now);
 				break;
 
 			case Model::SeqEncoderAlts::PhaseOffset: {
@@ -80,26 +105,25 @@ public:
 				else if (inc < 0)
 					p.RotateStepsLeft(page_start, page_start + Model::SeqStepsPerPage - 1);
 
-				p.shared.hang.Set(encoder, time_now);
 			} break;
 		}
 	}
-	void PaintLeds(const Model::Output::Buffer &outs) override {
+	void PaintLeds(const Model::Output::Buffer &) override {
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
-		c.SetButtonLed(p.shared.youngest_scene_button.value(), true);
+		for (auto [page, is_selected] : enumerate(selected_pages))
+			c.SetButtonLed(page, is_selected);
 
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
-		using namespace Model;
-		namespace Setting = Palette::Setting;
-
 		if (hang.has_value()) {
-			if (p.shared.youngest_scene_button.has_value()) {
+			auto lowest_scene_pressed =
+				std::distance(selected_pages.begin(), std::find(selected_pages.begin(), selected_pages.end(), true));
+			auto page = p.shared.youngest_scene_button.value_or(lowest_scene_pressed);
 
+			if (page < Model::SeqPages) {
 				const auto chan = p.GetSelectedChannel();
-				const auto page = p.shared.youngest_scene_button.value();
 				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
 
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
@@ -110,10 +134,10 @@ public:
 			}
 
 		} else {
-			c.SetEncoderLed(SeqEncoderAlts::Transpose, Setting::active);
-			c.SetEncoderLed(SeqEncoderAlts::Random, Setting::active);
-			c.SetEncoderLed(SeqEncoderAlts::PhaseOffset, Setting::active);
-			c.SetEncoderLed(SeqEncoderAlts::PlayMode, Setting::active);
+			c.SetEncoderLed(Model::SeqEncoderAlts::Transpose, Palette::Setting::active);
+			c.SetEncoderLed(Model::SeqEncoderAlts::Random, Palette::Setting::active);
+			c.SetEncoderLed(Model::SeqEncoderAlts::PhaseOffset, Palette::Setting::active);
+			c.SetEncoderLed(Model::SeqEncoderAlts::PlayMode, Palette::Setting::active);
 		}
 	}
 };
