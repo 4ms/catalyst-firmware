@@ -160,8 +160,8 @@ public:
 		ClearButtonLeds(c);
 		if (p.IsChannelSelected()) {
 			const auto chan = p.GetSelectedChannel();
-			const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
 			const auto playheadpage = p.player.GetPlayheadPage(chan);
+
 			uint8_t page;
 			if (p.IsPageSelected()) {
 				page = p.GetSelectedPage();
@@ -172,27 +172,23 @@ public:
 			}
 
 			if constexpr (ManualColorMode) {
-				// ManualColorTestMode(page);
+				ManualColorTestMode(page);
 				return;
 			}
 
 			const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
-			if (is_gate) {
-				auto gate_display_func =
-					c.button.fine.is_high() ?
-						[](Catalyst2::Sequencer::Step step) {
-							return Palette::Gate::fromTrigDelay(step.ReadTrigDelay());
-						} :
-						[](Catalyst2::Sequencer::Step step) { return Palette::Gate::fromLevel(step.ReadGate()); };
-				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					c.SetEncoderLed(i, gate_display_func(p.GetStep(step_offset + i)));
-				}
-			} else {
-				const auto range = p.slot.settings.GetRange(chan);
-				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					c.SetEncoderLed(i, Palette::Cv::fromLevel(p.GetStep(step_offset + i).ReadCv(), range));
-				}
+			const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
+			const auto range = p.slot.settings.GetRange(chan);
+			const auto fine_pressed = c.button.fine.is_pressed();
+			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+				auto step = p.GetStep(step_offset + i);
+				auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
+							 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :
+											Palette::Gate::fromLevel(step.ReadGate());
+
+				c.SetEncoderLed(i, color);
 			}
+
 			if (page == playheadpage) {
 				SetPlayheadLed();
 			}
@@ -210,16 +206,19 @@ public:
 	}
 
 	void ManualColorTestMode(uint8_t page) {
-		// auto pagevals = p.GetPageValuesCv(page);
-		// c.SetEncoderLed(0, Palette::red);
-		// c.SetEncoderLed(1, Palette::green);
-		// c.SetEncoderLed(2, Palette::blue);
-		// Color col = Palette::ManualRGB(pagevals[0], pagevals[1], pagevals[2]);
-		// c.SetEncoderLed(3, col);
-		// c.SetEncoderLed(4, col);
-		// c.SetEncoderLed(5, col);
-		// c.SetEncoderLed(6, col);
-		// c.SetEncoderLed(7, col);
+		const auto page_start = Catalyst2::Sequencer::SeqPageToStep(page);
+		auto red = p.GetStep(page_start).ReadCv();
+		auto green = p.GetStep(page_start + 1).ReadCv();
+		auto blue = p.GetStep(page_start + 2).ReadCv();
+		Color col = Palette::ManualRGB(red, green, blue);
+		c.SetEncoderLed(0, Palette::red);
+		c.SetEncoderLed(1, Palette::green);
+		c.SetEncoderLed(2, Palette::blue);
+		c.SetEncoderLed(3, col);
+		c.SetEncoderLed(4, col);
+		c.SetEncoderLed(5, col);
+		c.SetEncoderLed(6, col);
+		c.SetEncoderLed(7, col);
 	}
 };
 

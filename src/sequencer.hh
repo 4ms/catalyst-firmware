@@ -68,8 +68,8 @@ struct Data {
 	}
 };
 
-inline uint8_t SeqPageToStep(uint8_t chan) {
-	return chan * Model::SeqStepsPerPage;
+inline uint8_t SeqPageToStep(uint8_t page) {
+	return page * Model::SeqStepsPerPage;
 }
 
 class Interface {

@@ -183,11 +183,15 @@ inline constexpr Color ManualRGB(Model::Output::type r, Model::Output::type g, M
 	float G = (float)g / (float)Channel::Output::max;
 	float B = (float)b / (float)Channel::Output::max;
 
-	return Color{off.blend(full_red, R).red(), off.blend(full_blue, G).green(), off.blend(full_green, B).blue()};
+	auto true_red = Color{255, 0, 0};
+	auto true_blue = Color{0, 0, 255};
+	auto true_green = Color{0, 255, 0};
+	// Note: since Catalyst uses RBG but Color is RGB, the meanings for Color::blue() and Color::green() are swapped
+	return Color{off.blend(true_red, R).red(), off.blend(true_blue, B).blue(), off.blend(true_green, G).green()};
 }
 
 static_assert(ManualRGB(16384, 32768, 49152).red() == 63);
-static_assert(ManualRGB(16384, 32768, 49152).green() == 127);
-static_assert(ManualRGB(16384, 32768, 49152).blue() == 191);
+static_assert(ManualRGB(16384, 32768, 49152).blue() == 127);
+static_assert(ManualRGB(16384, 32768, 49152).green() == 191);
 
 } // namespace Catalyst2::Palette
