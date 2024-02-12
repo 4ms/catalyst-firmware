@@ -1,9 +1,11 @@
 #pragma once
+#include "conf/model.hh"
 
 namespace Catalyst2::BuildOptions
 {
 
 inline constexpr auto seq_gate_overrides_prev_step = true;
+inline constexpr auto default_mode = Model::Mode::Sequencer;
 
 #define SKIP_STARTUP_ANIMATION true
 

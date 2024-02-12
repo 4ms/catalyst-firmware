@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clock.hh"
+#include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "quantizer.hh"
 #include "validate.hh"
@@ -93,7 +94,7 @@ public:
 };
 
 struct Data {
-	Model::Mode saved_mode = Model::default_mode;
+	Model::Mode saved_mode = BuildOptions::default_mode;
 	bool Validate() const {
 		auto ret = true;
 		ret &= validateBool(std::to_underlying(saved_mode));
@@ -128,7 +129,7 @@ public:
 	bool did_copy = false;
 	float pos;
 	std::optional<uint8_t> youngest_scene_button;
-	Model::Mode mode = Model::default_mode;
+	Model::Mode mode = BuildOptions::default_mode;
 };
 
 } // namespace Catalyst2::Shared

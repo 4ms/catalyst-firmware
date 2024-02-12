@@ -14,7 +14,6 @@ inline constexpr auto NumSeqSlots = 8u;
 
 enum class Mode : bool { Sequencer, Macro };
 
-inline constexpr auto default_mode = Mode::Sequencer;
 
 inline constexpr auto sample_rate_hz = 3000u;
 inline constexpr auto clock_mult_factor = 12u;
