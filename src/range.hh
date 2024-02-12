@@ -41,10 +41,10 @@ public:
 	void Inc(int32_t inc) {
 		val = std::clamp<int32_t>(val + inc, min, max);
 	}
-	float NegAmount() const {
+	constexpr float NegAmount() const {
 		return std::abs(options[val].min / absmaxv);
 	}
-	float PosAmount() const {
+	constexpr float PosAmount() const {
 		return options[val].max / absmaxv;
 	}
 	float Min() const {
@@ -58,4 +58,3 @@ public:
 	}
 };
 } // namespace Catalyst2::Channel::Cv
-
