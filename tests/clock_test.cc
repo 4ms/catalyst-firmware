@@ -17,7 +17,7 @@ TEST_CASE("clock phase") {
 
 	uint32_t step = 1;
 
-	fprintf(stderr, "C Div Phase: %f\n", divider.GetPhase(cdiv));
+	// fprintf(stderr, "C Div Phase: %f\n", divider.GetPhase(cdiv));
 
 	for (;;) {
 		clock.Update();
@@ -25,7 +25,7 @@ TEST_CASE("clock phase") {
 		if (clock.Output()) {
 
 			divider.Update(cdiv);
-			fprintf(stderr, "C Div Phase: %f\n", divider.GetPhase(cdiv));
+			// fprintf(stderr, "C Div Phase: %f\n", divider.GetPhase(cdiv));
 
 			if (divider.Step()) {
 				step += 1;
@@ -34,7 +34,7 @@ TEST_CASE("clock phase") {
 			if (step == 2)
 				break;
 		}
-		fprintf(
-			stderr, "Clock Phase: %f Actual Phase: %f\n", clock.GetPhase(), divider.GetPhase(cdiv, clock.GetPhase()));
+		// fprintf(stderr, "Clock Phase: %f Actual Phase: %f\n", clock.GetPhase(), divider.GetPhase(cdiv,
+		// clock.GetPhase()));
 	}
 }
