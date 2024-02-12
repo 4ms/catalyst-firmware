@@ -4,6 +4,7 @@
 #include "controls.hh"
 #include "params.hh"
 #include "seq_common.hh"
+#include "sequencer.hh"
 
 namespace Catalyst2::Ui::Sequencer
 {
@@ -125,10 +126,12 @@ public:
 			if (page < Model::SeqPages) {
 				const auto chan = p.GetSelectedChannel();
 				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
-
+				const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
+				const auto range = p.slot.settings.GetRange(chan);
 				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-					auto color = is_gate ? Palette::GateBlend(p.GetPageValuesGate(page)[i]) :
-										   Palette::CvBlend(p.GetPageValuesCv(page)[i]);
+					const auto step = p.GetStep(step_offset + i);
+					auto color = is_gate ? Palette::Gate::fromLevel(step.ReadGate()) :
+										   Palette::Cv::fromLevel(step.ReadCv(), range);
 					c.SetEncoderLed(i, color);
 				}
 			}

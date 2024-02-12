@@ -217,14 +217,6 @@ public:
 		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
 		return s.ReadGate(r * slot.settings.GetRandomOrGlobal(chan));
 	}
-	std::array<float, Model::SeqStepsPerPage> GetPageValuesTrigDelay(uint8_t page) {
-		std::array<float, Model::SeqStepsPerPage> out;
-		for (auto [i, o] : countzip(out)) {
-			const auto step = (page * Model::SeqStepsPerPage) + i;
-			o = slot.channel[cur_channel][step].ReadTrigDelay();
-		}
-		return out;
-	}
 	Step GetStep(uint8_t step) {
 		return slot.channel[cur_channel][step];
 	}
@@ -238,12 +230,12 @@ public:
 	}
 	void CopyPage(uint8_t page) {
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-			clipboard.page[i] = slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i];
+			clipboard.page[i] = slot.channel[cur_channel][SeqPageToStep(page) + i];
 		}
 	}
 	void PastePage(uint8_t page) {
 		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
-			slot.channel[cur_channel][(page * Model::SeqStepsPerPage) + i] = clipboard.page[i];
+			slot.channel[cur_channel][SeqPageToStep(page) + i] = clipboard.page[i];
 		}
 	}
 

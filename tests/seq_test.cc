@@ -10,7 +10,7 @@ TEST_CASE("Rotate steps") {
 	Shared::Interface shared{shared_data};
 	Sequencer::Data data;
 	Sequencer::Interface seq{data, shared};
-	Channel::Range range{};
+	Channel::Cv::Range range{};
 
 	// Fill a page with some values
 	seq.slot.channel[0][0].IncCv(10, false, range);
@@ -22,10 +22,18 @@ TEST_CASE("Rotate steps") {
 	seq.slot.channel[0][6].IncCv(70, false, range);
 	seq.slot.channel[0][7].IncCv(80, false, range);
 
+	auto f = [&]() {
+		std::array<uint16_t, 8> out;
+		for (auto i = 0u; i < out.size(); i++) {
+			out[i] = seq.GetStep(i).ReadCv();
+		}
+		return out;
+	};
+
 	SUBCASE("Forwards") {
-		auto original_vals = seq.GetPageValuesCv(0);
+		auto original_vals = f();
 		seq.RotateStepsRight(0, 7);
-		auto rotated_vals = seq.GetPageValuesCv(0);
+		auto rotated_vals = f();
 
 		CHECK(rotated_vals[0] == original_vals[7]);
 		CHECK(rotated_vals[1] == original_vals[0]);
@@ -38,9 +46,9 @@ TEST_CASE("Rotate steps") {
 	}
 
 	SUBCASE("Backwards") {
-		auto original_vals = seq.GetPageValuesCv(0);
+		auto original_vals = f();
 		seq.RotateStepsLeft(0, 7);
-		auto rotated_vals = seq.GetPageValuesCv(0);
+		auto rotated_vals = f();
 
 		CHECK(original_vals[0] == rotated_vals[7]);
 		CHECK(original_vals[1] == rotated_vals[0]);
