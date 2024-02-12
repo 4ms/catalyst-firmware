@@ -154,7 +154,7 @@ inline Color fromOutput(Model::Output::type level) {
 
 namespace Gate
 {
-inline constexpr auto color = Color{0, 0, 15};
+inline constexpr auto color = dim_green;
 inline constexpr auto max = cyan;
 inline Color fromLevel(Channel::Gate::type level) {
 	return level >= 1.f ? max : off.blend(color, level);
