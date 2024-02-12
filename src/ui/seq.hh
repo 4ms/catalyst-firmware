@@ -41,7 +41,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
+		ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto ysb = p.shared.youngest_scene_button;
