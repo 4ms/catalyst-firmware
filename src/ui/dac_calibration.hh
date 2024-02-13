@@ -2,6 +2,7 @@
 
 #include "channel.hh"
 #include "conf/model.hh"
+#include "conf/palette.hh"
 #include "controls.hh"
 #include "helper_functions.hh"
 #include "util/countzip.hh"
@@ -47,6 +48,7 @@ inline void Process(Data &d, Model::Output::Buffer &input) {
 inline bool Calibrate(Data &d, Controls &c) {
 	auto idx = 0;
 	const auto prev_ = d;
+	c.SetButtonLed(idx, true);
 	while (true) {
 		c.Update();
 
@@ -64,20 +66,39 @@ inline bool Calibrate(Data &d, Controls &c) {
 
 		Model::Output::Buffer out;
 
-		Ui::ForEachSceneButtonJustPressed(c, [&idx](uint8_t button) { idx = button; });
+		Ui::ForEachSceneButtonJustPressed(c, [&c, &idx](uint8_t button) {
+			c.SetButtonLed(idx, false);
+			idx = button;
+			c.SetButtonLed(idx, true);
+		});
 
 		for (auto &o : out) {
 			o = test_voltage[idx];
 		}
+		auto color_func = [&c](uint8_t idx, float phase) {
+			auto col = Palette::blue;
+			if (phase < 0.f) {
+				col = Palette::red;
+				phase *= -1.f;
+			}
+			c.SetEncoderLed(idx, Palette::off.blend(col, phase));
+		};
 		if (c.button.shift.is_high()) {
-			Ui::ForEachEncoderInc(c, [&d](uint8_t encoder, int32_t inc) {
-				d.channel[encoder].offset =
-					std::clamp<int16_t>(d.channel[encoder].offset + inc, min_offset, max_offset);
-			});
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				d.channel[i].offset =
+					std::clamp<int16_t>(d.channel[i].offset + c.encoders[i].read(), min_offset, max_offset);
+				const auto phase = d.channel[i].offset / static_cast<float>(max_offset);
+				color_func(i, phase);
+			}
 		} else if (c.button.fine.is_high()) {
-			Ui::ForEachEncoderInc(c, [&d](uint8_t encoder, int32_t inc) {
-				d.channel[encoder].slope = std::clamp<int16_t>(d.channel[encoder].slope + inc, min_slope, max_slope);
-			});
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				d.channel[i].slope =
+					std::clamp<int16_t>(d.channel[i].slope + c.encoders[i].read(), min_slope, max_slope);
+				const auto phase = d.channel[i].slope / static_cast<float>(max_slope);
+				color_func(i, phase);
+			}
+		} else {
+			Ui::SetEncoderLedsCount(c, 8, 0, Palette::off);
 		}
 
 		if (c.button.add.is_high()) {
