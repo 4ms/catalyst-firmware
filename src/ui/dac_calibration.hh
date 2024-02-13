@@ -40,6 +40,7 @@ inline void Process(Data &d, Model::Output::Buffer &input) {
 
 inline bool Calibrate(Data &d, Controls &c) {
 	auto idx = 0;
+	const auto prev_ = d;
 	while (true) {
 		c.Update();
 
@@ -69,11 +70,16 @@ inline bool Calibrate(Data &d, Controls &c) {
 			});
 		}
 
+		if (c.button.add.is_high()) {
+			d = prev_;
+			return false;
+		}
 		if (c.button.play.is_high()) {
+			d = Data{};
 			return true;
 		}
-		if (c.button.add.is_high()) {
-			return false;
+		if (c.button.bank.is_high() && c.button.morph.is_high()) {
+			return true;
 		}
 
 		Process(d, out);
