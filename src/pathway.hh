@@ -85,7 +85,7 @@ struct Data {
 	}
 
 private:
-	std::array<PathwayData, Model::TotalBanks> pathways{};
+	std::array<PathwayData, Model::Macro::Bank::NumTotal> pathways{};
 };
 
 class Interface {
@@ -123,10 +123,10 @@ public:
 		pathway->Set(1, scene);
 	}
 	SceneId GetSceneA() const {
-		return data->Read(0);
+		return pathway->Read(0);
 	}
 	SceneId GetSceneB() const {
-		return data->Read(1);
+		return pathway->Read(1);
 	}
 	float GetPhase() const {
 		return phase;
