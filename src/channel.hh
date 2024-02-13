@@ -57,7 +57,7 @@ inline internal_type Inc(internal_type val, int32_t inc) {
 }
 inline type Read(internal_type val, float random) {
 	const auto t = val + (random * max);
-	return std::clamp(t / static_cast<type>(max), 0.f, 1.f);
+	return std::clamp(t / static_cast<type>(max), type(0), type(1));
 }
 inline bool Validate(internal_type val) {
 	return val < max;
