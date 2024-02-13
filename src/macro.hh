@@ -19,7 +19,7 @@ struct Data {
 	Recorder::Data recorder{};
 	SliderSlew::Data slider_slew{};
 	Clock::Divider::type clockdiv{};
-	bool override_outputs = false;
+	bool override_outputs = true;
 
 	bool validate() const {
 		auto ret = true;
