@@ -40,6 +40,7 @@ public:
 	Recorder::Interface recorder{data.recorder};
 	SliderSlew::Interface slider_slew{data.slider_slew};
 	Shared::Interface &shared;
+	bool main_mode = true;
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
