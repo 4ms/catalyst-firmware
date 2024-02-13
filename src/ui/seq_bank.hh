@@ -47,17 +47,17 @@ public:
 		p.slot.settings.IncChannelMode(encoder, dir);
 		p.shared.quantizer[encoder].Load(p.slot.settings.GetChannelMode(encoder).GetScale());
 	}
-	void OnSceneButtonRelease(uint8_t scene) {
+	void OnSceneButtonRelease(uint8_t page) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
 			if (p.seqclock.IsPaused()) {
-				p.slot.settings.SetStartOffset(p.GetSelectedChannel(), Catalyst2::Sequencer::SeqPageToStep(scene));
+				p.slot.settings.SetStartOffset(p.GetSelectedChannel(), Catalyst2::Sequencer::SeqPageToStep(page));
 				p.player.Reset();
 				p.seqclock.Pause();
 			} else {
-				p.player.queue.Queue(p.GetSelectedChannel(), scene);
+				p.player.queue.Queue(p.GetSelectedChannel(), page);
 			}
 		} else {
-			p.SelectChannel(scene);
+			p.SelectChannel(page);
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
