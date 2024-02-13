@@ -27,7 +27,7 @@ public:
 			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 		}
 
-		if (c.button.play.just_went_high()) {
+		if (c.button.play.just_went_low()) {
 			p.recorder.CueRecord();
 		}
 
