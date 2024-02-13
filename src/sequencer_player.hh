@@ -162,17 +162,21 @@ private:
 		}
 
 		int so;
-		if (!songmode.IsActive()) {
-			if (songmode.IsQueued(chan)) {
-				so = songmode.Read(chan);
-			} else {
-				so = queue.Read(chan);
-			}
+		if (const auto temp = settings.GetStartOffset(chan)) {
+			so = temp.value();
 		} else {
-			if (queue.IsQueued(chan)) {
-				so = queue.Read(chan);
+			if (!songmode.IsActive()) {
+				if (songmode.IsQueued(chan)) {
+					so = songmode.Read(chan);
+				} else {
+					so = queue.Read(chan);
+				}
 			} else {
-				so = songmode.Read(chan);
+				if (queue.IsQueued(chan)) {
+					so = queue.Read(chan);
+				} else {
+					so = songmode.Read(chan);
+				}
 			}
 		}
 
