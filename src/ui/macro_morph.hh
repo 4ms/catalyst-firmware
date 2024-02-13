@@ -48,6 +48,9 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
 		ClearEncoderLeds(c);
+		if (p.bank.IsBankClassic()) {
+			c.SetButtonLed(p.bank.pathway.GetSceneA(), true);
+		}
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			auto col = Palette::Morph::color(p.bank.GetMorph(i));
 			c.SetEncoderLed(i, col);

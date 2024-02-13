@@ -143,14 +143,18 @@ public:
 			if (p.recorder.IsRecording())
 				SceneButtonDisplayRecording();
 			else {
-				const auto l = p.bank.pathway.SceneRelative(-1);
-				const auto r = p.bank.pathway.SceneRelative(1);
-				if (l == r)
-					c.SetButtonLed(l, true);
-				else {
-					const auto pos = p.bank.pathway.GetPhase();
-					c.SetButtonLed(l, 1.f - pos);
-					c.SetButtonLed(r, pos);
+				if (c.button.add.is_high()) {
+					c.SetButtonLed(p.bank.pathway.GetSceneB(), true);
+				} else {
+					const auto l = p.bank.pathway.SceneRelative(-1);
+					const auto r = p.bank.pathway.SceneRelative(1);
+					if (l == r)
+						c.SetButtonLed(l, true);
+					else {
+						const auto pos = p.bank.pathway.GetPhase();
+						c.SetButtonLed(l, 1.f - pos);
+						c.SetButtonLed(r, pos);
+					}
 				}
 			}
 		}

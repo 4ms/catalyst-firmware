@@ -167,7 +167,12 @@ public:
 	void ReplaceSceneB(SceneId scene) {
 		data->Set(1, scene);
 	}
-
+	SceneId GetSceneA() const {
+		return data->Read(0);
+	}
+	SceneId GetSceneB() const {
+		return data->Read(1);
+	}
 	float GetPhase() const {
 		return phase;
 	}
