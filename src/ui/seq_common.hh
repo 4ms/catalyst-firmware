@@ -5,7 +5,7 @@
 
 namespace Catalyst2::Ui::Sequencer
 {
-inline void PlayModeLedAnnimation(Controls &c, Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
+inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
 	using namespace Palette::Setting;
 	static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
 	auto phase = (time_now / animation_duration);

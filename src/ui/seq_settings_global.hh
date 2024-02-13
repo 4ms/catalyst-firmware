@@ -153,7 +153,7 @@ public:
 										  std::abs(tpose / static_cast<float>(Transposer::max)));
 			c.SetEncoderLed(EncoderAlts::Transpose, col);
 
-			PlayModeLedAnnimation(c, playmode, time_now);
+			PlayModeLedAnimation(c, playmode, time_now);
 
 			if (p.seqclock.IsInternal()) {
 				if (p.seqclock.Peek()) {
