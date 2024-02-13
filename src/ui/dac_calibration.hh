@@ -14,10 +14,16 @@ namespace Catalyst2::Calibration::Dac
 inline constexpr auto max_offset = Channel::Output::from_volts(-4.9);
 inline constexpr auto min_offset = -max_offset;
 
+inline constexpr auto slope_scale = 100000.f;
+inline constexpr auto r_slope_scale = 1.f / slope_scale;
+inline constexpr int16_t max_slope =
+	((Channel::Output::max + max_offset) / static_cast<float>(Channel::Output::max) - 1.f) * slope_scale;
+inline constexpr int16_t min_slope = -max_slope;
+
 struct Data {
 	struct Channel {
-		int16_t offset = 0.f;
-		float slope = 0.f;
+		int16_t offset = 0;
+		int16_t slope = 0;
 	};
 	std::array<Channel, Model::NumChans> channel{};
 
@@ -25,16 +31,16 @@ struct Data {
 		auto ret = true;
 		for (auto &c : channel) {
 			ret &= c.offset >= min_offset && c.offset <= max_offset;
-			// TODO: slope
+			ret &= c.slope >= min_slope && c.slope <= max_slope;
 		}
 		return ret;
 	}
 };
 
-// TODO: slope
 inline void Process(Data &d, Model::Output::Buffer &input) {
 	for (auto [i, in] : enumerate(input)) {
-		in = std::clamp<int32_t>(in + d.channel[i].offset, Channel::Output::min, Channel::Output::max);
+		int32_t temp = in * (1.f + (d.channel[i].slope * r_slope_scale));
+		in = std::clamp<int32_t>(temp + d.channel[i].offset, Channel::Output::min, Channel::Output::max);
 	}
 }
 
@@ -67,6 +73,10 @@ inline bool Calibrate(Data &d, Controls &c) {
 			Ui::ForEachEncoderInc(c, [&d](uint8_t encoder, int32_t inc) {
 				d.channel[encoder].offset =
 					std::clamp<int16_t>(d.channel[encoder].offset + inc, min_offset, max_offset);
+			});
+		} else if (c.button.fine.is_high()) {
+			Ui::ForEachEncoderInc(c, [&d](uint8_t encoder, int32_t inc) {
+				d.channel[encoder].slope = std::clamp<int16_t>(d.channel[encoder].slope + inc, min_slope, max_slope);
 			});
 		}
 
