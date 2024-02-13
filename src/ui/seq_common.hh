@@ -61,6 +61,16 @@ protected:
 		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
 	}
 	void SetPlayheadLed() {
+		static constexpr auto threshold = .125f;
+		bool set = false;
+		if (p.seqclock.IsPaused()) {
+			set = p.seqclock.PeekPhase() < threshold;
+		} else {
+			set = p.seqclock.GetPhase() < threshold;
+		}
+		if (!set) {
+			return;
+		}
 		c.SetEncoderLed(p.player.GetPlayheadStepOnPage(p.GetSelectedChannel()), Palette::SeqHead::color);
 	}
 };

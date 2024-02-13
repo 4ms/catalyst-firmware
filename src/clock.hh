@@ -128,6 +128,10 @@ public:
 		auto out = static_cast<float>(cnt) / data.bpm_in_ticks;
 		return std::clamp(out, 0.f, .9999f);
 	}
+	float PeekPhase() const {
+		auto out = static_cast<float>(peek_cnt) / data.bpm_in_ticks;
+		return out;
+	}
 	void Reset() {
 		cnt = 0;
 	}
