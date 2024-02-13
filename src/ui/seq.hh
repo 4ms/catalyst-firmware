@@ -26,6 +26,7 @@ class Main : public Usual {
 	Settings::Channel channel_settings{p, c};
 	PageParams page_params{p, c};
 	Abstract &macro;
+	bool just_queued = false;
 
 public:
 	Main(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract &macro)
@@ -63,9 +64,13 @@ public:
 					p.player.Reset();
 					p.seqclock.Pause();
 				}
+				just_queued = true;
 			} else {
 				p.seqclock.Pause();
 			}
+		}
+		if (!ysb.has_value() && c.button.play.just_went_low()) {
+			just_queued = false;
 		}
 
 		if (c.button.add.just_went_high()) {
@@ -140,10 +145,11 @@ public:
 			p.shared.did_copy = false;
 			return;
 		}
-		if (c.button.fine.is_high()) {
+		if (c.button.fine.is_high() || c.button.play.is_high()) {
 			return;
 		}
-		if (c.button.play.just_went_low() || c.button.play.is_high()) {
+		if (just_queued) {
+			just_queued = false;
 			return;
 		}
 		if (p.IsPageSelected() && button == p.GetSelectedPage()) {
