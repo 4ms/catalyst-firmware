@@ -30,7 +30,7 @@ namespace Macro::Pool
 
 using type = float;
 
-struct Data : public std::array<int8_t, Model::NumScenes * Model::NumChans> {
+struct Data : public std::array<int8_t, Model::Macro::NumScenes * Model::NumChans> {
 	Data() {
 		RandomizeBuffer(*this);
 	}
@@ -118,7 +118,7 @@ public:
 } // namespace Probability
 namespace Steps
 {
-struct Data : public std::array<std::array<uint8_t, Model::MaxSeqSteps>, Model::NumChans> {
+struct Data : public std::array<std::array<uint8_t, Model::Sequencer::Steps::Max>, Model::NumChans> {
 	Data() {
 		for (auto &c : *this) {
 			RandomizeBuffer(c);

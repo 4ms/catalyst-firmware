@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "controls.hh"
 #include "params.hh"
 #include "seq_common.hh"
@@ -48,7 +49,7 @@ public:
 		ClearButtonLeds(c);
 		c.SetPlayLed(false);
 		if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
-			SetButtonLedsCount(c, Model::NumScenes, true);
+			SetButtonLedsCount(c, Model::NumChans, true);
 			c.SetPlayLed(true);
 		}
 	}

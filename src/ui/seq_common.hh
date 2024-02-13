@@ -30,7 +30,7 @@ inline void PlayModeLedAnnimation(Controls &c, Catalyst2::Sequencer::Settings::P
 	} else {
 		col = Palette::Random::color(time_now >> 8);
 	}
-	c.SetEncoderLed(Model::SeqEncoderAlts::PlayMode, col);
+	c.SetEncoderLed(Model::Sequencer::EncoderAlts::PlayMode, col);
 }
 
 class Usual : public Abstract {

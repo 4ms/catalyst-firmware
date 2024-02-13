@@ -28,7 +28,7 @@ using ResetJack = ToggleInput;
 // //////////////// Buttons
 
 struct Buttons {
-	static constexpr std::array<uint8_t, Model::NumScenes> SceneMap{
+	static constexpr std::array<uint8_t, Model::NumChans> SceneMap{
 		11,
 		8,
 		7,

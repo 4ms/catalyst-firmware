@@ -9,30 +9,74 @@
 // Configuration for everything that might change if we make a version with more or less user-facing features
 namespace Catalyst2::Model
 {
-
-inline constexpr auto NumSeqSlots = 8u;
-
 enum class Mode : bool { Sequencer, Macro };
 
-
-inline constexpr auto sample_rate_hz = 3000u;
-inline constexpr auto clock_mult_factor = 12u;
-
-inline constexpr auto triglengthms = 5u;
-
 inline constexpr auto NumChans = 8u;
-inline constexpr auto NumScenes = 8u;
-inline constexpr auto NumNormalBanks = 8u;
-inline constexpr auto NumClassicBanks = 1u;
-inline constexpr auto TotalBanks = NumNormalBanks + NumClassicBanks;
+inline constexpr auto sample_rate_hz = 3000u;
 
-inline constexpr auto SeqStepsPerPage = NumChans;
-inline constexpr auto SeqPages = NumScenes;
-inline constexpr auto MaxSeqSteps = SeqPages * SeqStepsPerPage;
-inline constexpr auto MinSeqSteps = 1;
+inline constexpr auto max_output_voltage = 10.f;
+inline constexpr auto min_output_voltage = -5.f;
+inline constexpr auto output_octave_range = max_output_voltage - min_output_voltage;
+
+inline constexpr auto fader_width_mm = 60u;
+
+namespace HoldTimes
+{
+inline constexpr auto mode_switcher = 3000u;
+inline constexpr auto reset = 3000u;
+inline constexpr auto save = 3000u;
+} // namespace HoldTimes
+
+namespace Sequencer
+{
+inline constexpr auto NumSlots = 8u;
+inline constexpr auto NumPages = NumChans;
+
 inline constexpr auto MaxQueuedStartOffsetPages = 16u;
 
-inline constexpr auto max_queued_start_offset_changes = 8u;
+namespace Steps
+{
+inline constexpr auto PerPage = NumChans;
+inline constexpr auto Max = NumPages * PerPage;
+inline constexpr auto Min = 1;
+} // namespace Steps
+
+namespace EncoderAlts
+{
+inline constexpr auto StartOffset = 0u;
+inline constexpr auto PlayMode = 1u;
+inline constexpr auto SeqLength = 2u;
+inline constexpr auto PhaseOffset = 3u;
+inline constexpr auto Range = 4u;
+inline constexpr auto ClockDiv = 5u;
+inline constexpr auto Transpose = 6u;
+inline constexpr auto Random = 7u;
+}; // namespace EncoderAlts
+} // namespace Sequencer
+
+namespace Macro
+{
+inline constexpr auto NumScenes = NumChans;
+
+namespace Bank
+{
+inline constexpr auto NumNormal = NumChans;
+inline constexpr auto NumClassic = 1u;
+inline constexpr auto NumTotal = NumNormal + NumClassic;
+} // namespace Bank
+
+inline constexpr auto rec_buffer_size = 2048u;
+inline constexpr auto rec_buffer_prescaler = 16u;
+
+namespace EncoderAlts
+{
+inline constexpr auto OutputOverride = 0u;
+inline constexpr auto SliderSlewCurve = 4u;
+inline constexpr auto ClockDiv = 5u;
+inline constexpr auto SliderSlew = 6u;
+inline constexpr auto Random = 7u;
+}; // namespace EncoderAlts
+} // namespace Macro
 
 namespace Output
 {
@@ -41,40 +85,6 @@ static_assert(std::same_as<type, uint16_t>, "type only tested with uint16_t");
 using Buffer = std::array<type, NumChans>;
 } // namespace Output
 
-enum class ModeSwitch { Sequence, Macro };
-
 enum class AdcElement { Slider, CVJack };
 
-inline constexpr auto max_output_voltage = 10.f;
-inline constexpr auto min_output_voltage = -5.f;
-inline constexpr auto output_octave_range = max_output_voltage - min_output_voltage;
-
-inline constexpr auto fader_width_mm = 60u;
-
-inline constexpr auto rec_buffer_size = 2048u;
-inline constexpr auto rec_buffer_prescaler = 16u;
-
-struct SeqEncoderAlts {
-	static constexpr auto StartOffset = 0u;
-	static constexpr auto PlayMode = 1u;
-	static constexpr auto SeqLength = 2u;
-	static constexpr auto PhaseOffset = 3u;
-	static constexpr auto Range = 4u;
-	static constexpr auto ClockDiv = 5u;
-	static constexpr auto Transpose = 6u;
-	static constexpr auto Random = 7u;
-};
-struct MacroEncoderAlts {
-	static constexpr auto OutputOverride = 0u;
-	static constexpr auto SliderSlewCurve = 4u;
-	static constexpr auto ClockDiv = 5u;
-	static constexpr auto SliderSlew = 6u;
-	static constexpr auto Random = 7u;
-};
-namespace HoldTimes
-{
-inline constexpr auto mode_switcher = 3000u;
-inline constexpr auto reset = 3000u;
-inline constexpr auto save = 3000u;
-} // namespace HoldTimes
 } // namespace Catalyst2::Model

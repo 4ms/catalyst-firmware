@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "controls.hh"
 #include "macro_common.hh"
 #include "params.hh"
@@ -44,7 +45,7 @@ public:
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
 		if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
-			SetButtonLedsCount(c, Model::NumScenes, true);
+			SetButtonLedsCount(c, Model::NumChans, true);
 		}
 	}
 };

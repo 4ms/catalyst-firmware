@@ -32,9 +32,9 @@ struct PlayMode {
 };
 struct Length {
 	using type = int8_t;
-	static constexpr type min = Model::MinSeqSteps;
-	static constexpr type max = Model::MaxSeqSteps;
-	static constexpr type def = Model::SeqStepsPerPage;
+	static constexpr type min = Model::Sequencer::Steps::Min;
+	static constexpr type max = Model::Sequencer::Steps::Max;
+	static constexpr type def = Model::Sequencer::Steps::PerPage;
 };
 struct StartOffset {
 	using type = int8_t;

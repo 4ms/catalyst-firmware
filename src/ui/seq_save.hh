@@ -50,14 +50,14 @@ public:
 		if (p.shared.youngest_scene_button.has_value()) {
 			const auto time_now = p.shared.internalclock.TimeNow();
 			if (p.shared.save.Check(time_now)) {
-				SetButtonLedsCount(c, Model::NumSeqSlots, true);
+				SetButtonLedsCount(c, Model::Sequencer::NumSlots, true);
 			} else {
 				c.SetButtonLed(p.shared.youngest_scene_button.value(), true);
 			}
 		} else {
-			SetButtonLedsCount(c, Model::NumSeqSlots, true);
+			SetButtonLedsCount(c, Model::Sequencer::NumSlots, true);
 			if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
-				for (auto i = 0u; i < Model::NumSeqSlots; i++) {
+				for (auto i = 0u; i < Model::Sequencer::NumSlots; i++) {
 					if (i == p.GetStartupSlot()) {
 						continue;
 					}

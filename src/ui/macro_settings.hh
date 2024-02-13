@@ -34,7 +34,8 @@ public:
 		const auto is_scene = p.shared.youngest_scene_button.has_value();
 
 		switch (encoder) {
-			case Model::MacroEncoderAlts::Random:
+			using namespace Model::Macro;
+			case EncoderAlts::Random:
 				if (is_scene) {
 					for (auto [i, b] : countzip(c.button.scene)) {
 						if (b.is_high()) {
@@ -52,14 +53,14 @@ public:
 				}
 				p.shared.hang.Cancel();
 				break;
-			case Model::MacroEncoderAlts::OutputOverride:
+			case EncoderAlts::OutputOverride:
 				if (is_scene) {
 					break;
 				}
 				p.IncOutputOverride(inc);
 				p.shared.hang.Cancel();
 				break;
-			case Model::MacroEncoderAlts::ClockDiv:
+			case EncoderAlts::ClockDiv:
 				if (is_scene) {
 					break;
 				}
@@ -67,7 +68,7 @@ public:
 				p.IncClockDiv(inc);
 				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
 				break;
-			case Model::MacroEncoderAlts::SliderSlew:
+			case EncoderAlts::SliderSlew:
 				if (is_scene) {
 					break;
 				}
@@ -75,7 +76,7 @@ public:
 				p.slider_slew.Inc(inc);
 				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
 				break;
-			case Model::MacroEncoderAlts::SliderSlewCurve:
+			case EncoderAlts::SliderSlewCurve:
 				if (is_scene) {
 					break;
 				}
@@ -97,38 +98,40 @@ public:
 		const auto is_scene = ysb.has_value();
 		const auto scene = ysb.value_or(0);
 
+		using namespace Model::Macro;
+
 		if (is_scene) {
 			const auto random = p.bank.GetRandomAmount(scene);
 			auto col = Palette::off.blend(Palette::Random::set, random);
-			c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
+			c.SetEncoderLed(EncoderAlts::Random, col);
 		} else {
 			const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
 			if (hang.has_value()) {
 				switch (hang.value()) {
-					case Model::MacroEncoderAlts::ClockDiv: {
+					case EncoderAlts::ClockDiv: {
 						SetLedsClockDiv(c, p.GetClockDiv().Read());
 					} break;
 
-					case Model::MacroEncoderAlts::SliderSlew: {
+					case EncoderAlts::SliderSlew: {
 						float num_lights = p.slider_slew.Value() * 8.f;
 						SetEncoderLedsFloat(c, num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
 					} break;
 				}
 			} else {
-				c.SetEncoderLed(Model::MacroEncoderAlts::OutputOverride,
+				c.SetEncoderLed(EncoderAlts::OutputOverride,
 								p.GetOutputOverride() ? Palette::Setting::OutputOverride::on :
 														Palette::Setting::OutputOverride::off);
-				c.SetEncoderLed(Model::MacroEncoderAlts::ClockDiv, Palette::Setting::active);
-				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlew,
+				c.SetEncoderLed(EncoderAlts::ClockDiv, Palette::Setting::active);
+				c.SetEncoderLed(EncoderAlts::SliderSlew,
 								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slider_slew.Value()));
 				auto col = p.slider_slew.GetCurve() == Catalyst2::Macro::SliderSlew::Curve::Linear ?
 							   Palette::Setting::curve_linear :
 							   Palette::Setting::curve_expo;
-				c.SetEncoderLed(Model::MacroEncoderAlts::SliderSlewCurve, col);
+				c.SetEncoderLed(EncoderAlts::SliderSlewCurve, col);
 				if (c.button.fine.is_high()) {
 					col = p.bank.randompool.IsRandomized() ? Palette::Random::color(p.bank.randompool.GetSeed()) :
 															 Palette::Setting::null;
-					c.SetEncoderLed(Model::MacroEncoderAlts::Random, col);
+					c.SetEncoderLed(EncoderAlts::Random, col);
 				}
 			}
 		}

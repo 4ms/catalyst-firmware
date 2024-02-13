@@ -7,21 +7,21 @@
 namespace Catalyst2::Macro::Recorder
 {
 
-struct Data : public std::array<uint16_t, Model::rec_buffer_size> {
+struct Data : public std::array<uint16_t, Model::Macro::rec_buffer_size> {
 	uint32_t length{0};
 	bool Validate() const {
 		auto ret = true;
 		for (auto &i : *this) {
 			ret &= i <= 8190;
 		}
-		ret &= length < Model::rec_buffer_size;
+		ret &= length < Model::Macro::rec_buffer_size;
 		return ret;
 	}
 };
 
 class Interface {
-	static constexpr auto prescaler = Model::rec_buffer_prescaler;
-	static constexpr auto buff_size = Model::rec_buffer_size;
+	static constexpr auto prescaler = Model::Macro::rec_buffer_prescaler;
+	static constexpr auto buff_size = Model::Macro::rec_buffer_size;
 	static constexpr auto max_record_lenth_seconds =
 		(1.f / (static_cast<float>(Model::sample_rate_hz) / prescaler)) * buff_size;
 	static_assert(MathTools::is_power_of_2(prescaler));

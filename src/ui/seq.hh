@@ -54,12 +54,12 @@ public:
 				if (!p.seqclock.IsPaused()) {
 					p.player.songmode.Cancel();
 					if (p.player.songmode.IsQueued()) {
-						p.slot.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+						p.slot.settings.SetStartOffset(ysb.value() * Model::Sequencer::Steps::PerPage);
 					} else {
 						p.player.queue.Queue(ysb.value());
 					}
 				} else {
-					p.slot.settings.SetStartOffset(ysb.value() * Model::SeqStepsPerPage);
+					p.slot.settings.SetStartOffset(ysb.value() * Model::Sequencer::Steps::PerPage);
 					p.player.Reset();
 					p.seqclock.Pause();
 				}
@@ -180,7 +180,7 @@ public:
 			const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
 			const auto range = p.slot.settings.GetRange(chan);
 			const auto fine_pressed = c.button.fine.is_pressed();
-			for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+			for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
 				auto step = p.GetStep(step_offset + i);
 				auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
 							 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :

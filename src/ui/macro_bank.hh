@@ -19,7 +19,7 @@ public:
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 		if (c.button.play.just_went_low()) {
-			p.SelectBank(Model::NumNormalBanks);
+			p.SelectBank(Model::Macro::Bank::NumNormal);
 		}
 
 		if (c.button.morph.just_went_high()) {

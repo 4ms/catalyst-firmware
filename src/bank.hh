@@ -18,7 +18,7 @@ struct BankData {
 		std::array<Macro::Value, Model::NumChans> channel{};
 		Random::Amount::type random_amount;
 	};
-	std::array<Scene, Model::NumScenes> scene{};
+	std::array<Scene, Model::Macro::NumScenes> scene{};
 	std::array<Channel::Mode, Model::NumChans> channelmode{};
 	std::array<Channel::Cv::Range, Model::NumChans> range{};
 	std::array<float, Model::NumChans> morph{};
@@ -49,7 +49,7 @@ struct BankData {
 };
 
 struct Data {
-	std::array<BankData, Model::TotalBanks> bank{};
+	std::array<BankData, Model::Macro::Bank::NumTotal> bank{};
 	Pathway::Data pathway{};
 	Random::Macro::Pool::Data randompool{};
 	uint8_t cur_bank;
@@ -61,7 +61,7 @@ struct Data {
 		}
 		ret &= pathway.Validate();
 		ret &= randompool.Validate();
-		ret &= cur_bank < Model::TotalBanks;
+		ret &= cur_bank < bank.size();
 		return ret;
 	}
 };
@@ -85,14 +85,14 @@ public:
 		data.bank[data.cur_bank].scene[scene] = BankData::Scene{};
 	}
 	void SelectBank(uint8_t bank) {
-		data.cur_bank = bank < Model::TotalBanks ? bank : data.cur_bank;
+		data.cur_bank = bank < Model::Macro::Bank::NumTotal ? bank : data.cur_bank;
 		pathway.Load(data.pathway[data.cur_bank]);
 	}
 	uint8_t GetSelectedBank() const {
 		return data.cur_bank;
 	}
 	bool IsBankClassic() const {
-		return data.cur_bank == Model::TotalBanks - 1;
+		return data.cur_bank == Model::Macro::Bank::NumTotal - 1;
 	}
 	void Copy(uint8_t scene) {
 		clipboard = data.bank[data.cur_bank].scene[scene];

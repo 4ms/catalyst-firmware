@@ -25,7 +25,7 @@ public:
 			state[chan].prev_offset = settings.GetStartOffsetOrGlobal(chan);
 			state[chan].is_queued = true;
 		}
-		settings.SetStartOffset(chan, page * Model::SeqStepsPerPage);
+		settings.SetStartOffset(chan, page * Model::Sequencer::Steps::PerPage);
 	}
 	void Queue(uint8_t page) {
 		const auto so = settings.GetStartOffset();
@@ -37,7 +37,7 @@ public:
 			state[i].prev_offset = so;
 			state[i].is_queued = true;
 		}
-		settings.SetStartOffset(page * Model::SeqStepsPerPage);
+		settings.SetStartOffset(page * Model::Sequencer::Steps::PerPage);
 	}
 	type Read(uint8_t chan) const {
 		if (state[chan].is_queued) {

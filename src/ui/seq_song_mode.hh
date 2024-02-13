@@ -46,7 +46,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
 		auto count = p.player.songmode.Size();
-		const auto phase = 1.f / (Model::MaxQueuedStartOffsetPages / static_cast<float>(count));
+		const auto phase = 1.f / (Model::Sequencer::MaxQueuedStartOffsetPages / static_cast<float>(count));
 		while (count > 8) {
 			count -= 8;
 		}

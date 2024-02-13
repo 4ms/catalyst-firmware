@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conf/model.hh"
 #include "conf/palette.hh"
 #include "controls.hh"
 #include "params.hh"
@@ -9,7 +10,7 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class PageParams : public Usual {
-	std::array<bool, Model::SeqPages> selected_pages{};
+	std::array<bool, Model::Sequencer::NumPages> selected_pages{};
 	bool is_latching_scene_buts = false;
 
 public:
@@ -62,19 +63,20 @@ public:
 
 	void OnEncoderInc(uint8_t encoder, int32_t inc, uint32_t page) {
 		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto page_start = page * Model::SeqStepsPerPage;
+		using namespace Model::Sequencer;
+		const auto page_start = page * Steps::PerPage;
 		p.shared.hang.Set(encoder, time_now);
 
 		switch (encoder) {
-			case Model::SeqEncoderAlts::Transpose: {
+			case EncoderAlts::Transpose: {
 				const auto fine = c.button.fine.is_high();
-				const auto page_start = page * Model::SeqStepsPerPage;
-				for (auto step = 0u; step < Model::SeqStepsPerPage; step++) {
+				const auto page_start = page * Steps::PerPage;
+				for (auto step = 0u; step < Steps::PerPage; step++) {
 					p.IncStepInSequence(step + page_start, inc, fine);
 				}
 			} break;
 
-			case Model::SeqEncoderAlts::Random: {
+			case EncoderAlts::Random: {
 				// idea: a page of random values is created with the amount set to 0
 				// turning right increases random amount for the page
 				// turning left decreases amount
@@ -87,24 +89,24 @@ public:
 
 				random_range *= Model::output_octave_range * 12;
 				// TODO: create a buffer of random values upon entry and the encoder selects one
-				for (auto step = 0u; step < Model::SeqStepsPerPage; step++) {
+				for (auto step = 0u; step < Steps::PerPage; step++) {
 					float random_inc = int8_t(std::rand() / 256) / float(-INT8_MIN);
 					p.IncStepInSequence(step + page_start, random_range * random_inc, false);
 				}
 			} break;
 
-			case Model::SeqEncoderAlts::PlayMode:
+			case EncoderAlts::PlayMode:
 				if (inc > 0)
-					p.ReverseStepOrder(page_start, page_start + Model::SeqStepsPerPage - 1);
+					p.ReverseStepOrder(page_start, page_start + Steps::PerPage - 1);
 				else if (inc < 0)
-					p.RandomShuffleStepOrder(page_start, page_start + Model::SeqStepsPerPage - 1);
+					p.RandomShuffleStepOrder(page_start, page_start + Steps::PerPage - 1);
 				break;
 
-			case Model::SeqEncoderAlts::PhaseOffset: {
+			case EncoderAlts::PhaseOffset: {
 				if (inc > 0)
-					p.RotateStepsRight(page_start, page_start + Model::SeqStepsPerPage - 1);
+					p.RotateStepsRight(page_start, page_start + Steps::PerPage - 1);
 				else if (inc < 0)
-					p.RotateStepsLeft(page_start, page_start + Model::SeqStepsPerPage - 1);
+					p.RotateStepsLeft(page_start, page_start + Steps::PerPage - 1);
 
 			} break;
 		}
@@ -118,17 +120,19 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
+		using namespace Model::Sequencer;
+
 		if (hang.has_value()) {
 			auto lowest_scene_pressed =
 				std::distance(selected_pages.begin(), std::find(selected_pages.begin(), selected_pages.end(), true));
 			auto page = p.shared.youngest_scene_button.value_or(lowest_scene_pressed);
 
-			if (page < Model::SeqPages) {
+			if (page < NumPages) {
 				const auto chan = p.GetSelectedChannel();
 				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
 				const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 				const auto range = p.slot.settings.GetRange(chan);
-				for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+				for (auto i = 0u; i < Steps::PerPage; i++) {
 					const auto step = p.GetStep(step_offset + i);
 					auto color = is_gate ? Palette::Gate::fromLevel(step.ReadGate()) :
 										   Palette::Cv::fromLevel(step.ReadCv(), range);
@@ -137,10 +141,10 @@ public:
 			}
 
 		} else {
-			c.SetEncoderLed(Model::SeqEncoderAlts::Transpose, Palette::Setting::active);
-			c.SetEncoderLed(Model::SeqEncoderAlts::Random, Palette::Setting::active);
-			c.SetEncoderLed(Model::SeqEncoderAlts::PhaseOffset, Palette::Setting::active);
-			c.SetEncoderLed(Model::SeqEncoderAlts::PlayMode, Palette::Setting::active);
+			c.SetEncoderLed(EncoderAlts::Transpose, Palette::Setting::active);
+			c.SetEncoderLed(EncoderAlts::Random, Palette::Setting::active);
+			c.SetEncoderLed(EncoderAlts::PhaseOffset, Palette::Setting::active);
+			c.SetEncoderLed(EncoderAlts::PlayMode, Palette::Setting::active);
 		}
 	}
 };

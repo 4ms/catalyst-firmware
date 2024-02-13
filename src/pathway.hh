@@ -71,7 +71,7 @@ struct Data : Abstract::Data {
 			return false;
 		}
 		for (auto &i : vec) {
-			if (i >= Model::NumScenes) {
+			if (i >= Model::Macro::NumScenes) {
 				return false;
 			}
 		}
@@ -96,7 +96,7 @@ struct Data : Abstract::Data {
 		return 2;
 	}
 	bool Validate() const {
-		return a < Model::NumScenes && b < Model::NumScenes;
+		return a < Model::Macro::NumScenes && b < Model::Macro::NumScenes;
 	}
 
 private:
@@ -106,14 +106,14 @@ private:
 
 struct Data {
 	Abstract::Data &operator[](uint32_t idx) {
-		if (idx >= Model::NumNormalBanks) {
+		if (idx >= Model::Macro::Bank::NumNormal) {
 			return classic;
 		} else {
 			return normal[idx];
 		}
 	}
 	void Clear(uint32_t idx) {
-		if (idx >= Model::NumNormalBanks) {
+		if (idx >= Model::Macro::Bank::NumNormal) {
 			classic = Classic::Data{};
 		} else {
 			normal[idx] = Normal::Data{};
@@ -129,7 +129,7 @@ struct Data {
 	}
 
 private:
-	std::array<Normal::Data, Model::NumNormalBanks> normal{};
+	std::array<Normal::Data, Model::Macro::Bank::NumNormal> normal{};
 	Classic::Data classic{};
 };
 

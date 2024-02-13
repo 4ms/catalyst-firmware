@@ -22,7 +22,7 @@
 namespace Catalyst2::Sequencer
 {
 
-struct ChannelData : public std::array<Step, Model::MaxSeqSteps> {
+struct ChannelData : public std::array<Step, Model::Sequencer::Steps::Max> {
 	bool Validate() const {
 		auto ret = true;
 		for (auto &s : *this) {
@@ -55,7 +55,7 @@ struct Slot {
 };
 
 struct Data {
-	std::array<Slot, Model::NumSeqSlots> slot;
+	std::array<Slot, Model::Sequencer::NumSlots> slot;
 	uint8_t startup_slot;
 
 	bool validate() const {
@@ -63,23 +63,23 @@ struct Data {
 		for (auto &s : slot) {
 			ret &= s.validate();
 		}
-		ret &= startup_slot < Model::NumSeqSlots;
+		ret &= startup_slot < slot.size();
 		return ret;
 	}
 };
 
 inline uint8_t SeqPageToStep(uint8_t page) {
-	return page * Model::SeqStepsPerPage;
+	return page * Model::Sequencer::Steps::PerPage;
 }
 
 class Interface {
 	Data &data;
 	uint8_t cur_channel = 0;
-	uint8_t cur_page = Model::SeqPages;
+	uint8_t cur_page = Model::Sequencer::NumPages;
 	struct Clipboard {
 		ChannelData cd;
 		Settings::Channel cs;
-		std::array<Step, Model::SeqStepsPerPage> page;
+		std::array<Step, Model::Sequencer::Steps::PerPage> page;
 	} clipboard;
 	uint32_t time_trigged;
 
@@ -152,16 +152,16 @@ public:
 		return cur_page;
 	}
 	void DeselectPage() {
-		cur_page = Model::SeqPages;
+		cur_page = Model::Sequencer::NumPages;
 	}
 	bool IsPageSelected() {
-		return cur_page < Model::SeqPages;
+		return cur_page < Model::Sequencer::NumPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
 		IncStepInSequence(StepOnPageToStep(step), inc, fine);
 	}
 	void IncStepInSequence(uint8_t step, int32_t inc, bool fine) {
-		if (step >= Model::MaxSeqSteps)
+		if (step >= Model::Sequencer::Steps::Max)
 			return;
 		auto &c = slot.channel[cur_channel][step];
 		if (slot.settings.GetChannelMode(cur_channel).IsGate()) {
@@ -229,12 +229,12 @@ public:
 		slot.settings.Paste(cur_channel, clipboard.cs);
 	}
 	void CopyPage(uint8_t page) {
-		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+		for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
 			clipboard.page[i] = slot.channel[cur_channel][SeqPageToStep(page) + i];
 		}
 	}
 	void PastePage(uint8_t page) {
-		for (auto i = 0u; i < Model::SeqStepsPerPage; i++) {
+		for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
 			slot.channel[cur_channel][SeqPageToStep(page) + i] = clipboard.page[i];
 		}
 	}
@@ -242,7 +242,7 @@ public:
 private:
 	uint8_t StepOnPageToStep(uint8_t step_on_page) {
 		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
-		return step_on_page + (page * Model::SeqStepsPerPage);
+		return step_on_page + (page * Model::Sequencer::Steps::PerPage);
 	}
 };
 

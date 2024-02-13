@@ -8,12 +8,12 @@ namespace Catalyst2::Sequencer::SongMode
 {
 
 struct Data {
-	std::array<uint8_t, Model::MaxQueuedStartOffsetPages> queue;
+	std::array<uint8_t, Model::Sequencer::MaxQueuedStartOffsetPages> queue;
 	uint8_t size;
 	bool Validate() const {
 		auto ret = true;
 		for (auto &q : queue) {
-			ret &= q < Model::SeqPages;
+			ret &= q < Model::Sequencer::NumPages;
 		}
 		ret &= size <= queue.size();
 		return ret;
@@ -51,7 +51,7 @@ public:
 		return data.size;
 	}
 	Settings::StartOffset::type Read(uint8_t chan) const {
-		return data.queue[state[chan].pos] * Model::SeqStepsPerPage;
+		return data.queue[state[chan].pos] * Model::Sequencer::Steps::PerPage;
 	}
 	bool IsActive() const {
 		return data.size != 0;

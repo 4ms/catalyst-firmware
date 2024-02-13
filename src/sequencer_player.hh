@@ -113,10 +113,10 @@ public:
 		return ToStep(chan, 0, l, pm);
 	}
 	uint8_t GetPlayheadPage(uint8_t chan) const {
-		return channel[chan].playhead_step / Model::SeqPages;
+		return channel[chan].playhead_step / Model::Sequencer::NumPages;
 	}
 	uint8_t GetPlayheadStepOnPage(uint8_t chan) const {
-		return channel[chan].playhead_step % Model::SeqPages;
+		return channel[chan].playhead_step % Model::Sequencer::NumPages;
 	}
 	uint8_t GetRelativeStep(uint8_t chan, int8_t position) const {
 		return position == -1 ? channel[chan].prev_playhead_step :
@@ -176,7 +176,7 @@ private:
 			}
 		}
 
-		return ((step % length) + so) % Model::MaxSeqSteps;
+		return ((step % length) + so) % Model::Sequencer::Steps::Max;
 	}
 };
 } // namespace Catalyst2::Sequencer::Player

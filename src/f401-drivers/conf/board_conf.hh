@@ -30,7 +30,7 @@ using ResetJack = mdrivlib::DebouncedPin<PinDef{GPIO::C, PinNum::_13}, PinPolari
 //////////////// Buttons
 
 struct Buttons {
-	static constexpr std::array<uint8_t, Model::NumScenes> SceneMap{
+	static constexpr std::array<uint8_t, Model::NumChans> SceneMap{
 		11,
 		8,
 		7,
