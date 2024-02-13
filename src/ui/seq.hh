@@ -182,18 +182,7 @@ public:
 				return;
 			}
 
-			const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
-			const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
-			const auto range = p.slot.settings.GetRange(chan);
-			const auto fine_pressed = c.button.fine.is_pressed();
-			for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
-				auto step = p.GetStep(step_offset + i);
-				auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
-							 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :
-											Palette::Gate::fromLevelSequencer(step.ReadGate());
-
-				c.SetEncoderLed(i, color);
-			}
+			PaintStepValues(page, chan);
 
 			if (page == playheadpage) {
 				SetPlayheadLed();

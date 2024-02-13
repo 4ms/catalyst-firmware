@@ -56,6 +56,21 @@ public:
 		p.Update(phase);
 	}
 
+	void PaintStepValues(uint8_t page, uint8_t chan) {
+		const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
+		const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
+		const auto fine_pressed = c.button.fine.is_high();
+		const auto range = p.slot.settings.GetRange(chan);
+
+		for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
+			const auto step = p.GetStep(step_offset + i);
+			auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
+						 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :
+										Palette::Gate::fromLevelSequencer(step.ReadGate());
+			c.SetEncoderLed(i, color);
+		}
+	}
+
 protected:
 	void BlinkSelectedPage(uint8_t page) {
 		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
