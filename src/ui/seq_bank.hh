@@ -4,6 +4,7 @@
 #include "params.hh"
 #include "seq_common.hh"
 #include "seq_save.hh"
+#include "sequencer.hh"
 
 namespace Catalyst2::Ui::Sequencer
 {
@@ -48,7 +49,13 @@ public:
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
-			p.player.queue.Queue(p.GetSelectedChannel(), scene);
+			if (p.seqclock.IsPaused()) {
+				p.slot.settings.SetStartOffset(p.GetSelectedChannel(), Catalyst2::Sequencer::SeqPageToStep(scene));
+				p.player.Reset();
+				p.seqclock.Pause();
+			} else {
+				p.player.queue.Queue(p.GetSelectedChannel(), scene);
+			}
 		} else {
 			p.SelectChannel(scene);
 		}
