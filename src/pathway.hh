@@ -37,11 +37,6 @@ inline bool SceneIsNear(float point, float scene_width) {
 
 struct PathwayData {
 	static inline constexpr auto MaxPoints = 64u;
-	enum Mode { Normal, Classic } mode;
-
-	PathwayData(Mode mode = Mode::Normal)
-		: mode{mode} {
-	}
 
 	SceneId Read(uint32_t idx) const {
 		return vec[idx];
@@ -79,11 +74,7 @@ struct Data {
 		return pathways[idx];
 	}
 	void Clear(uint32_t idx) {
-		if (idx >= Model::NumNormalBanks) {
-			pathways[idx] = PathwayData{PathwayData::Mode::Classic};
-		} else {
-			pathways[idx] = PathwayData{PathwayData::Mode::Normal};
-		}
+		pathways[idx] = PathwayData{};
 	}
 	bool Validate() const {
 		auto ret = true;
