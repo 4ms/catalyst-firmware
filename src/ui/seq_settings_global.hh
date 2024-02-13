@@ -156,7 +156,7 @@ public:
 			PlayModeLedAnimation(c, playmode, time_now);
 
 			if (p.seqclock.IsInternal()) {
-				if (p.seqclock.Peek()) {
+				if (p.seqclock.PeekPhase() < 0.5f) {
 					col = Setting::bpm;
 				} else {
 					col = Palette::off;
