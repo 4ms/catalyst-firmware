@@ -39,7 +39,6 @@ public:
 		if (p.shared.save.Check(time_now) && c.button.morph.is_high()) {
 			interface = &save;
 			return;
-			// p.shared.do_save = true;
 		}
 		interface = this;
 	}
