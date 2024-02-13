@@ -5,6 +5,7 @@
 #include "controls.hh"
 #include "params.hh"
 #include "ui/abstract.hh"
+#include "ui/dac_calibration.hh"
 #include "ui/macro.hh"
 #include "ui/seq.hh"
 #include "util/countzip.hh"
@@ -38,6 +39,11 @@ public:
 		StartupAnimation(controls);
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
+		if (controls.button.shift.is_high() && controls.button.morph.is_high()) {
+			if (Calibration::Dac::Calibrate(params.data.shared().dac_calibration, controls)) {
+				Save();
+			}
+		}
 		params.macro.SelectBank(0);
 		params.sequencer.Reset(true);
 		ui = GetUi();
@@ -108,10 +114,13 @@ private:
 		const auto saved_mode = params.shared.data.saved_mode;
 
 		auto &b = controls.button;
+		bool wait = false;
 		if (b.play.is_high() && b.morph.is_high() && b.fine.is_high()) {
 			params.shared.data.saved_mode = Model::Mode::Sequencer;
+			wait = true;
 		} else if (b.bank.is_high() && b.add.is_high() && b.shift.is_high()) {
 			params.shared.data.saved_mode = Model::Mode::Macro;
+			wait = true;
 		}
 
 		if (saved_mode != params.shared.data.saved_mode) {
@@ -119,8 +128,8 @@ private:
 			settings.write(params.data.sequencer);
 		}
 
-		while (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() || b.add.is_high() ||
-			   b.shift.is_high())
+		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
+						b.add.is_high() || b.shift.is_high()))
 		{
 			__NOP(); // wait until the buttons are released before cont
 		}

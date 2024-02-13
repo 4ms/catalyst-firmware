@@ -4,6 +4,7 @@
 #include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "quantizer.hh"
+#include "ui/dac_calibration.hh"
 #include "validate.hh"
 #include <optional>
 #include <utility>
@@ -95,9 +96,11 @@ public:
 
 struct Data {
 	Model::Mode saved_mode = BuildOptions::default_mode;
+	Calibration::Dac::Data dac_calibration;
 	bool Validate() const {
 		auto ret = true;
 		ret &= validateBool(std::to_underlying(saved_mode));
+		ret &= dac_calibration.Validate();
 		return ret;
 	}
 };
