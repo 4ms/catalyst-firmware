@@ -42,7 +42,26 @@ public:
 		cv = Channel::Cv::Inc(cv, inc, fine, range);
 	}
 	float ReadGate(float random = 0.f) const {
-		return Channel::Gate::Read(gate, random);
+		static constexpr std::array gate_widths = {0.f,
+												   0.004f,
+												   0.032f,
+												   0.064f,
+												   0.128f,
+												   0.256f,
+												   7.f / 16.f,
+												   8.f / 16.f,
+												   9.f / 16.f,
+												   10.f / 16.f,
+												   11.f / 16.f,
+												   12.f / 16.f,
+												   13.f / 16.f,
+												   14.f / 16.f,
+												   15.f / 16.f,
+												   1.f};
+		auto val = gate_widths[gate];
+		val += random * Channel::Gate::max;
+		val = std::clamp(val, 0.f, 1.f);
+		return val;
 	}
 	void IncGate(int32_t inc) {
 		gate = Channel::Gate::Inc(gate, inc);
