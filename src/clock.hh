@@ -67,7 +67,6 @@ class Interface {
 	uint32_t prevtaptime;
 	bool external = false;
 	bool step = false;
-	bool peek = false;
 	bool pause = false;
 
 public:
@@ -85,7 +84,6 @@ public:
 
 		peek_cnt++;
 		if (peek_cnt >= period) {
-			peek = !peek;
 			peek_cnt = 0;
 		}
 
@@ -137,9 +135,6 @@ public:
 	}
 	void Reset() {
 		cnt = 0;
-	}
-	bool Peek() const {
-		return peek;
 	}
 	void Pause() {
 		Pause(!pause);
