@@ -152,13 +152,14 @@ public:
 		return cur_channel < Model::NumChans;
 	}
 	void SelectPage(uint8_t page) {
-		cur_page = page;
+		if (page == cur_page) {
+			cur_page = Model::Sequencer::NumPages;
+		} else {
+			cur_page = page;
+		}
 	}
 	uint8_t GetSelectedPage() {
 		return cur_page;
-	}
-	void DeselectPage() {
-		cur_page = Model::Sequencer::NumPages;
 	}
 	bool IsPageSelected() {
 		return cur_page < Model::Sequencer::NumPages;
