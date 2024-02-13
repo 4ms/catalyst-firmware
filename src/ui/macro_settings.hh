@@ -91,7 +91,7 @@ public:
 					break;
 				}
 				inc = hang.has_value() ? inc : 0;
-				p.slider_slew.Inc(inc);
+				p.slider_slew.Inc(inc, c.button.fine.is_high());
 				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
 				break;
 			case EncoderAlts::SliderSlewCurve:
