@@ -75,6 +75,7 @@ inline uint8_t SeqPageToStep(uint8_t page) {
 class Interface {
 	Data &data;
 	uint8_t cur_channel = 0;
+	uint8_t prev_channel = 0;
 	uint8_t cur_page = Model::Sequencer::NumPages;
 	struct Clipboard {
 		ChannelData cd;
@@ -133,14 +134,19 @@ public:
 		}
 	}
 
+	void SelectChannel() {
+		cur_channel = prev_channel;
+	}
 	void SelectChannel(uint8_t chan) {
-		cur_channel = chan;
+		if (chan == cur_channel) {
+			prev_channel = chan;
+			cur_channel = Model::NumChans;
+		} else {
+			cur_channel = chan;
+		}
 	}
 	uint8_t GetSelectedChannel() {
 		return cur_channel;
-	}
-	void DeselectChannel() {
-		cur_channel = Model::NumChans;
 	}
 	bool IsChannelSelected() {
 		return cur_channel < Model::NumChans;
