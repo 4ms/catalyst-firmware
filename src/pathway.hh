@@ -35,35 +35,27 @@ inline bool SceneIsNear(float point, float scene_width) {
 	return point != std::clamp(point, near_threshold, high);
 }
 
-namespace Abstract
-{
-struct Data {
-	virtual SceneId Read(uint32_t idx) const = 0;
-	virtual void Erase(uint32_t idx){};
-	virtual void Set(uint32_t idx, SceneId d) = 0;
-	virtual void Insert(uint32_t idx, SceneId d){};
-	virtual uint32_t size() const = 0;
-};
-} // namespace Abstract
+struct PathwayData {
+	static inline constexpr auto MaxPoints = 64u;
+	enum Mode { Normal, Classic } mode;
 
-namespace Normal
-{
-inline constexpr auto MaxPoints = 64u;
+	PathwayData(Mode mode = Mode::Normal)
+		: mode{mode} {
+	}
 
-struct Data : Abstract::Data {
-	SceneId Read(uint32_t idx) const override {
+	SceneId Read(uint32_t idx) const {
 		return vec[idx];
 	}
-	void Set(uint32_t idx, SceneId d) override {
+	void Set(uint32_t idx, SceneId d) {
 		vec[idx] = d;
 	}
-	void Insert(uint32_t idx, SceneId d) override {
+	void Insert(uint32_t idx, SceneId d) {
 		vec.insert(idx, d);
 	}
-	void Erase(uint32_t idx) override {
+	void Erase(uint32_t idx) {
 		vec.erase(idx);
 	}
-	uint32_t size() const override {
+	uint32_t size() const {
 		return vec.size();
 	}
 	bool Validate() const {
@@ -81,60 +73,32 @@ struct Data : Abstract::Data {
 private:
 	FixedVector<SceneId, MaxPoints> vec{SceneId{0}, SceneId{7}};
 };
-} // namespace Normal
-
-namespace Classic
-{
-struct Data : Abstract::Data {
-	SceneId Read(uint32_t idx) const override {
-		return idx ? b : a;
-	}
-	void Set(uint32_t idx, SceneId d) override {
-		idx ? b = d : a = d;
-	}
-	uint32_t size() const override {
-		return 2;
-	}
-	bool Validate() const {
-		return a < Model::NumScenes && b < Model::NumScenes;
-	}
-
-private:
-	SceneId a = 0, b = 7;
-};
-} // namespace Classic
 
 struct Data {
-	Abstract::Data &operator[](uint32_t idx) {
-		if (idx >= Model::NumNormalBanks) {
-			return classic;
-		} else {
-			return normal[idx];
-		}
+	PathwayData &operator[](uint32_t idx) {
+		return pathways[idx];
 	}
 	void Clear(uint32_t idx) {
 		if (idx >= Model::NumNormalBanks) {
-			classic = Classic::Data{};
+			pathways[idx] = PathwayData{PathwayData::Mode::Classic};
 		} else {
-			normal[idx] = Normal::Data{};
+			pathways[idx] = PathwayData{PathwayData::Mode::Normal};
 		}
 	}
 	bool Validate() const {
 		auto ret = true;
-		for (auto &i : normal) {
-			ret &= i.Validate();
+		for (auto &pathway : pathways) {
+			ret &= pathway.Validate();
 		}
-		ret &= classic.Validate();
 		return ret;
 	}
 
 private:
-	std::array<Normal::Data, Model::NumNormalBanks> normal{};
-	Classic::Data classic{};
+	std::array<PathwayData, Model::TotalBanks> pathways{};
 };
 
 class Interface {
-	Abstract::Data *data;
+	PathwayData *pathway;
 	SceneId scene_left = 0;
 	SceneId scene_right = 0;
 	SceneId scene_nearest = 0;
@@ -144,8 +108,8 @@ class Interface {
 	std::optional<SceneId> last_scene_on;
 
 public:
-	void Load(Abstract::Data &d) {
-		data = &d;
+	void Load(PathwayData &d) {
+		pathway = &d;
 	}
 
 	void Update(float point) {
@@ -162,17 +126,17 @@ public:
 	}
 	// classic fucntions
 	void ReplaceSceneA(SceneId scene) {
-		data->Set(0, scene);
+		pathway->Set(0, scene);
 	}
 	void ReplaceSceneB(SceneId scene) {
-		data->Set(1, scene);
+		pathway->Set(1, scene);
 	}
 
 	float GetPhase() const {
 		return phase;
 	}
 	SceneId SceneRelative(int8_t pos = 0) const {
-		return data->Read(Relative(pos));
+		return pathway->Read(Relative(pos));
 	}
 	bool OnAScene() const {
 		return on_a_scene;
@@ -188,16 +152,16 @@ public:
 		}
 	}
 	void ReplaceScene(SceneId scene) {
-		data->Set(scene_nearest, scene);
+		pathway->Set(scene_nearest, scene);
 		prev_index = scene_nearest;
 	}
 	void InsertScene(SceneId scene) {
 		prev_index = scene_left + 1;
-		data->Insert(prev_index, scene);
+		pathway->Insert(prev_index, scene);
 	}
 	void InsertSceneAfterLast(SceneId scene) {
 		prev_index++;
-		data->Insert(prev_index, scene);
+		pathway->Insert(prev_index, scene);
 	}
 
 	void RemoveSceneRelative(int8_t pos = 0) {
@@ -205,18 +169,18 @@ public:
 			return;
 		}
 
-		data->Erase(Relative(pos));
+		pathway->Erase(Relative(pos));
 	}
 
 	void ClearScenes() {
 		// erase all scenes in between first and last one.
 		while (size() > 2) {
-			data->Erase(1);
+			pathway->Erase(1);
 		}
 	}
 
 	uint8_t size() {
-		return data->size();
+		return pathway->size();
 	}
 
 private:

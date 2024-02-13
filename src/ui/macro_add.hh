@@ -79,7 +79,7 @@ public:
 		ClearButtonLeds(c);
 
 		auto count = p.bank.pathway.size();
-		const auto phase = 1.f / (Catalyst2::Macro::Pathway::Normal::MaxPoints / static_cast<float>(count));
+		const auto phase = 1.f / (Catalyst2::Macro::Pathway::PathwayData::MaxPoints / static_cast<float>(count));
 
 		while (count > 8) {
 			count -= 8;
