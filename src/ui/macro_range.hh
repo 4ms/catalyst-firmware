@@ -35,12 +35,7 @@ public:
 		} else {
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				const auto r = p.bank.GetRange(i);
-				const auto phase = (r.PosAmount() + r.NegAmount()) / 1.5f;
-				const auto blend = phase < .25f ? std::array{Palette::off, Palette::red} :
-								   phase < .5f	? std::array{Palette::red, Palette::yellow} :
-								   phase < .75f ? std::array{Palette::yellow, Palette::green} :
-												  std::array{Palette::green, Palette::blue};
-				c.SetEncoderLed(i, blend[0].blend(blend[1], phase));
+				c.SetEncoderLed(i, Palette::Range::color(r));
 			}
 		}
 	}

@@ -39,6 +39,16 @@ inline constexpr auto Negative = full_red;
 inline constexpr auto Positive = blue;
 } // namespace Voltage
 
+namespace Range
+{
+inline constexpr auto Negative = full_red;
+inline constexpr std::array Positive = {blue, cyan, green, yellow, orange, magenta};
+
+constexpr Color color(Channel::Cv::Range range) {
+	return Positive[range.Index()];
+}
+} // namespace Range
+
 namespace Setting
 {
 inline constexpr auto null = very_dim_grey;
@@ -140,23 +150,21 @@ inline constexpr Color color(uint8_t val) {
 
 namespace Cv
 {
-namespace Details
-{
-inline Color pimpl(int level, uint16_t zero) {
-	level -= zero;
+
+inline Color fromOutput(Model::Output::type out_level) {
+	constexpr auto zero = Channel::Output::from_volts(0.f);
+	int level = out_level - zero;
 	const auto color = level < 0 ? Voltage::Negative : Voltage::Positive;
-	const auto phase = (std::abs(level) / static_cast<float>(zero));
+	auto phase = level / static_cast<float>(zero);
+	phase *= level < 0 ? -1.f : 0.5f;
 	return off.blend(color, phase);
 }
-} // namespace Details
+
 inline Color fromLevel(Channel::Cv::type level, Channel::Cv::Range range) {
-	level = std::clamp<int32_t>(level, RangeToMin(range), RangeToMax(range));
-	return Details::pimpl(level, Channel::Cv::zero);
+	auto out = Channel::Output::Scale(level, range.Min(), range.Max());
+	return fromOutput(out);
 }
 
-inline Color fromOutput(Model::Output::type level) {
-	return Details::pimpl(level, Channel::Output::from_volts(0.f));
-}
 } // namespace Cv
 
 namespace Gate

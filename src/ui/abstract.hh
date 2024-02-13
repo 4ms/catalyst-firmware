@@ -114,14 +114,16 @@ void DisplayRange(Controls &c, Channel::Cv::Range range) {
 	const auto negleds = static_cast<uint8_t>(neg * half);
 	const auto lastposledfade = pos * half - posleds;
 	const auto lastnegledfade = neg * half - negleds;
+	const auto PositiveColor = Palette::Range::color(range);
+	const auto NegativeColor = Palette::Range::Negative;
 	for (auto i = 0u; i < posleds; i++) {
-		c.SetEncoderLed(i + half, Palette::Voltage::Positive);
+		c.SetEncoderLed(i + half, PositiveColor);
 	}
-	c.SetEncoderLed(half + posleds, Palette::off.blend(Palette::Voltage::Positive, lastposledfade));
+	c.SetEncoderLed(half + posleds, Palette::off.blend(PositiveColor, lastposledfade));
 	for (auto i = 0u; i < negleds; i++) {
-		c.SetEncoderLed(half - 1 - i, Palette::Voltage::Negative);
+		c.SetEncoderLed(half - 1 - i, NegativeColor);
 	}
-	c.SetEncoderLed(half - negleds - 1, Palette::off.blend(Palette::Voltage::Negative, lastnegledfade));
+	c.SetEncoderLed(half - negleds - 1, Palette::off.blend(NegativeColor, lastnegledfade));
 }
 
 inline void SetLedsClockDiv(Controls &c, uint32_t div) {

@@ -42,13 +42,17 @@ public:
 			ConfirmCopy(p.shared, p.shared.youngest_scene_button.value());
 		}
 
+		p.main_mode = false;
+
 		if (p.shared.mode == Model::Mode::Sequencer) {
 			interface = &sequencer;
 			return;
 		}
 
-		if (c.button.add.is_high() && !p.bank.IsBankClassic()) {
-			interface = &add;
+		if (c.button.add.is_high()) {
+			p.main_mode = false;
+			if (!p.bank.IsBankClassic())
+				interface = &add;
 			return;
 		}
 		if (c.button.bank.is_high()) {
@@ -69,6 +73,8 @@ public:
 			interface = &settings;
 			return;
 		}
+
+		p.main_mode = true;
 		interface = this;
 	}
 	void OnSceneButtonPress(uint8_t button) {
