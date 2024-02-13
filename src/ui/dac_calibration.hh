@@ -12,7 +12,9 @@ namespace Catalyst2::Calibration::Dac
 {
 
 // 100 millivolts up or down
-inline constexpr auto max_offset = Channel::Output::from_volts(-4.9);
+inline constexpr auto max_adjustment_volts = .1f;
+
+inline constexpr auto max_offset = Channel::Output::from_volts(-5 + max_adjustment_volts);
 inline constexpr auto min_offset = -max_offset;
 
 inline constexpr auto slope_scale = 100000.f;
