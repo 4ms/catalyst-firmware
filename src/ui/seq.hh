@@ -128,7 +128,7 @@ public:
 	}
 	void OnSceneButtonPress(uint8_t button) {
 		if (!p.IsChannelSelected()) {
-			p.SelectChannel(button);
+			return;
 		}
 		if (c.button.fine.is_high()) {
 			p.PastePage(button);
@@ -137,6 +137,10 @@ public:
 		}
 	}
 	void OnSceneButtonRelease(uint8_t button) {
+		if (!p.IsChannelSelected()) {
+			p.SelectChannel(button);
+			return;
+		}
 		if (p.shared.did_paste) {
 			p.shared.did_paste = false;
 			return;
@@ -152,11 +156,7 @@ public:
 			just_queued = false;
 			return;
 		}
-		if (p.IsPageSelected() && button == p.GetSelectedPage()) {
-			p.DeselectPage();
-		} else {
-			p.SelectPage(button);
-		}
+		p.SelectPage(button);
 	}
 
 	static constexpr bool ManualColorMode = false;

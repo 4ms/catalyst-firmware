@@ -14,7 +14,7 @@ public:
 	void Init() override {
 		p.shared.hang.Cancel();
 		if (!p.IsChannelSelected()) {
-			p.SelectChannel(0);
+			p.SelectChannel();
 		}
 		p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
 	}
@@ -41,7 +41,9 @@ public:
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		p.shared.hang.Cancel();
-		p.SelectChannel(scene);
+		if (scene != p.GetSelectedChannel()) {
+			p.SelectChannel(scene);
+		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());

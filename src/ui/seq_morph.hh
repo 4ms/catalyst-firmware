@@ -11,7 +11,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		if (!p.IsChannelSelected()) {
-			p.SelectChannel(0);
+			p.SelectChannel();
 		}
 	}
 	void Update(Abstract *&interface) override {
@@ -31,16 +31,7 @@ public:
 	}
 
 	void OnSceneButtonRelease(uint8_t button) {
-		if (c.button.fine.is_high()) {
-			p.PastePage(button);
-		} else {
-			if (!c.button.fine.just_went_low() && !c.button.shift.just_went_low()) {
-				if (p.IsPageSelected() && button == p.GetSelectedPage())
-					p.DeselectPage();
-				else
-					p.SelectPage(button);
-			}
-		}
+		p.SelectPage(button);
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);

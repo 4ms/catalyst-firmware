@@ -50,11 +50,7 @@ public:
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
 			p.player.queue.Queue(p.GetSelectedChannel(), scene);
 		} else {
-			if (scene == p.GetSelectedChannel()) {
-				p.DeselectChannel();
-			} else {
-				p.SelectChannel(scene);
-			}
+			p.SelectChannel(scene);
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

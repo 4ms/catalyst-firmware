@@ -18,7 +18,7 @@ public:
 	void Init() override {
 		p.shared.hang.Cancel();
 		if (!p.IsChannelSelected()) {
-			p.SelectChannel(0);
+			p.SelectChannel();
 		}
 
 		is_latching_scene_buts = false;
