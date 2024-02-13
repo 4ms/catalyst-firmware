@@ -4,19 +4,37 @@
 #include "conf/palette.hh"
 #include "controls.hh"
 #include "macro_common.hh"
+#include "macro_reset.hh"
 #include "params.hh"
 
 namespace Catalyst2::Ui::Macro
 {
 
 class Settings : public Usual {
+	Reset reset{p, c};
+
 public:
 	using Usual::Usual;
 	void Init() override {
 		p.shared.hang.Cancel();
+		p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
+		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+
+		if (!c.button.play.is_high()) {
+			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
+		}
+
+		if (c.button.play.just_went_high()) {
+			p.recorder.CueRecord();
+		}
+
+		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {
+			interface = &reset;
+			return;
+		}
 
 		if (!c.button.shift.is_high()) {
 			return;

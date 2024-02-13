@@ -31,6 +31,7 @@ public:
 	// using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
+		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -43,6 +44,10 @@ public:
 		}
 
 		p.main_mode = false;
+
+		if (c.button.play.just_went_high()) {
+			p.recorder.Reset();
+		}
 
 		if (p.shared.mode == Model::Mode::Sequencer) {
 			interface = &sequencer;
@@ -110,6 +115,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
 		c.SetPlayLed(p.recorder.IsPlaying());
+
 		auto ysb = p.shared.youngest_scene_button;
 		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {

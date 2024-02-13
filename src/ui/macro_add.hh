@@ -3,36 +3,24 @@
 #include "conf/flash_layout.hh"
 #include "controls.hh"
 #include "macro_common.hh"
-#include "macro_reset.hh"
 #include "params.hh"
 
 namespace Catalyst2::Ui::Macro
 {
 
 class Add : public Usual {
-	Reset reset{p, c};
 	bool first_insert;
 
 public:
 	using Usual::Usual;
 	void Init() override {
 		first_insert = true;
-		p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 	}
 	void Update(Abstract *&interface) override {
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
-
-		if (!add || !shift || !first_insert) {
-			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
-		}
-
-		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {
-			interface = &reset;
-			return;
-		}
 
 		if (!add && !shift) {
 			return;

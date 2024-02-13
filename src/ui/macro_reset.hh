@@ -19,7 +19,7 @@ public:
 	}
 	void Update(Abstract *&interface) override {
 		if (wait) {
-			if (!c.button.shift.is_high() && !c.button.add.is_high()) {
+			if (!c.button.shift.is_high() && !c.button.play.is_high()) {
 				wait = false;
 			}
 		} else {

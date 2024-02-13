@@ -27,20 +27,26 @@ public:
 			}
 		}
 
-		const auto shift = c.button.shift.is_high();
-
-		if (c.button.play.just_went_high()) {
-			if (shift) {
-				p.recorder.CueRecord();
-			} else {
-				p.recorder.Reset();
-			}
-		}
+		PlayButtonDisplay();
 
 		auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
 		pos = p.slider_slew.Update(pos);
 		p.shared.pos = pos;
 		p.bank.pathway.Update(pos);
+	}
+
+private:
+	void PlayButtonDisplay() {
+		if (c.button.bank.is_high()) {
+			return;
+		}
+		bool level;
+		if (p.recorder.IsCued()) {
+			level = (p.shared.internalclock.TimeNow() >> 10) & 1;
+		} else {
+			level = p.recorder.IsPlaying();
+		}
+		c.SetPlayLed(level);
 	}
 };
 
