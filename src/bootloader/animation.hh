@@ -38,6 +38,7 @@ struct LedAnimation {
 				break;
 
 			case Animation::SUCCESS:
+				step_time = 200;
 				if (ctr >= Model::NumChans)
 					ctr = 0;
 
