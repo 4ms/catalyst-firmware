@@ -57,5 +57,8 @@ public:
 	bool Validate() const {
 		return val <= max;
 	}
+	constexpr uint8_t Index() const {
+		return val;
+	}
 };
 } // namespace Catalyst2::Channel::Cv

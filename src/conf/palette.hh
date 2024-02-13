@@ -39,6 +39,16 @@ inline constexpr auto Negative = full_red;
 inline constexpr auto Positive = blue;
 } // namespace Voltage
 
+namespace Range
+{
+inline constexpr auto Negative = full_red;
+inline constexpr std::array Positive = {blue, cyan, green, yellow, orange, magenta};
+
+constexpr Color color(Channel::Cv::Range range) {
+	return Positive[range.Index()];
+}
+} // namespace Range
+
 namespace Setting
 {
 inline constexpr auto null = very_dim_grey;
