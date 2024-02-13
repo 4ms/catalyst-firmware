@@ -32,7 +32,7 @@ namespace Sequencer
 inline constexpr auto NumSlots = 8u;
 inline constexpr auto NumPages = NumChans;
 
-inline constexpr auto MaxQueuedStartOffsetPages = 16u;
+inline constexpr auto MaxQueuedStartOffsetPages = 64u;
 
 namespace Steps
 {
