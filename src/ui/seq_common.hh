@@ -61,7 +61,7 @@ protected:
 		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
 	}
 	void SetPlayheadLed() {
-		static constexpr auto threshold = .125f;
+		static constexpr auto threshold = .25f;
 		bool set = false;
 		if (p.seqclock.IsPaused()) {
 			set = p.seqclock.PeekPhase() < threshold;
