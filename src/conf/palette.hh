@@ -171,8 +171,12 @@ namespace Gate
 {
 inline constexpr auto color = dim_green;
 inline constexpr auto max = cyan;
-inline Color fromLevel(Channel::Gate::type level) {
+inline Color fromLevelSequencer(Channel::Gate::type level) {
 	return level >= 1.f ? max : off.blend(color, level);
+}
+
+inline Color fromLevelMacro(Channel::Gate::type level) {
+	return off.blend(color, level);
 }
 
 inline Color fromOutput(Model::Output::type level) {

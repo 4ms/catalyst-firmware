@@ -184,7 +184,7 @@ public:
 				auto step = p.GetStep(step_offset + i);
 				auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
 							 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :
-											Palette::Gate::fromLevel(step.ReadGate());
+											Palette::Gate::fromLevelSequencer(step.ReadGate());
 
 				c.SetEncoderLed(i, color);
 			}

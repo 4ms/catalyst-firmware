@@ -134,7 +134,7 @@ public:
 				const auto range = p.slot.settings.GetRange(chan);
 				for (auto i = 0u; i < Steps::PerPage; i++) {
 					const auto step = p.GetStep(step_offset + i);
-					auto color = is_gate ? Palette::Gate::fromLevel(step.ReadGate()) :
+					auto color = is_gate ? Palette::Gate::fromLevelSequencer(step.ReadGate()) :
 										   Palette::Cv::fromLevel(step.ReadCv(), range);
 					c.SetEncoderLed(i, color);
 				}
