@@ -35,6 +35,8 @@ inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::Pl
 
 class Usual : public Abstract {
 
+	uint8_t last_playhead_pos = Model::Sequencer::NumPages;
+
 public:
 	Catalyst2::Sequencer::Interface &p;
 	Usual(Catalyst2::Sequencer::Interface &p, Controls &c)
@@ -78,15 +80,22 @@ protected:
 	void SetPlayheadLed() {
 		static constexpr auto threshold = .25f;
 		bool set = false;
+
+		auto pos = p.player.GetPlayheadStepOnPage(p.GetSelectedChannel());
+		if (last_playhead_pos != pos) {
+			last_playhead_pos = pos;
+			p.seqclock.ResetPeek();
+		}
+
 		if (p.seqclock.IsPaused()) {
 			set = p.seqclock.PeekPhase() < threshold;
 		} else {
 			set = p.seqclock.GetPhase() < threshold;
 		}
-		if (!set) {
-			return;
+
+		if (set) {
+			c.SetEncoderLed(pos, Palette::SeqHead::color);
 		}
-		c.SetEncoderLed(p.player.GetPlayheadStepOnPage(p.GetSelectedChannel()), Palette::SeqHead::color);
 	}
 };
 } // namespace Catalyst2::Ui::Sequencer

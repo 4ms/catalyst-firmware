@@ -132,6 +132,9 @@ public:
 		auto out = static_cast<float>(peek_cnt) / data.bpm_in_ticks;
 		return out;
 	}
+	void ResetPeek() {
+		peek_cnt = 0;
+	}
 	void Reset() {
 		cnt = 0;
 	}
