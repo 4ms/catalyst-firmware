@@ -36,7 +36,6 @@ public:
 
 	void Start() {
 		controls.Start();
-		StartupAnimation(controls);
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
 		if (controls.button.shift.is_high() && controls.button.morph.is_high()) {
@@ -44,6 +43,7 @@ public:
 				Save();
 			}
 		}
+		StartupAnimation(controls);
 		params.macro.SelectBank(0);
 		params.sequencer.Reset(true);
 		ui = GetUi();
