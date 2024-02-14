@@ -84,8 +84,8 @@ public:
 				// then turning right will once again increase the amount
 
 				auto random_range = p.slot.settings.GetRandomOrGlobal(p.GetSelectedChannel());
-				if (random_range == 0)
-					random_range = Random::Amount::inc;
+				if (random_range == 0.f)
+					random_range = Random::Amount::def;
 
 				random_range *= Model::output_octave_range * 12;
 				// TODO: create a buffer of random values upon entry and the encoder selects one

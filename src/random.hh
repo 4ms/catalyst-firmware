@@ -15,8 +15,10 @@ namespace Amount
 using type = float;
 inline constexpr auto min = 0.f;
 inline constexpr auto max = 1.f;
-inline constexpr auto def = 0.f;
+
+// +/1 2 semitones
 inline constexpr auto inc = (max / (Model::output_octave_range * 12)) * 2;
+inline constexpr auto def = inc;
 } // namespace Amount
 template<typename T>
 inline void RandomizeBuffer(T &d) {
