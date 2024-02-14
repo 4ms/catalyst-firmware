@@ -115,13 +115,13 @@ inline bool Calibrate(Data &d, Controls &c) {
 			Ui::SetEncoderLedsCount(c, 8, 0, Palette::off);
 		}
 
-		if (c.button.add.is_high()) {
-			d = prev_;
-			return false;
-		}
-		if (c.button.play.is_high()) {
-			d = Data{};
-			return true;
+		if (c.button.play.just_went_high()) {
+			if (c.button.bank.is_high()) {
+				d = Data{};
+			} else {
+				d = prev_;
+				return false;
+			}
 		}
 		if (c.button.bank.is_high() && c.button.morph.is_high()) {
 			return true;
