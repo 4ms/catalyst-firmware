@@ -45,10 +45,8 @@ public:
 		const uint8_t step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetEncoderLed(i, Palette::Probability::color(p.GetStep(step_offset + i).ReadProbability()));
-		}
-		if (page == playheadpage) {
-			SetPlayheadLed();
+			auto color = Palette::Probability::color(p.GetStep(step_offset + i).ReadProbability());
+			PaintStep(page, i, color);
 		}
 	}
 };

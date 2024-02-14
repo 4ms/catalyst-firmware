@@ -182,17 +182,14 @@ public:
 				return;
 			}
 
-			PaintStepValues(page, chan);
+			PaintStepValues(page);
 
-			if (page == playheadpage) {
-				SetPlayheadLed();
-			}
 		} else {
-			EncoderDisplayOutput(outs);
+			AllChannelStepOutput(outs);
 		}
 	}
 
-	void EncoderDisplayOutput(const Model::Output::Buffer &buf) {
+	void AllChannelStepOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
 			const auto col = p.slot.settings.GetChannelMode(chan).IsGate() ? Palette::Gate::fromOutput(val) :
 																			 Palette::Cv::fromOutput(val);

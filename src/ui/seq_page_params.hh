@@ -127,9 +127,8 @@ public:
 				std::distance(selected_pages.begin(), std::find(selected_pages.begin(), selected_pages.end(), true));
 			auto page = p.shared.youngest_scene_button.value_or(lowest_scene_pressed);
 
-			const auto chan = p.GetSelectedChannel();
 			if (page < NumPages) {
-				PaintStepValues(page, chan);
+				PaintStepValues(page);
 			}
 
 		} else {
