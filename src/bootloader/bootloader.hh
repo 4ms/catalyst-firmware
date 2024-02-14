@@ -254,16 +254,17 @@ struct GateBootloader {
 	}
 
 	void copy_firmware() {
+		constexpr auto block_size_bytes = 16 * 1024;
 		if (kStartReceiveAddress != AppFlashAddr) {
 			// Console::write("Copying from receive sectors to execution sectors\n");
 			uint32_t src_addr = kStartReceiveAddress;
 			uint32_t dst_addr = AppFlashAddr;
 			while (dst_addr < kStartReceiveAddress) {
-				auto data = std::span<uint32_t>{(uint32_t *)src_addr, 16 * 1024};
+				auto data = std::span<uint32_t>{(uint32_t *)src_addr, block_size_bytes / sizeof(uint32_t)};
 				mdrivlib::InternalFlash::erase_sector(dst_addr);
 				mdrivlib::InternalFlash::write(data, dst_addr);
-				src_addr += 16 * 1024;
-				dst_addr += 16 * 1024;
+				src_addr += block_size_bytes;
+				dst_addr += block_size_bytes;
 			}
 		}
 	}

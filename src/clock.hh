@@ -67,7 +67,6 @@ class Interface {
 	uint32_t prevtaptime;
 	bool external = false;
 	bool step = false;
-	bool peek = false;
 	bool pause = false;
 
 public:
@@ -85,7 +84,6 @@ public:
 
 		peek_cnt++;
 		if (peek_cnt >= period) {
-			peek = !peek;
 			peek_cnt = 0;
 		}
 
@@ -132,11 +130,11 @@ public:
 		auto out = static_cast<float>(peek_cnt) / data.bpm_in_ticks;
 		return out;
 	}
+	void ResetPeek() {
+		peek_cnt = 0;
+	}
 	void Reset() {
 		cnt = 0;
-	}
-	bool Peek() const {
-		return peek;
 	}
 	void Pause() {
 		Pause(!pause);

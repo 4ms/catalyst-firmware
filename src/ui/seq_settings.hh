@@ -160,7 +160,7 @@ public:
 			c.SetEncoderLed(EncoderAlts::Transpose, col);
 
 			if (playmode.has_value()) {
-				PlayModeLedAnnimation(c, playmode.value(), time_now);
+				PlayModeLedAnimation(c, playmode.value(), time_now);
 			} else {
 				c.SetEncoderLed(EncoderAlts::PlayMode, Setting::null);
 			}

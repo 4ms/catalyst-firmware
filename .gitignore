@@ -3,3 +3,5 @@ build/
 .DS_Store
 architecture.png
 .cache
+start_gdb.sh
+start_openocd.sh

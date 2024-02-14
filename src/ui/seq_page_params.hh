@@ -127,17 +127,9 @@ public:
 				std::distance(selected_pages.begin(), std::find(selected_pages.begin(), selected_pages.end(), true));
 			auto page = p.shared.youngest_scene_button.value_or(lowest_scene_pressed);
 
+			const auto chan = p.GetSelectedChannel();
 			if (page < NumPages) {
-				const auto chan = p.GetSelectedChannel();
-				const auto is_gate = p.slot.settings.GetChannelMode(chan).IsGate();
-				const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
-				const auto range = p.slot.settings.GetRange(chan);
-				for (auto i = 0u; i < Steps::PerPage; i++) {
-					const auto step = p.GetStep(step_offset + i);
-					auto color = is_gate ? Palette::Gate::fromLevelSequencer(step.ReadGate()) :
-										   Palette::Cv::fromLevel(step.ReadCv(), range);
-					c.SetEncoderLed(i, color);
-				}
+				PaintStepValues(page, chan);
 			}
 
 		} else {
