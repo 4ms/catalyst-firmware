@@ -154,10 +154,15 @@ private:
 
 		const auto step_phase = p.player.GetStepPhase(chan);
 
+		float prev_step_phase = 2.f;
 		for (int i = -1; i <= 1; i++) {
 			auto s = p.GetRelativeStep(chan, i);
 			auto s_phase = step_phase - s.ReadTrigDelay() - i;
 			if (s_phase >= 0.f && s_phase < 1.f) {
+				if (prev_step_phase < s_phase) {
+					continue;
+				}
+				prev_step_phase = s_phase;
 				s_phase *= s.ReadRetrig() + 1;
 				s_phase -= static_cast<uint32_t>(s_phase);
 				const auto gate_val = p.GetRelativeStepGate(chan, i);
