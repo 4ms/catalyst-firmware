@@ -125,8 +125,10 @@ private:
 		}
 
 		if (saved_mode != params.shared.data.saved_mode) {
-			// Because seq data contains the shared data, we have to write it:
-			settings.write(params.data.sequencer);
+			if constexpr (macro_is_smaller)
+				settings.write(params.data.macro);
+			else
+				settings.write(params.data.sequencer);
 		}
 
 		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
