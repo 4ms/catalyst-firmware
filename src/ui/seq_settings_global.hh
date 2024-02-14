@@ -166,11 +166,7 @@ public:
 			}
 			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
 
-			if (c.button.fine.is_high()) {
-				//	col = Palette::Random::color(p.randompool.GetSeed());
-			} else {
-				col = Palette::off.blend(Palette::Random::set, random);
-			}
+			col = Palette::off.blend(Palette::Random::set, random);
 			c.SetEncoderLed(EncoderAlts::Random, col);
 		}
 	}
