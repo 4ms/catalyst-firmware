@@ -17,11 +17,8 @@ inline constexpr auto max_adjustment_volts = .1f;
 inline constexpr auto max_offset = Channel::Output::from_volts(-5 + max_adjustment_volts);
 inline constexpr auto min_offset = -max_offset;
 
-inline constexpr auto slope_scale = 100000.f;
-inline constexpr auto r_slope_scale = 1.f / slope_scale;
-inline constexpr int16_t max_slope =
-	((Channel::Output::max + max_offset) / static_cast<float>(Channel::Output::max) - 1.f) * slope_scale;
-inline constexpr int16_t min_slope = -max_slope;
+inline constexpr auto max_slope = Channel::Output::max / Model::output_octave_range * max_adjustment_volts;
+inline constexpr auto min_slope = -max_slope;
 
 struct Data {
 	struct Channel {
@@ -40,10 +37,22 @@ struct Data {
 	}
 };
 
+inline int32_t ApplySlope(int32_t in, float slope) {
+	slope /= static_cast<float>(max_slope);
+	slope *= max_adjustment_volts;
+	in -= Channel::Output::from_volts(0.f);
+	in *= 1.f + slope;
+	return in + Channel::Output::from_volts(0.f);
+}
+
+inline Model::Output::type ApplyOffset(int32_t in, int16_t offset) {
+	return std::clamp<int32_t>(in + offset, Channel::Output::min, Channel::Output::max);
+}
+
 inline void Process(Data &d, Model::Output::Buffer &input) {
 	for (auto [i, in] : enumerate(input)) {
-		int32_t temp = in * (1.f + (d.channel[i].slope * r_slope_scale));
-		in = std::clamp<int32_t>(temp + d.channel[i].offset, Channel::Output::min, Channel::Output::max);
+		const auto temp = ApplySlope(in, d.channel[i].slope);
+		in = ApplyOffset(temp, d.channel[i].offset);
 	}
 }
 
@@ -56,14 +65,14 @@ inline bool Calibrate(Data &d, Controls &c) {
 
 		using namespace Channel::Output;
 		static constexpr std::array test_voltage = {
-			from_volts(-5.f),
+			from_volts(-4.75f),
 			from_volts(-3.f),
 			from_volts(0.f),
-			from_volts(1.f),
-			from_volts(3.f),
+			from_volts(2.f),
+			from_volts(4.f),
 			from_volts(5.f),
 			from_volts(8.f),
-			from_volts(10.f),
+			from_volts(9.75f),
 		};
 
 		Model::Output::Buffer out;
