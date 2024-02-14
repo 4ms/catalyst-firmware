@@ -47,9 +47,9 @@ public:
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetEncoderLed(i, Palette::Probability::color(p.GetStep(step_offset + i).ReadProbability()));
 		}
-		if (page == playheadpage) {
-			SetPlayheadLed();
-		}
+		// if (page == playheadpage) {
+		// 	SetPlayheadLed();
+		// }
 	}
 };
 

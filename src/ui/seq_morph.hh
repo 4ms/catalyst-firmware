@@ -50,9 +50,9 @@ public:
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetEncoderLed(i, Palette::Morph::color(p.GetStep(step_offset + i).ReadMorph()));
 		}
-		if (page == playheadpage) {
-			SetPlayheadLed();
-		}
+		// if (page == playheadpage) {
+		// 	SetPlayheadLed();
+		// }
 	}
 };
 

@@ -184,9 +184,9 @@ public:
 
 			PaintStepValues(page, chan);
 
-			if (page == playheadpage) {
-				SetPlayheadLed();
-			}
+			// if (page == playheadpage) {
+			// 	SetPlayheadLed();
+			// }
 		} else {
 			EncoderDisplayOutput(outs);
 		}

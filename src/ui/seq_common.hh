@@ -63,13 +63,19 @@ public:
 		const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
 		const auto fine_pressed = c.button.fine.is_high();
 		const auto range = p.slot.settings.GetRange(chan);
+		const auto playhead_page = p.player.GetPlayheadPage(chan);
+		const auto playhead_pos = p.player.GetPlayheadStepOnPage(chan);
 
 		for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
 			const auto step = p.GetStep(step_offset + i);
 			auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
 						 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :
 										Palette::Gate::fromLevelSequencer(step.ReadGate());
-			c.SetEncoderLed(i, color);
+
+			if (page == playhead_page && i == playhead_pos)
+				SetPlayheadPageStepLed(i, color);
+			else
+				c.SetEncoderLed(i, color);
 		}
 	}
 
@@ -77,25 +83,15 @@ protected:
 	void BlinkSelectedPage(uint8_t page) {
 		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
 	}
-	void SetPlayheadLed() {
-		static constexpr auto threshold = .25f;
-		bool set = false;
-
-		auto pos = p.player.GetPlayheadStepOnPage(p.GetSelectedChannel());
-		if (last_playhead_pos != pos) {
-			last_playhead_pos = pos;
+	void SetPlayheadPageStepLed(uint8_t playhead_pos, Color base_color) {
+		if (last_playhead_pos != playhead_pos) {
+			last_playhead_pos = playhead_pos;
 			p.seqclock.ResetPeek();
 		}
 
-		if (p.seqclock.IsPaused()) {
-			set = p.seqclock.PeekPhase() < threshold;
-		} else {
-			set = p.seqclock.GetPhase() < threshold;
-		}
-
-		if (set) {
-			c.SetEncoderLed(pos, Palette::SeqHead::color);
-		}
+		c.SetEncoderLed(
+			playhead_pos,
+			base_color.blend(Palette::SeqHead::color, std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)));
 	}
 };
 } // namespace Catalyst2::Ui::Sequencer
