@@ -30,7 +30,7 @@ void main() {
 
 	mdrivlib::Timekeeper cv_stream(Board::cv_stream_conf, [&macroseq, &ui]() {
 		ui.Update();
-		const auto out = macroseq.Update();
+		auto out = macroseq.Update();
 		ui.SetOutputs(out);
 	});
 

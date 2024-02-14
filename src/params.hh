@@ -46,8 +46,6 @@ struct Data {
 	Macro macro{};
 	Sequencer sequencer{};
 
-private:
-	friend struct Params;
 	auto &shared() {
 		if constexpr (macro_is_smaller) {
 			return macro.shared;

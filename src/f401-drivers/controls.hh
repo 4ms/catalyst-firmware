@@ -165,7 +165,7 @@ public:
 	void Delay(uint32_t ms) {
 		HAL_Delay(ms);
 	}
-	void Write(const Model::Output::Buffer &outs) {
+	void Write(Model::Output::Buffer &outs) {
 		outputs.write(outs);
 	}
 
