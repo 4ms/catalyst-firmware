@@ -22,7 +22,7 @@ inline constexpr Color red = Color(128, 0, 0);
 inline constexpr Color pink = Color(150, 70, 20);
 inline constexpr Color orange = Color(250, 0, 25);
 inline constexpr Color yellow = Color(80, 0, 30);
-inline constexpr Color dim_green = Color(0, 0, 15);
+inline constexpr Color dim_green = Color(0, 0, 31);
 inline constexpr Color green = Color(0, 0, 90);
 inline constexpr Color cyan = Color(0, 90, 90);
 inline constexpr Color blue = Color(0, 128, 0);
@@ -172,7 +172,14 @@ namespace Gate
 inline constexpr auto color = dim_green;
 inline constexpr auto max = cyan;
 inline Color fromLevelSequencer(Channel::Gate::type level) {
-	return level >= 1.f ? max : off.blend(color, level);
+	if (level >= 1.f)
+		return max;
+	if (level == 0.f)
+		return off;
+	constexpr uint8_t max_element = std::max(color.red(), std::max(color.green(), color.blue()));
+	if (level < 1.f / max_element)
+		level = 1.f / max_element;
+	return off.blend(color, level);
 }
 
 inline Color fromLevelMacro(Channel::Gate::type level) {
