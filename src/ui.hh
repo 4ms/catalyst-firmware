@@ -134,7 +134,7 @@ private:
 		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
 						b.add.is_high() || b.shift.is_high()))
 		{
-			__NOP(); // wait until the buttons are released before cont
+			controls.SetPlayLed(controls.Time() & 0x100);
 		}
 		params.shared.mode = params.shared.data.saved_mode;
 	}

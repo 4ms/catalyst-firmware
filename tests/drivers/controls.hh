@@ -122,6 +122,9 @@ public:
 	void Delay(unsigned x) {
 		;
 	}
+	uint32_t Time() {
+		return 0;
+	}
 
 	void Write(const Model::Output::Buffer &outs) {
 		outputs.write(outs);

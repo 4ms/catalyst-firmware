@@ -165,6 +165,9 @@ public:
 	void Delay(uint32_t ms) {
 		HAL_Delay(ms);
 	}
+	uint32_t Time() {
+		return HAL_GetTick();
+	}
 	void Write(Model::Output::Buffer &outs) {
 		outputs.write(outs);
 	}
