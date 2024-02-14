@@ -16,7 +16,7 @@ namespace Catalyst2::Macro::Bank
 struct BankData {
 	struct Scene {
 		std::array<Macro::Value, Model::NumChans> channel{};
-		Random::Amount::type random_amount;
+		Random::Amount::type random_amount = 0.f;
 	};
 	std::array<Scene, Model::Macro::NumScenes> scene{};
 	std::array<Channel::Mode, Model::NumChans> channelmode{};
