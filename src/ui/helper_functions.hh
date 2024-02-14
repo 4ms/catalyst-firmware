@@ -98,8 +98,10 @@ inline void DisplayRange(Controls &c, Channel::Cv::Range range) {
 	const auto neg = range.NegAmount();
 	const auto posleds = static_cast<uint8_t>(pos * half);
 	const auto negleds = static_cast<uint8_t>(neg * half);
-	const auto lastposledfade = pos * half - posleds;
-	const auto lastnegledfade = neg * half - negleds;
+	auto lastposledfade = pos * half - posleds;
+	auto lastnegledfade = neg * half - negleds;
+	lastposledfade *= lastposledfade;
+	lastnegledfade *= lastnegledfade;
 	const auto PositiveColor = Palette::Range::color(range);
 	const auto NegativeColor = Palette::Range::Negative;
 	for (auto i = 0u; i < posleds; i++) {

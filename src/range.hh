@@ -13,8 +13,8 @@ class Range {
 	};
 	static constexpr std::array options = {
 		Option{Model::min_output_voltage, Model::max_output_voltage},
-		Option{-5.f, 5.f},
 		Option{0.f, 10.f},
+		Option{-5.f, 5.f},
 		Option{0.f, 5.f},
 		Option{0.f, 3.f},
 		Option{0.f, 1.f},
