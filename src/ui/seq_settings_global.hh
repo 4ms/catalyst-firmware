@@ -44,10 +44,12 @@ public:
 		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto hang = p.shared.hang.Check(time_now);
 
+		const auto fine = c.button.fine.is_high();
+
 		switch (encoder) {
 			using namespace Model::Sequencer;
 			case EncoderAlts::Transpose:
-				p.slot.settings.IncTranspose(inc);
+				p.slot.settings.IncTranspose(inc, fine);
 				p.shared.hang.Cancel();
 				break;
 			case EncoderAlts::Random:
@@ -86,7 +88,7 @@ public:
 				break;
 			case EncoderAlts::ClockDiv:
 				if (p.seqclock.IsInternal()) {
-					p.seqclock.Inc(inc, c.button.fine.is_high());
+					p.seqclock.Inc(inc, fine);
 					p.shared.hang.Cancel();
 				} else {
 					inc = hang.has_value() ? inc : 0;

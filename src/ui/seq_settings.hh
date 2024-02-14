@@ -53,7 +53,7 @@ public:
 
 		switch (encoder) {
 			case Model::Sequencer::EncoderAlts::Transpose:
-				p.slot.settings.IncTranspose(i, inc);
+				p.slot.settings.IncTranspose(i, inc, c.button.fine.is_high());
 				p.shared.hang.Cancel();
 				break;
 			case Model::Sequencer::EncoderAlts::Random:

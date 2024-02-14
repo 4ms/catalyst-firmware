@@ -349,10 +349,12 @@ public:
 			c.playmode.UpdatePivot(global.playmode.Read());
 		}
 	}
-	void IncTranspose(uint8_t chan, int32_t inc) {
+	void IncTranspose(uint8_t chan, int32_t inc, bool fine) {
+		inc *= fine ? Transposer::inc_step_fine : Transposer::inc_step;
 		channel[chan].transpose.Inc(inc, global.transpose.Read());
 	}
-	void IncTranspose(int32_t inc) {
+	void IncTranspose(int32_t inc, bool fine) {
+		inc *= fine ? Transposer::inc_step_fine : Transposer::inc_step;
 		global.transpose.Inc(inc);
 		for (auto &c : channel) {
 			c.transpose.UpdatePivot(global.transpose.Read());
