@@ -100,6 +100,9 @@ inline bool Calibrate(Data &d, Controls &c) {
 				color_func(i, phase);
 			}
 		} else {
+			for (auto &i : c.encoders) {
+				(void)i.read();
+			}
 			Ui::SetEncoderLedsCount(c, 8, 0, Palette::off);
 		}
 
