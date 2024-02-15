@@ -104,7 +104,7 @@ public:
 		if (step.diceroll >= step_prob_threshold)
 			return 0;
 		else
-			return step.val / static_cast<float>(INT8_MIN);
+			return step.val ? step.val / static_cast<float>(INT8_MIN) : -1.f;
 	}
 	void Step(uint8_t chan) {
 		buffer[chan].pp = buffer[chan].prev;
