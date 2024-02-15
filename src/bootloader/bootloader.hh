@@ -75,10 +75,13 @@ struct GateBootloader {
 		}
 		HAL_Delay(100);
 
-		while (controls.button.shift.is_pressed() && controls.button.fine.is_pressed())
-			;
-
 		bool do_bootloader = (button_debounce > 15000);
+
+		if (do_bootloader) {
+			while (controls.button.shift.is_pressed() && controls.button.fine.is_pressed())
+				;
+		}
+
 		return do_bootloader;
 	}
 
