@@ -5,6 +5,7 @@
 #include "conf/model.hh"
 #include "macro.hh"
 #include "params.hh"
+#include "sequencer_settings.hh"
 #include "trigger.hh"
 #include "util/countzip.hh"
 #include "util/math.hh"
@@ -157,7 +158,8 @@ private:
 		float prev_step_phase = 2.f;
 		for (int i = -1; i <= 1; i++) {
 			auto s = p.GetRelativeStep(chan, i);
-			auto s_phase = step_phase - s.ReadTrigDelay() - i;
+			const auto tdelay = s.ReadTrigDelay() * (p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1);
+			auto s_phase = step_phase - tdelay - i;
 			if (s_phase >= 0.f && s_phase < 1.f) {
 				if (prev_step_phase < s_phase) {
 					continue;
