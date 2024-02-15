@@ -171,7 +171,7 @@ const TimekeeperConfig cv_stream_conf{
 inline constexpr unsigned encoder_led_hz = 60;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
-	.period_ns = TimekeeperConfig::Hz(encoder_led_hz),
+	.period_ns = TimekeeperConfig::Hz(encoder_led_hz * Model::NumChans),
 	.priority1 = 1,
 	.priority2 = 3,
 };

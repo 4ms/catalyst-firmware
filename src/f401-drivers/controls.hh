@@ -177,10 +177,18 @@ public:
 	}
 
 private:
+	unsigned cur_encoder_led = 0;
 	void WriteToEncoderLeds() {
+		// about 120us to write one LED
+		const std::span<const uint8_t, 3> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data() + cur_encoder_led),
+													   3);
+		led_driver.set_rgb_led(cur_encoder_led, raw_led_data);
+		if (++cur_encoder_led >= Model::NumChans)
+			cur_encoder_led = 0;
+
 		// Takes about 620us to write all LEDs
-		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
-		led_driver.set_all_leds(raw_led_data);
+		// const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
+		// led_driver.set_all_leds(raw_led_data);
 	}
 	void UpdateMuxio() {
 		static uint8_t cnt = 0;
