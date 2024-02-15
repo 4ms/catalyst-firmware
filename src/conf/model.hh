@@ -12,7 +12,7 @@ namespace Catalyst2::Model
 enum class Mode : bool { Sequencer, Macro };
 
 inline constexpr auto NumChans = 8u;
-inline constexpr auto sample_rate_hz = 3000u;
+inline constexpr auto sample_rate_hz = 6000u;
 
 inline constexpr auto max_output_voltage = 10.f;
 inline constexpr auto min_output_voltage = -5.f;
