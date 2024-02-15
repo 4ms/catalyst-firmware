@@ -168,6 +168,12 @@ const TimekeeperConfig cv_stream_conf{
 	.priority2 = 2,
 };
 
+//@10Hz clock
+// old way: step jitter is 1.5ms. PW jitter is 620uS
+// new way: step jitter is 3.8ms. PW jitter is 200us
+//@2Hz clock
+// old way: step jitter is 5.5ms. PW jiiter the same
+// new way: step jitter is 20ms!
 inline constexpr unsigned encoder_led_hz = 60;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
