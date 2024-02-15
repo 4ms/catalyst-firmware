@@ -26,9 +26,6 @@ class Interface {
 		uint8_t first_step;
 		float step_phase;
 		float sequence_phase;
-		bool prev_step_backwards;
-		bool step_is_backwards;
-		bool next_step_backwards;
 	};
 	std::array<State, Model::NumChans> channel;
 	Data &data;
@@ -98,24 +95,14 @@ public:
 
 			c.sequence_phase = sp;
 			const auto playhead = static_cast<uint32_t>(c.sequence_phase);
-			using enum Settings::PlayMode::Mode;
 			c.playhead_step = ToStep(i, playhead, l, pm);
 			c.prev_playhead_step = ToStep(i, (playhead - 1u) % actual_length, l, pm);
-			c.prev_step_backwards = c.step_is_backwards;
-			c.step_is_backwards = c.next_step_backwards;
-			const auto next_playhead = (playhead + 1u) % actual_length;
-			c.next_step_backwards = pm == Backward || (pm == PingPong && static_cast<int>(next_playhead) > l);
-			c.next_playhead_step = ToStep(i, next_playhead, l, pm);
+			c.next_playhead_step = ToStep(i, (playhead + 1u) % actual_length, l, pm);
 			c.step_phase = c.sequence_phase - static_cast<int32_t>(c.sequence_phase);
 		}
 	}
 	void Reset() {
 		phaser.Reset();
-	}
-	bool IsRelativeStepMovingBackwards(uint8_t chan, int8_t pos) const {
-		return pos == -1 ? channel[chan].prev_step_backwards :
-			   pos == 0	 ? channel[chan].step_is_backwards :
-						   channel[chan].next_step_backwards;
 	}
 	float GetStepPhase(uint8_t chan) const {
 		return channel[chan].step_phase;
