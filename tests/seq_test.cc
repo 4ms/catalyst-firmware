@@ -60,3 +60,36 @@ TEST_CASE("Rotate steps") {
 		CHECK(original_vals[7] == rotated_vals[6]);
 	}
 }
+
+TEST_CASE("Random Gate Prob.") {
+	Catalyst2::Sequencer::Step gate;
+	CHECK(gate.ReadGate() == 0.f);
+	gate.IncGate(1);
+	CHECK(gate.ReadGate() > 0.f);
+
+	// Set to 0
+	gate.IncGate(-1);
+	CHECK(gate.ReadGate() == 0.f);
+
+	// Random shift folds back at 0
+
+	CHECK(gate.ReadGate(1.f * 0.011f) == doctest::Approx(0.011));
+	CHECK(gate.ReadGate(-1.f * 0.011f) == doctest::Approx(0.011));
+
+	gate.IncGate(1);
+	auto base = gate.ReadGate(); // 0.004
+
+	CHECK(gate.ReadGate(1.f * 0.011f) == doctest::Approx(0.011 + (double)base));
+	CHECK(gate.ReadGate(-1.f * 0.011f) == doctest::Approx(0.011 - (double)base));
+
+	CHECK(gate.ReadGate(2.f * base) == (3 * base));
+	CHECK(gate.ReadGate(-2.f * base) == base);
+
+	// Set to Max
+	gate.IncGate(100);
+	CHECK(gate.ReadGate() == 1.f);
+
+	// Folds back at max
+	CHECK(gate.ReadGate(1.f * 0.011f) == doctest::Approx(0.989));
+	CHECK(gate.ReadGate(-1.f * 0.011f) == doctest::Approx(0.989));
+}

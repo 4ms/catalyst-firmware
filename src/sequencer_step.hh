@@ -41,27 +41,31 @@ public:
 	void IncCv(int32_t inc, bool fine, Channel::Cv::Range range) {
 		cv = Channel::Cv::Inc(cv, inc, fine, range);
 	}
-	float ReadGate(float random = 0.f) const {
-		static constexpr std::array gate_widths = {0.f,
-												   0.004f,
-												   0.032f,
-												   0.064f,
-												   0.128f,
-												   0.256f,
-												   7.f / 16.f,
-												   8.f / 16.f,
-												   9.f / 16.f,
-												   10.f / 16.f,
-												   11.f / 16.f,
-												   12.f / 16.f,
-												   13.f / 16.f,
-												   14.f / 16.f,
-												   15.f / 16.f,
-												   1.f};
-		auto val = gate_widths[gate];
-		val += random * Channel::Gate::max;
-		val = std::clamp(val, 0.f, 1.f);
-		return val;
+	float ReadGate(float adjustment = 0.f) const {
+		static constexpr std::array<float, Channel::Gate::max + 1> gate_widths = {0.f,
+																				  0.004f,
+																				  0.032f,
+																				  0.064f,
+																				  0.128f,
+																				  0.256f,
+																				  7.f / 16.f,
+																				  8.f / 16.f,
+																				  9.f / 16.f,
+																				  10.f / 16.f,
+																				  11.f / 16.f,
+																				  12.f / 16.f,
+																				  13.f / 16.f,
+																				  14.f / 16.f,
+																				  15.f / 16.f,
+																				  1.f};
+		auto random_gate = gate_widths[gate] + adjustment;
+		// Fold back across 0
+		random_gate = std::abs(random_gate);
+		// Fold back across 1
+		if (random_gate > 1.f)
+			random_gate = 2.f - random_gate;
+
+		return std::clamp(random_gate, 0.f, 1.f);
 	}
 	void IncGate(int32_t inc) {
 		gate = Channel::Gate::Inc(gate, inc);
