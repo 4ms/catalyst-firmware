@@ -12,6 +12,7 @@ namespace Catalyst2::Ui::Sequencer
 class PageParams : public Usual {
 	std::array<bool, Model::Sequencer::NumPages> selected_pages{};
 	bool is_latching_scene_buts = false;
+	uint8_t displayed_page = 0;
 
 public:
 	using Usual::Usual;
@@ -24,17 +25,25 @@ public:
 		is_latching_scene_buts = false;
 		for (auto [page, selected] : enumerate(selected_pages)) {
 			selected = c.button.scene[page].is_pressed();
+			if (selected)
+				displayed_page = page;
 		}
 	}
 	void Update(Abstract *&interface) override {
 		if (!c.button.shift.is_high() && !p.shared.youngest_scene_button.has_value())
 			return; // exit PageParams mode
 
+		// On button press events, extend hang time if it's already hanging
+		// Display the most recently pressed button
+		ForEachSceneButtonJustPressed(c, [this](auto page) {
+			displayed_page = page;
+			if (p.shared.hang.Check()) {
+				p.shared.hang.Set({}, p.shared.internalclock.TimeNow());
+			}
+		});
+
 		auto num_pressed = 0u;
 		ForEachSceneButtonPressed(c, [&, this](auto page) {
-			if (!selected_pages[page])
-				p.shared.hang.Set({}, p.shared.internalclock.TimeNow());
-
 			selected_pages[page] = true;
 			num_pressed++;
 		});
@@ -123,9 +132,11 @@ public:
 		using namespace Model::Sequencer;
 
 		if (hang.has_value()) {
-			auto lowest_scene_pressed =
-				std::distance(selected_pages.begin(), std::find(selected_pages.begin(), selected_pages.end(), true));
-			auto page = p.shared.youngest_scene_button.value_or(lowest_scene_pressed);
+			// auto lowest_scene_pressed =
+			// 	std::distance(selected_pages.begin(), std::find(selected_pages.begin(), selected_pages.end(), true));
+			// auto page = p.shared.youngest_scene_button.value_or(lowest_scene_pressed);
+			// displayed_page = 3;
+			auto page = displayed_page;
 
 			if (page < NumPages) {
 				PaintStepValues(page);

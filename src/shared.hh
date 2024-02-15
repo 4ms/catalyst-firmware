@@ -33,6 +33,12 @@ public:
 		}
 		return onto;
 	}
+	std::optional<uint8_t> Check() const {
+		if (onto == 0xff)
+			return std::nullopt;
+		else
+			return onto;
+	}
 };
 
 class Blinker {
