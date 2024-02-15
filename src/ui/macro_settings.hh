@@ -23,12 +23,12 @@ public:
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		if (!c.button.play.is_high()) {
+		if (!c.button.play.is_high() || !c.button.shift.is_high()) {
 			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
 		}
 
 		if (c.button.play.just_went_low()) {
-			p.recorder.CueRecord();
+			p.recorder.ToggleCueRecord();
 		}
 
 		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {
@@ -36,7 +36,7 @@ public:
 			return;
 		}
 
-		if (!c.button.shift.is_high()) {
+		if (!c.button.shift.is_high() && !c.button.play.is_high()) {
 			return;
 		}
 		if (c.button.add.is_high()) {

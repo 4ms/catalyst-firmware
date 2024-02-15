@@ -61,9 +61,8 @@ public:
 		accum = 0;
 		pos_ = 0;
 	}
-	void CueRecord() {
-		data.length = 0;
-		flags.cue_rec = true;
+	void ToggleCueRecord() {
+		flags.cue_rec = !flags.cue_rec;
 	}
 	void Play() {
 		flags.playing = true;
@@ -75,6 +74,7 @@ public:
 		if (!flags.cue_rec) {
 			return;
 		}
+		data.length = 0;
 		flags.cue_rec = false;
 		flags.recording = true;
 	}
