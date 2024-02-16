@@ -105,13 +105,11 @@ public:
 
 		// 0.5us, 300kHz with interruptions
 		adc_dma.register_callback([this] {
-			Debug::Pin0::high();
 			constexpr auto slider_adc_chan = std::to_underlying(Model::AdcElement::Slider);
 			sliderf.add_val(adc_buffer[slider_adc_chan]);
 
 			constexpr auto cv_adc_chan = std::to_underlying(Model::AdcElement::CVJack);
 			cv.add_val(adc_buffer[cv_adc_chan]);
-			Debug::Pin0::low();
 		});
 		adc_dma.start();
 
@@ -150,7 +148,7 @@ public:
 	}
 
 	void SetPlayLed(bool on) {
-		// playled.set(on);
+		playled.set(on);
 	}
 
 	void Update() {
