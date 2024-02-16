@@ -23,7 +23,7 @@ inline constexpr auto fader_width_mm = 60u;
 namespace HoldTimes
 {
 inline constexpr auto mode_switcher = 3000u;
-inline constexpr auto reset = 3000u;
+inline constexpr auto reset = 5000u;
 inline constexpr auto save = 3000u;
 } // namespace HoldTimes
 
