@@ -9,7 +9,7 @@ namespace Catalyst2::Quantizer
 {
 
 struct Scale {
-	static constexpr auto MaxScaleNotes = 12;
+	static constexpr auto MaxScaleNotes = 13;
 
 	template<typename... T>
 	constexpr Scale(T... ts)
@@ -43,34 +43,20 @@ public:
 			return input;
 		}
 		using namespace Channel;
-		uint8_t octave = 0;
-		while (input >= Cv::octave) {
-			input -= Cv::octave;
-			octave += 1;
-		}
-		uint8_t note = 0;
-		while (input >= Cv::note) {
-			input -= Cv::note;
-			note += 1;
-		}
 
-		float value = note + (static_cast<float>(input) / Cv::note);
-		auto lb = std::lower_bound(scale.begin(), scale.end(), value);
+		float octaves_exact = input / Cv::octave;
+		auto octave = static_cast<uint8_t>(octaves_exact);
+		input -= octave * Cv::octave;
 
-		if (lb == scale.end()) {
-			if (std::abs(12.f - value) < std::abs(value - *(lb - 1))) {
-				lb = scale.begin();
-				octave += 1;
-			}
-		}
-		float closest = *lb;
+		float note = (float)input / (float)Cv::note;
 
-		if (lb != scale.begin()) {
-			auto ub = lb - 1;
-			if (std::abs(value - *ub) < std::abs(value - closest)) {
-				closest = *ub;
-			}
-		}
+		// lower bound is first element that is >= note
+		auto lb = std::lower_bound(scale.begin(), scale.end(), note);
+
+		float upper = *lb;
+		float lower = lb == scale.begin() ? 0.f : *std::next(lb, -1);
+		float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
+
 		return (closest * Cv::note) + (octave * Cv::octave);
 	}
 	void Load(const Scale &scl) {
