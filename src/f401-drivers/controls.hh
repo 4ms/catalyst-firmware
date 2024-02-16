@@ -24,7 +24,8 @@ class Controls {
 
 	static inline std::array<uint16_t, Board::NumAdcs> adc_buffer;
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
-	Oversampler<512, uint16_t> slider;
+
+	CascadingFilter<uint16_t, SmoothOversampler<64, uint16_t>, HysteresisFilter<4, 1>> sliderf;
 	Oversampler<256, uint16_t> cv;
 
 	struct Buttons {
@@ -102,13 +103,18 @@ public:
 		encoder_led_update_task.start();
 		muxio_update_task.start();
 
+		// 0.5us, 300kHz with interruptions
 		adc_dma.register_callback([this] {
+			Debug::Pin0::high();
 			constexpr auto slider_adc_chan = std::to_underlying(Model::AdcElement::Slider);
+			sliderf.add_val(adc_buffer[slider_adc_chan]);
+
 			constexpr auto cv_adc_chan = std::to_underlying(Model::AdcElement::CVJack);
-			slider.add_val(adc_buffer[slider_adc_chan]);
 			cv.add_val(adc_buffer[cv_adc_chan]);
+			Debug::Pin0::low();
 		});
 		adc_dma.start();
+
 		if (!led_driver.init()) {
 			// __BKPT();
 		}
@@ -117,7 +123,7 @@ public:
 	}
 
 	uint16_t ReadSlider() {
-		return (1ul << 12) - 1 - slider.val();
+		return 4095 - sliderf.val();
 	}
 
 	uint16_t ReadCv() {
@@ -144,7 +150,7 @@ public:
 	}
 
 	void SetPlayLed(bool on) {
-		playled.set(on);
+		// playled.set(on);
 	}
 
 	void Update() {
