@@ -86,14 +86,20 @@ inline constexpr auto bpm = yellow;
 namespace Scales
 {
 inline constexpr std::array color = {
-	very_dim_grey,			 // off
-	pink,					 // chromatic
-	red.blend(off, 0.5f),	 // major
-	yellow.blend(off, 0.5f), // minor
-	cyan.blend(off, 0.5f),	 // major pent
-	blue.blend(off, 0.5f),	 // minor pent
-	grey,					 // wholetone
-	green.blend(off, 0.5f),	 // gate
+	very_dim_grey,			  // off
+	pink,					  // chromatic
+	red.blend(off, 0.5f),	  // major
+	yellow.blend(off, 0.5f),  // minor
+	orange.blend(off, 0.5f),  // harm. minor
+	cyan.blend(off, 0.5f),	  // major pent
+	blue.blend(off, 0.5f),	  // minor pent
+	grey,					  // wholetone
+	red.blend(off, 0.25f),	  // lydian dom.
+	yellow.blend(off, 0.25f), // Beebop
+	orange.blend(off, 0.25f), // enigmatic
+	cyan.blend(off, 0.25f),	  // vietnamese
+
+	green.blend(off, 0.5f), // gate
 };
 }
 
