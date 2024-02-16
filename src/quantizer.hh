@@ -9,7 +9,7 @@ namespace Catalyst2::Quantizer
 {
 
 struct Scale {
-	static constexpr auto MaxScaleNotes = 13;
+	static constexpr auto MaxScaleNotes = 22;
 
 	template<typename... T>
 	constexpr Scale(T... ts)
