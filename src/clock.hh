@@ -123,8 +123,8 @@ public:
 		external = on;
 	}
 	float GetPhase() const {
-		auto out = static_cast<float>(cnt) / data.bpm_in_ticks;
-		return std::clamp(out, 0.f, .9999f);
+		const auto tc = static_cast<float>(std::clamp<int32_t>(cnt, 0, data.bpm_in_ticks - 1));
+		return tc / data.bpm_in_ticks;
 	}
 	float PeekPhase() const {
 		auto out = static_cast<float>(peek_cnt) / data.bpm_in_ticks;

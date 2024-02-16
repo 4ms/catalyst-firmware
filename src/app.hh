@@ -154,27 +154,43 @@ private:
 
 		const auto step_phase = p.player.GetStepPhase(chan);
 
-		float prev_step_phase = 2.f;
-		for (int i = -1; i <= 1; i++) {
+		std::array order = {-1, 0, 1};
+
+		// if steps overlap, the order that they are output needs to change
+		// later steps (in time) should always override steps already in progress
+		for (int i = 0; i <= 1; i++) {
+			auto p_step = p.GetRelativeStep(chan, i - 1).ReadTrigDelay();
+			p_step *= p.player.IsRelativeStepMovingBackwards(chan, i - 1) ? -1 : 1;
+			auto step = p.GetRelativeStep(chan, i).ReadTrigDelay();
+			step *= p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1;
+			if ((p_step - 1.f) > step) {
+				std::swap(order[i + 1], order[i]);
+				break;
+			}
+		}
+
+		for (auto i : order) {
+			const auto gate_val = p.GetRelativeStepGate(chan, i);
+			if (gate_val <= 0.f) {
+				continue;
+			}
 			auto s = p.GetRelativeStep(chan, i);
-			auto s_phase = step_phase - s.ReadTrigDelay() - i;
-			if (s_phase >= 0.f && s_phase < 1.f) {
-				if (prev_step_phase < s_phase) {
-					continue;
-				}
-				prev_step_phase = s_phase;
-				s_phase *= s.ReadRetrig() + 1;
-				s_phase -= static_cast<uint32_t>(s_phase);
-				const auto gate_val = p.GetRelativeStepGate(chan, i);
-				if (gate_val <= 0.f) {
-					continue;
-				}
-				const auto temp = gate_val >= s_phase;
-				if constexpr (BuildOptions::seq_gate_overrides_prev_step) {
-					out = temp;
-				} else {
-					out |= temp;
-				}
+			const auto tdelay = s.ReadTrigDelay() * (p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1);
+			const auto s_phase = step_phase - tdelay - i;
+
+			// only output the previous and next step during this step if they are within this steps phase window
+			if (s_phase < 0.f || s_phase >= 1.f) {
+				continue;
+			}
+
+			auto retrig_phase = s.ReadRetrig() + 1.f;
+			retrig_phase *= s_phase;
+			retrig_phase -= static_cast<uint32_t>(retrig_phase);
+			const auto temp = gate_val >= retrig_phase;
+			if constexpr (BuildOptions::seq_gate_overrides_prev_step) {
+				out = temp;
+			} else {
+				out |= temp;
 			}
 		}
 
