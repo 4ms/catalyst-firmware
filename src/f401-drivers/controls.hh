@@ -24,7 +24,8 @@ class Controls {
 
 	static inline std::array<uint16_t, Board::NumAdcs> adc_buffer;
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
-	std::array<Oversampler<256, uint16_t>, Board::NumAdcs> analog;
+	Oversampler<512, uint16_t> slider;
+	Oversampler<256, uint16_t> cv;
 
 	struct Buttons {
 		std::array<MuxedButton, Model::NumChans> scene{
@@ -102,9 +103,10 @@ public:
 		muxio_update_task.start();
 
 		adc_dma.register_callback([this] {
-			for (unsigned i = 0; auto &a : analog) {
-				a.add_val(adc_buffer[i++]);
-			}
+			constexpr auto slider_adc_chan = std::to_underlying(Model::AdcElement::Slider);
+			constexpr auto cv_adc_chan = std::to_underlying(Model::AdcElement::CVJack);
+			slider.add_val(adc_buffer[slider_adc_chan]);
+			cv.add_val(adc_buffer[cv_adc_chan]);
 		});
 		adc_dma.start();
 		if (!led_driver.init()) {
@@ -115,13 +117,11 @@ public:
 	}
 
 	uint16_t ReadSlider() {
-		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::Slider);
-		return (1ul << 12) - 1 - analog[adc_chan_num].val();
+		return (1ul << 12) - 1 - slider.val();
 	}
 
 	uint16_t ReadCv() {
-		constexpr auto adc_chan_num = std::to_underlying(Model::AdcElement::CVJack);
-		return analog[adc_chan_num].val();
+		return cv.val();
 	}
 
 	void SetEncoderLed(unsigned led, Color color) {
