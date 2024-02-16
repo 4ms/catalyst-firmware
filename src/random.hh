@@ -17,7 +17,7 @@ inline constexpr auto min = 0.f;
 inline constexpr auto max = 1.f;
 
 // +/1 2 semitones
-inline constexpr auto inc = (max / (Model::output_octave_range * 12)) * 2;
+inline constexpr auto inc = (max / (Model::output_octave_range * 12));
 inline constexpr auto def = inc;
 } // namespace Amount
 template<typename T>

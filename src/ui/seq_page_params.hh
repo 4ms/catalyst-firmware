@@ -6,6 +6,7 @@
 #include "params.hh"
 #include "seq_common.hh"
 #include "sequencer.hh"
+#include <climits>
 
 namespace Catalyst2::Ui::Sequencer
 {
@@ -99,8 +100,8 @@ public:
 				random_range *= Model::output_octave_range * 12;
 				// TODO: create a buffer of random values upon entry and the encoder selects one
 				for (auto step = 0u; step < Steps::PerPage; step++) {
-					float random_inc = int8_t(std::rand() / 256) / float(-INT8_MIN);
-					p.IncStepInSequence(step + page_start, random_range * random_inc, false);
+					float random_inc = MathTools::map_value(std::rand(), 0, RAND_MAX, -1.f, +1.f);
+					p.IncStepInSequence(step + page_start, std::round(random_range * random_inc), false);
 				}
 			} break;
 

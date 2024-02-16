@@ -147,7 +147,7 @@ inline constexpr Color color(float phase) {
 namespace Random
 {
 inline constexpr auto none = off;
-inline constexpr auto set = red;
+inline constexpr auto set = bright_red;
 
 inline constexpr Color color(uint8_t val) {
 	uint8_t r = (val & 0b0110000) >> 1;
