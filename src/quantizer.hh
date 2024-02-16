@@ -54,12 +54,24 @@ public:
 			note += 1;
 		}
 
-		auto value = note + (static_cast<float>(input) / Cv::note);
+		float value = note + (static_cast<float>(input) / Cv::note);
 		auto lb = std::lower_bound(scale.begin(), scale.end(), value);
+
 		if (lb == scale.end()) {
-			lb -= 1;
+			if (std::abs(12.f - value) < std::abs(value - *(lb - 1))) {
+				lb = scale.begin();
+				octave += 1;
+			}
 		}
-		return (*lb * Cv::note) + (octave * Cv::octave);
+		float closest = *lb;
+
+		if (lb != scale.begin()) {
+			auto ub = lb - 1;
+			if (std::abs(value - *ub) < std::abs(value - closest)) {
+				closest = *ub;
+			}
+		}
+		return (closest * Cv::note) + (octave * Cv::octave);
 	}
 	void Load(const Scale &scl) {
 		scale = scl;
