@@ -159,8 +159,6 @@ public:
 		p.SelectPage(button);
 	}
 
-	static constexpr bool ManualColorMode = false;
-
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		c.SetPlayLed(!p.seqclock.IsPaused());
 		ClearButtonLeds(c);
@@ -177,7 +175,7 @@ public:
 				c.SetButtonLed(playheadpage, true);
 			}
 
-			if constexpr (ManualColorMode) {
+			if constexpr (BuildOptions::ManualColorMode) {
 				ManualColorTestMode(page);
 				return;
 			}
