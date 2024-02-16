@@ -20,15 +20,10 @@ struct Data {
 };
 class Interface {
 	struct State {
-		uint8_t playhead_step;
-		uint8_t prev_playhead_step;
-		uint8_t next_playhead_step;
-		uint8_t first_step;
 		float step_phase;
 		float sequence_phase;
-		bool prev_step_backwards;
-		bool step_is_backwards;
-		bool next_step_backwards;
+		std::array<uint8_t, 3> relative_playhead_step;
+		std::array<bool, 3> relative_step_backwards;
 	};
 	std::array<State, Model::NumChans> channel;
 	Data &data;
@@ -49,31 +44,30 @@ public:
 	float phase = 0.f;
 
 	void Update(float phase, float internal_clock_phase, bool do_step) {
-		for (auto i = 0u; i < Model::NumChans; i++) {
-			const auto l = settings.GetLengthOrGlobal(i);
-			const auto pm = settings.GetPlayModeOrGlobal(i);
+		for (auto chan = 0u; chan < Model::NumChans; chan++) {
+			const auto l = settings.GetLengthOrGlobal(chan);
+			const auto pm = settings.GetPlayModeOrGlobal(chan);
 			const auto actual_length = ActualLength(l, pm);
 			if (do_step) {
-				phaser.Step(i, actual_length);
+				phaser.Step(chan, actual_length);
 			}
-			if (phaser.DidReset(i)) {
+			if (phaser.DidReset(chan)) {
 				if (!songmode.IsActive()) {
-					if (songmode.IsQueued(i)) {
-						songmode.Step(i);
+					if (songmode.IsQueued(chan)) {
+						songmode.Step(chan);
 					} else {
-						queue.Step(i);
+						queue.Step(chan);
 					}
 				} else {
-					if (queue.IsQueued(i)) {
-						queue.Step(i);
+					if (queue.IsQueued(chan)) {
+						queue.Step(chan);
 					} else {
-						songmode.Step(i);
+						songmode.Step(chan);
 					}
 				}
 			}
-			auto &c = channel[i];
-			c.first_step = ToStep(i, 0, l, pm);
-			const auto sp = GetPhase(i, phase, internal_clock_phase, actual_length);
+			auto &c = channel[chan];
+			const auto sp = GetPhase(chan, phase, internal_clock_phase, actual_length);
 
 			const auto new_ = static_cast<uint32_t>(sp);
 			const auto prev_ = static_cast<uint32_t>(c.sequence_phase);
@@ -83,29 +77,29 @@ public:
 				// sequence has changed
 				if (new_ > prev_) {
 					if (prev_ == 0 && new_ == actual_length - 1) {
-						randomvalue.StepBackward(i);
+						randomvalue.StepBackward(chan);
 					} else {
-						randomvalue.Step(i);
+						randomvalue.Step(chan);
 					}
 				} else {
 					if (new_ == 0 && prev_ == actual_length - 1) {
-						randomvalue.Step(i);
+						randomvalue.Step(chan);
 					} else {
-						randomvalue.StepBackward(i);
+						randomvalue.StepBackward(chan);
 					}
 				}
 			}
 
 			c.sequence_phase = sp;
-			const auto playhead = static_cast<uint32_t>(c.sequence_phase);
-			using enum Settings::PlayMode::Mode;
-			c.playhead_step = ToStep(i, playhead, l, pm);
-			c.prev_playhead_step = ToStep(i, (playhead - 1u) % actual_length, l, pm);
-			c.prev_step_backwards = c.step_is_backwards;
-			c.step_is_backwards = c.next_step_backwards;
-			const auto next_playhead = (playhead + 1u) % actual_length;
-			c.next_step_backwards = pm == Backward || (pm == PingPong && static_cast<int>(next_playhead) > l);
-			c.next_playhead_step = ToStep(i, next_playhead, l, pm);
+			const auto playhead = static_cast<int32_t>(c.sequence_phase);
+
+			for (auto i = -1; i <= 1; i++) {
+				const auto p = (playhead + i) < 0 ? actual_length - 1 : (playhead + i) % actual_length;
+				c.relative_step_backwards[i + 1] = pm == Settings::PlayMode::Mode::Backward ||
+												   (pm == Settings::PlayMode::Mode::PingPong && p >= (l - 1u));
+				c.relative_playhead_step[i + 1] = ToStep(chan, p, l, pm);
+			}
+
 			c.step_phase = c.sequence_phase - static_cast<int32_t>(c.sequence_phase);
 		}
 	}
@@ -113,9 +107,7 @@ public:
 		phaser.Reset();
 	}
 	bool IsRelativeStepMovingBackwards(uint8_t chan, int8_t pos) const {
-		return pos == -1 ? channel[chan].prev_step_backwards :
-			   pos == 0	 ? channel[chan].step_is_backwards :
-						   channel[chan].next_step_backwards;
+		return channel[chan].relative_step_backwards[pos + 1];
 	}
 	float GetStepPhase(uint8_t chan) const {
 		return channel[chan].step_phase;
@@ -126,21 +118,20 @@ public:
 		return ToStep(chan, 0, l, pm);
 	}
 	uint8_t GetPlayheadPage(uint8_t chan) const {
-		return channel[chan].playhead_step / Model::Sequencer::NumPages;
+		return channel[chan].relative_playhead_step[1] / Model::Sequencer::NumPages;
 	}
 	uint8_t GetPlayheadStepOnPage(uint8_t chan) const {
-		return channel[chan].playhead_step % Model::Sequencer::NumPages;
+		return channel[chan].relative_playhead_step[1] % Model::Sequencer::NumPages;
 	}
 	uint8_t GetRelativeStep(uint8_t chan, int8_t position) const {
-		return position == -1 ? channel[chan].prev_playhead_step :
-			   position == 1  ? channel[chan].next_playhead_step :
-								channel[chan].playhead_step;
-		;
+		return channel[chan].relative_playhead_step[position + 1];
 	}
 
 private:
 	float GetPhase(uint8_t chan, float phase, float internal_clock_phase, float actual_length) const {
-		const auto phase_offset = (settings.GetPhaseOffsetOrGlobal(chan) + phase) * actual_length;
+		auto phase_offset = settings.GetPhaseOffsetOrGlobal(chan) + phase;
+		phase_offset -= static_cast<int>(phase_offset);
+		phase_offset *= actual_length;
 		auto current_phase = phaser.GetPhase(chan, internal_clock_phase) + phase_offset;
 		while (current_phase >= actual_length) {
 			current_phase -= actual_length;
