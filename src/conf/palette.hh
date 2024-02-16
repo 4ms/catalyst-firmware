@@ -31,6 +31,8 @@ inline constexpr Color magenta = Color(100, 50, 0);
 inline constexpr Color salmon = Color(153, 5, 13);
 inline constexpr Color lavender = Color(100, 100, 0);
 
+inline constexpr Color bright_red = Color(180, 0, 0);
+
 inline constexpr Color full_white = Color(255, 255, 255);
 inline constexpr Color full_red = Color(255, 0, 0);
 inline constexpr Color full_green = Color(0, 0, 255);
@@ -129,9 +131,9 @@ namespace Probability
 inline constexpr Color color(Catalyst2::Sequencer::Probability::type p) {
 	const auto phase = Catalyst2::Sequencer::Probability::toFloat(p);
 	if (phase < 0.5f)
-		return off.blend(orange, phase * 2.f);
+		return off.blend(orange.blend(off, 0.65f), phase * 2.f);
 	else
-		return orange.blend(green, phase * 2.f - 1.f);
+		return orange.blend(teal.blend(off, 0.5f), phase * 2.f - 1.f);
 }
 } // namespace Probability
 
