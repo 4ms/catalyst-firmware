@@ -44,7 +44,6 @@ public:
 			}
 		}
 		StartupAnimation(controls);
-		params.macro.SelectBank(0);
 		params.sequencer.Reset(true);
 		ui = GetUi();
 		ui->Init();
@@ -111,6 +110,7 @@ private:
 		}
 
 		params.sequencer.Load();
+		params.macro.bank.SelectBank(0);
 
 		const auto saved_mode = params.shared.data.saved_mode;
 
@@ -137,6 +137,7 @@ private:
 			controls.SetPlayLed(controls.Time() & 0x100);
 		}
 		params.shared.mode = params.shared.data.saved_mode;
+		params.LoadScales();
 	}
 };
 
