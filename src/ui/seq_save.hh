@@ -16,6 +16,8 @@ public:
 	void Init() override {
 		p.shared.blinker.Cancel();
 		p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
+		c.button.morph.clear_events();
+		c.button.bank.clear_events();
 		p.Reset(true);
 	}
 	void Update(Abstract *&interface) override {
@@ -27,6 +29,12 @@ public:
 
 		if (p.shared.blinker.IsSet()) {
 			ClearButtonLeds(c);
+			return;
+		}
+
+		if (c.button.morph.just_went_high() || c.button.bank.just_went_high() || c.button.fine.is_high() ||
+			c.button.add.is_high() || c.button.shift.is_high())
+		{
 			return;
 		}
 
