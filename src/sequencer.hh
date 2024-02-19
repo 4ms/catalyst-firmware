@@ -87,6 +87,9 @@ public:
 	Shared::Interface &shared;
 	Player::Interface player{slot.player, slot.settings, slot.songmode};
 
+	bool show_playhead = true;
+	uint8_t last_playhead_pos = Model::Sequencer::NumPages;
+
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
 		, shared{shared} {

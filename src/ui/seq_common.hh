@@ -35,8 +35,6 @@ inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::Pl
 
 class Usual : public Abstract {
 
-	uint8_t last_playhead_pos = Model::Sequencer::NumPages;
-
 public:
 	Catalyst2::Sequencer::Interface &p;
 	Usual(Catalyst2::Sequencer::Interface &p, Controls &c)
@@ -85,14 +83,16 @@ protected:
 			c.SetEncoderLed(step, base_color);
 	}
 	void SetPlayheadStepLed(uint8_t playhead_pos, Color base_color) {
-		if (last_playhead_pos != playhead_pos) {
-			last_playhead_pos = playhead_pos;
+		if (p.last_playhead_pos != playhead_pos) {
+			p.last_playhead_pos = playhead_pos;
 			p.seqclock.ResetPeek();
+			p.show_playhead = true;
 		}
 
-		c.SetEncoderLed(
-			playhead_pos,
-			base_color.blend(Palette::SeqHead::color, std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)));
+		auto color = p.show_playhead ? base_color.blend(Palette::SeqHead::color,
+														std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)) :
+									   base_color;
+		c.SetEncoderLed(playhead_pos, color);
 	}
 	void BlinkSelectedPage(uint8_t page) {
 		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
