@@ -142,6 +142,11 @@ namespace Pathway
 inline constexpr Color color(float phase) {
 	constexpr auto first_page = green.blend(off, 0.5f);
 	constexpr auto last_page = red.blend(off, 0.5f);
+
+	phase -= 1.f / 64.f;
+	auto p = static_cast<int>(phase * 8.f);
+	phase = std::clamp(p / 8.f, 0.f, 1.f);
+	phase = 1.f - (1.f - phase) * (1.f - phase);
 	return first_page.blend(last_page, phase);
 }
 } // namespace Pathway
