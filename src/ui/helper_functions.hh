@@ -151,13 +151,12 @@ inline void StartupAnimation(Controls &c) {
 		if (version == 0)
 			return;
 
-		// 9 = Buttons 1 + 8
-		if (version == 9) {
+		else if (version == 9) {
+			// 9 = Buttons 1 + 8
 			c.SetButtonLed(7, true);
 			c.SetButtonLed(0, true);
-		}
-
-		c.SetButtonLed(version - 1, true);
+		} else
+			c.SetButtonLed(version - 1, true);
 	};
 
 	DisplayVersion(FirmwareMajorVersion);
@@ -166,14 +165,15 @@ inline void StartupAnimation(Controls &c) {
 		if (remaining == duration / 2)
 			DisplayVersion(FirmwareMinorVersion);
 
-		ClearEncoderLeds(c);
-		auto phase = (duration - remaining + 0.f) / duration;
-		phase *= 8;
-		const auto idx = static_cast<uint8_t>(phase);
-		const auto cphase = phase - idx;
-		const auto col = Palette::Scales::color[idx & 0x7];
-		const auto nextcol = idx + 1 >= 8 ? Palette::off : Palette::Scales::color[idx + 1];
-		SetEncoderLedsCount(c, 8, 0, col.blend(nextcol, cphase));
+		for (auto enc = 0u; enc < 8; enc++) {
+			auto phase = (duration - remaining + enc * (duration / 32.f)) / duration;
+			phase = std::clamp(phase * 8, 0.f, 7.999f);
+			auto idx = static_cast<uint8_t>(phase);
+			const auto cphase = phase - idx;
+			const auto col = Palette::Scales::color[idx];
+			const auto nextcol = Palette::Scales::color[idx + 1];
+			c.SetEncoderLed(enc, col.blend(nextcol, cphase));
+		}
 		c.Delay(1);
 	}
 }
