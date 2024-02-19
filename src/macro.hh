@@ -58,8 +58,7 @@ public:
 	Clock::Divider::type GetClockDiv() const {
 		return data.clockdiv;
 	}
-	void SelectBank(uint8_t bank) {
-		this->bank.SelectBank(bank);
+	void LoadScales() {
 		for (auto [i, q] : countzip(shared.quantizer)) {
 			q.Load(this->bank.GetChannelMode(i).GetScale());
 		}

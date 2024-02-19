@@ -97,6 +97,11 @@ public:
 	void Load(uint8_t slot) {
 		this->slot = data.slot[slot];
 	}
+	void LoadScales() {
+		for (auto [i, q] : enumerate(shared.quantizer)) {
+			q.Load(slot.settings.GetChannelMode(i).GetScale());
+		}
+	}
 	void Save(uint8_t slot) {
 		data.startup_slot = slot;
 		data.slot[slot] = this->slot;

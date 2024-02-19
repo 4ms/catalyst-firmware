@@ -19,7 +19,8 @@ public:
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 		if (c.button.play.just_went_low()) {
-			p.SelectBank(Model::Macro::Bank::NumNormal);
+			p.bank.SelectBank(Model::Macro::Bank::NumNormal);
+			p.LoadScales();
 		}
 
 		if (c.button.morph.just_went_high()) {
@@ -52,7 +53,8 @@ public:
 	}
 
 	void OnSceneButtonRelease(uint8_t button) {
-		p.SelectBank(button);
+		p.bank.SelectBank(button);
+		p.LoadScales();
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
