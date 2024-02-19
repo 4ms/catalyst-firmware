@@ -206,7 +206,7 @@ inline Color fromLevelMacro(Channel::Gate::type level) {
 }
 
 inline Color fromOutput(Model::Output::type level) {
-	return level == Channel::Output::gate_off ? off : color;
+	return level <= Channel::Output::gate_off ? off : color;
 }
 
 inline Color fromTrigDelay(float val) {
