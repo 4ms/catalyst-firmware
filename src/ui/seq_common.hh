@@ -74,24 +74,17 @@ protected:
 		}
 	}
 	void PaintStep(uint8_t page, uint8_t step, Color base_color) {
-		const auto chan = p.GetSelectedChannel();
-		const auto playhead_page = p.player.GetPlayheadPage(chan);
-		const auto playhead_pos = p.player.GetPlayheadStepOnPage(chan);
+		const auto playhead_page = p.GetPlayheadPage();
+		const auto playhead_pos = p.GetPlayheadStepOnPage();
 		if (page == playhead_page && step == playhead_pos)
 			SetPlayheadStepLed(step, base_color);
 		else
 			c.SetEncoderLed(step, base_color);
 	}
 	void SetPlayheadStepLed(uint8_t playhead_pos, Color base_color) {
-		if (p.last_playhead_pos != playhead_pos) {
-			p.last_playhead_pos = playhead_pos;
-			p.seqclock.ResetPeek();
-			p.show_playhead = true;
-		}
-
-		auto color = p.show_playhead ? base_color.blend(Palette::SeqHead::color,
-														std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)) :
-									   base_color;
+		auto color = p.ShowPlayhead() ? base_color.blend(Palette::SeqHead::color,
+														 std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)) :
+										base_color;
 		c.SetEncoderLed(playhead_pos, color);
 	}
 	void BlinkSelectedPage(uint8_t page) {

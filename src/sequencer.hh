@@ -82,6 +82,8 @@ class Interface {
 	uint32_t time_trigged;
 	uint8_t playhead_pos;
 	uint8_t playhead_page;
+	bool show_playhead = true;
+	uint8_t last_playhead_pos = Model::Sequencer::NumPages;
 
 public:
 	Slot slot;
@@ -89,8 +91,6 @@ public:
 	Shared::Interface &shared;
 	Player::Interface player{slot.player, slot.settings, slot.songmode};
 
-	bool show_playhead = true;
-	uint8_t last_playhead_pos = Model::Sequencer::NumPages;
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
@@ -118,6 +118,15 @@ public:
 		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
 		playhead_page = player.GetPlayheadPage(cur_channel);
 		playhead_pos = player.GetPlayheadStepOnPage(cur_channel);
+		if (last_playhead_pos != playhead_pos) {
+			last_playhead_pos = playhead_pos;
+			seqclock.ResetPeek();
+			seqclock.Stop(false);
+			show_playhead = true;
+		}
+	}
+	bool ShowPlayhead() const {
+		return show_playhead;
 	uint8_t GetPlayheadStepOnPage() const {
 		return playhead_pos;
 	}
@@ -178,6 +187,7 @@ public:
 		return cur_page < Model::Sequencer::NumPages;
 	}
 	void IncStep(uint8_t step, int32_t inc, bool fine) {
+		show_playhead = false;
 		IncStepInSequence(StepOnPageToStep(step), inc, fine);
 	}
 	void IncStepInSequence(uint8_t step, int32_t inc, bool fine) {
@@ -215,10 +225,12 @@ public:
 		std::reverse(steps.begin(), steps.end());
 	}
 	void IncStepModifier(uint8_t step, int32_t inc) {
+		show_playhead = false;
 		step = StepOnPageToStep(step);
 		slot.channel[cur_channel][step].IncMorphRetrig(inc);
 	}
 	void IncStepProbability(uint8_t step, int32_t inc) {
+		show_playhead = false;
 		step = StepOnPageToStep(step);
 		slot.channel[cur_channel][step].IncProbability(inc);
 	}

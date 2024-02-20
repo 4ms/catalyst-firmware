@@ -27,7 +27,6 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		p.show_playhead = false;
 		p.IncStepModifier(encoder, inc);
 	}
 
