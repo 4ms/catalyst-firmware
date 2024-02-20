@@ -52,7 +52,7 @@ public:
 			p.Trig();
 		}
 
-		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4095.f;
+		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4096.f;
 		p.Update(phase);
 	}
 
