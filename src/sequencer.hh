@@ -80,6 +80,8 @@ class Interface {
 		std::array<Step, Model::Sequencer::Steps::PerPage> page;
 	} clipboard;
 	uint32_t time_trigged;
+	uint8_t playhead_pos;
+	uint8_t playhead_page;
 
 public:
 	Slot slot;
@@ -114,8 +116,14 @@ public:
 	}
 	void Update(float phase) {
 		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
+		playhead_page = player.GetPlayheadPage(cur_channel);
+		playhead_pos = player.GetPlayheadStepOnPage(cur_channel);
+	uint8_t GetPlayheadStepOnPage() const {
+		return playhead_pos;
 	}
-
+	uint8_t GetPlayheadPage() const {
+		return playhead_page;
+	}
 	void Reset(bool stop) {
 		seqclock.Reset();
 		shared.clockdivider.Reset();
