@@ -174,6 +174,9 @@ private:
 			if (gate_val <= 0.f) {
 				continue;
 			}
+			if (p.seqclock.IsStopped()) {
+				continue;
+			}
 			auto s = p.GetRelativeStep(chan, i);
 			const auto tdelay = s.ReadTrigDelay() * (p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1);
 			const auto s_phase = step_phase - tdelay - i;

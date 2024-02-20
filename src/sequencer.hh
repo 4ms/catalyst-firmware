@@ -91,7 +91,6 @@ public:
 	Shared::Interface &shared;
 	Player::Interface player{slot.player, slot.settings, slot.songmode};
 
-
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
 		, shared{shared} {
@@ -127,6 +126,7 @@ public:
 	}
 	bool ShowPlayhead() const {
 		return show_playhead;
+	}
 	uint8_t GetPlayheadStepOnPage() const {
 		return playhead_pos;
 	}
@@ -138,6 +138,7 @@ public:
 		shared.clockdivider.Reset();
 		player.Reset();
 		seqclock.Pause(stop);
+		seqclock.Stop(stop);
 
 		// blocks trig for a short period of time
 		// TODO: come up with better name

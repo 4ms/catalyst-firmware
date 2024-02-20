@@ -68,6 +68,7 @@ class Interface {
 	bool external = false;
 	bool step = false;
 	bool pause = false;
+	bool stop = false;
 
 public:
 	Interface(Data &data)
@@ -141,9 +142,16 @@ public:
 	}
 	void Pause(bool pause) {
 		this->pause = pause;
+		stop = false;
+	}
+	void Stop(bool stop) {
+		this->stop = stop;
 	}
 	bool IsPaused() const {
 		return pause;
+	}
+	bool IsStopped() const {
+		return stop;
 	}
 };
 } // namespace Bpm
