@@ -121,11 +121,8 @@ public:
 	}
 
 	uint16_t ReadSlider() {
-		const uint16_t MinSliderVal = 8;
-		const uint16_t MaxSliderVal = 4095 - MinSliderVal;
-		auto val = std::clamp(sliderf.val(), MinSliderVal, MaxSliderVal);
-		float calibrated = MathTools::map_value(val, MinSliderVal, MaxSliderVal, 4095.9f, 0.f);
-		return calibrated;
+		auto val = std::clamp(sliderf.val(), Board::MinSliderVal, Board::MaxSliderVal);
+		return MathTools::map_value(val, Board::MinSliderVal, Board::MaxSliderVal, 4095.9f, 0.f);
 	}
 
 	uint16_t ReadCv() {
@@ -189,10 +186,6 @@ private:
 		led_driver.set_rgb_led(cur_encoder_led, raw_led_data);
 		if (++cur_encoder_led >= Model::NumChans)
 			cur_encoder_led = 0;
-
-		// Takes about 620us to write all LEDs
-		// const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
-		// led_driver.set_all_leds(raw_led_data);
 	}
 	void UpdateMuxio() {
 		static uint8_t cnt = 0;

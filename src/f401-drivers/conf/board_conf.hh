@@ -143,6 +143,9 @@ inline constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
 	{{GPIO::A, PinNum::_1}, mdrivlib::AdcChanNum::_1, 1, mdrivlib::AdcSamplingTime::_56Cycles},
 }};
 
+inline constexpr uint16_t MinSliderVal = 8;
+inline constexpr uint16_t MaxSliderVal = 4095 - MinSliderVal;
+
 ////////////////// DAC
 
 struct DacSpiConf : mdrivlib::DefaultSpiConf {
