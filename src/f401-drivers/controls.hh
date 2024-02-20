@@ -26,7 +26,7 @@ class Controls {
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
 
 	CascadingFilter<uint16_t, SmoothOversampler<64, uint16_t>, HysteresisFilter<2, 1>> sliderf;
-	MovingAverage<512, uint16_t> cv;
+	CascadingFilter<uint16_t, SmoothOversampler<64, uint16_t>, HysteresisFilter<2, 1>> cv;
 
 	struct Buttons {
 		std::array<MuxedButton, Model::NumChans> scene{
@@ -121,9 +121,10 @@ public:
 	}
 
 	uint16_t ReadSlider() {
-		const float MinSliderVal = 8.f;
-		const float MaxSliderVal = 4096.f - MinSliderVal;
-		float calibrated = MathTools::map_value(sliderf.val(), MinSliderVal, MaxSliderVal, 4095.999f, 0.f);
+		const uint16_t MinSliderVal = 8;
+		const uint16_t MaxSliderVal = 4095 - MinSliderVal;
+		auto val = std::clamp(sliderf.val(), MinSliderVal, MaxSliderVal);
+		float calibrated = MathTools::map_value(val, MinSliderVal, MaxSliderVal, 4095.9f, 0.f);
 		return calibrated;
 	}
 
