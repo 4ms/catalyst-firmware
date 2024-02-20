@@ -143,6 +143,9 @@ inline constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
 	{{GPIO::A, PinNum::_1}, mdrivlib::AdcChanNum::_1, 1, mdrivlib::AdcSamplingTime::_56Cycles},
 }};
 
+inline constexpr uint16_t MinSliderVal = 8;
+inline constexpr uint16_t MaxSliderVal = 4095 - MinSliderVal;
+
 ////////////////// DAC
 
 struct DacSpiConf : mdrivlib::DefaultSpiConf {
@@ -171,7 +174,7 @@ const TimekeeperConfig cv_stream_conf{
 inline constexpr unsigned encoder_led_hz = 60;
 const TimekeeperConfig encoder_led_task{
 	.TIMx = TIM2,
-	.period_ns = TimekeeperConfig::Hz(encoder_led_hz),
+	.period_ns = TimekeeperConfig::Hz(encoder_led_hz * Model::NumChans),
 	.priority1 = 1,
 	.priority2 = 3,
 };

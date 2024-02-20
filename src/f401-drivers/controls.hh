@@ -25,8 +25,8 @@ class Controls {
 	static inline std::array<uint16_t, Board::NumAdcs> adc_buffer;
 	mdrivlib::AdcDmaPeriph<Board::AdcConf> adc_dma{adc_buffer, Board::AdcChans};
 
-	CascadingFilter<uint16_t, SmoothOversampler<64, uint16_t>, HysteresisFilter<4, 1>> sliderf;
-	Oversampler<256, uint16_t> cv;
+	CascadingFilter<uint16_t, SmoothOversampler<64, uint16_t>, HysteresisFilter<2, 1>> sliderf;
+	CascadingFilter<uint16_t, SmoothOversampler<64, uint16_t>, HysteresisFilter<2, 1>> cv;
 
 	struct Buttons {
 		std::array<MuxedButton, Model::NumChans> scene{
@@ -121,7 +121,8 @@ public:
 	}
 
 	uint16_t ReadSlider() {
-		return 4095 - sliderf.val();
+		auto val = std::clamp(sliderf.val(), Board::MinSliderVal, Board::MaxSliderVal);
+		return MathTools::map_value(val, Board::MinSliderVal, Board::MaxSliderVal, 4095.9f, 0.f);
 	}
 
 	uint16_t ReadCv() {
@@ -177,10 +178,14 @@ public:
 	}
 
 private:
+	unsigned cur_encoder_led = 0;
 	void WriteToEncoderLeds() {
-		// Takes about 620us to write all LEDs
-		const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);
-		led_driver.set_all_leds(raw_led_data);
+		// about 120us to write one LED
+		const std::span<const uint8_t, 3> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data() + cur_encoder_led),
+													   3);
+		led_driver.set_rgb_led(cur_encoder_led, raw_led_data);
+		if (++cur_encoder_led >= Model::NumChans)
+			cur_encoder_led = 0;
 	}
 	void UpdateMuxio() {
 		static uint8_t cnt = 0;
