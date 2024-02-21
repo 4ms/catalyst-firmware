@@ -45,7 +45,7 @@ public:
 		p.seqclock.Update();
 
 		if (c.jack.reset.just_went_high()) {
-			p.Reset(false);
+			p.Reset(p.seqclock.IsPaused());
 		}
 
 		if (c.jack.trig.just_went_high()) {
