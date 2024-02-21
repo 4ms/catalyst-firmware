@@ -1,6 +1,7 @@
 #pragma once
 
 #include "channel.hh"
+#include <algorithm>
 #include <bit>
 #include <cstdint>
 
@@ -15,8 +16,10 @@ struct TrigDelay {
 struct MorphRetrig {
 	using type = uint8_t;
 	static constexpr type min = 0u;
-	static constexpr type max = 15u;
-	static constexpr type bits = std::bit_width(max);
+	static constexpr type morph_max = 15u;
+	static constexpr type retrig_max = 3u;
+	static constexpr type bits = std::bit_width(morph_max > retrig_max ? morph_max : retrig_max);
+	static constexpr type retrig_shift = std::bit_width(morph_max <= retrig_max ? morph_max : retrig_max);
 };
 struct Probability {
 	using type = uint8_t;
@@ -77,13 +80,18 @@ public:
 		trig_delay = std::clamp<int32_t>(trig_delay + inc, TrigDelay::min, TrigDelay::max);
 	}
 	float ReadMorph() const {
-		return morph_retrig / static_cast<float>(MorphRetrig::max);
+		return morph_retrig / static_cast<float>(MorphRetrig::morph_max);
 	}
 	MorphRetrig::type ReadRetrig() const {
-		return morph_retrig;
+		return morph_retrig >> MorphRetrig::retrig_shift;
 	}
-	void IncMorphRetrig(int32_t inc) {
-		morph_retrig = std::clamp<int32_t>(morph_retrig + inc, MorphRetrig::min, MorphRetrig::max);
+	void IncMorph(int32_t inc) {
+		morph_retrig = std::clamp<int32_t>(morph_retrig + inc, MorphRetrig::min, MorphRetrig::morph_max);
+	}
+	void IncRetrig(int32_t inc) {
+		auto temp = ReadRetrig();
+		temp = std::clamp<int>(temp + inc, MorphRetrig::min, MorphRetrig::retrig_max);
+		morph_retrig = temp << MorphRetrig::retrig_shift;
 	}
 	Probability::type ReadProbability() const {
 		return probability;

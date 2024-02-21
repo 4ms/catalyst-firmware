@@ -228,7 +228,11 @@ public:
 	void IncStepModifier(uint8_t step, int32_t inc) {
 		show_playhead = false;
 		step = StepOnPageToStep(step);
-		slot.channel[cur_channel][step].IncMorphRetrig(inc);
+		if (slot.settings.GetChannelMode(cur_channel).IsGate()) {
+			slot.channel[cur_channel][step].IncRetrig(inc);
+		} else {
+			slot.channel[cur_channel][step].IncMorph(inc);
+		}
 	}
 	void IncStepProbability(uint8_t step, int32_t inc) {
 		show_playhead = false;
