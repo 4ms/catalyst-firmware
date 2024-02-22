@@ -120,8 +120,10 @@ public:
 		if (last_playhead_pos != playhead_pos) {
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
-			seqclock.Stop(false);
 			show_playhead = true;
+			if (seqclock.IsStopped() && (shared.internalclock.TimeNow() - time_trigged >= Clock::BpmToTicks(1200))) {
+				seqclock.Stop(false);
+			}
 		}
 	}
 	bool ShowPlayhead() const {
