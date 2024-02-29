@@ -57,13 +57,13 @@ public:
 
 		auto next = GetUi();
 		ui->Update(next);
-		if (params.shared.do_save) {
-			params.shared.do_save = false;
-			Save();
-		}
 		if (next != ui) {
 			ui = next;
 			ui->Init();
+		}
+		if (params.shared.do_save) {
+			params.shared.do_save = false;
+			Save();
 		}
 	}
 
