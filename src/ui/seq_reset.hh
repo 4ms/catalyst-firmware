@@ -16,7 +16,7 @@ public:
 		wait = true;
 		p.Reset(true);
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		if (wait) {
 			if (!c.button.play.is_high() && !c.button.shift.is_high()) {
 				wait = false;
@@ -25,25 +25,25 @@ public:
 			if (c.button.add.is_high() || c.button.fine.is_high() || c.button.morph.is_high() ||
 				c.button.bank.is_high() || c.button.shift.is_high())
 			{
+				SwitchUiMode(main_ui);
 				return;
 			}
 			for (auto [chan, butt, sequence] : countzip(c.button.scene, p.slot.channel)) {
 				if (butt.is_high()) {
 					sequence = Catalyst2::Sequencer::ChannelData{};
 					p.slot.settings.Clear(chan);
+					SwitchUiMode(main_ui);
 					return;
 				}
 			}
 			if (c.button.play.is_high()) {
 				p.slot = Catalyst2::Sequencer::Slot{};
 				p.Reset(true);
+				SwitchUiMode(main_ui);
 				return;
 			}
 		}
-
-		interface = this;
 	}
-
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);

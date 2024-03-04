@@ -45,7 +45,7 @@ public:
 		}
 		StartupAnimation(controls);
 		params.sequencer.Reset(true);
-		ui = GetUi();
+		ui = MainUI();
 		ui->Init();
 	}
 	void Update() {
@@ -53,14 +53,14 @@ public:
 		params.shared.internalclock.Update();
 		params.shared.blinker.Update(params.shared.internalclock.TimeNow());
 		params.shared.youngest_scene_button = YoungestSceneButton(controls);
-		ui->Common();
 
-		auto next = GetUi();
-		ui->Update(next);
-		if (next != ui) {
-			ui = next;
+		ui->Common();
+		ui->Update();
+		if (auto new_ui = ui->NextUi()) {
+			ui = new_ui.value();
 			ui->Init();
 		}
+
 		if (params.shared.do_save) {
 			params.shared.do_save = false;
 			Save();
@@ -80,7 +80,7 @@ public:
 	}
 
 private:
-	Abstract *GetUi() {
+	Abstract *MainUI() {
 		if (params.shared.mode == Model::Mode::Macro) {
 			return &macro;
 		} else {

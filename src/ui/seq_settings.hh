@@ -18,7 +18,7 @@ public:
 		}
 		p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
@@ -27,6 +27,7 @@ public:
 		}
 
 		if (!c.button.shift.is_high() || !c.button.bank.is_high()) {
+			SwitchUiMode(main_ui);
 			return;
 		}
 
@@ -35,9 +36,9 @@ public:
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				p.shared.blinker.Set(i, 1, 200, p.shared.internalclock.TimeNow(), 100 * i + 250);
 			}
+			SwitchUiMode(main_ui);
 			return;
 		}
-		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		p.shared.hang.Cancel();

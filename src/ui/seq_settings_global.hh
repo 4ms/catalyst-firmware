@@ -10,7 +10,7 @@
 namespace Catalyst2::Ui::Sequencer::Settings
 {
 class Global : public Usual {
-	SongMode songmode{p, c};
+	SongMode songmode{p, c, &main_ui};
 
 public:
 	using Usual::Usual;
@@ -18,27 +18,20 @@ public:
 		p.shared.hang.Cancel();
 		c.button.play.clear_events();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		if (!c.button.shift.is_high() || c.button.bank.is_high()) {
-			return;
-		}
-
-		if (p.shared.youngest_scene_button.has_value()) {
-			return;
-		}
-
-		if (c.button.morph.is_high()) {
+		if (!c.button.shift.is_high() || c.button.bank.is_high() || c.button.morph.is_high() ||
+			p.shared.youngest_scene_button.has_value())
+		{
+			SwitchUiMode(main_ui);
 			return;
 		}
 
 		if (c.button.play.just_went_high()) {
-			interface = &songmode;
+			SwitchUiMode(songmode);
 			return;
 		}
-
-		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto time_now = p.shared.internalclock.TimeNow();
