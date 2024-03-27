@@ -53,8 +53,8 @@ class Mode {
 						 12.f},
 	};
 
-	// notice no -1 after size.
-	// final "scale" is gate mode
+	// Notice max = size(), not size()-1:
+	// The final "scale" is gate mode
 	static constexpr uint8_t max = Scale.size();
 	static constexpr uint8_t min = 0u;
 	uint8_t val = min;

@@ -26,7 +26,8 @@ public:
 	bool Validate() const {
 		auto ret = true;
 		ret &= Channel::Cv::Validate(cv);
-		return ret &= Channel::Gate::Validate(gate);
+		ret &= Channel::Gate::Validate(gate);
+		return ret;
 	}
 };
 } // namespace Catalyst2::Macro
