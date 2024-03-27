@@ -39,7 +39,7 @@ inline type Read(type val, float random) {
 	return std::clamp<int32_t>(t, min, max);
 }
 inline bool Validate(type val) {
-	return val < max;
+	return val <= max;
 }
 
 }; // namespace Cv
@@ -60,7 +60,7 @@ inline type Read(internal_type val, float random) {
 	return std::clamp(t / static_cast<type>(max), type(0), type(1));
 }
 inline bool Validate(internal_type val) {
-	return val < max;
+	return val <= max;
 }
 }; // namespace Gate
 namespace Output
