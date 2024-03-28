@@ -14,11 +14,11 @@ namespace Catalyst2::Calibration::Dac
 // 100 millivolts up or down
 inline constexpr auto max_adjustment_volts = .1f;
 
-inline constexpr auto max_offset = Channel::Output::from_volts(-5 + max_adjustment_volts);
-inline constexpr auto min_offset = -max_offset;
+inline constexpr int16_t max_offset = Channel::Output::from_volts(-5 + max_adjustment_volts);
+inline constexpr int16_t min_offset = -max_offset;
 
-inline constexpr auto max_slope = Channel::Output::max / Model::output_octave_range * max_adjustment_volts;
-inline constexpr auto min_slope = -max_slope;
+inline constexpr int16_t max_slope = Channel::Output::max / Model::output_octave_range * max_adjustment_volts;
+inline constexpr int16_t min_slope = -max_slope;
 
 struct Data {
 	struct Channel {
@@ -44,6 +44,7 @@ struct Data {
 		// So we should reject this data
 		if (all_bits_set)
 			return false;
+
 		return true;
 	}
 };
