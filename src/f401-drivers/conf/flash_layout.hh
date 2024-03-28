@@ -14,13 +14,27 @@
 namespace Catalyst2
 {
 
-constexpr inline uint32_t BootloaderFlashAddr = get_sector_addr(0);	   // sectors 0,1: 32k Bootloader
-constexpr inline uint32_t MacroSettingsFlashAddr = get_sector_addr(2); // sector 2: 16k for macro settings
-// sectors 3 (16k) and 4 (64k) are empty
+constexpr inline uint32_t BootloaderFlashAddr = get_sector_addr(0); // sectors 0,1: 32k Bootloader
+constexpr inline uint32_t AlsoBootloader = get_sector_addr(1);
+
+constexpr inline uint32_t SharedSettingsFlashAddr = get_sector_addr(2);
+constexpr inline uint32_t Empty3 = get_sector_addr(3);
+
+constexpr inline uint32_t MacroSettingsFlashAddr = get_sector_addr(4); // sector 4: 64k for macro settings
+
 constexpr inline uint32_t SeqSettingsFlashAddr = get_sector_addr(5);  // sector 5: 128k for sequencer settings
 constexpr inline uint32_t AppFlashAddr = get_sector_addr(6);		  // sector 6: 128k for app
 constexpr inline uint32_t BootloaderReceiveAddr = get_sector_addr(7); // sector 7: 128k to receive new firmware
-constexpr inline uint32_t SettingsSectorSize = SeqSettingsFlashAddr - MacroSettingsFlashAddr;
+
+constexpr inline uint32_t MacroSettingsSectorSize = SeqSettingsFlashAddr - MacroSettingsFlashAddr;
+
+// What we want: (128k)
+// constexpr inline uint32_t SeqSettingsSectorSize = AppFlashAddr - SeqSettingsFlashAddr;
+
+// What v1.0 has: 96k
+constexpr inline uint32_t SeqSettingsSectorSize = get_sector_addr(5) - get_sector_addr(2);
+
+constexpr inline uint32_t SharedSettingsSectorSize = 16 * 1024;
 
 static_assert(BootloaderFlashAddr == BOOTLOADER_FLASH_START);
 static_assert(AppFlashAddr == APP_FLASH_START);
