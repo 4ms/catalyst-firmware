@@ -9,7 +9,7 @@
 // Configuration for everything that might change if we make a version with more or less user-facing features
 namespace Catalyst2::Model
 {
-enum class Mode : bool { Sequencer, Macro };
+enum class Mode : uint8_t { Sequencer, Macro };
 
 inline constexpr auto NumChans = 8u;
 inline constexpr auto sample_rate_hz = 4000u;
