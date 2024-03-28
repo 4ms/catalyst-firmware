@@ -2,7 +2,7 @@
 #include "channel.hh"
 #include "drivers/flash_block.hh"
 #include "drivers/flash_sectors.hh"
-#include "legacy/v1_1/macro.hh"
+#include "legacy/v1_0/macro.hh"
 #include "util/wear_level.hh"
 #include "validate.hh"
 #include <cstdint>
