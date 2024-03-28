@@ -1,7 +1,6 @@
 #pragma once
 
 #include "clock.hh"
-#include "conf/build_options.hh"
 #include "conf/model.hh"
 #include "dac_calibration.hh"
 #include "quantizer.hh"
@@ -13,7 +12,7 @@ namespace Catalyst2::Legacy::V1_0::Shared
 {
 
 struct Data {
-	Model::Mode saved_mode = BuildOptions::default_mode;
+	Model::Mode saved_mode;
 	Calibration::Dac::Data dac_calibration;
 	bool Validate() const {
 		auto ret = true;

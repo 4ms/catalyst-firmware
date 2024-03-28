@@ -42,24 +42,4 @@ struct Data : public std::array<int8_t, Model::Macro::NumScenes * Model::NumChan
 };
 
 } // namespace Macro::Pool
-namespace Sequencer
-{
-namespace Probability
-{
-using type = Catalyst2::Legacy::V1_0::Sequencer::Probability::type;
-} // namespace Probability
-namespace Steps
-{
-struct Data : public std::array<std::array<uint8_t, Model::Sequencer::Steps::Max>, Model::NumChans> {
-	Data() {
-		for (auto &c : *this) {
-			RandomizeBuffer(c);
-		}
-	}
-	bool Validate() const {
-		return true;
-	}
-};
-} // namespace Steps
-} // namespace Sequencer
 } // namespace Catalyst2::Legacy::V1_0::Random

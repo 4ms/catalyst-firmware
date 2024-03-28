@@ -27,7 +27,6 @@ struct Data {
 		ret &= clockdiv.Validate();
 		ret &= recorder.Validate();
 		ret &= slider_slew.Validate();
-		ret &= validateBool(override_outputs);
 		return ret;
 	}
 };

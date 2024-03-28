@@ -9,7 +9,7 @@
 namespace Catalyst2::Legacy::V1_0::Macro::SliderSlew
 {
 
-enum class Curve : bool { Linear, Expo };
+enum class Curve : uint8_t { Linear, Expo };
 static constexpr float MaxTime = Model::sample_rate_hz * 120.f;
 static constexpr float MinSlew = 0.04f; // TODO: when constexpr math in gcc:  = std::powf(MaxTime, 0.25);
 static constexpr float EncoderStepSizeFine = 1.f / 200.f;
