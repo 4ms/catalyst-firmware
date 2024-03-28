@@ -35,14 +35,14 @@ public:
 	}
 
 	bool read(SharedData &data) {
-		LegacyV1_0::SharedFlashBlock legacy_flash;
-		LegacyV1_0::SharedPlusMacroData legacy_data;
+		Legacy::V1_0::SharedFlashBlock legacy_flash;
+		Legacy::V1_0::MacroSharedData legacy_data;
 
-		if (legacy_flash.read(legacy_data)) {
-			if (legacy_data.shared.saved_mode)
-				data.saved_mode = Model::Mode::Macro;
-			else
-				data.saved_mode = Model::Mode::Sequencer;
+		static_cast<void>(legacy_flash.read(legacy_data));
+
+		if (legacy_data.isSharedOk()) {
+
+			data.saved_mode = legacy_data.shared.saved_mode;
 
 			auto &new_cal = data.dac_calibration.channel;
 			auto const &old_cal = legacy_data.shared.dac_calibration.channel;
@@ -51,13 +51,17 @@ public:
 				newcal.slope = oldcal.slope;
 			}
 
-			// TODO: try to validate Macro Data,
 			// wipe legacy sector, which is v1.1 Macro sector
+			if (!Legacy::V1_0::eraseFlashSectors()) {
+				// failed to erase sectors... what to do about that?
+				return false; //?
+			}
 			return true;
-
-		} else {
-			return shared_settings_flash.read(data);
 		}
+		if (legacy_data.isMacroOk()) {
+			// TODO: copy macro data
+		}
+		return shared_settings_flash.read(data);
 	}
 
 	bool write(SharedData const &data) {
