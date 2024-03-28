@@ -28,12 +28,23 @@ struct Data {
 	std::array<Channel, Model::NumChans> channel{};
 
 	bool Validate() const {
-		auto ret = true;
+		unsigned all_bits_set = true;
+
 		for (auto &c : channel) {
-			ret &= c.offset >= min_offset && c.offset <= max_offset;
-			ret &= c.slope >= min_slope && c.slope <= max_slope;
+			if (c.offset < min_offset || c.offset > max_offset)
+				return false;
+			if (c.slope < min_slope || c.slope > max_slope)
+				return false;
+
+			if (c.offset != -1 || c.slope != -1)
+				all_bits_set = false;
 		}
-		return ret;
+
+		// If all bits are set, then the data is likely to be erased flash (all 0xFF bytes)
+		// So we should reject this data
+		if (all_bits_set)
+			return false;
+		return true;
 	}
 };
 
