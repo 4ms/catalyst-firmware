@@ -35,31 +35,29 @@ public:
 	}
 
 	bool read(SharedData &data) {
-		bool ok = shared_settings_flash.read(data);
+		LegacyV1_0::SharedFlashBlock legacy_flash;
+		LegacyV1_0::SharedPlusMacroData legacy_data;
 
-		if (!ok) {
-			// __BKPT(1); // This never triggers!
-			LegacyV1_0::SharedFlashBlock legacy_flash;
-			LegacyV1_0::SharedPlusMacroData legacy_data;
+		if (legacy_flash.read(legacy_data)) {
+			if (legacy_data.shared.saved_mode)
+				data.saved_mode = Model::Mode::Macro;
+			else
+				data.saved_mode = Model::Mode::Sequencer;
 
-			if (legacy_flash.read(legacy_data)) {
-
-				if (legacy_data.shared.saved_mode)
-					data.saved_mode = Model::Mode::Macro;
-				else
-					data.saved_mode = Model::Mode::Sequencer;
-
-				auto &new_cal = data.dac_calibration.channel;
-				auto const &old_cal = legacy_data.shared.dac_calibration.channel;
-				for (auto [oldcal, newcal] : zip(old_cal, new_cal)) {
-					newcal.offset = oldcal.offset;
-					newcal.slope = oldcal.slope;
-				}
-
-				ok = true;
+			auto &new_cal = data.dac_calibration.channel;
+			auto const &old_cal = legacy_data.shared.dac_calibration.channel;
+			for (auto [oldcal, newcal] : zip(old_cal, new_cal)) {
+				newcal.offset = oldcal.offset;
+				newcal.slope = oldcal.slope;
 			}
+
+			// TODO: try to validate Macro Data,
+			// wipe legacy sector, which is v1.1 Macro sector
+			return true;
+
+		} else {
+			return shared_settings_flash.read(data);
 		}
-		return ok;
 	}
 
 	bool write(SharedData const &data) {

@@ -24,31 +24,46 @@ struct DacCalibrationData {
 	std::array<Channel, 8> channel{};
 
 	bool Validate() const {
-		auto ret = true;
+		unsigned all_bits_set = true;
+
 		for (auto &c : channel) {
-			ret &= c.offset >= min_offset && c.offset <= max_offset;
-			ret &= c.slope >= min_slope && c.slope <= max_slope;
+			if (c.offset < min_offset || c.offset > max_offset)
+				return false;
+			if (c.slope < min_slope || c.slope > max_slope)
+				return false;
+
+			if (c.offset != -1 || c.slope != -1)
+				all_bits_set = false;
 		}
-		return ret;
+
+		// If all bits are set, then the data is likely to be erased flash (all 0xFF bytes)
+		// So we should reject this data
+		if (all_bits_set)
+			return false;
+
+		return true;
 	}
 };
 
 struct SharedData {
-	bool saved_mode = false;
+	uint8_t saved_mode = 0;
 	DacCalibrationData dac_calibration;
 	bool validate() const {
-		auto ret = true;
-		ret &= validateBool(saved_mode);
-		ret &= dac_calibration.Validate();
-		return ret;
+		if (!validateBool(saved_mode))
+			return false;
+		if (!dac_calibration.Validate())
+			return false;
+
+		return true;
 	}
 };
 
 struct SharedPlusMacroData {
-	static constexpr uint32_t legacy_macro_size = 0x1E8C;
+	static constexpr uint32_t legacy_macro_size = 0x1E88;
 	uint8_t macro_data_padding[legacy_macro_size];
 
 	SharedData shared;
+	uint8_t padding[4];
 
 	bool validate() const {
 		return shared.validate();
@@ -59,7 +74,8 @@ constexpr uint32_t block_size = 0x1EAC;
 constexpr uint32_t block_padding = 0x4; // due to mdrivlib::FlashBlock adding extra padding
 constexpr uint32_t padded_block_size = block_size + block_padding;
 constexpr uint32_t block_start_addr = 0x08008000;
+constexpr uint32_t legacy_sector_size = 0x18000; // Not an actual sector! But that's what we told it
 
-using SharedFlashBlock = WearLevel<mdrivlib::FlashBlock<SharedPlusMacroData, block_start_addr, padded_block_size * 2>>;
+using SharedFlashBlock = WearLevel<mdrivlib::FlashBlock<SharedPlusMacroData, block_start_addr, legacy_sector_size>>;
 
 } // namespace Catalyst2::LegacyV1_0
