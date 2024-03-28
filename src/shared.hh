@@ -103,17 +103,11 @@ public:
 struct Data {
 	Model::Mode saved_mode = BuildOptions::default_mode;
 	Calibration::Dac::Data dac_calibration;
-	bool Validate() const {
+	bool validate() const {
 		auto ret = true;
 		ret &= validateBool(std::to_underlying(saved_mode));
 		ret &= dac_calibration.Validate();
 		return ret;
-	}
-};
-
-struct Dummy {
-	bool Validate() const {
-		return true;
 	}
 };
 

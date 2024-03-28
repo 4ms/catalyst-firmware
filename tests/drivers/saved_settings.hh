@@ -1,6 +1,6 @@
 #pragma once
 
-template<typename SeqModeData, typename MacroModeData>
+template<typename SeqModeData, typename MacroModeData, typename SharedData>
 class SavedSettings {
 
 	// WearLevel<mdrivlib::FlashBlock<SeqModeData, SeqSettingsFlashAddr, SettingsSectorSize>> seq_settings_flash;
@@ -18,6 +18,12 @@ public:
 		return true;
 	}
 	bool write(MacroModeData const &data) {
+		return true;
+	}
+	bool read(SharedData &data) {
+		return true;
+	}
+	bool write(SharedData const &data) {
 		return true;
 	}
 };

@@ -7,11 +7,14 @@
 namespace Catalyst2
 {
 
-template<typename SeqModeData, typename MacroModeData>
+template<typename SeqModeData, typename MacroModeData, typename SharedData>
 class SavedSettings {
 
-	WearLevel<mdrivlib::FlashBlock<SeqModeData, SeqSettingsFlashAddr, SettingsSectorSize>> seq_settings_flash;
-	WearLevel<mdrivlib::FlashBlock<MacroModeData, MacroSettingsFlashAddr, SettingsSectorSize>> macro_settings_flash;
+	WearLevel<mdrivlib::FlashBlock<SeqModeData, SeqSettingsFlashAddr, SeqSettingsSectorSize>> seq_settings_flash;
+	WearLevel<mdrivlib::FlashBlock<MacroModeData, MacroSettingsFlashAddr, MacroSettingsSectorSize>>
+		macro_settings_flash;
+	WearLevel<mdrivlib::FlashBlock<SharedData, SharedSettingsFlashAddr, SharedSettingsSectorSize>>
+		shared_settings_flash;
 
 public:
 	bool read(SeqModeData &data) {
@@ -28,6 +31,15 @@ public:
 
 	bool write(MacroModeData const &data) {
 		return macro_settings_flash.write(data);
+	}
+
+	bool read(SharedData &data) {
+		bool ok = shared_settings_flash.read(data);
+		return ok;
+	}
+
+	bool write(SharedData const &data) {
+		return shared_settings_flash.write(data);
 	}
 };
 

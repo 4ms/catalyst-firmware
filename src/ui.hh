@@ -27,7 +27,7 @@ class Interface {
 	Macro::Main macro{params.macro, controls, sequencer};
 	Sequencer::Main sequencer{params.sequencer, controls, macro};
 
-	SavedSettings<Data::Sequencer, Data::Macro> settings;
+	SavedSettings<Catalyst2::Sequencer::Data, Catalyst2::Macro::Data, Catalyst2::Shared::Data> settings;
 
 public:
 	Interface(Params &params)
@@ -39,7 +39,7 @@ public:
 		std::srand(controls.ReadSlider() + controls.ReadCv());
 		Load();
 		if (controls.button.shift.is_high() && controls.button.morph.is_high()) {
-			if (Calibration::Dac::Calibrate(params.data.shared().dac_calibration, controls)) {
+			if (Calibration::Dac::Calibrate(params.data.shared.dac_calibration, controls)) {
 				Save();
 			}
 		}
@@ -68,7 +68,7 @@ public:
 	}
 
 	void SetOutputs(Model::Output::Buffer &outs) {
-		Calibration::Dac::Process(params.data.shared().dac_calibration, outs);
+		Calibration::Dac::Process(params.data.shared.dac_calibration, outs);
 		controls.Write(outs);
 
 		if (controls.LedsReady()) {
@@ -102,11 +102,16 @@ private:
 		}
 	}
 	void Load() {
+		if (!settings.read(params.data.shared)) {
+			params.data.shared = Catalyst2::Shared::Data{};
+		}
 		if (!settings.read(params.data.sequencer)) {
-			params.data.sequencer = Data::Sequencer{};
+			params.data.sequencer = Catalyst2::Sequencer::Data{};
 		}
 		if (!settings.read(params.data.macro)) {
-			params.data.macro = Data::Macro{};
+			// TODO: Can we salvage some saved macro mode data?
+			// Try reading and validating using legacy slot addresses
+			params.data.macro = Catalyst2::Macro::Data{};
 		}
 
 		params.sequencer.Load();
@@ -125,10 +130,7 @@ private:
 		}
 
 		if (saved_mode != params.shared.data.saved_mode) {
-			if constexpr (macro_is_smaller)
-				settings.write(params.data.macro);
-			else
-				settings.write(params.data.sequencer);
+			settings.write(params.data.shared);
 		}
 
 		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
