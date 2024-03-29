@@ -157,10 +157,10 @@ function(create_target target driver_arch)
   )
 
   add_custom_target(
-    ${target}-oflash-app
+    ${target}-erase-chip
     DEPENDS ${target}.elf
-    COMMAND openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "program ${TARGET_BASE}.hex verify reset exit"
-    COMMENT "Flashing app+bootloader. Only for F4xx chips"
+    COMMAND JFlashExe -openprj${CMAKE_SOURCE_DIR}/scripts/${target}.jflash -erasechip -exit
+    COMMENT "Eraseing Chip..."
     USES_TERMINAL
   )
 
