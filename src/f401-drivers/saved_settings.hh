@@ -1,9 +1,9 @@
 #pragma once
-#include "cmsis_gcc.h"
 #include "conf/flash_layout.hh"
+#include "conf/model.hh"
 #include "drivers/flash_block.hh"
 #include "drivers/flash_sectors.hh"
-#include "legacy_shared_data.hh"
+#include "legacy/v1_0/legacy_shared_data.hh"
 #include "util/wear_level.hh"
 
 namespace Catalyst2
@@ -43,21 +43,21 @@ public:
 			return shared_settings_flash.read(data);
 		}
 
-		// __BKPT(2);
 		auto legacy_settings_slot0 = *reinterpret_cast<Legacy::V1_0::Shared::Data *>(Legacy::V1_0::FirstSlot);
 		auto legacy_settings_slot1 = *reinterpret_cast<Legacy::V1_0::Shared::Data *>(Legacy::V1_0::SecondSlot);
 		const Legacy::V1_0::Shared::Data *valid_slot = nullptr;
 
 		if (legacy_settings_slot1.Validate()) {
-			// __BKPT(3);
 			valid_slot = &legacy_settings_slot1;
 		} else if (legacy_settings_slot0.Validate()) {
-			// __BKPT(4);
 			valid_slot = &legacy_settings_slot0;
 		}
+
 		if (valid_slot) {
-			// __BKPT(5);
-			data.saved_mode = valid_slot->saved_mode;
+			if (valid_slot->saved_mode == Legacy::V1_0::Shared::Data::Mode::Macro)
+				data.saved_mode = Catalyst2::Model::Mode::Macro;
+			else
+				data.saved_mode = Catalyst2::Model::Mode::Sequencer;
 
 			for (auto [oldcal, newcal] : zip(valid_slot->dac_calibration.channel, data.dac_calibration.channel)) {
 				newcal.offset = oldcal.offset;
@@ -68,16 +68,14 @@ public:
 			Legacy::V1_0::eraseFlashSectors();
 
 			// Try to write the extracted data, regardless if the above erasing failed
-			// Note: must write after erasing, just in case a "writeable" sector is found
 			// Reset the settings WearLeveling sector since we just wiped it
 			auto reset_settings = decltype(shared_settings_flash){};
 			data.SettingsVersionTag = Version1_1Tag;
-			bool write_ok = reset_settings.write(data);
+			reset_settings.write(data);
 
 			return true;
 		}
 
-		// __BKPT(6);
 		return false;
 	}
 
