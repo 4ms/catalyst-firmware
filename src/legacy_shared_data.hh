@@ -20,7 +20,7 @@ constexpr uint32_t legacy_sector_size = 0x18000; // Not an actual sector! But th
 struct MacroSharedData : Macro::Data {
 	Shared::Data shared{};
 	bool validate() const {
-		return true;
+		return shared.Validate();
 	}
 	bool isMacroOk() const {
 		return Macro::Data::validate();

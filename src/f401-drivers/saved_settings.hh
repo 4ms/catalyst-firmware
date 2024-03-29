@@ -38,29 +38,33 @@ public:
 		Legacy::V1_0::SharedFlashBlock legacy_flash;
 		Legacy::V1_0::MacroSharedData legacy_data;
 
-		static_cast<void>(legacy_flash.read(legacy_data));
+		if (legacy_flash.read(legacy_data)) {
 
-		if (legacy_data.isSharedOk()) {
+			if (legacy_data.isSharedOk()) {
 
-			data.saved_mode = legacy_data.shared.saved_mode;
+				data.saved_mode = legacy_data.shared.saved_mode;
 
-			auto &new_cal = data.dac_calibration.channel;
-			auto const &old_cal = legacy_data.shared.dac_calibration.channel;
-			for (auto [oldcal, newcal] : zip(old_cal, new_cal)) {
-				newcal.offset = oldcal.offset;
-				newcal.slope = oldcal.slope;
+				auto &new_cal = data.dac_calibration.channel;
+				auto const &old_cal = legacy_data.shared.dac_calibration.channel;
+				for (auto [oldcal, newcal] : zip(old_cal, new_cal)) {
+					newcal.offset = oldcal.offset;
+					newcal.slope = oldcal.slope;
+				}
+
+				// wipe legacy sector, which is v1.1 Settings and Macro sectors
+				if (!Legacy::V1_0::eraseFlashSectors()) {
+					// failed to erase sectors... what to do about that?
+					return false; //?
+				}
 			}
 
-			// wipe legacy sector, which is v1.1 Macro sector
-			if (!Legacy::V1_0::eraseFlashSectors()) {
-				// failed to erase sectors... what to do about that?
-				return false; //?
+			if (legacy_data.isMacroOk()) {
+				// TODO: copy macro data
 			}
+
 			return true;
 		}
-		if (legacy_data.isMacroOk()) {
-			// TODO: copy macro data
-		}
+
 		return shared_settings_flash.read(data);
 	}
 
