@@ -17,8 +17,8 @@ namespace Catalyst2
 constexpr inline uint32_t BootloaderFlashAddr = get_sector_addr(0); // sectors 0,1: 32k Bootloader
 constexpr inline uint32_t AlsoBootloader = get_sector_addr(1);
 
-constexpr inline uint32_t SharedSettingsFlashAddr = get_sector_addr(2);
-constexpr inline uint32_t Empty3 = get_sector_addr(3);
+constexpr inline uint32_t Empty2 = get_sector_addr(2);
+constexpr inline uint32_t SharedSettingsFlashAddr = get_sector_addr(3);
 
 constexpr inline uint32_t MacroSettingsFlashAddr = get_sector_addr(4); // sector 4: 64k for macro settings
 
