@@ -170,8 +170,8 @@ inline void StartupAnimation(Controls &c) {
 			phase = std::clamp(phase * 8, 0.f, 7.999f);
 			auto idx = static_cast<uint8_t>(phase);
 			const auto cphase = phase - idx;
-			const auto col = Palette::Scales::color[idx];
-			const auto nextcol = Palette::Scales::color[idx + 1];
+			const auto col = Palette::Scales::color[idx + 1];
+			const auto nextcol = Palette::Scales::color[idx + 2];
 			c.SetEncoderLed(enc, col.blend(nextcol, cphase));
 		}
 		c.Delay(1);
