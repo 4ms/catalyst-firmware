@@ -101,8 +101,8 @@ public:
 };
 
 struct Data {
-	Model::Mode saved_mode = BuildOptions::default_mode;
-	Calibration::Dac::Data dac_calibration;
+	Model::Mode saved_mode alignas(4) = BuildOptions::default_mode;
+	Calibration::Dac::Data dac_calibration alignas(4);
 
 	bool validate() const {
 		if (!validateBool(std::to_underlying(saved_mode)))
@@ -112,6 +112,8 @@ struct Data {
 		return true;
 	}
 };
+
+static_assert(sizeof(Data) % 4 == 0);
 
 class Interface {
 	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
