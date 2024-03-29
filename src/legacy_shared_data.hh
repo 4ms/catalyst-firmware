@@ -1,10 +1,7 @@
 #pragma once
-#include "channel.hh"
 #include "drivers/flash_block.hh"
 #include "drivers/flash_sectors.hh"
-#include "legacy/v1_0/macro.hh"
-#include "util/wear_level.hh"
-#include "validate.hh"
+#include "legacy/v1_0/shared.hh"
 #include <cstdint>
 
 namespace Catalyst2::Legacy::V1_0
@@ -14,25 +11,13 @@ constexpr auto legacy_addr_0 = get_sector_addr(2);
 constexpr auto legacy_addr_1 = get_sector_addr(3);
 constexpr auto legacy_addr_2 = get_sector_addr(4);
 
-constexpr uint32_t block_start_addr = legacy_addr_0;
-constexpr uint32_t legacy_sector_size = 0x18000; // Not an actual sector! But that's what we told it
+constexpr uint32_t OffsetToSettingData = 0x1E8A;
+constexpr uint32_t SettingsDataSize = sizeof(Shared::Data);
+static_assert(SettingsDataSize == 0x22);
+constexpr uint32_t Padding = 0x4; // Added by FlashBlock (extra padding bug)
 
-struct MacroSharedData : Macro::Data {
-	Shared::Data shared{};
-	bool validate() const {
-		return shared.Validate();
-	}
-	bool isMacroOk() const {
-		return Macro::Data::validate();
-	}
-	bool isSharedOk() const {
-		return shared.Validate();
-	}
-};
-
-constexpr uint32_t block_size = sizeof(MacroSharedData); // 0x1eac
-
-using SharedFlashBlock = WearLevel<mdrivlib::FlashBlock<MacroSharedData, block_start_addr, legacy_sector_size>>;
+constexpr uint32_t FirstSlot = Legacy::V1_0::legacy_addr_0 + Legacy::V1_0::OffsetToSettingData; // want 9e8a
+constexpr uint32_t SecondSlot = FirstSlot + OffsetToSettingData + SettingsDataSize + Padding;	// want bd3a
 
 inline bool eraseFlashSectors() {
 	if (!mdrivlib::InternalFlash::erase_sector(legacy_addr_0)) {

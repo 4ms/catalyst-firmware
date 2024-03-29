@@ -1,4 +1,5 @@
 #pragma once
+#include "cmsis_gcc.h"
 #include "conf/flash_layout.hh"
 #include "drivers/flash_block.hh"
 #include "drivers/flash_sectors.hh"
@@ -16,6 +17,8 @@ class SavedSettings {
 		macro_settings_flash;
 	WearLevel<mdrivlib::FlashBlock<SharedData, SharedSettingsFlashAddr, SharedSettingsSectorSize>>
 		shared_settings_flash;
+
+	static constexpr uint32_t Version1_1Tag = 0xABCDDCBA;
 
 public:
 	bool read(SeqModeData &data) {
@@ -35,40 +38,51 @@ public:
 	}
 
 	bool read(SharedData &data) {
-		Legacy::V1_0::SharedFlashBlock legacy_flash;
-		Legacy::V1_0::MacroSharedData legacy_data;
+		const auto magic_number_v1_1 = *reinterpret_cast<uint32_t *>(SharedSettingsFlashAddr);
+		if (magic_number_v1_1 == Version1_1Tag) {
+			return shared_settings_flash.read(data);
+		}
 
-		if (legacy_flash.read(legacy_data)) {
+		// __BKPT(2);
+		auto legacy_settings_slot0 = *reinterpret_cast<Legacy::V1_0::Shared::Data *>(Legacy::V1_0::FirstSlot);
+		auto legacy_settings_slot1 = *reinterpret_cast<Legacy::V1_0::Shared::Data *>(Legacy::V1_0::SecondSlot);
+		const Legacy::V1_0::Shared::Data *valid_slot = nullptr;
 
-			if (legacy_data.isSharedOk()) {
+		if (legacy_settings_slot1.Validate()) {
+			// __BKPT(3);
+			valid_slot = &legacy_settings_slot1;
+		} else if (legacy_settings_slot0.Validate()) {
+			// __BKPT(4);
+			valid_slot = &legacy_settings_slot0;
+		}
+		if (valid_slot) {
+			// __BKPT(5);
+			data.saved_mode = valid_slot->saved_mode;
 
-				data.saved_mode = legacy_data.shared.saved_mode;
-
-				auto &new_cal = data.dac_calibration.channel;
-				auto const &old_cal = legacy_data.shared.dac_calibration.channel;
-				for (auto [oldcal, newcal] : zip(old_cal, new_cal)) {
-					newcal.offset = oldcal.offset;
-					newcal.slope = oldcal.slope;
-				}
-
-				// wipe legacy sector, which is v1.1 Settings and Macro sectors
-				if (!Legacy::V1_0::eraseFlashSectors()) {
-					// failed to erase sectors... what to do about that?
-					return false; //?
-				}
+			for (auto [oldcal, newcal] : zip(valid_slot->dac_calibration.channel, data.dac_calibration.channel)) {
+				newcal.offset = oldcal.offset;
+				newcal.slope = oldcal.slope;
 			}
 
-			if (legacy_data.isMacroOk()) {
-				// TODO: copy macro data
-			}
+			// wipe legacy sectors, which is v1.1 Settings and Macro sectors
+			Legacy::V1_0::eraseFlashSectors();
+
+			// Try to write the extracted data, regardless if the above erasing failed
+			// Note: must write after erasing, just in case a "writeable" sector is found
+			// Reset the settings WearLeveling sector since we just wiped it
+			auto reset_settings = decltype(shared_settings_flash){};
+			data.SettingsVersionTag = Version1_1Tag;
+			bool write_ok = reset_settings.write(data);
 
 			return true;
 		}
 
-		return shared_settings_flash.read(data);
+		// __BKPT(6);
+		return false;
 	}
 
-	bool write(SharedData const &data) {
+	bool write(SharedData &data) {
+		data.SettingsVersionTag = Version1_1Tag;
 		return shared_settings_flash.write(data);
 	}
 };
