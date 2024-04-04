@@ -106,14 +106,14 @@ inline bool Calibrate(Data &d, Controls &c) {
 			}
 			c.SetEncoderLed(idx, Palette::off.blend(col, phase));
 		};
-		if (c.button.shift.is_high()) {
+		if (c.button.shift.is_pressed()) {
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				d.channel[i].offset =
 					std::clamp<int16_t>(d.channel[i].offset + c.encoders[i].read(), min_offset, max_offset);
 				const auto phase = d.channel[i].offset / static_cast<float>(max_offset);
 				color_func(i, phase);
 			}
-		} else if (c.button.fine.is_high()) {
+		} else if (c.button.fine.is_pressed()) {
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				d.channel[i].slope =
 					std::clamp<int16_t>(d.channel[i].slope + c.encoders[i].read(), min_slope, max_slope);
@@ -128,14 +128,14 @@ inline bool Calibrate(Data &d, Controls &c) {
 		}
 
 		if (c.button.play.just_went_high()) {
-			if (c.button.bank.is_high()) {
+			if (c.button.bank.is_pressed()) {
 				d = Data{};
 			} else {
 				d = prev_;
 				return false;
 			}
 		}
-		if (c.button.bank.is_high() && c.button.morph.is_high()) {
+		if (c.button.bank.is_pressed() && c.button.morph.is_pressed()) {
 			return true;
 		}
 
