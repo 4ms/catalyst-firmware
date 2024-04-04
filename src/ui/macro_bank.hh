@@ -28,7 +28,7 @@ public:
 		}
 		if (p.shared.save.Check(p.shared.internalclock.TimeNow()) && c.button.morph.is_high()) {
 			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
-			p.shared.do_save = true;
+			p.shared.do_save_macro = true;
 			p.shared.blinker.Set(16, 500, p.shared.internalclock.TimeNow());
 		}
 

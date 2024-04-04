@@ -48,7 +48,7 @@ public:
 			p.shared.blinker.Set(scene, 4, 125, p.shared.internalclock.TimeNow());
 		} else {
 			p.Save(scene);
-			p.shared.do_save = true;
+			p.shared.do_save_seq = true;
 			p.shared.blinker.Set(scene, 16, 500, p.shared.internalclock.TimeNow());
 		}
 	}

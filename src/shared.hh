@@ -132,7 +132,8 @@ public:
 	Clock::Timer modeswitcher{Model::HoldTimes::mode_switcher};
 	Clock::Timer save{Model::HoldTimes::save};
 	Blinker blinker;
-	bool do_save = false;
+	bool do_save_macro = false;
+	bool do_save_seq = false;
 	bool did_paste = false;
 	bool did_copy = false;
 	float pos;

@@ -40,7 +40,7 @@ public:
 		Load();
 		if (controls.button.shift.is_high() && controls.button.morph.is_high()) {
 			if (Calibration::Dac::Calibrate(params.data.shared.dac_calibration, controls)) {
-				Save();
+				SaveShared();
 			}
 		}
 		StartupAnimation(controls);
@@ -57,9 +57,13 @@ public:
 
 		auto next = GetUi();
 		ui->Update(next);
-		if (params.shared.do_save) {
-			params.shared.do_save = false;
-			Save();
+		if (params.shared.do_save_macro) {
+			params.shared.do_save_macro = false;
+			SaveMacro();
+		}
+		if (params.shared.do_save_seq) {
+			params.shared.do_save_seq = false;
+			SaveSeq();
 		}
 		if (next != ui) {
 			ui = next;
@@ -87,19 +91,25 @@ private:
 			return &sequencer;
 		}
 	}
-	void Save() {
-		auto result = settings.write(params.data.macro);
-		result &= settings.write(params.data.sequencer);
-		result &= settings.write(params.data.shared);
-
-		if (!result) {
-			// save failure
-			for (auto i = 0u; i < 48; i++) {
-				for (auto but = 0u; but < 8; but++) {
-					controls.SetButtonLed(but, !!(i & 0b1));
-				}
-				controls.Delay(3000 / 48);
+	void SaveShared() {
+		if (!settings.write(params.data.shared))
+			SaveError();
+	}
+	void SaveMacro() {
+		if (!settings.write(params.data.macro))
+			SaveError();
+	}
+	void SaveSeq() {
+		if (!settings.write(params.data.sequencer))
+			SaveError();
+	}
+	void SaveError() {
+		// save failure
+		for (auto i = 0u; i < 48; i++) {
+			for (auto but = 0u; but < 8; but++) {
+				controls.SetButtonLed(but, !!(i & 0b1));
 			}
+			controls.Delay(3000 / 48);
 		}
 	}
 	void Load() {
@@ -131,7 +141,7 @@ private:
 		}
 
 		if (saved_mode != params.shared.data.saved_mode) {
-			settings.write(params.data.shared);
+			SaveShared();
 		}
 
 		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
