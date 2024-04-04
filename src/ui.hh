@@ -90,6 +90,7 @@ private:
 	void Save() {
 		auto result = settings.write(params.data.macro);
 		result &= settings.write(params.data.sequencer);
+		result &= settings.write(params.data.shared);
 
 		if (!result) {
 			// save failure
