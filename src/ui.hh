@@ -120,8 +120,6 @@ private:
 			params.data.sequencer = Catalyst2::Sequencer::Data{};
 		}
 		if (!settings.read(params.data.macro)) {
-			// TODO: Can we salvage some saved macro mode data?
-			// Try reading and validating using legacy slot addresses
 			params.data.macro = Catalyst2::Macro::Data{};
 		}
 
