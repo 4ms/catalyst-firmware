@@ -117,7 +117,7 @@ public:
 			// __BKPT();
 		}
 		// long delay to let the muxio run a few times so buttons checked on start up will be accurate
-		HAL_Delay(500);
+		Delay(64);
 	}
 
 	uint16_t ReadSlider() {
