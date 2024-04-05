@@ -104,13 +104,7 @@ private:
 			SaveError();
 	}
 	void SaveError() {
-		// save failure
-		for (auto i = 0u; i < 48; i++) {
-			for (auto but = 0u; but < 8; but++) {
-				controls.SetButtonLed(but, !!(i & 0b1));
-			}
-			controls.Delay(3000 / 48);
-		}
+		params.shared.blinker.Set(48, 3000, params.shared.internalclock.TimeNow());
 	}
 	void Load() {
 		if (!settings.read(params.data.shared)) {
