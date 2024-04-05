@@ -28,7 +28,7 @@ public:
 
 		if (!c.button.shift.is_high()) {
 			if (!p.player.songmode.Size()) {
-				p.Reset(true);
+				p.Stop();
 			}
 			return;
 		}

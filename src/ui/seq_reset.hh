@@ -14,7 +14,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		wait = true;
-		p.Reset(true);
+		p.Stop();
 	}
 	void Update(Abstract *&interface) override {
 		if (wait) {
@@ -36,7 +36,7 @@ public:
 			}
 			if (c.button.play.is_high()) {
 				p.slot = Catalyst2::Sequencer::Slot{};
-				p.Reset(true);
+				p.Stop();
 				return;
 			}
 		}

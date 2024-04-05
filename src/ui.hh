@@ -44,7 +44,7 @@ public:
 			}
 		}
 		StartupAnimation(controls);
-		params.sequencer.Reset(true);
+		params.sequencer.Stop();
 		ui = GetUi();
 		ui->Init();
 	}
