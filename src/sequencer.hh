@@ -136,7 +136,8 @@ public:
 	uint8_t GetPlayheadPage() const {
 		return playhead_page;
 	}
-	void Reset(bool stop) {
+	void Reset() {
+		bool stop = seqclock.IsPaused();
 		seqclock.Reset();
 		shared.clockdivider.Reset();
 		player.Reset();
