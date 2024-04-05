@@ -42,8 +42,6 @@ public:
 		, p{p} {
 	}
 	void Common() final {
-		p.seqclock.Update();
-
 		if (c.jack.reset.just_went_high()) {
 			p.Reset();
 		}

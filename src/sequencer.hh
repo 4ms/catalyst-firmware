@@ -114,6 +114,7 @@ public:
 		return data.startup_slot;
 	}
 	void Update(float phase) {
+		seqclock.Update();
 		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
 		playhead_page = player.GetPlayheadPage(cur_channel);
 		playhead_pos = player.GetPlayheadStepOnPage(cur_channel);
