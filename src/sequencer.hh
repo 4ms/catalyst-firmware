@@ -117,6 +117,7 @@ public:
 		player.Update(phase, seqclock.GetPhase(), seqclock.Output());
 		playhead_page = player.GetPlayheadPage(cur_channel);
 		playhead_pos = player.GetPlayheadStepOnPage(cur_channel);
+
 		if (last_playhead_pos != playhead_pos) {
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
@@ -276,6 +277,14 @@ public:
 		for (auto i = 0u; i < Model::Sequencer::Steps::PerPage; i++) {
 			slot.channel[cur_channel][SeqPageToStep(page) + i] = clipboard.page[i];
 		}
+	}
+
+	std::array<Step, 3> GetStepCluster_TEST(uint8_t chan) {
+		std::array<Step, 3> out;
+		out[0] = GetRelativeStep(chan, -1);
+		out[1] = GetRelativeStep(chan, 0);
+		out[2] = GetRelativeStep(chan, 1);
+		return out;
 	}
 
 private:

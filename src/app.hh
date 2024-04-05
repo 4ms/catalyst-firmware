@@ -154,14 +154,16 @@ private:
 
 		const auto step_phase = p.player.GetStepPhase(chan);
 
+		auto steps = p.GetStepCluster_TEST(chan);
+
 		std::array order = {-1, 0, 1};
 
 		// if steps overlap, the order that they are output needs to change
 		// later steps (in time) should always override steps already in progress
 		for (int i = 0; i <= 1; i++) {
-			auto p_step = p.GetRelativeStep(chan, i - 1).ReadTrigDelay();
+			auto p_step = steps[i].ReadTrigDelay();
 			p_step *= p.player.IsRelativeStepMovingBackwards(chan, i - 1) ? -1 : 1;
-			auto step = p.GetRelativeStep(chan, i).ReadTrigDelay();
+			auto step = steps[i + 1].ReadTrigDelay();
 			step *= p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1;
 			if ((p_step - 1.f) > step) {
 				std::swap(order[i + 1], order[i]);
@@ -170,14 +172,16 @@ private:
 		}
 
 		for (auto i : order) {
-			const auto gate_val = p.GetRelativeStepGate(chan, i);
+			auto s = steps[i + 1];
+			const auto gate_val = s.ReadGate(p.slot.settings.GetRandomOrGlobal(chan) *
+											 p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability()));
+
 			if (gate_val <= 0.f) {
 				continue;
 			}
 			if (p.seqclock.IsStopped()) {
 				continue;
 			}
-			auto s = p.GetRelativeStep(chan, i);
 			const auto tdelay = s.ReadTrigDelay() * (p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1);
 			const auto s_phase = step_phase - tdelay - i;
 
