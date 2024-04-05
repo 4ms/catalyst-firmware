@@ -49,20 +49,19 @@ public:
 			const auto pm = settings.GetPlayModeOrGlobal(chan);
 			const auto actual_length = ActualLength(l, pm);
 			if (do_step) {
-				phaser.Step(chan, actual_length);
-			}
-			if (phaser.DidReset(chan)) {
-				if (!songmode.IsActive()) {
-					if (songmode.IsQueued(chan)) {
-						songmode.Step(chan);
+				if (phaser.Step(chan, actual_length)) {
+					if (!songmode.IsActive()) {
+						if (songmode.IsQueued(chan)) {
+							songmode.Step(chan);
+						} else {
+							queue.Step(chan);
+						}
 					} else {
-						queue.Step(chan);
-					}
-				} else {
-					if (queue.IsQueued(chan)) {
-						queue.Step(chan);
-					} else {
-						songmode.Step(chan);
+						if (queue.IsQueued(chan)) {
+							queue.Step(chan);
+						} else {
+							songmode.Step(chan);
+						}
 					}
 				}
 			}

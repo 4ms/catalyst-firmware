@@ -22,7 +22,6 @@ class Interface {
 	struct State {
 		Clock::Divider clockdivider;
 		uint8_t counter = 0;
-		bool sequence_reset;
 	};
 	std::array<State, Model::NumChans> channel;
 	Data &data;
@@ -31,16 +30,17 @@ public:
 	Interface(Data &data)
 		: data{data} {
 	}
-	void Step(uint8_t chan, uint8_t actual_seq_length) {
+	bool Step(uint8_t chan, uint8_t actual_seq_length) {
 		auto &c = channel[chan];
 		c.clockdivider.Update(data.cdiv[chan]);
 		if (c.clockdivider.Step()) {
 			c.counter += 1;
 			if (c.counter >= actual_seq_length) {
 				c.counter = 0;
-				c.sequence_reset = true;
+				return true;
 			}
 		}
+		return false;
 	}
 	float GetPhase(uint8_t chan, float clock_phase) const {
 		return channel[chan].counter + channel[chan].clockdivider.GetPhase(data.cdiv[chan], clock_phase);
@@ -50,11 +50,6 @@ public:
 			c.counter = 0;
 			c.clockdivider.Reset();
 		}
-	}
-	bool DidReset(uint8_t chan) {
-		const auto ret = channel[chan].sequence_reset;
-		channel[chan].sequence_reset = false;
-		return ret;
 	}
 };
 } // namespace Catalyst2::Sequencer::Phaser
