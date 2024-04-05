@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef TESTPROJECT
-#define GCC_OPTIMIZE_OFF
+#include "../tests/drivers/debug.hh"
 #else
 
 #include "conf/board_conf.hh"
