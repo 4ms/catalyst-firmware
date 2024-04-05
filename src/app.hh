@@ -205,15 +205,16 @@ private:
 	}
 	Model::Output::type Cv(uint8_t chan) {
 		const auto random = p.slot.settings.GetRandomOrGlobal(chan);
-		const auto ps = p.GetRelativeStep(chan, -1);
-		const auto pr = p.player.randomvalue.ReadRelative(chan, -1, ps.ReadProbability());
-		auto stepval = p.shared.quantizer[chan].Process(ps.ReadCv(pr * random));
+		const auto prev_step = p.GetRelativeStep(chan, -1);
+		const auto prev_step_random = p.player.randomvalue.ReadRelative(chan, -1, prev_step.ReadProbability());
 
-		const auto s = p.GetRelativeStep(chan, 0);
-		const auto sr = p.player.randomvalue.ReadRelative(chan, 0, s.ReadProbability());
+		const auto current_step = p.GetRelativeStep(chan, 0);
+		const auto current_step_random = p.player.randomvalue.ReadRelative(chan, 0, current_step.ReadProbability());
 
-		const auto distance = p.shared.quantizer[chan].Process(s.ReadCv(sr * random)) - stepval;
-		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), s.ReadMorph());
+		auto stepval = p.shared.quantizer[chan].Process(prev_step.ReadCv(prev_step_random * random));
+		const auto distance =
+			p.shared.quantizer[chan].Process(current_step.ReadCv(current_step_random * random)) - stepval;
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), current_step.ReadMorph());
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
 		const auto r = p.slot.settings.GetRange(chan);
