@@ -253,16 +253,6 @@ public:
 		const auto step = player.GetRelativeStep(chan, relative_pos);
 		return slot.channel[chan][step];
 	}
-	auto GetRelativeStepCv(uint8_t chan, int8_t relative_pos) {
-		const auto s = GetRelativeStep(chan, relative_pos);
-		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
-		return s.ReadCv(r * slot.settings.GetRandomOrGlobal(chan));
-	}
-	auto GetRelativeStepGate(uint8_t chan, int8_t relative_pos) {
-		const auto s = GetRelativeStep(chan, relative_pos);
-		auto r = player.randomvalue.ReadRelative(chan, relative_pos, s.ReadProbability());
-		return s.ReadGate(r * slot.settings.GetRandomOrGlobal(chan));
-	}
 	Step GetStep(uint8_t step) {
 		return slot.channel[cur_channel][step];
 	}

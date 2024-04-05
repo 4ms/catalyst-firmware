@@ -204,9 +204,16 @@ private:
 		return out ? Channel::Output::gate_high : Channel::Output::gate_off;
 	}
 	Model::Output::type Cv(uint8_t chan) {
-		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), p.GetRelativeStep(chan, 0).ReadMorph());
-		auto stepval = p.shared.quantizer[chan].Process(p.GetRelativeStepCv(chan, -1));
-		const auto distance = p.shared.quantizer[chan].Process(p.GetRelativeStepCv(chan, 0)) - stepval;
+		const auto random = p.slot.settings.GetRandomOrGlobal(chan);
+		const auto ps = p.GetRelativeStep(chan, -1);
+		const auto pr = p.player.randomvalue.ReadRelative(chan, -1, ps.ReadProbability());
+		auto stepval = p.shared.quantizer[chan].Process(ps.ReadCv(pr * random));
+
+		const auto s = p.GetRelativeStep(chan, 0);
+		const auto sr = p.player.randomvalue.ReadRelative(chan, 0, s.ReadProbability());
+
+		const auto distance = p.shared.quantizer[chan].Process(s.ReadCv(sr * random)) - stepval;
+		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), s.ReadMorph());
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
 		const auto r = p.slot.settings.GetRange(chan);
