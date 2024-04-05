@@ -163,8 +163,7 @@ public:
 		c.SetPlayLed(!p.seqclock.IsPaused());
 		ClearButtonLeds(c);
 		if (p.IsChannelSelected()) {
-			const auto chan = p.GetSelectedChannel();
-			const auto playheadpage = p.player.GetPlayheadPage(chan);
+			const auto playheadpage = p.GetPlayheadPage();
 
 			uint8_t page;
 			if (p.IsPageSelected()) {

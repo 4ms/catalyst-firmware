@@ -33,7 +33,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
 
-		const auto playheadpage = p.player.GetPlayheadPage(p.GetSelectedChannel());
+		const auto playheadpage = p.GetPlayheadPage();
 		uint8_t page;
 		if (p.IsPageSelected()) {
 			page = p.GetSelectedPage();

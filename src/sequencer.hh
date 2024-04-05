@@ -291,7 +291,7 @@ public:
 
 private:
 	uint8_t StepOnPageToStep(uint8_t step_on_page) {
-		const auto page = IsPageSelected() ? GetSelectedPage() : player.GetPlayheadPage(cur_channel);
+		const auto page = IsPageSelected() ? GetSelectedPage() : GetPlayheadPage();
 		return step_on_page + (page * Model::Sequencer::Steps::PerPage);
 	}
 };
