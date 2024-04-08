@@ -57,10 +57,5 @@ public:
 	Clock::Divider::type GetClockDiv() const {
 		return data.clockdiv;
 	}
-	void LoadScales() {
-		for (auto [i, q] : countzip(shared.quantizer)) {
-			q.Load(this->bank.GetChannelMode(i).GetScale());
-		}
-	}
 };
 } // namespace Catalyst2::Macro

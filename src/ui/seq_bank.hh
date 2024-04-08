@@ -44,7 +44,6 @@ public:
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
 		p.slot.settings.IncChannelMode(encoder, dir);
-		p.shared.quantizer[encoder].Load(p.slot.settings.GetChannelMode(encoder).GetScale());
 	}
 	void OnSceneButtonRelease(uint8_t page) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {

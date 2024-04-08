@@ -44,7 +44,6 @@ public:
 		if (!p.shared.save.Check(p.shared.internalclock.TimeNow())) {
 			// load
 			p.Load(scene);
-			p.LoadScales();
 			p.shared.blinker.Set(scene, 4, 125, p.shared.internalclock.TimeNow());
 		} else {
 			p.Save(scene);

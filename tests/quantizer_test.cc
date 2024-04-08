@@ -10,17 +10,16 @@ TEST_CASE("Quantizer: number of transitions is correct") {
 
 	// on init no scale will be loaded. check to make sure the quantizer doesnt affect the input value
 	for (auto i = Channel::Cv::min; i < Channel::Cv::max; i++) {
-		CHECK(i == quan.Process(i));
+		CHECK(i == quan.Process(Quantizer::Scale{}, i));
 	}
 
 	constexpr auto tscale0 = Quantizer::Scale{12.f};
-	quan.Load(tscale0);
 
 	// this scale will be octaves only.
 	auto output_values = 0u;
 	auto prev_out_value = -1;
 	for (auto i = Channel::Cv::min; i < Channel::Cv::max; i++) {
-		const auto temp = quan.Process(i);
+		const auto temp = quan.Process(tscale0, i);
 		if (temp == prev_out_value)
 			continue;
 		prev_out_value = temp;
@@ -37,12 +36,11 @@ TEST_CASE("Quantizer: number of transitions is correct") {
 
 	// let's try a bigger scale
 	constexpr auto tscale1 = Quantizer::Scale{1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 12.f};
-	quan.Load(tscale1);
 
 	output_values = 0u;
 	prev_out_value = -1;
 	for (auto i = Channel::Cv::min; i < Channel::Cv::max; i++) {
-		const auto temp = quan.Process(i);
+		const auto temp = quan.Process(tscale1, i);
 		if (temp == prev_out_value)
 			continue;
 		prev_out_value = temp;
@@ -57,7 +55,6 @@ TEST_CASE("Quantizer: number of transitions is correct") {
 
 void check_scale(Quantizer::Scale const &scale, unsigned step_size) {
 	Quantizer::Interface quan;
-	quan.Load(scale);
 
 	std::array<Channel::Cv::type, (size_t)Model::output_octave_range * 12 / 2> notes;
 	for (auto [i, note] : enumerate(notes)) {
@@ -66,28 +63,28 @@ void check_scale(Quantizer::Scale const &scale, unsigned step_size) {
 
 	for (auto note : notes) {
 		// Dead-on note value quantizes to itself
-		CHECK(quan.Process(note) == note);
+		CHECK(quan.Process(scale, note) == note);
 
 		// Slightly flat should quantize back to the note
 		if (note > 0)
-			CHECK(quan.Process(note - 1) == note);
+			CHECK(quan.Process(scale, note - 1) == note);
 
 		// Very flat should still quantize to itself
 		if (note >= step_size / 2)
-			CHECK(quan.Process(note - (step_size / 2) + 1) == note);
+			CHECK(quan.Process(scale, note - (step_size / 2) + 1) == note);
 
 		// Too flat and it goes to the next note down
 		if (note >= step_size / 2)
-			CHECK(quan.Process(note - (step_size / 2) - 1) == (note - step_size));
+			CHECK(quan.Process(scale, note - (step_size / 2) - 1) == (note - step_size));
 
 		// Slightly sharp should quantize back to the note
-		CHECK(quan.Process(note + 1) == note);
+		CHECK(quan.Process(scale, note + 1) == note);
 
 		// Very sharp should still quantize to itself
-		CHECK(quan.Process(note + (step_size / 2) - 1) == note);
+		CHECK(quan.Process(scale, note + (step_size / 2) - 1) == note);
 
 		// Too sharp and it quantizes to the next
-		CHECK(quan.Process(note + (step_size / 2) + 1) == (note + step_size));
+		CHECK(quan.Process(scale, note + (step_size / 2) + 1) == (note + step_size));
 	}
 }
 

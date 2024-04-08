@@ -117,8 +117,9 @@ private:
 				o = Trig(do_trigs, chan, time_now, level);
 			} else {
 				const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
-				const auto a = p.shared.quantizer[chan].Process(p.bank.GetCv(left, chan));
-				const auto b = p.shared.quantizer[chan].Process(p.bank.GetCv(right, chan));
+				const auto &scale = p.bank.GetChannelMode(chan).GetScale();
+				const auto a = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(left, chan));
+				const auto b = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(right, chan));
 				o = MathTools::interpolate(a, b, phs);
 				const auto r = p.bank.GetRange(chan);
 				o = Channel::Output::Scale(o, r.Min(), r.Max());
@@ -211,9 +212,10 @@ private:
 		const auto current_step = p.GetRelativeStep(chan, 0);
 		const auto current_step_random = p.player.randomvalue.ReadRelative(chan, 0, current_step.ReadProbability());
 
-		auto stepval = p.shared.quantizer[chan].Process(prev_step.ReadCv(prev_step_random * random));
+		const auto &scale = p.slot.settings.GetChannelMode(chan).GetScale();
+		auto stepval = p.shared.quantizer[chan].Process(scale, prev_step.ReadCv(prev_step_random * random));
 		const auto distance =
-			p.shared.quantizer[chan].Process(current_step.ReadCv(current_step_random * random)) - stepval;
+			p.shared.quantizer[chan].Process(scale, current_step.ReadCv(current_step_random * random)) - stepval;
 		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), current_step.ReadMorph());
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));

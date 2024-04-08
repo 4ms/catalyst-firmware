@@ -34,10 +34,6 @@ struct Params {
 	Shared::Interface shared{data.shared};
 	Sequencer::Interface sequencer{data.sequencer, shared};
 	Macro::Interface macro{data.macro, shared};
-
-	void LoadScales() {
-		shared.mode == Model::Mode::Macro ? macro.LoadScales() : sequencer.LoadScales();
-	}
 };
 
 inline constexpr auto params_size = sizeof(Params);

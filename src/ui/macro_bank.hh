@@ -20,7 +20,6 @@ public:
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 		if (c.button.play.just_went_low()) {
 			p.bank.SelectBank(Model::Macro::Bank::NumNormal);
-			p.LoadScales();
 		}
 
 		if (c.button.morph.just_went_high()) {
@@ -38,23 +37,11 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		if (c.button.shift.is_high()) {
-			// change all channgels.
-			auto cm = p.bank.GetChannelMode(encoder);
-			cm.Inc(inc);
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.bank.SetChanMode(i, cm);
-				p.shared.quantizer[i].Load(cm.GetScale());
-			}
-		} else {
-			p.bank.IncChannelMode(encoder, inc);
-			p.shared.quantizer[encoder].Load(p.bank.GetChannelMode(encoder).GetScale());
-		}
+		p.bank.IncChannelMode(encoder, inc);
 	}
 
 	void OnSceneButtonRelease(uint8_t button) {
 		p.bank.SelectBank(button);
-		p.LoadScales();
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
