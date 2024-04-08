@@ -6,6 +6,7 @@
 #include "macro.hh"
 #include "params.hh"
 #include "trigger.hh"
+#include "ui/dac_calibration.hh"
 #include "util/countzip.hh"
 #include "util/math.hh"
 #include <algorithm>
@@ -87,9 +88,9 @@ private:
 				const auto level = p.bank.GetGate(scene, chan);
 				o = Trig(do_trigs, chan, time_now, level);
 			} else {
-				o = p.bank.GetCv(scene, chan);
 				const auto r = p.bank.GetRange(chan);
-				o = Channel::Output::Scale(o, r.Min(), r.Max());
+				const auto temp = Channel::Output::Scale(p.bank.GetCv(scene, chan), r.Min(), r.Max());
+				o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 			}
 		}
 		return out;
@@ -120,9 +121,9 @@ private:
 				const auto &scale = p.bank.GetChannelMode(chan).GetScale();
 				const auto a = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(left, chan));
 				const auto b = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(right, chan));
-				o = MathTools::interpolate(a, b, phs);
 				const auto r = p.bank.GetRange(chan);
-				o = Channel::Output::Scale(o, r.Min(), r.Max());
+				const auto temp = Channel::Output::Scale(MathTools::interpolate(a, b, phs), r.Min(), r.Max());
+				o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 			}
 		}
 		return out;
@@ -220,7 +221,8 @@ private:
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
 		const auto r = p.slot.settings.GetRange(chan);
-		return Channel::Output::Scale(stepval, r.Min(), r.Max());
+		const auto temp = Channel::Output::Scale(stepval, r.Min(), r.Max());
+		return Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 	}
 };
 } // namespace Sequencer

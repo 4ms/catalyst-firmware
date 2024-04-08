@@ -61,11 +61,9 @@ inline Model::Output::type ApplyOffset(int32_t in, int16_t offset) {
 	return std::clamp<int32_t>(in + offset, Channel::Output::min, Channel::Output::max);
 }
 
-inline void Process(Data &d, Model::Output::Buffer &input) {
-	for (auto [i, in] : enumerate(input)) {
-		const auto temp = ApplySlope(in, d.channel[i].slope);
-		in = ApplyOffset(temp, d.channel[i].offset);
-	}
+inline Model::Output::type Process(const Data::Channel &d, Model::Output::type input) {
+	input = ApplySlope(input, d.slope);
+	return ApplyOffset(input, d.offset);
 }
 
 inline bool Calibrate(Data &d, Controls &c) {
@@ -95,8 +93,8 @@ inline bool Calibrate(Data &d, Controls &c) {
 			c.SetButtonLed(idx, true);
 		});
 
-		for (auto &o : out) {
-			o = test_voltage[idx];
+		for (auto [idx, o, c] : enumerate(out, d.channel)) {
+			o = Process(c, test_voltage[idx]);
 		}
 		auto color_func = [&c](uint8_t idx, float phase) {
 			auto col = Palette::blue;
@@ -138,8 +136,6 @@ inline bool Calibrate(Data &d, Controls &c) {
 		if (c.button.bank.is_pressed() && c.button.morph.is_pressed()) {
 			return true;
 		}
-
-		Process(d, out);
 
 		c.Write(out);
 		c.Delay(1);

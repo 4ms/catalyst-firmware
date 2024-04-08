@@ -72,7 +72,6 @@ public:
 	}
 
 	void SetOutputs(Model::Output::Buffer &outs) {
-		Calibration::Dac::Process(params.data.shared.dac_calibration, outs);
 		controls.Write(outs);
 
 		if (controls.LedsReady()) {
