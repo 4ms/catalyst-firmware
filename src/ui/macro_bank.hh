@@ -53,8 +53,7 @@ public:
 			c.SetButtonLed(p.bank.GetSelectedBank(), true);
 		}
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			const auto col = p.bank.GetChannelMode(i).GetColor();
-			c.SetEncoderLed(i, col);
+			c.SetEncoderLed(i, p.bank.GetChannelMode(i).GetColor());
 		}
 	}
 };
