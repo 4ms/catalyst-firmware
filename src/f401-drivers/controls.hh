@@ -173,7 +173,7 @@ public:
 	uint32_t Time() {
 		return HAL_GetTick();
 	}
-	void Write(Model::Output::Buffer &outs) {
+	void Write(const Model::Output::Buffer &outs) {
 		outputs.write(outs);
 	}
 
