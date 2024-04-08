@@ -19,7 +19,7 @@ Catalyst2::System _init;
 maybe clipboards should reset eachother?
 */
 
-void main() {
+int main() {
 	using namespace Catalyst2;
 
 	run_hardware_test();

@@ -21,7 +21,7 @@ struct System {
 
 } // namespace Catalyst2::Bootloader
 
-void main() {
+int main() {
 
 	Catalyst2::Bootloader::System system_init;
 	Catalyst2::Bootloader::GateBootloader bootloader;
