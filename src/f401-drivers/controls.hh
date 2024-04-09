@@ -91,10 +91,7 @@ public:
 		outputs.write(zeros);
 
 		// 3.8%: 60Hz
-		encoder_led_update_task.init(Board::encoder_led_task, [this]() {
-			WriteToEncoderLeds();
-			leds_ready_flag = true;
-		});
+		encoder_led_update_task.init(Board::encoder_led_task, [this]() { WriteToEncoderLeds(); });
 		// 4.6%: 16kHz
 		muxio_update_task.init(Board::muxio_conf, [this]() { UpdateMuxio(); });
 	}
@@ -184,8 +181,10 @@ private:
 		const std::span<const uint8_t, 3> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data() + cur_encoder_led),
 													   3);
 		led_driver.set_rgb_led(cur_encoder_led, raw_led_data);
-		if (++cur_encoder_led >= Model::NumChans)
+		if (++cur_encoder_led >= Model::NumChans) {
 			cur_encoder_led = 0;
+			leds_ready_flag = true;
+		}
 	}
 	void UpdateMuxio() {
 		static uint8_t cnt = 0;
