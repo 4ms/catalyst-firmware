@@ -164,9 +164,9 @@ private:
 		// later steps (in time) should always override steps already in progress
 		for (int i = 0; i <= 1; i++) {
 			auto p_step = steps[i].ReadTrigDelay();
-			p_step *= p.player.IsRelativeStepMovingBackwards(chan, i - 1) ? -1 : 1;
+			p_step *= p.player.RelativeStepMovementDir(chan, i - 1);
 			auto step = steps[i + 1].ReadTrigDelay();
-			step *= p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1;
+			step *= p.player.RelativeStepMovementDir(chan, i);
 			if ((p_step - 1.f) > step) {
 				std::swap(order[i + 1], order[i]);
 				break;
@@ -184,7 +184,7 @@ private:
 			if (p.seqclock.IsStopped()) {
 				continue;
 			}
-			const auto tdelay = s.ReadTrigDelay() * (p.player.IsRelativeStepMovingBackwards(chan, i) ? -1 : 1);
+			const auto tdelay = s.ReadTrigDelay() * p.player.RelativeStepMovementDir(chan, i);
 			const auto s_phase = step_phase - tdelay - i;
 
 			// only output the previous and next step during this step if they are within this steps phase window

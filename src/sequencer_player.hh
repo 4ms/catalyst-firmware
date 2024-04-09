@@ -105,8 +105,8 @@ public:
 	void Reset() {
 		phaser.Reset();
 	}
-	bool IsRelativeStepMovingBackwards(uint8_t chan, int8_t pos) const {
-		return channel[chan].relative_step_backwards[pos + 1];
+	int8_t RelativeStepMovementDir(uint8_t chan, int8_t pos) const {
+		return channel[chan].relative_step_backwards[pos + 1] ? -1 : 1;
 	}
 	float GetStepPhase(uint8_t chan) const {
 		return channel[chan].step_phase;
