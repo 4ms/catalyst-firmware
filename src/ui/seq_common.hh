@@ -60,15 +60,28 @@ protected:
 		const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 		const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
 		const auto fine_pressed = c.button.fine.is_high();
-		const auto range = p.slot.settings.GetRange(chan);
 
-		for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
-			const auto step = p.GetStep(step_offset + step_i);
-			auto color = is_cv		  ? Palette::Cv::fromLevel(step.ReadCv(), range) :
-						 fine_pressed ? Palette::Gate::fromTrigDelay(step.ReadTrigDelay()) :
-										Palette::Gate::fromLevelSequencer(step.ReadGate());
-
-			PaintStep(page, step_i, color);
+		if (is_cv) {
+			const auto range = p.slot.settings.GetRange(chan);
+			for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
+				const auto step = p.GetStep(step_offset + step_i);
+				const auto color = Palette::Cv::fromLevel(step.ReadCv(), range);
+				PaintStep(page, step_i, color);
+			}
+		} else {
+			if (!fine_pressed) {
+				for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
+					const auto step = p.GetStep(step_offset + step_i);
+					const auto color = Palette::Gate::fromLevelSequencer(step.ReadGate());
+					PaintStep(page, step_i, color);
+				}
+			} else {
+				for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
+					const auto step = p.GetStep(step_offset + step_i);
+					const auto color = Palette::Gate::fromTrigDelay(step.ReadTrigDelay());
+					PaintStep(page, step_i, color);
+				}
+			}
 		}
 	}
 	void PaintStep(uint8_t page, uint8_t step, Color base_color) {
