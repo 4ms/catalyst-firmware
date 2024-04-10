@@ -32,11 +32,10 @@ public:
 		if (c.button.shift.is_high()) {
 			return;
 		}
-		const auto time_now = p.shared.internalclock.TimeNow();
 		if (c.button.morph.just_went_high()) {
-			p.shared.save.SetAlarm(time_now);
+			p.shared.save.SetAlarm();
 		}
-		if (p.shared.save.Check(time_now) && c.button.morph.is_high()) {
+		if (p.shared.save.Check() && c.button.morph.is_high()) {
 			interface = &save;
 			return;
 		}

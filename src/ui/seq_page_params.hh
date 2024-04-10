@@ -39,7 +39,7 @@ public:
 		ForEachSceneButtonJustPressed(c, [this](auto page) {
 			displayed_page = page;
 			if (p.shared.hang.Check()) {
-				p.shared.hang.Set({}, p.shared.internalclock.TimeNow());
+				p.shared.hang.Set({});
 			}
 		});
 
@@ -72,10 +72,9 @@ public:
 	}
 
 	void OnEncoderInc(uint8_t encoder, int32_t inc, uint32_t page) {
-		const auto time_now = p.shared.internalclock.TimeNow();
 		using namespace Model::Sequencer;
 		const auto page_start = page * Steps::PerPage;
-		p.shared.hang.Set(encoder, time_now);
+		p.shared.hang.Set(encoder);
 
 		switch (encoder) {
 			case EncoderAlts::Transpose: {
@@ -127,8 +126,7 @@ public:
 		for (auto [page, is_selected] : enumerate(selected_pages))
 			c.SetButtonLed(page, is_selected);
 
-		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 
 		using namespace Model::Sequencer;
 

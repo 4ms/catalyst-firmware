@@ -12,7 +12,7 @@
 namespace Catalyst2::Shared
 {
 class DisplayHanger {
-	static constexpr uint32_t duration = Clock::MsToTicks(4000);
+	static constexpr uint32_t duration = 4000;
 	uint8_t onto;
 	uint32_t start_time;
 
@@ -20,12 +20,12 @@ public:
 	void Cancel() {
 		onto = 0xff;
 	}
-	void Set(uint8_t encoder, uint32_t time_now) {
-		start_time = time_now;
+	void Set(uint8_t encoder) {
+		start_time = Controls::TimeNow();
 		onto = encoder;
 	}
-	std::optional<uint8_t> Check(uint32_t time_now) {
-		if (time_now - start_time >= duration) {
+	std::optional<uint8_t> Check() {
+		if (Controls::TimeNow() - start_time >= duration) {
 			onto = 0xff;
 		}
 		if (onto == 0xff) {
@@ -51,16 +51,16 @@ class Blinker {
 	std::array<State, Model::NumChans> state{};
 
 public:
-	void Set(uint8_t led, uint32_t num_blinks, uint32_t duration_ms, uint32_t time_now, uint32_t delay_ms = 0) {
+	void Set(uint8_t led, uint32_t num_blinks, uint32_t duration_ms, uint32_t delay_ms = 0) {
 		auto &s = state[led];
-		s.delay = Clock::MsToTicks(delay_ms);
+		s.delay = delay_ms;
 		s.remaining = num_blinks * 2;
-		s.blink_duration = Clock::MsToTicks(duration_ms) / num_blinks;
-		s.set_time = time_now;
+		s.blink_duration = duration_ms / num_blinks;
+		s.set_time = Controls::TimeNow();
 	}
-	void Set(uint32_t num_blinks, uint32_t duration_ms, uint32_t time_now, uint32_t delay_ms = 0) {
+	void Set(uint32_t num_blinks, uint32_t duration_ms, uint32_t delay_ms = 0) {
 		for (auto i = 0u; i < state.size(); i++) {
-			Set(i, num_blinks, duration_ms, time_now, delay_ms);
+			Set(i, num_blinks, duration_ms, delay_ms);
 		}
 	}
 	void Cancel(uint8_t led) {
@@ -71,8 +71,8 @@ public:
 			Cancel(i);
 		}
 	}
-	void Update(uint32_t time_now) {
-		const auto t = time_now;
+	void Update() {
+		const auto t = Controls::TimeNow();
 		for (auto &s : state) {
 			if (s.delay) {
 				s.delay--;
@@ -124,7 +124,6 @@ public:
 	Interface(Data &data)
 		: data{data} {
 	}
-	Clock::Internal internalclock;
 	QuantizerArray quantizer;
 	Clock::Divider clockdivider;
 	DisplayHanger hang;

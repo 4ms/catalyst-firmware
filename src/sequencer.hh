@@ -118,7 +118,7 @@ public:
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
 			show_playhead = true;
-			if (seqclock.IsStopped() && (shared.internalclock.TimeNow() - time_trigged >= Clock::BpmToTicks(1200))) {
+			if (seqclock.IsStopped() && (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(1200))) {
 				seqclock.Stop(false);
 			}
 		}
@@ -146,17 +146,17 @@ public:
 
 		// blocks trig for a short period of time
 		// TODO: come up with better name
-		time_trigged = shared.internalclock.TimeNow();
+		time_trigged = Controls::TimeNow();
 	}
 
 	void Trig() {
-		if (shared.internalclock.TimeNow() - time_trigged >= Clock::BpmToTicks(1200)) {
+		if (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(1200)) {
 			if (seqclock.IsInternal()) {
 				seqclock.SetExternal(true);
 			}
 			shared.clockdivider.Update(slot.clockdiv);
 			if (shared.clockdivider.Step()) {
-				seqclock.Input(shared.internalclock.TimeNow());
+				seqclock.Input();
 			}
 		}
 	}

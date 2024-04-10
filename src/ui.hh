@@ -50,8 +50,7 @@ public:
 	}
 	void Update() {
 		controls.Update();
-		params.shared.internalclock.Update();
-		params.shared.blinker.Update(params.shared.internalclock.TimeNow());
+		params.shared.blinker.Update();
 		params.shared.youngest_scene_button = YoungestSceneButton(controls);
 		ui->Common();
 
@@ -103,7 +102,7 @@ private:
 			SaveError();
 	}
 	void SaveError() {
-		params.shared.blinker.Set(48, 3000, params.shared.internalclock.TimeNow());
+		params.shared.blinker.Set(48, 3000);
 	}
 	void Load() {
 		if (!settings.read(params.data.shared)) {
@@ -138,7 +137,7 @@ private:
 		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
 						b.add.is_high() || b.shift.is_high()))
 		{
-			controls.SetPlayLed(controls.Time() & 0x100);
+			controls.SetPlayLed(controls.TimeNow() & 0x40);
 		}
 		params.shared.mode = params.shared.data.saved_mode;
 	}

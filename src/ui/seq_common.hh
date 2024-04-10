@@ -5,9 +5,10 @@
 
 namespace Catalyst2::Ui::Sequencer
 {
-inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::PlayMode::Mode pm, uint32_t time_now) {
+inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::PlayMode::Mode pm) {
 	using namespace Palette::Setting;
-	static constexpr auto animation_duration = static_cast<float>(Clock::MsToTicks(1000));
+	static constexpr auto animation_duration = 1000.f;
+	const auto time_now = Controls::TimeNow();
 	auto phase = (time_now / animation_duration);
 	phase -= static_cast<uint32_t>(phase);
 	Color col;
@@ -99,7 +100,7 @@ protected:
 		c.SetEncoderLed(playhead_pos, color);
 	}
 	void BlinkSelectedPage(uint8_t page) {
-		c.SetButtonLed(page, ((p.shared.internalclock.TimeNow() >> 8) & 1) > 0);
+		c.SetButtonLed(page, ((Controls::TimeNow() >> 6) & 1) > 0);
 	}
 };
 } // namespace Catalyst2::Ui::Sequencer

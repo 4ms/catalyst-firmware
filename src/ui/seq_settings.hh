@@ -16,24 +16,24 @@ public:
 		if (!p.IsChannelSelected()) {
 			p.SelectChannel();
 		}
-		p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
+		p.shared.modeswitcher.SetAlarm();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.add.is_high()) {
-			p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
+			p.shared.modeswitcher.SetAlarm();
 		}
 
 		if (!c.button.shift.is_high() || !c.button.bank.is_high()) {
 			return;
 		}
 
-		if (p.shared.modeswitcher.Check(p.shared.internalclock.TimeNow())) {
+		if (p.shared.modeswitcher.Check()) {
 			p.shared.mode = Model::Mode::Macro;
 			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.shared.blinker.Set(i, 1, 200, p.shared.internalclock.TimeNow(), 100 * i + 250);
+				p.shared.blinker.Set(i, 1, 200, 100 * i + 250);
 			}
 			return;
 		}
@@ -46,10 +46,9 @@ public:
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
+		const auto hang = p.shared.hang.Check();
 
 		const auto i = p.GetSelectedChannel();
-		const auto time_now = p.shared.internalclock.TimeNow();
 
 		switch (encoder) {
 			case Model::Sequencer::EncoderAlts::Transpose:
@@ -68,27 +67,27 @@ public:
 			case Model::Sequencer::EncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncStartOffset(i, inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::Sequencer::EncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncPhaseOffset(i, inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::Sequencer::EncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncLength(i, inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::Sequencer::EncoderAlts::Range:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncRange(i, inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case Model::Sequencer::EncoderAlts::ClockDiv:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncClockDiv(i, inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 		}
 	}
@@ -97,8 +96,7 @@ public:
 		ClearButtonLeds(c);
 		c.SetButtonLed(p.GetSelectedChannel(), true);
 
-		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 
 		const auto chan = p.GetSelectedChannel();
 		const auto length = p.slot.settings.GetLength(chan);
@@ -160,7 +158,7 @@ public:
 			c.SetEncoderLed(EncoderAlts::Transpose, col);
 
 			if (playmode.has_value()) {
-				PlayModeLedAnimation(c, playmode.value(), time_now);
+				PlayModeLedAnimation(c, playmode.value());
 			} else {
 				c.SetEncoderLed(EncoderAlts::PlayMode, Setting::null);
 			}

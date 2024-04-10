@@ -17,21 +17,21 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		p.shared.hang.Cancel();
-		p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
+		p.shared.reset.SetAlarm();
 		c.button.play.clear_events();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
 		if (!c.button.play.is_high() || !c.button.shift.is_high()) {
-			p.shared.reset.SetAlarm(p.shared.internalclock.TimeNow());
+			p.shared.reset.SetAlarm();
 		}
 
 		if (c.button.play.just_went_low()) {
 			p.recorder.ToggleCueRecord();
 		}
 
-		if (p.shared.reset.Check(p.shared.internalclock.TimeNow())) {
+		if (p.shared.reset.Check()) {
 			interface = &reset;
 			return;
 		}
@@ -48,7 +48,7 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
+		const auto hang = p.shared.hang.Check();
 		const auto is_scene = p.shared.youngest_scene_button.has_value();
 
 		switch (encoder) {
@@ -84,7 +84,7 @@ public:
 				}
 				inc = hang.has_value() ? inc : 0;
 				p.IncClockDiv(inc);
-				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
+				p.shared.hang.Set(encoder);
 				break;
 			case EncoderAlts::SliderSlew:
 				if (is_scene) {
@@ -92,7 +92,7 @@ public:
 				}
 				inc = hang.has_value() ? inc : 0;
 				p.slider_slew.Inc(inc, c.button.fine.is_high());
-				p.shared.hang.Set(encoder, p.shared.internalclock.TimeNow());
+				p.shared.hang.Set(encoder);
 				break;
 			case EncoderAlts::SliderSlewCurve:
 				if (is_scene) {
@@ -123,7 +123,7 @@ public:
 			auto col = Palette::off.blend(Palette::Random::set, random);
 			c.SetEncoderLed(EncoderAlts::Random, col);
 		} else {
-			const auto hang = p.shared.hang.Check(p.shared.internalclock.TimeNow());
+			const auto hang = p.shared.hang.Check();
 			if (hang.has_value()) {
 				switch (hang.value()) {
 					case EncoderAlts::ClockDiv: {

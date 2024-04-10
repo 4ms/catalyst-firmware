@@ -167,11 +167,11 @@ public:
 	void Delay(uint32_t ms) {
 		HAL_Delay(ms);
 	}
-	uint32_t Time() {
-		return HAL_GetTick();
-	}
 	void Write(const Model::Output::Buffer &outs) {
 		outputs.write(outs);
+	}
+	static uint32_t TimeNow() {
+		return HAL_GetTick();
 	}
 
 private:

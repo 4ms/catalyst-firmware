@@ -42,7 +42,7 @@ private:
 		}
 		bool level;
 		if (p.recorder.IsCued()) {
-			level = (p.shared.internalclock.TimeNow() >> 10) & 1;
+			level = (Controls::TimeNow() >> 8) & 1;
 		} else {
 			level = p.recorder.IsPlaying();
 		}

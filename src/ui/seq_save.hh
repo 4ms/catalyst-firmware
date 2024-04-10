@@ -15,7 +15,7 @@ public:
 	using Usual::Usual;
 	void Init() override {
 		p.shared.blinker.Cancel();
-		p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
+		p.shared.save.SetAlarm();
 		c.button.morph.clear_events();
 		c.button.bank.clear_events();
 		p.Stop();
@@ -24,7 +24,7 @@ public:
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!p.shared.youngest_scene_button) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
+			p.shared.save.SetAlarm();
 		}
 
 		if (p.shared.blinker.IsSet()) {
@@ -41,14 +41,14 @@ public:
 		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
-		if (!p.shared.save.Check(p.shared.internalclock.TimeNow())) {
+		if (!p.shared.save.Check()) {
 			// load
 			p.Load(scene);
-			p.shared.blinker.Set(scene, 4, 125, p.shared.internalclock.TimeNow());
+			p.shared.blinker.Set(scene, 4, 125);
 		} else {
 			p.Save(scene);
 			p.shared.do_save_seq = true;
-			p.shared.blinker.Set(scene, 16, 500, p.shared.internalclock.TimeNow());
+			p.shared.blinker.Set(scene, 16, 500);
 		}
 	}
 
@@ -56,15 +56,14 @@ public:
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
 		if (p.shared.youngest_scene_button.has_value()) {
-			const auto time_now = p.shared.internalclock.TimeNow();
-			if (p.shared.save.Check(time_now)) {
+			if (p.shared.save.Check()) {
 				SetButtonLedsCount(c, Model::Sequencer::NumSlots, true);
 			} else {
 				c.SetButtonLed(p.shared.youngest_scene_button.value(), true);
 			}
 		} else {
 			SetButtonLedsCount(c, Model::Sequencer::NumSlots, true);
-			if ((p.shared.internalclock.TimeNow() >> 10u) & 0x01) {
+			if ((Controls::TimeNow() >> 8u) & 0x01) {
 				for (auto i = 0u; i < Model::Sequencer::NumSlots; i++) {
 					if (i == p.GetStartupSlot()) {
 						continue;

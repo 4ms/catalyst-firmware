@@ -74,7 +74,7 @@ public:
 		}
 
 		if (c.button.add.just_went_high()) {
-			p.seqclock.Tap(p.shared.internalclock.TimeNow());
+			p.seqclock.Tap();
 		}
 		if (p.IsChannelSelected()) {
 			if (c.button.fine.just_went_high() && ysb.has_value()) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "conf/model.hh"
+#include "controls.hh"
 #include <algorithm>
 #include <array>
 
@@ -10,6 +11,9 @@ namespace Catalyst2::Clock
 constexpr uint32_t BpmToTicks(uint32_t bpm) {
 	return (60.f * Model::sample_rate_hz) / bpm;
 }
+constexpr uint32_t BpmToMs(uint32_t bpm) {
+	return (60.f * 1000.f) / bpm;
+}
 constexpr uint32_t TicksToBpm(uint32_t tick) {
 	return (60.f * Model::sample_rate_hz) / tick;
 }
@@ -17,32 +21,19 @@ constexpr uint32_t MsToTicks(uint32_t ms) {
 	return (Model::sample_rate_hz / 1000.f) * ms;
 }
 
-class Internal {
-	uint32_t timenow = 0;
-
-public:
-	uint32_t TimeNow() {
-		return timenow;
-	}
-
-	void Update() {
-		timenow++;
-	}
-};
-
 class Timer {
 	const uint32_t duration;
 	uint32_t set_time;
 
 public:
 	Timer(uint32_t duration_ms)
-		: duration{MsToTicks(duration_ms)} {
+		: duration{duration_ms} {
 	}
-	void SetAlarm(uint32_t time_now) {
-		set_time = time_now;
+	void SetAlarm() {
+		set_time = Controls::TimeNow();
 	}
-	bool Check(uint32_t time_now) {
-		return time_now - set_time >= duration;
+	bool Check() {
+		return Controls::TimeNow() - set_time >= duration;
 	}
 };
 
@@ -103,7 +94,7 @@ public:
 		step = false;
 		return ret;
 	}
-	void Input(uint32_t time_now) {
+	void Input() {
 		if (IsInternal()) {
 			return;
 		}
@@ -111,9 +102,10 @@ public:
 
 		cnt = 0;
 
-		Tap(time_now);
+		Tap();
 	}
-	void Tap(uint32_t time_now) {
+	void Tap() {
+		const auto time_now = Controls::TimeNow();
 		data.bpm_in_ticks = time_now - prevtaptime;
 		prevtaptime = time_now;
 	}

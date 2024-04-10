@@ -61,13 +61,13 @@ public:
 	}
 
 private:
-	Model::Output::type Trig(bool do_trig, uint8_t chan, uint32_t time_now, float level) {
+	Model::Output::type Trig(bool do_trig, uint8_t chan, float level) {
 		if (do_trig && level > 0.f) {
-			trigger.Trig(chan, time_now, level);
+			trigger.Trig(chan, level);
 		}
-		return trigger.Read(chan, time_now) ? Channel::Output::gate_high :
-			   level > 0.f					? Channel::Output::gate_armed :
-											  Channel::Output::gate_off;
+		return trigger.Read(chan) ? Channel::Output::gate_high :
+			   level > 0.f		  ? Channel::Output::gate_armed :
+									Channel::Output::gate_off;
 	}
 
 	Model::Output::Buffer Override() {
@@ -75,7 +75,6 @@ private:
 
 		const auto scene = p.shared.youngest_scene_button.value();
 
-		const auto time_now = p.shared.internalclock.TimeNow();
 		auto do_trigs = false;
 
 		if (did_override != scene) {
@@ -86,7 +85,7 @@ private:
 		for (auto [chan, o] : countzip(out)) {
 			if (p.bank.GetChannelMode(chan).IsGate()) {
 				const auto level = p.bank.GetGate(scene, chan);
-				o = Trig(do_trigs, chan, time_now, level);
+				o = Trig(do_trigs, chan, level);
 			} else {
 				const auto r = p.bank.GetRange(chan);
 				const auto temp = Channel::Output::Scale(p.bank.GetCv(scene, chan), r.Min(), r.Max());
@@ -100,7 +99,6 @@ private:
 		did_override = Model::NumChans;
 		Model::Output::Buffer out;
 
-		const auto time_now = p.shared.internalclock.TimeNow();
 		const auto left = p.bank.pathway.SceneRelative(-1);
 		const auto right = p.bank.pathway.SceneRelative(1);
 
@@ -115,7 +113,7 @@ private:
 		for (auto [chan, o] : countzip(out)) {
 			if (p.bank.GetChannelMode(chan).IsGate()) {
 				const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
-				o = Trig(do_trigs, chan, time_now, level);
+				o = Trig(do_trigs, chan, level);
 			} else {
 				const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
 				const auto &scale = p.bank.GetChannelMode(chan).GetScale();

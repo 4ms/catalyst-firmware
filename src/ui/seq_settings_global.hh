@@ -41,8 +41,7 @@ public:
 		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 
 		const auto fine = c.button.fine.is_high();
 
@@ -72,17 +71,17 @@ public:
 			case EncoderAlts::StartOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncStartOffset(inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case EncoderAlts::PhaseOffset:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncPhaseOffset(inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case EncoderAlts::SeqLength:
 				inc = hang.has_value() ? inc : 0;
 				p.slot.settings.IncLength(inc);
-				p.shared.hang.Set(encoder, time_now);
+				p.shared.hang.Set(encoder);
 				break;
 			case EncoderAlts::Range:
 				break;
@@ -92,7 +91,7 @@ public:
 					p.shared.hang.Cancel();
 				} else {
 					inc = hang.has_value() ? inc : 0;
-					p.shared.hang.Set(encoder, time_now);
+					p.shared.hang.Set(encoder);
 					p.slot.clockdiv.Inc(inc);
 				}
 				break;
@@ -103,8 +102,7 @@ public:
 		ClearButtonLeds(c);
 		ClearEncoderLeds(c);
 
-		const auto time_now = p.shared.internalclock.TimeNow();
-		const auto hang = p.shared.hang.Check(time_now);
+		const auto hang = p.shared.hang.Check();
 
 		auto clockdiv = p.slot.clockdiv;
 		auto length = p.slot.settings.GetLength();
@@ -155,7 +153,7 @@ public:
 										  std::abs(tpose / static_cast<float>(Transposer::max)));
 			c.SetEncoderLed(EncoderAlts::Transpose, col);
 
-			PlayModeLedAnimation(c, playmode, time_now);
+			PlayModeLedAnimation(c, playmode);
 
 			if (p.seqclock.IsInternal()) {
 				if (p.seqclock.PeekPhase() < 0.5f) {

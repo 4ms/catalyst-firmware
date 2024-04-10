@@ -13,7 +13,7 @@ class Morph : public Usual {
 public:
 	using Usual::Usual;
 	void Init() override {
-		p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
+		p.shared.modeswitcher.SetAlarm();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -26,12 +26,12 @@ public:
 			return;
 		}
 		if (!c.button.fine.is_high() && !c.button.play.is_high()) {
-			p.shared.modeswitcher.SetAlarm(p.shared.internalclock.TimeNow());
+			p.shared.modeswitcher.SetAlarm();
 		}
-		if (p.shared.modeswitcher.Check(p.shared.internalclock.TimeNow())) {
+		if (p.shared.modeswitcher.Check()) {
 			p.shared.mode = Model::Mode::Sequencer;
 			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.shared.blinker.Set(Model::NumChans - i - 1, 1, 200, p.shared.internalclock.TimeNow(), 100 * i + 250);
+				p.shared.blinker.Set(Model::NumChans - i - 1, 1, 200, 100 * i + 250);
 			}
 			return;
 		}

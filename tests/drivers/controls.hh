@@ -130,6 +130,10 @@ public:
 		outputs.write(outs);
 	}
 
+	static uint32_t TimeNow() {
+		return 0;
+	}
+
 private:
 	void WriteToEncoderLeds() {
 		// const std::span<const uint8_t, 24> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data()), 24);

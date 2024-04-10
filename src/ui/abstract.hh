@@ -9,7 +9,7 @@ namespace Catalyst2::Ui
 {
 
 inline void ConfirmCopy(Shared::Interface &p, uint8_t led) {
-	p.blinker.Set(led, 8, 250, p.internalclock.TimeNow());
+	p.blinker.Set(led, 8, 250);
 }
 inline void ConfirmPaste(Shared::Interface &p, uint8_t led) {
 	ConfirmCopy(p, led);

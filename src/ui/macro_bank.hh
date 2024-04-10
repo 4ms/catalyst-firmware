@@ -23,12 +23,12 @@ public:
 		}
 
 		if (c.button.morph.just_went_high()) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
+			p.shared.save.SetAlarm();
 		}
-		if (p.shared.save.Check(p.shared.internalclock.TimeNow()) && c.button.morph.is_high()) {
-			p.shared.save.SetAlarm(p.shared.internalclock.TimeNow());
+		if (p.shared.save.Check() && c.button.morph.is_high()) {
+			p.shared.save.SetAlarm();
 			p.shared.do_save_macro = true;
-			p.shared.blinker.Set(16, 500, p.shared.internalclock.TimeNow());
+			p.shared.blinker.Set(16, 500);
 		}
 
 		if (!c.button.bank.is_high() && p.shared.youngest_scene_button == std::nullopt) {
