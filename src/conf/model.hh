@@ -10,6 +10,7 @@
 namespace Catalyst2::Model
 {
 enum class Mode : uint8_t { Sequencer, Macro };
+inline constexpr auto ModeMax = std::underlying_type_t<Mode>{2};
 
 inline constexpr auto NumChans = 8u;
 inline constexpr auto sample_rate_hz = 4000u;

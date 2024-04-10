@@ -104,9 +104,15 @@ struct Data {
 	uint32_t SettingsVersionTag alignas(4);
 	Model::Mode saved_mode alignas(4) = BuildOptions::default_mode;
 	Calibration::Dac::Data dac_calibration alignas(4);
+	Clock::Bpm::Mode clock_sync_mode{};
 
 	bool validate() const {
-		if (!validateBool(std::to_underlying(saved_mode)))
+		if (SettingsVersionTag == 0xffffffff) {
+			return false;
+		}
+		if (std::to_underlying(clock_sync_mode) >= Clock::Bpm::ModeMax)
+			return false;
+		if (std::to_underlying(saved_mode) >= Model::ModeMax)
 			return false;
 		if (!dac_calibration.Validate())
 			return false;
