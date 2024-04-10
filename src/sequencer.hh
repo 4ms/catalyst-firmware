@@ -118,7 +118,7 @@ public:
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
 			show_playhead = true;
-			if (seqclock.IsStopped() && (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(1200))) {
+			if (seqclock.IsStopped() && (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(Clock::Bpm::max))) {
 				seqclock.Stop(false);
 			}
 		}
@@ -150,7 +150,7 @@ public:
 	}
 
 	void Trig() {
-		if (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(1200)) {
+		if (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(Clock::Bpm::max)) {
 			if (seqclock.IsInternal()) {
 				seqclock.SetExternal(true);
 			}
