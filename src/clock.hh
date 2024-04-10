@@ -41,6 +41,15 @@ namespace Bpm
 {
 inline constexpr auto min = 10u;
 inline constexpr auto max = 1200u;
+
+enum class Mode : uint8_t {
+	FREE_RUN,
+	FOLLOW,
+	DIN_SYNC,
+};
+
+inline constexpr auto ModeMax = std::underlying_type_t<Mode>{3};
+
 struct Data {
 	uint32_t bpm_in_ticks = BpmToTicks(120u);
 
