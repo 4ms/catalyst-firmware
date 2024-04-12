@@ -44,9 +44,20 @@ public:
 		}
 	}
 	void Update(Abstract *&interface) override {
-		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
-		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		// ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		// ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
+		// ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			if (c.button.scene[i].just_went_high()) {
+				OnSceneButtonPress(i);
+			} else if (c.button.scene[i].just_went_low()) {
+				OnSceneButtonRelease(i);
+			}
+			if (const auto inc = c.encoders[i].read()) {
+				OnEncoderInc(i, inc);
+			}
+		}
 
 		const auto ysb = p.shared.youngest_scene_button;
 
