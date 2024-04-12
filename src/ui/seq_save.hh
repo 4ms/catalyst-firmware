@@ -18,7 +18,6 @@ public:
 		p.shared.save.SetAlarm();
 		c.button.morph.clear_events();
 		c.button.bank.clear_events();
-		p.Stop();
 	}
 	void Update(Abstract *&interface) override {
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
