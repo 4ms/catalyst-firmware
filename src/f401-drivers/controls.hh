@@ -174,7 +174,7 @@ public:
 	}
 
 private:
-	unsigned cur_encoder_led = 0;
+	uint8_t cur_encoder_led = 0;
 	uint8_t mux_io_cnt = 0;
 	void WriteToEncoderLeds() {
 		// about 120us to write one LED
