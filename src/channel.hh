@@ -4,6 +4,7 @@
 #include "range.hh"
 #include "util/math.hh"
 #include <algorithm>
+#include <bit>
 #include <cstdint>
 #include <numeric>
 
