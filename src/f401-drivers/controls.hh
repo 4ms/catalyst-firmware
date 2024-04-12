@@ -175,6 +175,7 @@ public:
 
 private:
 	unsigned cur_encoder_led = 0;
+	uint8_t mux_io_cnt = 0;
 	void WriteToEncoderLeds() {
 		// about 120us to write one LED
 		const std::span<const uint8_t, 3> raw_led_data(reinterpret_cast<uint8_t *>(rgb_leds.data() + cur_encoder_led),
@@ -186,7 +187,6 @@ private:
 		}
 	}
 	void UpdateMuxio() {
-		static uint8_t cnt = 0;
 		auto button_leds = 0u;
 		for (auto x = 0u; x < Model::NumChans; x++) {
 			auto led = button_led_duty[x];
