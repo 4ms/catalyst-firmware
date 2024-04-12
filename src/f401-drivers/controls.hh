@@ -141,7 +141,7 @@ public:
 	}
 
 	void SetButtonLed(unsigned led, bool on) {
-		button_led_duty[led] = on ? 32 : 0;
+		button_led_duty[Board::ButtonLedMap[led]] = on ? 32 : 0;
 	}
 
 	void SetPlayLed(bool on) {
