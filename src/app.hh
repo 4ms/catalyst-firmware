@@ -173,15 +173,17 @@ private:
 
 		for (auto i : order) {
 			auto s = steps[i + 1];
-			const auto gate_val = s.ReadGate(p.slot.settings.GetRandomOrGlobal(chan) *
-											 p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability()));
+			auto gate_width_phase = s.ReadGate(p.slot.settings.GetRandomOrGlobal(chan) *
+											   p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability()));
 
-			if (gate_val <= 0.f) {
+			if (gate_width_phase <= 0.f) {
 				continue;
 			}
+
 			if (p.seqclock.IsStopped()) {
 				continue;
 			}
+
 			const auto tdelay = s.ReadTrigDelay() * p.player.RelativeStepMovementDir(chan, i);
 			const auto s_phase = step_phase - tdelay - i;
 
@@ -190,10 +192,19 @@ private:
 				continue;
 			}
 
-			auto retrig_phase = s.ReadRetrig() + 1.f;
+			float retrig_phase = s.ReadRetrig() + 1.f;
+
+			// Clamp gate pulses at 1ms
+			float channel_period_ms = (60.f * 1000.f) / p.GetChannelDividedBpm(chan);
+			channel_period_ms = channel_period_ms / retrig_phase;
+			float gate_width_ms = channel_period_ms * gate_width_phase;
+			if (gate_width_ms < 1.f)
+				gate_width_phase = 1.f / channel_period_ms;
+
 			retrig_phase *= s_phase;
 			retrig_phase -= static_cast<uint32_t>(retrig_phase);
-			const auto temp = gate_val >= retrig_phase;
+
+			const auto temp = gate_width_phase >= retrig_phase;
 			if constexpr (BuildOptions::seq_gate_overrides_prev_step) {
 				out = temp;
 			} else {

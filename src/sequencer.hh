@@ -148,7 +148,12 @@ public:
 		// TODO: come up with better name
 		time_trigged = Controls::TimeNow();
 	}
-
+	float GetGlobalDividedBpm() {
+		return (float)Clock::TicksToBpm(slot.bpm.bpm_in_ticks) / (float)slot.clockdiv.Read();
+	}
+	float GetChannelDividedBpm(uint32_t chan) {
+		return GetGlobalDividedBpm() / (float)slot.settings.GetClockDiv(chan).Read();
+	}
 	void Trig() {
 		if (Controls::TimeNow() - time_trigged >= Clock::BpmToMs(Clock::Bpm::max)) {
 			if (seqclock.IsInternal()) {
