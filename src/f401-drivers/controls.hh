@@ -189,18 +189,16 @@ private:
 	void UpdateMuxio() {
 		auto button_leds = 0u;
 		for (auto x = 0u; x < Model::NumChans; x++) {
-			auto led = button_led_duty[x];
-			if (cnt < led) {
-				button_leds |= 1ul << Board::ButtonLedMap[x];
+			if (mux_io_cnt < button_led_duty[x]) {
+				button_leds |= 1ul << x;
 			}
 		}
 
 		auto mux_read = muxio.step(button_leds);
 		if (mux_read.has_value()) {
-			UpdateButtons(mux_read.value());
-			cnt++;
-			if (cnt >= 32) {
-				cnt = 0;
+			mux_io_cnt++;
+			if (mux_io_cnt >= 32) {
+				mux_io_cnt = 0;
 				UpdateButtons(mux_read.value());
 			}
 		}
