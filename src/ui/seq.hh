@@ -19,18 +19,18 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class Main : public Usual {
-	Bank bank{p, c};
-	Morph morph{p, c};
-	Probability probability{p, c};
-	Settings::Global global_settings{p, c};
-	Settings::Channel channel_settings{p, c};
-	PageParams page_params{p, c};
+	Bank bank{p, c, this};
+	Morph morph{p, c, this};
+	Probability probability{p, c, this};
+	Settings::Global global_settings{p, c, this};
+	Settings::Channel channel_settings{p, c, this};
+	PageParams page_params{p, c, this};
 	Abstract &macro;
 	bool just_queued = false;
 
 public:
 	Main(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract &macro)
-		: Usual{p, c}
+		: Usual{p, c, this}
 		, macro{macro} {
 	}
 	//	using Usual::Usual;
@@ -43,7 +43,7 @@ public:
 			b.clear_events();
 		}
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
@@ -88,36 +88,26 @@ public:
 			}
 		}
 
-		if (p.shared.mode == Model::Mode::Macro) {
-			interface = &macro;
-			return;
-		}
-
 		const auto bmorph = c.button.morph.is_high();
 		const auto bbank = c.button.bank.is_high();
-		if (c.button.shift.is_high()) {
+
+		if (p.shared.mode == Model::Mode::Macro) {
+			SwitchUiMode(macro);
+		} else if (c.button.shift.is_high()) {
 			if (bbank) {
-				interface = &channel_settings;
+				SwitchUiMode(channel_settings);
 			} else if (bmorph) {
-				interface = &probability;
+				SwitchUiMode(probability);
 			} else if (ysb) {
-				interface = &page_params;
+				SwitchUiMode(page_params);
 			} else {
-				interface = &global_settings;
+				SwitchUiMode(global_settings);
 			}
-			return;
+		} else if (bmorph) {
+			SwitchUiMode(morph);
+		} else if (bbank) {
+			SwitchUiMode(bank);
 		}
-
-		if (bmorph) {
-			interface = &morph;
-			return;
-		}
-		if (bbank) {
-			interface = &bank;
-			return;
-		}
-
-		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		if (!p.IsChannelSelected()) {

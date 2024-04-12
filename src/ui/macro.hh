@@ -16,24 +16,23 @@ namespace Catalyst2::Ui::Macro
 {
 
 class Main : public Usual {
-	Add add{p, c};
-	Bank bank{p, c};
-	Morph morph{p, c};
-	Settings settings{p, c};
-	Range range{p, c};
+	Add add{p, c, this};
+	Bank bank{p, c, this};
+	Morph morph{p, c, this};
+	Settings settings{p, c, this};
+	Range range{p, c, this};
 	Abstract &sequencer;
 
 public:
 	Main(Catalyst2::Macro::Interface &p, Controls &c, Abstract &sequencer)
-		: Usual{p, c}
+		: Usual{p, c, this}
 		, sequencer{sequencer} {
 	}
-	// using Usual::Usual;
 	void Init() override {
 		c.button.fine.clear_events();
 		c.button.play.clear_events();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustPressed(c, [this](uint8_t button) { OnSceneButtonPress(button); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
@@ -50,37 +49,37 @@ public:
 		}
 
 		if (p.shared.mode == Model::Mode::Sequencer) {
-			interface = &sequencer;
-			return;
+			SwitchUiMode(sequencer);
 		}
 
-		if (c.button.add.is_high()) {
+		else if (c.button.add.is_high())
+		{
 			p.main_mode = false;
 			if (!p.bank.IsBankClassic())
-				interface = &add;
-			return;
-		}
-		if (c.button.bank.is_high()) {
-			interface = &bank;
-			return;
+				SwitchUiMode(add);
 		}
 
-		if (c.button.morph.is_high()) {
+		else if (c.button.bank.is_high())
+		{
+			SwitchUiMode(bank);
+		}
+
+		else if (c.button.morph.is_high())
+		{
 			if (c.button.shift.is_high()) {
-				interface = &range;
+				SwitchUiMode(range);
 			} else {
-				interface = &morph;
+				SwitchUiMode(morph);
 			}
-			return;
 		}
 
-		if (c.button.shift.is_high()) {
-			interface = &settings;
-			return;
+		else if (c.button.shift.is_high())
+		{
+			SwitchUiMode(settings);
 		}
 
-		p.main_mode = true;
-		interface = this;
+		else
+			p.main_mode = true;
 	}
 	void OnSceneButtonPress(uint8_t button) {
 		if (p.bank.IsBankClassic() && c.button.add.is_high()) {

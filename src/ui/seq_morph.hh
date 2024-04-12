@@ -14,17 +14,13 @@ public:
 			p.SelectChannel();
 		}
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		if (!c.button.morph.is_high()) {
-			return;
+		if (!c.button.morph.is_high() || c.button.shift.is_high()) {
+			SwitchUiMode(main_ui);
 		}
-		if (c.button.shift.is_high()) {
-			return;
-		}
-		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		p.IncStepModifier(encoder, inc);
