@@ -142,7 +142,8 @@ public:
 		Model::Output::Buffer buf;
 
 		for (auto [chan, o] : countzip(buf)) {
-			o = p.slot.settings.GetChannelMode(chan).IsGate() ? Gate(chan) : Cv(chan);
+			const auto cm = p.slot.settings.GetChannelMode(chan);
+			o = cm.IsMuted() ? Channel::Output::from_volts(0.f) : cm.IsGate() ? Gate(chan) : Cv(chan);
 		}
 
 		return buf;
