@@ -11,29 +11,44 @@ namespace Catalyst2::Channel
 class Mode {
 	static_assert(Palette::Scales::color.size() - 1 == Quantizer::scale.size());
 	static constexpr uint8_t max = Quantizer::scale.size();
-	static constexpr uint8_t min = 0u;
+	static_assert(max < 0x80,
+				  "Note: In order to have more than 127 scales, the saved data structure will have to change size, "
+				  "data recovery will be necessary");
+	static constexpr uint8_t min = 0;
 
-	int8_t val = min;
+	uint8_t val = min;
 
 public:
 	void Inc(int32_t dir) {
-		auto temp = val + dir;
-		val = std::clamp<int32_t>(temp, min, max);
+		auto temp = Val();
+		temp = std::clamp<int32_t>(temp + dir, min, max);
+		val = (val & 0x80) | temp;
 	}
 	bool IsGate() const {
-		return val == max;
+		return Val() == max;
 	}
 	bool IsQuantized() const {
 		return !IsGate();
 	}
 	const Quantizer::Scale &GetScale() const {
-		return Quantizer::scale[val];
+		return Quantizer::scale[Val()];
 	}
 	Color GetColor() {
-		return Palette::Scales::color[val];
+		return Palette::Scales::color[Val()];
 	}
 	bool Validate() const {
-		return val <= max;
+		return Val() <= max;
+	}
+	bool IsMuted() const {
+		return val & 0x80;
+	}
+	void ToggleMute() {
+		val ^= 0x80;
+	}
+
+private:
+	uint8_t Val() const {
+		return val & 0x7f;
 	}
 
 }; // namespace Catalyst2::Channel
