@@ -30,10 +30,25 @@ public:
 
 	virtual void Init() {
 	}
-	virtual void Update(Abstract *&interface) = 0;
+	virtual void Update() = 0;
 	virtual void Common() = 0;
 	virtual void PaintLeds(const Model::Output::Buffer &outs) {
 	}
+
+	std::optional<Abstract *> NextUi() {
+		auto next = next_ui;
+		next_ui = same_ui_tag;
+		return next;
+	}
+
+protected:
+	void SwitchUiMode(Abstract &next) {
+		next_ui = &next;
+	}
+
+private:
+	std::optional<Abstract *> next_ui = same_ui_tag;
+	static constexpr std::optional<Abstract *> same_ui_tag = std::nullopt;
 };
 
 } // namespace Catalyst2::Ui

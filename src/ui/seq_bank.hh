@@ -9,7 +9,7 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
-	Save save{p, c};
+	Save save{p, c, &main_ui};
 
 public:
 	using Usual::Usual;
@@ -18,7 +18,7 @@ public:
 		c.button.morph.clear_events();
 		c.button.play.clear_events();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
@@ -27,19 +27,20 @@ public:
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
 		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {
+			SwitchUiMode(main_ui);
 			return;
 		}
 		if (c.button.shift.is_high()) {
+			SwitchUiMode(main_ui);
 			return;
 		}
 		if (c.button.morph.just_went_high()) {
 			p.shared.save.SetAlarm();
 		}
 		if (p.shared.save.Check() && c.button.morph.is_high()) {
-			interface = &save;
+			SwitchUiMode(save);
 			return;
 		}
-		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
 		p.slot.settings.IncChannelMode(encoder, dir);

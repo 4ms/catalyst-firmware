@@ -19,7 +19,7 @@ public:
 		c.button.morph.clear_events();
 		c.button.bank.clear_events();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!p.shared.youngest_scene_button) {
@@ -28,16 +28,16 @@ public:
 
 		if (p.shared.blinker.IsSet()) {
 			ClearButtonLeds(c);
+			SwitchUiMode(main_ui);
 			return;
 		}
 
 		if (c.button.morph.just_went_high() || c.button.bank.just_went_high() || c.button.fine.is_high() ||
 			c.button.add.is_high() || c.button.shift.is_high())
 		{
+			SwitchUiMode(main_ui);
 			return;
 		}
-
-		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		if (!p.shared.save.Check()) {

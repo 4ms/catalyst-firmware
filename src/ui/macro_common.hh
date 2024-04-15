@@ -10,9 +10,12 @@ namespace Catalyst2::Ui::Macro
 class Usual : public Abstract {
 public:
 	Catalyst2::Macro::Interface &p;
-	Usual(Catalyst2::Macro::Interface &p, Controls &c)
+	Abstract &main_ui;
+
+	Usual(Catalyst2::Macro::Interface &p, Controls &c, Abstract *main_ui)
 		: Abstract{c}
-		, p{p} {
+		, p{p}
+		, main_ui{*main_ui} {
 	}
 	void Common() final {
 		if (c.jack.trig.just_went_high()) {

@@ -30,9 +30,11 @@ public:
 				displayed_page = page;
 		}
 	}
-	void Update(Abstract *&interface) override {
-		if (!c.button.shift.is_high() && !p.shared.youngest_scene_button.has_value())
-			return; // exit PageParams mode
+	void Update() override {
+		if (!c.button.shift.is_high() && !p.shared.youngest_scene_button.has_value()) {
+			SwitchUiMode(main_ui);
+			return;
+		}
 
 		// On button press events, extend hang time if it's already hanging
 		// Display the most recently pressed button
@@ -66,9 +68,6 @@ public:
 					OnEncoderInc(encoder, inc, page);
 			}
 		});
-
-		// Stay in PageParams mode
-		interface = this;
 	}
 
 	void OnEncoderInc(uint8_t encoder, int32_t inc, uint32_t page) {

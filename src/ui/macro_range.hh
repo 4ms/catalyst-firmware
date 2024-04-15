@@ -12,13 +12,13 @@ public:
 	void Init() override {
 		p.shared.hang.Cancel();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		if (!c.button.morph.is_high() && !c.button.shift.is_high())
+		if (!c.button.morph.is_high() && !c.button.shift.is_high()) {
+			SwitchUiMode(main_ui);
 			return;
-
-		interface = this;
+		}
 	}
 	void OnEncoderInc(uint8_t channel, int32_t inc) {
 		inc = p.shared.hang.Check().has_value() ? inc : 0;

@@ -17,7 +17,7 @@ public:
 		wait = true;
 		p.recorder.Stop();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		if (wait) {
 			if (!c.button.shift.is_high() && !c.button.play.is_high()) {
 				wait = false;
@@ -26,20 +26,22 @@ public:
 			if (c.button.play.is_high() || c.button.fine.is_high() || c.button.morph.is_high() ||
 				c.button.bank.is_high() || c.button.shift.is_high())
 			{
+				SwitchUiMode(main_ui);
 				return;
 			}
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high()) {
 					p.bank.ClearScene(i);
+					SwitchUiMode(main_ui);
 					return;
 				}
 			}
 			if (c.button.add.is_high()) {
 				p.bank.Clear();
+				SwitchUiMode(main_ui);
 				return;
 			}
 		}
-		interface = this;
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds(c);

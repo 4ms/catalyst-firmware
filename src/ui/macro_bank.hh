@@ -15,7 +15,7 @@ public:
 		c.button.play.clear_events();
 		c.button.morph.clear_events();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 		if (c.button.play.just_went_low()) {
@@ -32,9 +32,8 @@ public:
 		}
 
 		if (!c.button.bank.is_high() && p.shared.youngest_scene_button == std::nullopt) {
-			return;
+			SwitchUiMode(main_ui);
 		}
-		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		p.bank.IncChannelMode(encoder, inc);

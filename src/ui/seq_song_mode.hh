@@ -8,7 +8,7 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class SongMode : public Usual {
-	Reset reset{p, c};
+	Reset reset{p, c, &main_ui};
 
 public:
 	using Usual::Usual;
@@ -19,7 +19,7 @@ public:
 		p.shared.reset.SetAlarm();
 		p.player.songmode.Cancel();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		if (!c.button.play.is_high() || p.player.songmode.Size()) {
@@ -30,15 +30,14 @@ public:
 			if (!p.player.songmode.Size()) {
 				p.Stop();
 			}
+			SwitchUiMode(main_ui);
 			return;
 		}
 
 		if (p.shared.reset.Check()) {
-			interface = &reset;
+			SwitchUiMode(reset);
 			return;
 		}
-
-		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t scene) {
 		p.player.songmode.Queue(scene);

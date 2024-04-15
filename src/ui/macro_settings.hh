@@ -11,7 +11,7 @@ namespace Catalyst2::Ui::Macro
 {
 
 class Settings : public Usual {
-	Reset reset{p, c};
+	Reset reset{p, c, &main_ui};
 
 public:
 	using Usual::Usual;
@@ -20,7 +20,7 @@ public:
 		p.shared.reset.SetAlarm();
 		c.button.play.clear_events();
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
 		if (!c.button.play.is_high() || !c.button.shift.is_high()) {
@@ -32,20 +32,14 @@ public:
 		}
 
 		if (p.shared.reset.Check()) {
-			interface = &reset;
-			return;
+			SwitchUiMode(reset);
+		} else if (!c.button.shift.is_high() && !c.button.play.is_high()) {
+			SwitchUiMode(main_ui);
+		} else if (c.button.add.is_high()) {
+			SwitchUiMode(main_ui);
+		} else if (c.button.morph.is_high()) {
+			SwitchUiMode(main_ui);
 		}
-
-		if (!c.button.shift.is_high() && !c.button.play.is_high()) {
-			return;
-		}
-		if (c.button.add.is_high()) {
-			return;
-		}
-		if (c.button.morph.is_high()) {
-			return;
-		}
-		interface = this;
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto hang = p.shared.hang.Check();

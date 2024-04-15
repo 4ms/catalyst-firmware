@@ -16,17 +16,15 @@ public:
 	void Init() override {
 		first_insert = true;
 	}
-	void Update(Abstract *&interface) override {
+	void Update() override {
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
 		const auto add = c.button.add.is_high();
 		const auto shift = c.button.shift.is_high();
 
 		if (!add && !shift) {
-			return;
+			SwitchUiMode(main_ui);
 		}
-
-		interface = this;
 	}
 	void OnSceneButtonRelease(uint8_t button) {
 		auto &path = p.bank.pathway;

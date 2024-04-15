@@ -39,9 +39,12 @@ class Usual : public Abstract {
 
 public:
 	Catalyst2::Sequencer::Interface &p;
-	Usual(Catalyst2::Sequencer::Interface &p, Controls &c)
+	Abstract &main_ui;
+
+	Usual(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract *main_ui)
 		: Abstract{c}
-		, p{p} {
+		, p{p}
+		, main_ui{*main_ui} {
 	}
 	void Common() final {
 		if (c.jack.reset.just_went_high()) {
