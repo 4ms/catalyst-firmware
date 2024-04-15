@@ -378,8 +378,8 @@ public:
 	void IncChannelMode(uint8_t chan, int32_t inc) {
 		channel[chan].mode.Inc(inc);
 	}
-	void SetChannelMode(uint8_t chan, Catalyst2::Channel::Mode mode) {
-		channel[chan].mode = mode;
+	void ToggleMute(uint8_t chan) {
+		channel[chan].mode.ToggleMute();
 	}
 };
 } // namespace Settings
