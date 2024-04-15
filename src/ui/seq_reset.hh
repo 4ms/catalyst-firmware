@@ -46,7 +46,7 @@ public:
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
 		c.SetPlayLed(false);
-		if ((Controls::TimeNow() >> 8u) & 0x01) {
+		if ((Controls::TimeNow() >> 10u) & 0x01) {
 			SetButtonLedsCount(c, Model::NumChans, true);
 			c.SetPlayLed(true);
 		}

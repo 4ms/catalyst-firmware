@@ -62,7 +62,7 @@ public:
 			}
 		} else {
 			SetButtonLedsCount(c, Model::Sequencer::NumSlots, true);
-			if ((Controls::TimeNow() >> 8u) & 0x01) {
+			if ((Controls::TimeNow() >> 10u) & 0x01) {
 				for (auto i = 0u; i < Model::Sequencer::NumSlots; i++) {
 					if (i == p.GetStartupSlot()) {
 						continue;

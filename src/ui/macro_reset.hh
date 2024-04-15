@@ -44,7 +44,7 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearEncoderLeds(c);
 		ClearButtonLeds(c);
-		if ((Controls::TimeNow() >> 8u) & 0x01) {
+		if ((Controls::TimeNow() >> 10u) & 0x01) {
 			SetButtonLedsCount(c, Model::NumChans, true);
 		}
 	}

@@ -157,6 +157,7 @@ public:
 		for (auto &enc : encoders) {
 			enc.update();
 		}
+		time_cnt++;
 	}
 	bool LedsReady() {
 		const auto ret = leds_ready_flag;
@@ -170,10 +171,11 @@ public:
 		outputs.write(outs);
 	}
 	static uint32_t TimeNow() {
-		return HAL_GetTick();
+		return time_cnt;
 	}
 
 private:
+	static inline uint32_t time_cnt;
 	uint8_t cur_encoder_led = 0;
 	uint8_t mux_io_cnt = 0;
 	void WriteToEncoderLeds() {

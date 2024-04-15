@@ -42,7 +42,7 @@ private:
 		}
 		bool level;
 		if (p.recorder.IsCued()) {
-			level = (Controls::TimeNow() >> 8) & 1;
+			level = (Controls::TimeNow() >> 10) & 1;
 		} else {
 			level = p.recorder.IsPlaying();
 		}

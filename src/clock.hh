@@ -11,9 +11,6 @@ namespace Catalyst2::Clock
 constexpr uint32_t BpmToTicks(uint32_t bpm) {
 	return (60.f * Model::sample_rate_hz) / bpm;
 }
-constexpr uint32_t BpmToMs(uint32_t bpm) {
-	return (60.f * 1000.f) / bpm;
-}
 constexpr uint32_t TicksToBpm(uint32_t tick) {
 	return (60.f * Model::sample_rate_hz) / tick;
 }
@@ -27,7 +24,7 @@ class Timer {
 
 public:
 	Timer(uint32_t duration_ms)
-		: duration{duration_ms} {
+		: duration{MsToTicks(duration_ms)} {
 	}
 	void SetAlarm() {
 		set_time = Controls::TimeNow();

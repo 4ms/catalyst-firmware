@@ -12,7 +12,7 @@
 namespace Catalyst2::Shared
 {
 class DisplayHanger {
-	static constexpr uint32_t duration = 4000;
+	static constexpr uint32_t duration = Clock::MsToTicks(4000);
 	uint8_t onto;
 	uint32_t start_time;
 
@@ -53,9 +53,9 @@ class Blinker {
 public:
 	void Set(uint8_t led, uint32_t num_blinks, uint32_t duration_ms, uint32_t delay_ms = 0) {
 		auto &s = state[led];
-		s.delay = delay_ms;
+		s.delay = Clock::MsToTicks(delay_ms);
 		s.remaining = num_blinks * 2;
-		s.blink_duration = duration_ms / num_blinks;
+		s.blink_duration = Clock::MsToTicks(duration_ms) / num_blinks;
 		s.set_time = Controls::TimeNow();
 	}
 	void Set(uint32_t num_blinks, uint32_t duration_ms, uint32_t delay_ms = 0) {

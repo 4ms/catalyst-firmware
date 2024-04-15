@@ -30,7 +30,7 @@ public:
 private:
 	uint32_t CalcTime(float pulse_width) {
 		const auto x = pulse_width;
-		return (max_gate_length - min_gate_length) * x * x * x + min_gate_length;
+		return Clock::MsToTicks((max_gate_length - min_gate_length) * x * x * x + min_gate_length);
 	}
 };
 } // namespace Catalyst2
