@@ -51,21 +51,28 @@ public:
 		if (c.button.bank.is_high()) {
 			ClearButtonLeds(c);
 			c.SetButtonLed(p.GetPrevSelectedChannel(), true);
+		} else {
+			SetMutedLeds();
 		}
 	}
 
 	void AllChannelStepOutput(const Model::Output::Buffer &buf) {
 		for (auto [chan, val] : countzip(buf)) {
 			const auto cm = p.slot.settings.GetChannelMode(chan);
-			const auto is_muted = cm.IsMuted();
 			Color col;
-			if (is_muted) {
+			if (cm.IsMuted()) {
 				col = Palette::very_dim_grey;
 			} else {
 				col = cm.IsGate() ? Palette::Gate::fromOutput(val) : Palette::Cv::fromOutput(val);
 			}
-			c.SetButtonLed(chan, !is_muted);
 			c.SetEncoderLed(chan, col);
+		}
+	}
+
+	void SetMutedLeds() {
+		for (auto chan = 0u; chan < Model::NumChans; chan++) {
+			const auto is_muted = p.slot.settings.GetChannelMode(chan).IsMuted();
+			c.SetButtonLed(chan, !is_muted);
 		}
 	}
 };
