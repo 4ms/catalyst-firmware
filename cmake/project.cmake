@@ -69,7 +69,6 @@ function(create_target target driver_arch)
               -fdata-sections
               -ffunction-sections
               -fno-common
-              -ffreestanding
               -fno-unwind-tables
               -mfloat-abi=hard
               -nostartfiles
