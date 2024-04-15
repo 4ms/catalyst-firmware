@@ -5,11 +5,13 @@
 #include "seq_common.hh"
 #include "seq_save.hh"
 #include "sequencer.hh"
+#include "ui/seq_mutes.hh"
 
 namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
 	Save save{p, c, &main_ui};
+	Mutes mutes{p, c, &main_ui};
 
 public:
 	using Usual::Usual;
@@ -56,6 +58,10 @@ public:
 			}
 		} else {
 			p.SelectChannel(page);
+
+			if (!p.IsChannelSelected()) {
+				SwitchUiMode(mutes);
+			}
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {

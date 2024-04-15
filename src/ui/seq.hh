@@ -76,16 +76,14 @@ public:
 		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap();
 		}
-		if (p.IsChannelSelected()) {
-			if (c.button.fine.just_went_high() && ysb.has_value()) {
-				p.shared.did_copy = true;
-				p.CopyPage(ysb.value());
-				ConfirmCopy(p.shared, ysb.value());
-			}
-			if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
-				p.PasteSequence();
-				ConfirmPaste(p.shared, p.GetSelectedChannel());
-			}
+		if (c.button.fine.just_went_high() && ysb.has_value()) {
+			p.shared.did_copy = true;
+			p.CopyPage(ysb.value());
+			ConfirmCopy(p.shared, ysb.value());
+		}
+		if (c.button.bank.just_went_high() && c.button.fine.is_high()) {
+			p.PasteSequence();
+			ConfirmPaste(p.shared, p.GetSelectedChannel());
 		}
 
 		const auto bmorph = c.button.morph.is_high();
@@ -110,16 +108,10 @@ public:
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		if (!p.IsChannelSelected()) {
-			return;
-		}
 		const auto fine = c.button.fine.is_high();
 		p.IncStep(encoder, inc, fine);
 	}
 	void OnSceneButtonPress(uint8_t button) {
-		if (!p.IsChannelSelected()) {
-			return;
-		}
 		if (c.button.fine.is_high()) {
 			p.PastePage(button);
 			Catalyst2::Ui::ConfirmPaste(p.shared, button);
@@ -127,10 +119,6 @@ public:
 		}
 	}
 	void OnSceneButtonRelease(uint8_t button) {
-		if (!p.IsChannelSelected()) {
-			p.SelectChannel(button);
-			return;
-		}
 		if (p.shared.did_paste) {
 			p.shared.did_paste = false;
 			return;
@@ -152,36 +140,23 @@ public:
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		c.SetPlayLed(!p.seqclock.IsPaused());
 		ClearButtonLeds(c);
-		if (p.IsChannelSelected()) {
-			const auto playheadpage = p.GetPlayheadPage();
+		const auto playheadpage = p.GetPlayheadPage();
 
-			uint8_t page;
-			if (p.IsPageSelected()) {
-				page = p.GetSelectedPage();
-				BlinkSelectedPage(page);
-			} else {
-				page = playheadpage;
-				c.SetButtonLed(playheadpage, true);
-			}
-
-			if constexpr (BuildOptions::ManualColorMode) {
-				ManualColorTestMode(page);
-				return;
-			}
-
-			PaintStepValues(page);
-
+		uint8_t page;
+		if (p.IsPageSelected()) {
+			page = p.GetSelectedPage();
+			BlinkSelectedPage(page);
 		} else {
-			AllChannelStepOutput(outs);
+			page = playheadpage;
+			c.SetButtonLed(playheadpage, true);
 		}
-	}
 
-	void AllChannelStepOutput(const Model::Output::Buffer &buf) {
-		for (auto [chan, val] : countzip(buf)) {
-			const auto col = p.slot.settings.GetChannelMode(chan).IsGate() ? Palette::Gate::fromOutput(val) :
-																			 Palette::Cv::fromOutput(val);
-			c.SetEncoderLed(chan, col);
+		if constexpr (BuildOptions::ManualColorMode) {
+			ManualColorTestMode(page);
+			return;
 		}
+
+		PaintStepValues(page);
 	}
 
 	void ManualColorTestMode(uint8_t page) {

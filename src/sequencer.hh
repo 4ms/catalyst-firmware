@@ -180,6 +180,9 @@ public:
 	uint8_t GetSelectedChannel() {
 		return cur_channel;
 	}
+	uint8_t GetPrevSelectedChannel() {
+		return prev_channel;
+	}
 	bool IsChannelSelected() {
 		return cur_channel < Model::NumChans;
 	}
