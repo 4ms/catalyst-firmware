@@ -65,42 +65,44 @@ protected:
 		const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 		const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
 		const auto fine_pressed = c.button.fine.is_high();
+		const auto seqhead_col =
+			p.slot.settings.GetChannelMode(chan).IsMuted() ? Palette::SeqHead::mute : Palette::SeqHead::active;
 
 		if (is_cv) {
 			const auto range = p.slot.settings.GetRange(chan);
 			for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
 				const auto step = p.GetStep(step_offset + step_i);
 				const auto color = Palette::Cv::fromLevel(step.ReadCv(), range);
-				PaintStep(page, step_i, color);
+				PaintStep(page, step_i, color, seqhead_col);
 			}
 		} else {
 			if (!fine_pressed) {
 				for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
 					const auto step = p.GetStep(step_offset + step_i);
 					const auto color = Palette::Gate::fromLevelSequencer(step.ReadGate());
-					PaintStep(page, step_i, color);
+					PaintStep(page, step_i, color, seqhead_col);
 				}
 			} else {
 				for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
 					const auto step = p.GetStep(step_offset + step_i);
 					const auto color = Palette::Gate::fromTrigDelay(step.ReadTrigDelay());
-					PaintStep(page, step_i, color);
+					PaintStep(page, step_i, color, seqhead_col);
 				}
 			}
 		}
 	}
-	void PaintStep(uint8_t page, uint8_t step, Color base_color) {
+	void PaintStep(uint8_t page, uint8_t step, Color base_color, Color seq_head) {
 		const auto playhead_page = p.GetPlayheadPage();
 		const auto playhead_pos = p.GetPlayheadStepOnPage();
 		if (page == playhead_page && step == playhead_pos)
-			SetPlayheadStepLed(step, base_color);
+			SetPlayheadStepLed(step, base_color, seq_head);
 		else
 			c.SetEncoderLed(step, base_color);
 	}
-	void SetPlayheadStepLed(uint8_t playhead_pos, Color base_color) {
-		auto color = p.ShowPlayhead() ? base_color.blend(Palette::SeqHead::color,
-														 std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)) :
-										base_color;
+	void SetPlayheadStepLed(uint8_t playhead_pos, Color base_color, Color seq_head) {
+		const auto color = p.ShowPlayhead() ?
+							   base_color.blend(seq_head, std::clamp(1.f - 2.f * p.seqclock.PeekPhase(), 0.f, 1.f)) :
+							   base_color;
 		c.SetEncoderLed(playhead_pos, color);
 	}
 	void BlinkSelectedPage(uint8_t page) {

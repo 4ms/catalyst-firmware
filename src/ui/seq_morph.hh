@@ -45,7 +45,11 @@ public:
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			auto color = Palette::Morph::color(p.GetStep(step_offset + i).ReadMorph());
-			PaintStep(page, i, color);
+			Color seqhead_col = Palette::SeqHead::active;
+			if (p.slot.settings.GetChannelMode(i).IsMuted())
+				seqhead_col = Palette::SeqHead::mute;
+
+			PaintStep(page, i, color, seqhead_col);
 		}
 	}
 };

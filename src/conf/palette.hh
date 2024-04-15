@@ -113,8 +113,9 @@ inline constexpr std::array color = {
 
 namespace SeqHead
 {
-inline constexpr auto color = magenta;
-}
+inline constexpr auto active = magenta;
+inline constexpr auto mute = Color{35, 35, 35};
+} // namespace SeqHead
 
 namespace Morph
 {

@@ -46,7 +46,11 @@ public:
 
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			auto color = Palette::Probability::color(p.GetStep(step_offset + i).ReadProbability());
-			PaintStep(page, i, color);
+			Color seqhead_col = Palette::SeqHead::active;
+			if (p.slot.settings.GetChannelMode(i).IsMuted())
+				seqhead_col = Palette::SeqHead::mute;
+
+			PaintStep(page, i, color, seqhead_col);
 		}
 	}
 };
