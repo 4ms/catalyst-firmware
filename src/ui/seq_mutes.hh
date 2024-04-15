@@ -23,6 +23,14 @@ public:
 	void Update() override {
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
+		if (c.button.play.just_went_low()) {
+			if (c.button.shift.is_high()) {
+				p.Stop();
+			} else {
+				p.seqclock.Pause();
+			}
+		}
+
 		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap();
 		}
