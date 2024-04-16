@@ -27,6 +27,11 @@ inline std::optional<uint8_t> YoungestSceneButton(Controls &c) {
 	}
 	return youngest;
 }
+inline void ClearEncoderEvents(Controls &c) {
+	for (auto &e : c.encoders) {
+		static_cast<void>(e.read());
+	}
+}
 inline void ForEachEncoderInc(Controls &c, auto func) {
 	for (auto [i, enc] : countzip(c.encoders)) {
 		const auto inc = enc.read();

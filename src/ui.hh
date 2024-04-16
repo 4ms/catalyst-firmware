@@ -57,6 +57,7 @@ public:
 		ui->Update();
 		if (auto new_ui = ui->NextUi()) {
 			ui = new_ui.value();
+			ClearEncoderEvents(controls);
 			ui->Init();
 		}
 
