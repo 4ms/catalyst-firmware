@@ -28,15 +28,12 @@ public:
 			SwitchUiMode(mutes);
 			return;
 		}
+
 		if (c.button.fine.just_went_high()) {
 			p.CopySequence();
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
-		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {
-			SwitchUiMode(main_ui);
-			return;
-		}
-		if (c.button.shift.is_high()) {
+		if ((!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) || c.button.shift.is_high()) {
 			SwitchUiMode(main_ui);
 			return;
 		}
