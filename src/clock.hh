@@ -36,8 +36,11 @@ public:
 
 namespace Bpm
 {
-inline constexpr auto min = 10u;
-inline constexpr auto max = 1200u;
+inline constexpr auto min_bpm = 10u;
+inline constexpr auto max_bpm = 1200u;
+
+inline constexpr auto max_ticks = BpmToTicks(min_bpm);
+inline constexpr auto min_ticks = BpmToTicks(max_bpm);
 
 enum class Mode : uint8_t {
 	FREE_RUN,
@@ -51,7 +54,7 @@ struct Data {
 	uint32_t bpm_in_ticks = BpmToTicks(120u);
 
 	bool Validate() const {
-		return bpm_in_ticks <= BpmToTicks(min) && bpm_in_ticks >= BpmToTicks(max);
+		return bpm_in_ticks >= min_ticks && bpm_in_ticks <= max_ticks;
 	}
 };
 
@@ -74,7 +77,7 @@ public:
 	void Inc(int32_t inc, bool fine) {
 		auto temp = TicksToBpm(data.bpm_in_ticks);
 		inc = fine ? inc : inc * 10;
-		temp = std::clamp<int32_t>(temp + inc, min, max);
+		temp = std::clamp<int32_t>(temp + inc, min_bpm, max_bpm);
 		data.bpm_in_ticks = BpmToTicks(temp);
 	}
 	void Update() {

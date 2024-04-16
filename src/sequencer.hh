@@ -118,7 +118,8 @@ public:
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
 			show_playhead = true;
-			if (seqclock.IsStopped() && (Controls::TimeNow() - time_trigged >= Clock::BpmToTicks(Clock::Bpm::max))) {
+			if (seqclock.IsStopped() && (Controls::TimeNow() - time_trigged >= Clock::BpmToTicks(Clock::Bpm::max_bpm)))
+			{
 				seqclock.Stop(false);
 			}
 		}
@@ -155,7 +156,7 @@ public:
 		return GetGlobalDividedBpm() / (float)slot.settings.GetClockDiv(chan).Read();
 	}
 	void Trig() {
-		if (Controls::TimeNow() - time_trigged >= Clock::BpmToTicks(Clock::Bpm::max)) {
+		if (Controls::TimeNow() - time_trigged >= Clock::BpmToTicks(Clock::Bpm::max_bpm)) {
 			if (seqclock.IsInternal()) {
 				seqclock.SetExternal(true);
 			}
