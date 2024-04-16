@@ -100,7 +100,7 @@ public:
 		step = false;
 		return ret;
 	}
-	void Input() {
+	void Trig() {
 		if (IsInternal()) {
 			return;
 		}

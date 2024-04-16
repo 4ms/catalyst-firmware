@@ -161,7 +161,7 @@ public:
 			}
 			shared.clockdivider.Update(slot.clockdiv);
 			if (shared.clockdivider.Step()) {
-				seqclock.Input();
+				seqclock.Trig();
 			}
 		}
 	}
