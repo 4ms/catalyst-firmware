@@ -155,7 +155,6 @@ public:
 } // namespace Bpm
 class Divider {
 	uint32_t counter = 0;
-	bool step = false;
 
 public:
 	class type {
@@ -175,12 +174,13 @@ public:
 			return true;
 		}
 	};
-	void Update(type div) {
+	bool Update(type div) {
 		counter += 1;
 		if (counter >= div.Read()) {
-			step = true;
 			counter = 0;
+			return true;
 		}
+		return false;
 	}
 	float GetPhase(type div) const {
 		return static_cast<float>(counter) / div.Read();
@@ -188,14 +188,8 @@ public:
 	float GetPhase(type div, float phase) const {
 		return (phase / div.Read()) + GetPhase(div);
 	}
-	bool Step() {
-		bool ret = step;
-		step = false;
-		return ret;
-	}
 	void Reset() {
 		counter = 0;
-		step = false;
 	}
 };
 

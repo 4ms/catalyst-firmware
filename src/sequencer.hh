@@ -159,8 +159,7 @@ public:
 			if (seqclock.IsInternal()) {
 				seqclock.SetExternal(true);
 			}
-			shared.clockdivider.Update(slot.clockdiv);
-			if (shared.clockdivider.Step()) {
+			if (shared.clockdivider.Update(slot.clockdiv)) {
 				seqclock.Trig();
 			}
 		}
