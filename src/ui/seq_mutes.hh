@@ -16,12 +16,23 @@ class Mutes : public Usual {
 public:
 	using Usual::Usual;
 	void Init() override {
+		c.button.bank.clear_events();
 		for (auto &b : c.button.scene) {
 			b.clear_events();
 		}
 	}
 	void Update() override {
-		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		if (c.button.bank.just_went_high()) {
+			p.SelectChannel();
+			SwitchUiMode(main_ui);
+			return;
+		}
+
+		for (auto button = 0u; button < c.button.scene.size(); button++) {
+			if (c.button.scene[button].just_went_low()) {
+				p.slot.settings.ToggleMute(button);
+			}
+		}
 
 		if (c.button.play.just_went_low()) {
 			if (c.button.shift.is_high()) {
@@ -34,15 +45,6 @@ public:
 		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap();
 		}
-	}
-	void OnSceneButtonRelease(uint8_t button) {
-		if (c.button.bank.is_high()) {
-			p.SelectChannel(button);
-			SwitchUiMode(main_ui);
-			return;
-		}
-
-		p.slot.settings.ToggleMute(button);
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {

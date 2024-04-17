@@ -24,15 +24,16 @@ public:
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
 
-		if (c.button.fine.just_went_high() && p.IsChannelSelected()) {
+		if (!p.IsChannelSelected()) {
+			SwitchUiMode(mutes);
+			return;
+		}
+
+		if (c.button.fine.just_went_high()) {
 			p.CopySequence();
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
 		}
-		if (!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) {
-			SwitchUiMode(main_ui);
-			return;
-		}
-		if (c.button.shift.is_high()) {
+		if ((!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) || c.button.shift.is_high()) {
 			SwitchUiMode(main_ui);
 			return;
 		}
@@ -58,15 +59,13 @@ public:
 			}
 		} else {
 			p.SelectChannel(page);
-
-			if (!p.IsChannelSelected()) {
-				SwitchUiMode(mutes);
-			}
 		}
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
-		c.SetButtonLed(p.GetSelectedChannel(), true);
+		if (p.IsChannelSelected()) {
+			c.SetButtonLed(p.GetSelectedChannel(), true);
+		}
 		for (auto i = 0u; i < Model::NumChans; i++) {
 			c.SetEncoderLed(i, p.slot.settings.GetChannelMode(i).GetColor());
 		}
