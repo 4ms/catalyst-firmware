@@ -53,6 +53,11 @@ class Controls {
 		Board::ResetJack reset;
 	};
 
+	// jack sense pins
+	struct SensePins {
+		InvertedMuxedButton trig{13};
+	};
+
 	// Mux
 	MuxedIO<Board::MuxConf> muxio;
 
@@ -85,6 +90,7 @@ public:
 	}};
 	Buttons button;
 	Jacks jack;
+	SensePins sense;
 
 	Controls() {
 		Model::Output::Buffer zeros{Channel::Output::from_volts(0)};
@@ -216,6 +222,7 @@ private:
 		button.add.update(raw_mux_read);
 		button.play.update(raw_mux_read);
 		button.clocksense.update(raw_mux_read);
+		sense.trig.update(raw_mux_read);
 	}
 };
 } // namespace Catalyst2
