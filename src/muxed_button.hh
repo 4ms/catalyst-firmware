@@ -27,4 +27,11 @@ private:
 	const uint8_t bit;
 };
 
+struct InvertedMuxedButton : MuxedButton {
+	using MuxedButton::MuxedButton;
+	void update(uint32_t raw_mux_read) {
+		MuxedButton::update(~raw_mux_read);
+	}
+};
+
 } // namespace Catalyst2
