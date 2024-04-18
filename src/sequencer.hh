@@ -79,7 +79,7 @@ class Interface {
 		Settings::Channel cs;
 		std::array<Step, Model::Sequencer::Steps::PerPage> page;
 	} clipboard;
-	uint32_t time_trigged;
+	uint32_t time_last_reset;
 	uint8_t playhead_pos;
 	uint8_t playhead_page;
 	bool show_playhead = true;
@@ -118,7 +118,8 @@ public:
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
 			show_playhead = true;
-			if (seqclock.IsStopped() && (Controls::TimeNow() - time_trigged >= Clock::BpmToTicks(Clock::Bpm::max_bpm)))
+			if (seqclock.IsStopped() &&
+				(Controls::TimeNow() - time_last_reset >= Clock::BpmToTicks(Clock::Bpm::max_bpm)))
 			{
 				seqclock.Stop(false);
 			}
@@ -145,9 +146,8 @@ public:
 		seqclock.Pause(stop);
 		seqclock.Stop(stop);
 
-		// blocks trig for a short period of time
-		// TODO: come up with better name
-		time_trigged = Controls::TimeNow();
+		// blocks next trig for a short period of time after reset
+		time_last_reset = Controls::TimeNow();
 	}
 	float GetGlobalDividedBpm() {
 		return (float)Clock::TicksToBpm(slot.bpm.bpm_in_ticks) / (float)slot.clockdiv.Read();
@@ -156,10 +156,10 @@ public:
 		return GetGlobalDividedBpm() / (float)slot.settings.GetClockDiv(chan).Read();
 	}
 	void Trig() {
-		if (Controls::TimeNow() - time_trigged >= Clock::BpmToTicks(Clock::Bpm::max_bpm)) {
 			if (seqclock.IsInternal()) {
 				seqclock.SetExternal(true);
 			}
+		if (Controls::TimeNow() - time_last_reset >= Clock::BpmToTicks(Clock::Bpm::max_bpm)) {
 			if (shared.clockdivider.Update(slot.clockdiv)) {
 				seqclock.Trig();
 			}
