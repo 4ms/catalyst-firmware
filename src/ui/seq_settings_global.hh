@@ -79,13 +79,18 @@ public:
 			case EncoderAlts::Range:
 				break;
 			case EncoderAlts::ClockDiv:
-				if (p.seqclock.IsInternal()) {
-					p.seqclock.Inc(inc, fine);
+				if (c.button.add.is_high() && p.seqclock.external) {
+					p.seqclock.IncMode(inc);
 					p.shared.hang.Cancel();
 				} else {
-					inc = hang.has_value() ? inc : 0;
-					p.shared.hang.Set(encoder);
-					p.slot.clockdiv.Inc(inc);
+					if (p.seqclock.external) {
+						inc = hang.has_value() ? inc : 0;
+						p.shared.hang.Set(encoder);
+						p.slot.clockdiv.Inc(inc);
+					} else {
+						p.seqclock.Inc(inc, fine);
+						p.shared.hang.Cancel();
+					}
 				}
 				break;
 		}
@@ -95,72 +100,84 @@ public:
 		ClearButtonLeds(c);
 		ClearEncoderLeds(c);
 
-		const auto hang = p.shared.hang.Check();
-
-		auto clockdiv = p.slot.clockdiv;
-		auto length = p.slot.settings.GetLength();
-		auto startoffset = p.slot.settings.GetStartOffset();
-		auto playmode = p.slot.settings.GetPlayMode();
-		auto tpose = p.slot.settings.GetTranspose();
-		auto random = p.slot.settings.GetRandom();
-
 		using namespace Model::Sequencer;
 		namespace Setting = Palette::Setting;
 
-		if (hang.has_value()) {
-			switch (hang.value()) {
-				case EncoderAlts::StartOffset: {
-					c.SetEncoderLed(startoffset % Steps::PerPage, Setting::active);
-					c.SetButtonLed(startoffset / Steps::PerPage, true);
-					break;
-				}
-				case EncoderAlts::SeqLength: {
-					auto led = length % Steps::PerPage;
-					SetEncoderLedsCount(c, led == 0 ? Steps::PerPage : led, 0, Setting::active);
-					led = (length - 1) / Steps::PerPage;
-					SetButtonLedsCount(c, led + 1, true);
-					break;
-				}
-				case EncoderAlts::ClockDiv: {
-					SetLedsClockDiv(c, clockdiv.Read());
-					break;
-				}
-				case EncoderAlts::PhaseOffset: {
-					auto chan = p.GetSelectedChannel();
-					auto o = p.player.GetFirstStep(chan);
-					o += p.slot.settings.GetPhaseOffsetOrGlobal(chan) * (p.slot.settings.GetLengthOrGlobal(chan) - 1);
-					c.SetEncoderLed(o % Steps::PerPage, Setting::active);
-					c.SetButtonLed((o / Steps::PerPage) % NumPages, true);
-					break;
-				}
-				case EncoderAlts::Range: {
-					break;
-				}
-			}
-		} else {
-			c.SetEncoderLed(EncoderAlts::StartOffset, Setting::active);
-			c.SetEncoderLed(EncoderAlts::SeqLength, Setting::active);
-			c.SetEncoderLed(EncoderAlts::PhaseOffset, Setting::active);
-
-			auto col = Palette::off.blend(tpose > 0 ? Setting::Transpose::positive : Setting::Transpose::negative,
-										  std::abs(tpose / static_cast<float>(Transposer::max)));
-			c.SetEncoderLed(EncoderAlts::Transpose, col);
-
-			PlayModeLedAnimation(c, playmode);
-
-			if (p.seqclock.IsInternal()) {
-				if (p.seqclock.PeekPhase() < 0.5f) {
-					col = Setting::bpm;
-				} else {
-					col = Palette::off;
-				}
+		if (c.button.add.is_high() && p.seqclock.external) {
+			Color col;
+			if (p.seqclock.data.mode == Clock::Bpm::Mode::SYNCED) {
+				col = Setting::curve_expo;
 			} else {
-				col = Setting::active;
+				col = Setting::curve_linear;
 			}
 			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
+		} else {
 
-			col = Palette::off.blend(Palette::Random::set, random);
-			c.SetEncoderLed(EncoderAlts::Random, col);
+			const auto hang = p.shared.hang.Check();
+
+			auto clockdiv = p.slot.clockdiv;
+			auto length = p.slot.settings.GetLength();
+			auto startoffset = p.slot.settings.GetStartOffset();
+			auto playmode = p.slot.settings.GetPlayMode();
+			auto tpose = p.slot.settings.GetTranspose();
+			auto random = p.slot.settings.GetRandom();
+
+			if (hang.has_value()) {
+				switch (hang.value()) {
+					case EncoderAlts::StartOffset: {
+						c.SetEncoderLed(startoffset % Steps::PerPage, Setting::active);
+						c.SetButtonLed(startoffset / Steps::PerPage, true);
+						break;
+					}
+					case EncoderAlts::SeqLength: {
+						auto led = length % Steps::PerPage;
+						SetEncoderLedsCount(c, led == 0 ? Steps::PerPage : led, 0, Setting::active);
+						led = (length - 1) / Steps::PerPage;
+						SetButtonLedsCount(c, led + 1, true);
+						break;
+					}
+					case EncoderAlts::ClockDiv: {
+						SetLedsClockDiv(c, clockdiv.Read());
+						break;
+					}
+					case EncoderAlts::PhaseOffset: {
+						auto chan = p.GetSelectedChannel();
+						auto o = p.player.GetFirstStep(chan);
+						o += p.slot.settings.GetPhaseOffsetOrGlobal(chan) *
+							 (p.slot.settings.GetLengthOrGlobal(chan) - 1);
+						c.SetEncoderLed(o % Steps::PerPage, Setting::active);
+						c.SetButtonLed((o / Steps::PerPage) % NumPages, true);
+						break;
+					}
+					case EncoderAlts::Range: {
+						break;
+					}
+				}
+			} else {
+				c.SetEncoderLed(EncoderAlts::StartOffset, Setting::active);
+				c.SetEncoderLed(EncoderAlts::SeqLength, Setting::active);
+				c.SetEncoderLed(EncoderAlts::PhaseOffset, Setting::active);
+
+				auto col = Palette::off.blend(tpose > 0 ? Setting::Transpose::positive : Setting::Transpose::negative,
+											  std::abs(tpose / static_cast<float>(Transposer::max)));
+				c.SetEncoderLed(EncoderAlts::Transpose, col);
+
+				PlayModeLedAnimation(c, playmode);
+
+				if (p.seqclock.external) {
+					col = Setting::active;
+				} else {
+					if (p.seqclock.PeekPhase() < 0.5f) {
+						col = Setting::bpm;
+					} else {
+						col = Palette::off;
+					}
+				}
+				c.SetEncoderLed(EncoderAlts::ClockDiv, col);
+
+				col = Palette::off.blend(Palette::Random::set, random);
+				c.SetEncoderLed(EncoderAlts::Random, col);
+			}
 		}
 	}
 };
