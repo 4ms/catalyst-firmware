@@ -35,7 +35,7 @@ struct Slot {
 	Player::Data player;
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
-	Clock::Bpm::Data bpm{};
+	Clock::Bpm::Data bpm;
 
 	bool validate() const {
 		auto ret = true;
@@ -46,10 +46,11 @@ struct Slot {
 		ret &= settings.Validate();
 		ret &= player.Validate();
 		ret &= songmode.Validate();
-		ret &= bpm.Validate();
 		return ret;
 	}
 };
+
+static_assert(sizeof(Slot) == 3256);
 
 struct Data {
 	std::array<Slot, Model::Sequencer::NumSlots> slot;
@@ -82,8 +83,9 @@ class Interface {
 	uint32_t time_last_reset;
 	uint8_t playhead_pos;
 	uint8_t playhead_page;
-	bool show_playhead = true;
 	uint8_t last_playhead_pos = Model::Sequencer::NumPages;
+	bool show_playhead = true;
+	bool gates_blocked = true;
 
 public:
 	Slot slot;
@@ -118,10 +120,8 @@ public:
 			last_playhead_pos = playhead_pos;
 			seqclock.ResetPeek();
 			show_playhead = true;
-			if (seqclock.IsStopped() &&
-				(Controls::TimeNow() - time_last_reset >= Clock::BpmToTicks(Clock::Bpm::max_bpm)))
-			{
-				seqclock.Stop(false);
+			if (gates_blocked && (Controls::TimeNow() - time_last_reset >= Clock::BpmToTicks(Clock::Bpm::max_bpm))) {
+				gates_blocked = false;
 			}
 		}
 	}
@@ -134,31 +134,45 @@ public:
 	uint8_t GetPlayheadPage() const {
 		return playhead_page;
 	}
-	void Stop() {
-		seqclock.Pause(true);
-		Reset();
+	bool IsPaused() const {
+		return seqclock.pause;
+	}
+	void Play() {
+		seqclock.pause = false;
+		gates_blocked = false;
+	}
+	void Pause() {
+		seqclock.pause = true;
+		gates_blocked = false;
+	}
+	void TogglePause() {
+		seqclock.pause ^= 1;
+		gates_blocked = false;
 	}
 	void Reset() {
-		bool stop = seqclock.IsPaused();
-		seqclock.Reset();
 		shared.clockdivider.Reset();
 		player.Reset();
-		seqclock.Pause(stop);
-		seqclock.Stop(stop);
+		seqclock.Reset();
+		gates_blocked = false;
 
 		// blocks next trig for a short period of time after reset
 		time_last_reset = Controls::TimeNow();
 	}
+	void Stop(bool kill_gates = false) {
+		seqclock.pause = true;
+		Reset();
+		gates_blocked = kill_gates;
+	}
+	bool IsGatesBlocked() const {
+		return gates_blocked;
+	}
 	float GetGlobalDividedBpm() {
-		return (float)Clock::TicksToBpm(slot.bpm.bpm_in_ticks) / (float)slot.clockdiv.Read();
+		return seqclock.GetBpm() / slot.clockdiv.Read();
 	}
 	float GetChannelDividedBpm(uint32_t chan) {
-		return GetGlobalDividedBpm() / (float)slot.settings.GetClockDiv(chan).Read();
+		return GetGlobalDividedBpm() / slot.settings.GetClockDiv(chan).Read();
 	}
 	void Trig() {
-			if (seqclock.IsInternal()) {
-				seqclock.SetExternal(true);
-			}
 		if (Controls::TimeNow() - time_last_reset >= Clock::BpmToTicks(Clock::Bpm::max_bpm)) {
 			if (shared.clockdivider.Update(slot.clockdiv)) {
 				seqclock.Trig();

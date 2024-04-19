@@ -38,7 +38,7 @@ public:
 			if (c.button.shift.is_high()) {
 				p.Stop();
 			} else {
-				p.seqclock.Pause();
+				p.TogglePause();
 			}
 		}
 
@@ -48,7 +48,7 @@ public:
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		c.SetPlayLed(!p.seqclock.IsPaused());
+		c.SetPlayLed(!p.IsPaused());
 		AllChannelStepOutput(outs);
 		if (c.button.bank.is_high()) {
 			ClearButtonLeds(c);

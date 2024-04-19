@@ -143,7 +143,19 @@ public:
 
 		for (auto [chan, o] : countzip(buf)) {
 			const auto cm = p.slot.settings.GetChannelMode(chan);
-			o = cm.IsMuted() ? Channel::Output::from_volts(0.f) : cm.IsGate() ? Gate(chan) : Cv(chan);
+			if (cm.IsMuted()) {
+				o = Channel::Output::from_volts(0.f);
+				continue;
+			}
+			if (!cm.IsGate()) {
+				o = Cv(chan);
+				continue;
+			}
+			if (p.IsGatesBlocked()) {
+				o = Channel::Output::gate_off;
+				continue;
+			}
+			o = Gate(chan);
 		}
 
 		return buf;
@@ -172,18 +184,10 @@ private:
 			}
 		}
 
+		const auto channel_period_ms = (60.f * 1000.f) / p.GetChannelDividedBpm(chan);
+
 		for (auto i : order) {
-			auto s = steps[i + 1];
-			auto gate_width_phase = s.ReadGate(p.slot.settings.GetRandomOrGlobal(chan) *
-											   p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability()));
-
-			if (gate_width_phase <= 0.f) {
-				continue;
-			}
-
-			if (p.seqclock.IsStopped()) {
-				continue;
-			}
+			const auto s = steps[i + 1];
 
 			const auto tdelay = s.ReadTrigDelay() * p.player.RelativeStepMovementDir(chan, i);
 			const auto s_phase = step_phase - tdelay - i;
@@ -193,14 +197,20 @@ private:
 				continue;
 			}
 
-			float retrig_phase = s.ReadRetrig() + 1.f;
+			auto retrig_phase = s.ReadRetrig() + 1.f;
+
+			const auto gate_period_ms = channel_period_ms / retrig_phase;
+
+			auto gate_width_phase = s.ReadGate(p.slot.settings.GetRandomOrGlobal(chan) *
+											   p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability()));
+			if (gate_width_phase <= 0.f) {
+				continue;
+			}
 
 			// Clamp gate pulses at 1ms
-			float channel_period_ms = (60.f * 1000.f) / p.GetChannelDividedBpm(chan);
-			channel_period_ms = channel_period_ms / retrig_phase;
-			float gate_width_ms = channel_period_ms * gate_width_phase;
+			const auto gate_width_ms = gate_period_ms * gate_width_phase;
 			if (gate_width_ms < 1.f)
-				gate_width_phase = 1.f / channel_period_ms;
+				gate_width_phase = 1.f / gate_period_ms;
 
 			retrig_phase *= s_phase;
 			retrig_phase -= static_cast<uint32_t>(retrig_phase);

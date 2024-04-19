@@ -52,7 +52,7 @@ public:
 
 		if (c.button.play.just_went_high()) {
 			if (ysb.has_value()) {
-				if (!p.seqclock.IsPaused()) {
+				if (!p.IsPaused()) {
 					p.player.songmode.Cancel();
 					if (p.player.songmode.IsQueued()) {
 						p.slot.settings.SetStartOffset(ysb.value() * Model::Sequencer::Steps::PerPage);
@@ -62,11 +62,11 @@ public:
 				} else {
 					p.slot.settings.SetStartOffset(ysb.value() * Model::Sequencer::Steps::PerPage);
 					p.player.Reset();
-					p.seqclock.Pause();
+					p.TogglePause();
 				}
 				just_queued = true;
 			} else {
-				p.seqclock.Pause();
+				p.TogglePause();
 			}
 		}
 		if (!ysb.has_value() && c.button.play.just_went_low()) {
@@ -138,7 +138,7 @@ public:
 	}
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		c.SetPlayLed(!p.seqclock.IsPaused());
+		c.SetPlayLed(!p.IsPaused());
 		ClearButtonLeds(c);
 		const auto playheadpage = p.GetPlayheadPage();
 

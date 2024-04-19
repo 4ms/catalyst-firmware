@@ -50,10 +50,10 @@ public:
 	}
 	void OnSceneButtonRelease(uint8_t page) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
-			if (p.seqclock.IsPaused()) {
+			if (p.IsPaused()) {
 				p.slot.settings.SetStartOffset(p.GetSelectedChannel(), Catalyst2::Sequencer::SeqPageToStep(page));
 				p.player.Reset();
-				p.seqclock.Pause();
+				p.TogglePause();
 			} else {
 				p.player.queue.Queue(p.GetSelectedChannel(), page);
 			}
