@@ -62,10 +62,20 @@ inline constexpr auto min_bpm = 10u;
 inline constexpr auto max_bpm = 1200u;
 
 inline constexpr auto max_ticks = BpmToTicks(min_bpm);
+inline constexpr auto absolute_max_ticks = INT16_MAX; // ~7.32 bpm
 inline constexpr auto min_ticks = BpmToTicks(max_bpm);
+inline constexpr auto absolute_min_ticks = 1;
+
+struct Data {
+	int16_t bpm_in_ticks = BpmToTicks(120);
+
+	bool Validate() const {
+		return bpm_in_ticks >= absolute_min_ticks;
+	}
+};
 
 class Interface {
-	uint32_t bpm_in_ticks = BpmToTicks(120);
+	int16_t &bpm_in_ticks;
 	uint32_t prev_tap_time;
 
 	uint32_t cnt;
@@ -76,6 +86,10 @@ class Interface {
 public:
 	bool external;
 	bool pause;
+
+	Interface(Data &data)
+		: bpm_in_ticks{data.bpm_in_ticks} {
+	}
 
 	void Trig() {
 		// this wont ever be true unless there is a hardware problem..
@@ -96,8 +110,10 @@ public:
 	}
 
 	bool Update() {
+		const uint32_t bpm = bpm_in_ticks;
+
 		peek_cnt++;
-		if (peek_cnt >= bpm_in_ticks) {
+		if (peek_cnt >= bpm) {
 			peek_cnt = 0;
 		}
 
@@ -109,7 +125,7 @@ public:
 				return true;
 			}
 		} else {
-			if (cnt >= bpm_in_ticks) {
+			if (cnt >= bpm) {
 				cnt = 0;
 				peek_cnt = 0;
 				return true;
@@ -128,7 +144,7 @@ public:
 
 	void Tap() {
 		const auto time_now = Controls::TimeNow();
-		bpm_in_ticks = time_now - prev_tap_time;
+		bpm_in_ticks = std::clamp<uint32_t>(time_now - prev_tap_time, absolute_min_ticks, absolute_max_ticks);
 		prev_tap_time = time_now;
 	}
 

@@ -35,7 +35,8 @@ struct Slot {
 	Player::Data player;
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
-	Clock::Sync clock_sync_mode alignas(4);
+	Clock::Bpm::Data bpm{};
+	Clock::Sync clock_sync_mode;
 
 	bool validate() const {
 		auto ret = true;
@@ -46,6 +47,7 @@ struct Slot {
 		ret &= settings.Validate();
 		ret &= player.Validate();
 		ret &= songmode.Validate();
+		ret &= bpm.Validate();
 		ret &= clock_sync_mode.Validate();
 		return ret;
 	}
@@ -88,7 +90,7 @@ class Interface {
 
 public:
 	Slot slot;
-	Clock::Bpm::Interface seqclock{};
+	Clock::Bpm::Interface seqclock{slot.bpm};
 	Shared::Interface &shared;
 	Player::Interface player{slot.player, slot.settings, slot.songmode};
 
