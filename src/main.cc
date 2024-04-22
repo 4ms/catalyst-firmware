@@ -19,6 +19,11 @@ Catalyst2::System _init;
 maybe clipboards should reset eachother?
 */
 
+// !paused = sequencer is moving, either from internal clock or external
+// pause = sequence stops moving, playhead remains where it is
+// reset = send sequence back to beginning regardless of play / pause
+// stop = pause && reset && mute gate output
+
 int main() {
 	using namespace Catalyst2;
 

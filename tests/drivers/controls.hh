@@ -47,6 +47,10 @@ class Controls {
 		Board::ResetJack reset;
 	};
 
+	struct SensePins {
+		InvertedMuxedButton trig{0};
+	};
+
 	Outputs outputs;
 
 public:
@@ -60,6 +64,7 @@ public:
 	Buttons button;
 	Toggles toggle;
 	Jacks jack;
+	SensePins sense;
 
 	Controls() = default;
 

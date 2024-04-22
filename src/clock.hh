@@ -4,6 +4,7 @@
 #include "controls.hh"
 #include <algorithm>
 #include <array>
+#include <utility>
 
 namespace Catalyst2::Clock
 {
@@ -11,7 +12,7 @@ namespace Catalyst2::Clock
 constexpr uint32_t BpmToTicks(uint32_t bpm) {
 	return (60.f * Model::sample_rate_hz) / bpm;
 }
-constexpr uint32_t TicksToBpm(uint32_t tick) {
+constexpr float TicksToBpm(uint32_t tick) {
 	return (60.f * Model::sample_rate_hz) / tick;
 }
 constexpr uint32_t MsToTicks(uint32_t ms) {
@@ -34,128 +35,137 @@ public:
 	}
 };
 
-namespace Bpm
-{
-inline constexpr auto min = 10u;
-inline constexpr auto max = 1200u;
+struct Sync {
+	enum class Mode : uint8_t {
+		SYNCED,
+		DIN_SYNC,
+	};
 
-enum class Mode : uint8_t {
-	FREE_RUN,
-	FOLLOW,
-	DIN_SYNC,
+	static constexpr auto ModeMax = std::underlying_type_t<Mode>{2};
+
+	Mode mode = Mode::SYNCED;
+
+	void Inc(int32_t inc) {
+		const auto temp = std::to_underlying(mode);
+		mode = static_cast<Mode>(std::clamp<int32_t>(temp + inc, 0, ModeMax - 1));
+	}
+	bool Validate() const {
+		if (std::to_underlying(mode) >= ModeMax)
+			return false;
+		return true;
+	}
 };
 
-inline constexpr auto ModeMax = std::underlying_type_t<Mode>{3};
+namespace Bpm
+{
+inline constexpr auto min_bpm = 10u;
+inline constexpr auto max_bpm = 1200u;
+
+inline constexpr auto max_ticks = BpmToTicks(min_bpm);
+inline constexpr auto absolute_max_ticks = INT16_MAX; // ~7.32 bpm
+inline constexpr auto min_ticks = BpmToTicks(max_bpm);
+inline constexpr auto absolute_min_ticks = 1;
 
 struct Data {
-	uint32_t bpm_in_ticks = BpmToTicks(120u);
+	int16_t bpm_in_ticks = BpmToTicks(120);
 
 	bool Validate() const {
-		return bpm_in_ticks <= BpmToTicks(min) && bpm_in_ticks >= BpmToTicks(max);
+		return bpm_in_ticks >= absolute_min_ticks;
 	}
 };
 
 class Interface {
-	Data &data;
+	int16_t &bpm_in_ticks;
+	uint32_t prev_tap_time;
 
-	uint32_t peek_cnt = 0;
-	uint32_t cnt = 0;
+	uint32_t cnt;
+	uint32_t peek_cnt;
 
-	uint32_t prevtaptime;
-	bool external = false;
-	bool step = false;
-	bool pause = false;
-	bool stop = false;
+	bool did_trig = false;
 
 public:
+	bool external;
+	bool pause;
+
 	Interface(Data &data)
-		: data{data} {
+		: bpm_in_ticks{data.bpm_in_ticks} {
 	}
-	void Inc(int32_t inc, bool fine) {
-		auto temp = TicksToBpm(data.bpm_in_ticks);
-		inc = fine ? inc : inc * 10;
-		temp = std::clamp<int32_t>(temp + inc, min, max);
-		data.bpm_in_ticks = BpmToTicks(temp);
+
+	void Trig() {
+		// this wont ever be true unless there is a hardware problem..
+		// leaving commented so I don't re-write it and then re-realize it wont be necessary
+		// if (!external) {
+		//       return;
+		// }
+
+		did_trig = !pause;
+		cnt = 0;
+		peek_cnt = 0;
+
+		Tap();
 	}
-	void Update() {
-		const auto period = data.bpm_in_ticks;
+
+	float GetBpm() const {
+		return Clock::TicksToBpm(bpm_in_ticks);
+	}
+
+	bool Update() {
+		const uint32_t bpm = bpm_in_ticks;
 
 		peek_cnt++;
-		if (peek_cnt >= period) {
+		if (peek_cnt >= bpm) {
 			peek_cnt = 0;
 		}
 
 		cnt += !pause;
 
-		if (cnt >= period) {
-			if (IsInternal() || cnt >= period * 2) {
+		if (external) {
+			if (did_trig) {
+				did_trig = false;
+				return true;
+			}
+		} else {
+			if (cnt >= bpm) {
 				cnt = 0;
-				step = true;
-				SetExternal(false);
+				peek_cnt = 0;
+				return true;
 			}
 		}
-	}
-	bool Output() {
-		bool ret = step;
-		step = false;
-		return ret;
-	}
-	void Input() {
-		if (IsInternal()) {
-			return;
-		}
-		step = !pause;
 
-		cnt = 0;
-
-		Tap();
+		return false;
 	}
+
+	void Inc(int32_t inc, bool fine) {
+		auto temp = static_cast<uint32_t>(TicksToBpm(bpm_in_ticks));
+		inc = fine ? inc : inc * 10;
+		temp = std::clamp<int32_t>(temp + inc, min_bpm, max_bpm);
+		bpm_in_ticks = BpmToTicks(temp);
+	}
+
 	void Tap() {
 		const auto time_now = Controls::TimeNow();
-		data.bpm_in_ticks = time_now - prevtaptime;
-		prevtaptime = time_now;
+		bpm_in_ticks = std::clamp<uint32_t>(time_now - prev_tap_time, absolute_min_ticks, absolute_max_ticks);
+		prev_tap_time = time_now;
 	}
-	bool IsInternal() const {
-		return external == false;
-	}
-	void SetExternal(bool on) {
-		external = on;
-	}
+
 	float GetPhase() const {
-		const auto tc = static_cast<float>(std::clamp<int32_t>(cnt, 0, data.bpm_in_ticks - 1));
-		return tc / data.bpm_in_ticks;
+		const auto tc = static_cast<float>(std::clamp<int32_t>(cnt, 0, bpm_in_ticks - 1));
+		return tc / bpm_in_ticks;
 	}
 	float PeekPhase() const {
-		auto out = static_cast<float>(peek_cnt) / data.bpm_in_ticks;
-		return out;
-	}
-	void ResetPeek() {
-		peek_cnt = 0;
+		return static_cast<float>(peek_cnt) / bpm_in_ticks;
 	}
 	void Reset() {
 		cnt = 0;
 	}
-	void Pause() {
-		Pause(!pause);
-	}
-	void Pause(bool pause) {
-		this->pause = pause;
-		stop = false;
-	}
-	void Stop(bool stop) {
-		this->stop = stop;
-	}
-	bool IsPaused() const {
-		return pause;
-	}
-	bool IsStopped() const {
-		return stop;
+	void ResetPeek() {
+		peek_cnt = 0;
 	}
 };
 } // namespace Bpm
+
 class Divider {
 	uint32_t counter = 0;
-	bool step = false;
 
 public:
 	class type {
@@ -175,12 +185,13 @@ public:
 			return true;
 		}
 	};
-	void Update(type div) {
+	bool Update(type div) {
 		counter += 1;
 		if (counter >= div.Read()) {
-			step = true;
 			counter = 0;
+			return true;
 		}
+		return false;
 	}
 	float GetPhase(type div) const {
 		return static_cast<float>(counter) / div.Read();
@@ -188,14 +199,8 @@ public:
 	float GetPhase(type div, float phase) const {
 		return (phase / div.Read()) + GetPhase(div);
 	}
-	bool Step() {
-		bool ret = step;
-		step = false;
-		return ret;
-	}
 	void Reset() {
 		counter = 0;
-		step = false;
 	}
 };
 

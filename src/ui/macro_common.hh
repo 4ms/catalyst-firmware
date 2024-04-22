@@ -23,8 +23,7 @@ public:
 				p.shared.clockdivider.Reset();
 				p.recorder.Record();
 			} else {
-				p.shared.clockdivider.Update(p.GetClockDiv());
-				if (p.shared.clockdivider.Step()) {
+				if (p.shared.clockdivider.Update(p.GetClockDiv())) {
 					p.recorder.Reset();
 				}
 			}

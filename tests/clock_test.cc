@@ -7,7 +7,6 @@ using namespace Catalyst2;
 
 TEST_CASE("clock phase") {
 	Clock::Bpm::Data bpm;
-	bpm.bpm_in_ticks = Clock::BpmToTicks(64000);
 	Clock::Bpm::Interface clock{bpm};
 
 	Clock::Divider::type cdiv;
@@ -20,14 +19,12 @@ TEST_CASE("clock phase") {
 	// fprintf(stderr, "C Div Phase: %f\n", divider.GetPhase(cdiv));
 
 	for (;;) {
-		clock.Update();
 
-		if (clock.Output()) {
+		if (clock.Update()) {
 
-			divider.Update(cdiv);
 			// fprintf(stderr, "C Div Phase: %f\n", divider.GetPhase(cdiv));
 
-			if (divider.Step()) {
+			if (divider.Update(cdiv)) {
 				step += 1;
 			}
 

@@ -32,8 +32,7 @@ public:
 	}
 	bool Step(uint8_t chan, uint8_t actual_seq_length) {
 		auto &c = channel[chan];
-		c.clockdivider.Update(data.cdiv[chan]);
-		if (c.clockdivider.Step()) {
+		if (c.clockdivider.Update(data.cdiv[chan])) {
 			c.counter += 1;
 			if (c.counter >= actual_seq_length) {
 				c.counter = 0;

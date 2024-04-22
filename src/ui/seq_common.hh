@@ -47,8 +47,18 @@ public:
 		, main_ui{*main_ui} {
 	}
 	void Common() final {
+		p.seqclock.external = c.sense.trig.is_high();
+
 		if (c.jack.reset.just_went_high()) {
-			p.Reset();
+			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::SYNCED) {
+				p.Reset();
+			} else {
+				p.Play();
+			}
+		} else if (c.jack.reset.just_went_low()) {
+			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::DIN_SYNC) {
+				p.Stop(true);
+			}
 		}
 
 		if (c.jack.trig.just_went_high()) {
