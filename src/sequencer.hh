@@ -35,8 +35,8 @@ struct Slot {
 	Player::Data player;
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
-	Clock::Bpm::Data bpm{};
 	Clock::Sync clock_sync_mode;
+	Clock::Bpm::Data bpm{};
 
 	bool validate() const {
 		auto ret = true;
