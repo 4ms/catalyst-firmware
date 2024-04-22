@@ -57,7 +57,7 @@ public:
 			}
 		} else if (c.jack.reset.just_went_low()) {
 			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::DIN_SYNC) {
-				p.Stop();
+				p.Stop(true);
 			}
 		}
 
@@ -65,7 +65,10 @@ public:
 			p.Trig();
 		}
 
-		const auto phase = (c.ReadSlider() + c.ReadCv()) / 4096.f;
+		volatile auto s = c.ReadSlider();
+		volatile auto v = c.ReadCv();
+
+		const auto phase = (s + v) / 4096.f;
 		p.Update(phase);
 	}
 
