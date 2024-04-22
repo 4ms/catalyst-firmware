@@ -54,11 +54,10 @@ public:
 				p.Reset();
 			} else {
 				p.Play();
-				p.Reset();
 			}
 		} else if (c.jack.reset.just_went_low()) {
 			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::DIN_SYNC) {
-				p.Pause();
+				p.Stop();
 			}
 		}
 
