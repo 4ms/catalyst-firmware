@@ -50,14 +50,14 @@ public:
 		p.seqclock.external = c.sense.trig.is_high();
 
 		if (c.jack.reset.just_went_high()) {
-			if (p.seqclock.data.mode == Clock::Bpm::Mode::SYNCED) {
+			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::SYNCED) {
 				p.Reset();
 			} else {
 				p.Play();
 				p.Reset();
 			}
 		} else if (c.jack.reset.just_went_low()) {
-			if (p.seqclock.data.mode == Clock::Bpm::Mode::DIN_SYNC) {
+			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::DIN_SYNC) {
 				p.Pause();
 			}
 		}

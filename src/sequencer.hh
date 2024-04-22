@@ -35,7 +35,7 @@ struct Slot {
 	Player::Data player;
 	SongMode::Data songmode;
 	Clock::Divider::type clockdiv{};
-	Clock::Bpm::Data bpm;
+	Clock::Sync clock_sync_mode alignas(4);
 
 	bool validate() const {
 		auto ret = true;
@@ -46,11 +46,10 @@ struct Slot {
 		ret &= settings.Validate();
 		ret &= player.Validate();
 		ret &= songmode.Validate();
+		ret &= clock_sync_mode.Validate();
 		return ret;
 	}
 };
-
-static_assert(sizeof(Slot) == 3256);
 
 struct Data {
 	std::array<Slot, Model::Sequencer::NumSlots> slot;
@@ -89,7 +88,7 @@ class Interface {
 
 public:
 	Slot slot;
-	Clock::Bpm::Interface seqclock{slot.bpm};
+	Clock::Bpm::Interface seqclock{};
 	Shared::Interface &shared;
 	Player::Interface player{slot.player, slot.settings, slot.songmode};
 

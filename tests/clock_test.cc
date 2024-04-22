@@ -6,8 +6,7 @@
 using namespace Catalyst2;
 
 TEST_CASE("clock phase") {
-	Clock::Bpm::Data bpm;
-	Clock::Bpm::Interface clock{bpm};
+	Clock::Bpm::Interface clock{};
 
 	Clock::Divider::type cdiv;
 	cdiv.Inc(3);

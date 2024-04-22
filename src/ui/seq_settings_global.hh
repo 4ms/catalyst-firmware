@@ -80,7 +80,7 @@ public:
 				break;
 			case EncoderAlts::ClockDiv:
 				if (c.button.add.is_high() && p.seqclock.external) {
-					p.seqclock.IncMode(inc);
+					p.slot.clock_sync_mode.Inc(inc);
 					p.shared.hang.Cancel();
 				} else {
 					if (p.seqclock.external) {
@@ -105,7 +105,7 @@ public:
 
 		if (c.button.add.is_high() && p.seqclock.external) {
 			Color col;
-			if (p.seqclock.data.mode == Clock::Bpm::Mode::SYNCED) {
+			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::SYNCED) {
 				col = Setting::curve_expo;
 			} else {
 				col = Setting::curve_linear;

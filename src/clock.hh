@@ -35,6 +35,27 @@ public:
 	}
 };
 
+struct Sync {
+	enum class Mode : uint8_t {
+		SYNCED,
+		DIN_SYNC,
+	};
+
+	static constexpr auto ModeMax = std::underlying_type_t<Mode>{2};
+
+	Mode mode = Mode::SYNCED;
+
+	void Inc(int32_t inc) {
+		const auto temp = std::to_underlying(mode);
+		mode = static_cast<Mode>(std::clamp<int32_t>(temp + inc, 0, ModeMax - 1));
+	}
+	bool Validate() const {
+		if (std::to_underlying(mode) >= ModeMax)
+			return false;
+		return true;
+	}
+};
+
 namespace Bpm
 {
 inline constexpr auto min_bpm = 10u;
@@ -43,24 +64,7 @@ inline constexpr auto max_bpm = 1200u;
 inline constexpr auto max_ticks = BpmToTicks(min_bpm);
 inline constexpr auto min_ticks = BpmToTicks(max_bpm);
 
-enum class Mode : uint8_t {
-	SYNCED,
-	DIN_SYNC,
-};
-
-inline constexpr auto ModeMax = std::underlying_type_t<Mode>{2};
-
-struct Data {
-	Mode mode alignas(4){};
-
-	bool Validate() const {
-		return true;
-		//	return bpm_in_ticks >= min_ticks && bpm_in_ticks <= max_ticks;
-	}
-};
-
 class Interface {
-
 	uint32_t bpm_in_ticks = BpmToTicks(120);
 	uint32_t prev_tap_time;
 
@@ -70,16 +74,8 @@ class Interface {
 	bool did_trig = false;
 
 public:
-	Data &data;
 	bool external;
 	bool pause;
-
-	Interface(Data &data)
-		: data{data} {
-		auto t = static_cast<std::underlying_type_t<Mode>>(data.mode);
-		t &= 0x1;
-		data.mode = static_cast<Mode>(t);
-	}
 
 	void Trig() {
 		// this wont ever be true unless there is a hardware problem..
@@ -100,20 +96,27 @@ public:
 	}
 
 	bool Update() {
+		peek_cnt++;
+		if (peek_cnt >= bpm_in_ticks) {
+			peek_cnt = 0;
+		}
+
+		cnt += !pause;
+
 		if (external) {
-			if (data.mode == Mode::SYNCED) {
-				return UpdateSynced();
-			} else {
-				return UpdateDinSync();
+			if (did_trig) {
+				did_trig = false;
+				return true;
 			}
 		} else {
-			return UpdateInternal();
+			if (cnt >= bpm_in_ticks) {
+				cnt = 0;
+				peek_cnt = 0;
+				return true;
+			}
 		}
-	}
 
-	void IncMode(int32_t inc) {
-		const auto temp = std::to_underlying(data.mode);
-		data.mode = static_cast<Mode>(std::clamp<int32_t>(temp + inc, 0, ModeMax - 1));
+		return false;
 	}
 
 	void Inc(int32_t inc, bool fine) {
@@ -141,42 +144,6 @@ public:
 	}
 	void ResetPeek() {
 		peek_cnt = 0;
-	}
-
-private:
-	bool UpdateInternal() {
-		UpdatePeek();
-
-		cnt += !pause;
-
-		if (cnt >= bpm_in_ticks) {
-			cnt = 0;
-			peek_cnt = 0;
-			return true;
-		}
-
-		return false;
-	}
-	bool UpdateSynced() {
-		UpdatePeek();
-
-		cnt += !pause;
-
-		if (did_trig) {
-			did_trig = false;
-			return true;
-		}
-		return false;
-	}
-	bool UpdateDinSync() {
-		// TODO
-		return UpdateSynced();
-	}
-	void UpdatePeek() {
-		peek_cnt++;
-		if (peek_cnt >= bpm_in_ticks) {
-			peek_cnt = 0;
-		}
 	}
 };
 } // namespace Bpm
