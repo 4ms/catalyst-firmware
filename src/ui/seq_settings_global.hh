@@ -106,9 +106,9 @@ public:
 		if (c.button.add.is_high() && p.seqclock.external) {
 			Color col;
 			if (p.slot.clock_sync_mode.mode == Clock::Sync::Mode::SYNCED) {
-				col = Setting::curve_expo;
+				col = Setting::clock_mode_sync;
 			} else {
-				col = Setting::curve_linear;
+				col = Setting::clock_mode_dinsync;
 			}
 			c.SetEncoderLed(EncoderAlts::ClockDiv, col);
 		} else {

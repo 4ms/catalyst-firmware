@@ -63,6 +63,8 @@ inline constexpr auto playmode_bck = red;
 inline constexpr auto slider_slew = pink;
 inline constexpr auto curve_linear = grey.blend(off, 0.3f);
 inline constexpr auto curve_expo = yellow;
+inline constexpr auto clock_mode_sync = grey;
+inline constexpr auto clock_mode_dinsync = orange;
 
 namespace OutputOverride
 {
