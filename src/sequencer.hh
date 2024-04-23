@@ -38,6 +38,13 @@ struct Slot {
 	Clock::Sync clock_sync_mode;
 	Clock::Bpm::Data bpm{};
 
+	void PreSave() {
+		bpm.PreSave();
+	}
+	void PostLoad() {
+		bpm.PostLoad();
+	}
+
 	bool validate() const {
 		auto ret = true;
 		for (auto &c : channel) {
@@ -56,6 +63,17 @@ struct Slot {
 struct Data {
 	std::array<Slot, Model::Sequencer::NumSlots> slot;
 	uint8_t startup_slot;
+
+	void PreSave() {
+		for (auto &s : slot) {
+			s.PreSave();
+		}
+	}
+	void PostLoad() {
+		for (auto &s : slot) {
+			s.PostLoad();
+		}
+	}
 
 	bool validate() const {
 		auto ret = true;

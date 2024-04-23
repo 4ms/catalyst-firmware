@@ -67,7 +67,21 @@ inline constexpr auto min_ticks = BpmToTicks(max_bpm);
 inline constexpr auto absolute_min_ticks = 1;
 
 struct Data {
+	static constexpr auto original_sample_rate_hz = 4000;
+
 	int16_t bpm_in_ticks = BpmToTicks(120);
+
+	void PreSave() {
+		const auto bpm = (60.f * original_sample_rate_hz) / bpm_in_ticks;
+		const auto temp = BpmToTicks(bpm);
+		bpm_in_ticks = std::clamp<uint32_t>(temp, absolute_min_ticks, absolute_max_ticks);
+	}
+
+	void PostLoad() {
+		const auto bpm = TicksToBpm(bpm_in_ticks);
+		const auto temp = (60.f * original_sample_rate_hz) / bpm;
+		bpm_in_ticks = std::clamp<uint32_t>(temp, absolute_min_ticks, absolute_max_ticks);
+	}
 
 	bool Validate() const {
 		return bpm_in_ticks >= absolute_min_ticks;
