@@ -105,6 +105,7 @@ private:
 	void SaveError() {
 		params.shared.blinker.Set(48, 3000);
 	}
+
 	void Load() {
 		if (!settings.read(params.data.shared)) {
 			params.data.shared = Catalyst2::Shared::Data{};
@@ -138,7 +139,10 @@ private:
 		while (wait && (b.play.is_high() || b.morph.is_high() || b.fine.is_high() || b.bank.is_high() ||
 						b.add.is_high() || b.shift.is_high()))
 		{
-			controls.SetPlayLed(Controls::TimeNow() & 0x100);
+			controls.SetPlayLed(true);
+			controls.Delay(64);
+			controls.SetPlayLed(false);
+			controls.Delay(64);
 		}
 		params.shared.mode = params.shared.data.saved_mode;
 	}
