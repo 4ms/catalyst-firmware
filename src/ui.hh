@@ -118,8 +118,8 @@ private:
 		if (!settings.read(params.data.macro)) {
 			params.data.macro = Catalyst2::Macro::Data{};
 		}
-
 		params.data.sequencer.PostLoad();
+
 		params.sequencer.Load();
 		params.macro.bank.SelectBank(0);
 
