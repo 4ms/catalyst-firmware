@@ -63,8 +63,8 @@ function(create_target target driver_arch)
     ${target}_ARCH
     INTERFACE $<$<CONFIG:Debug>:-O0
               -g3>
-              $<$<CONFIG:Release>:-Ofast>
-              $<$<CONFIG:RelWithDebInfo>:-Ofast
+              $<$<CONFIG:Release>:-O2>
+              $<$<CONFIG:RelWithDebInfo>:-O2
               -g3>
               -fdata-sections
               -ffunction-sections
