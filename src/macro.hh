@@ -21,6 +21,14 @@ struct Data {
 	Clock::Divider::type clockdiv{};
 	bool override_outputs = true;
 
+	void PreSave() {
+		slider_slew.PreSave();
+	}
+
+	void PostLoad() {
+		slider_slew.PostLoad();
+	}
+
 	bool validate() const {
 		auto ret = true;
 		ret &= bank.Validate();

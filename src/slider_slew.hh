@@ -11,15 +11,16 @@ namespace Catalyst2::Macro::SliderSlew
 {
 
 enum class Curve : uint8_t { Linear, Expo };
-static constexpr float MaxTime = Model::sample_rate_hz * 120.f;
-static constexpr float MinSlew = 0.04f; // TODO: when constexpr math in gcc:  = std::powf(MaxTime, 0.25);
+static constexpr float MaxTime = 120.f; // seconds
+static constexpr float MinSlew = 0.04f; // TODO: when constexpr math in gcc:  = std::powf(MaxSlew, 0.25);
 static constexpr float EncoderStepSizeFine = 1.f / 200.f;
 static constexpr float EncoderStepSizeCourse = EncoderStepSizeFine * 10;
 
 // Converts slew amount(0..1) to a coef (1..1/MaxSlew)
-inline float CalcCoef(float slew) {
+inline constexpr float CalcCoef(float slew, float SampleRate) {
+	const auto MaxSlew = SampleRate * MaxTime;
 	slew = slew * (1.f - MinSlew) + MinSlew;
-	slew = slew * slew * slew * slew * MaxTime;
+	slew = slew * slew * slew * slew * MaxSlew;
 	if (slew < 1.f)
 		return 1.f;
 
@@ -28,14 +29,22 @@ inline float CalcCoef(float slew) {
 
 struct Data {
 	float slew{0.f};
-	float coef{CalcCoef(slew)};
+	float coef{CalcCoef(slew, Model::sample_rate_hz)};
 	Curve curve{Curve::Linear};
+
+	void PostLoad() {
+		coef = CalcCoef(slew, Model::sample_rate_hz);
+	}
+
+	void PreSave() {
+		coef = CalcCoef(slew, Legacy::V1_0::Model::sample_rate_hz);
+	}
 
 	bool Validate() const {
 		auto ret = true;
-		ret &= std::abs(CalcCoef(slew) - coef) < 0.0001f;
 		ret &= slew >= 0.f && slew <= 1.f;
-		ret &= validateBool(std::to_underlying(curve));
+		ret &= std::abs(CalcCoef(slew, Legacy::V1_0::Model::sample_rate_hz) - coef) < 0.0001f;
+		ret &= std::to_underlying(curve) <= std::to_underlying(Curve::Expo);
 		return ret;
 	}
 };
@@ -53,7 +62,7 @@ public:
 	void Inc(int32_t inc, bool fine) {
 		auto slew = data.slew + inc * (fine ? EncoderStepSizeFine : EncoderStepSizeCourse);
 		data.slew = std::clamp(slew, 0.f, 1.f);
-		data.coef = CalcCoef(data.slew);
+		data.coef = CalcCoef(data.slew, Model::sample_rate_hz);
 	}
 
 	float Value() const {

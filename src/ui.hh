@@ -95,8 +95,10 @@ private:
 			SaveError();
 	}
 	void SaveMacro() {
+		params.data.macro.PreSave();
 		if (!settings.write(params.data.macro))
 			SaveError();
+		params.data.macro.PostLoad();
 	}
 	void SaveSeq() {
 		params.data.sequencer.PreSave();
@@ -119,6 +121,7 @@ private:
 			params.data.macro = Catalyst2::Macro::Data{};
 		}
 		params.data.sequencer.PostLoad();
+		params.data.macro.PostLoad();
 
 		params.sequencer.Load();
 		params.macro.bank.SelectBank(0);
