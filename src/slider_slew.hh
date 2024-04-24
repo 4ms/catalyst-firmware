@@ -1,5 +1,6 @@
 #pragma once
 #include "conf/model.hh"
+#include "legacy/v1_0/conf/model.hh"
 #include "validate.hh"
 #include <algorithm>
 #include <cstdint>

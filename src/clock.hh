@@ -2,6 +2,7 @@
 
 #include "conf/model.hh"
 #include "controls.hh"
+#include "legacy/v1_0/conf/model.hh"
 #include <algorithm>
 #include <array>
 #include <utility>
@@ -67,7 +68,7 @@ inline constexpr auto min_ticks = BpmToTicks(max_bpm);
 inline constexpr auto absolute_min_ticks = 1;
 
 struct Data {
-	static constexpr auto original_sample_rate_hz = 4000;
+	static constexpr auto original_sample_rate_hz = Legacy::V1_0::Model::sample_rate_hz;
 
 	int16_t bpm_in_ticks = BpmToTicks(120);
 
