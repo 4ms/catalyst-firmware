@@ -9,11 +9,14 @@ namespace Catalyst2::Ui::Macro
 {
 
 class Bank : public Usual {
+	bool did_save = false;
+
 public:
 	using Usual::Usual;
 	void Init() override {
 		c.button.play.clear_events();
 		c.button.morph.clear_events();
+		did_save = false;
 	}
 	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -26,9 +29,12 @@ public:
 			p.shared.save.SetAlarm();
 		}
 		if (p.shared.save.Check() && c.button.morph.is_high()) {
-			p.shared.save.SetAlarm();
-			p.shared.do_save_macro = true;
-			p.shared.blinker.Set(16, 500);
+			if (!did_save) {
+				p.shared.save.SetAlarm();
+				p.shared.do_save_macro = true;
+				p.shared.blinker.Set(16, 500);
+				did_save = true;
+			}
 		}
 
 		if (!c.button.bank.is_high() && p.shared.youngest_scene_button == std::nullopt) {
