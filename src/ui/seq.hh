@@ -73,7 +73,7 @@ public:
 			just_queued = false;
 		}
 
-		if (!p.seqclock.external && c.button.add.just_went_high()) {
+		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap();
 		}
 		if (c.button.fine.just_went_high() && ysb.has_value()) {

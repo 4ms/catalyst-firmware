@@ -42,7 +42,7 @@ public:
 			}
 		}
 
-		if (!p.seqclock.external && c.button.add.just_went_high()) {
+		if (c.button.add.just_went_high()) {
 			p.seqclock.Tap();
 		}
 	}

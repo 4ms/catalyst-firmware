@@ -117,7 +117,7 @@ public:
 		cnt = 0;
 		peek_cnt = 0;
 
-		Tap();
+		UpdateBpm();
 	}
 
 	float GetBpm() const {
@@ -158,9 +158,10 @@ public:
 	}
 
 	void Tap() {
-		const auto time_now = Controls::TimeNow();
-		bpm_in_ticks = std::clamp<uint32_t>(time_now - prev_tap_time, absolute_min_ticks, absolute_max_ticks);
-		prev_tap_time = time_now;
+		if (external) {
+			return;
+		}
+		UpdateBpm();
 	}
 
 	float GetPhase() const {
@@ -176,7 +177,15 @@ public:
 	void ResetPeek() {
 		peek_cnt = 0;
 	}
+
+private:
+	void UpdateBpm() {
+		const auto time_now = Controls::TimeNow();
+		bpm_in_ticks = std::clamp<uint32_t>(time_now - prev_tap_time, absolute_min_ticks, absolute_max_ticks);
+		prev_tap_time = time_now;
+	}
 };
+
 } // namespace Bpm
 
 class Divider {
