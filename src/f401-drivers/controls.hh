@@ -65,7 +65,9 @@ class Controls {
 	mdrivlib::I2CPeriph led_driver_i2c{Board::LedDriverConf};
 	mdrivlib::LP5024::Device led_driver{led_driver_i2c, Board::LedDriverAddr};
 
+	std::array<uint8_t, Model::NumChans> button_led_duty_buffer{};
 	std::array<uint8_t, Model::NumChans> button_led_duty{};
+
 	std::array<Color, Model::NumChans> rgb_leds;
 	Color::Adjustment global_brightness{128, 128, 128}; // 64, 64, 64};
 
@@ -143,11 +145,11 @@ public:
 	void SetButtonLed(unsigned led, float intensity) {
 		static constexpr std::array<uint8_t, 32> lut = {0, 1, 1, 1, 1,	1,	1,	1,	2,	2,	2,	3,	3,	4,	4,	5,
 														6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 25, 28, 32, 32};
-		button_led_duty[Board::ButtonLedMap[led]] = lut[intensity * (lut.size() - 1)];
+		button_led_duty_buffer[Board::ButtonLedMap[led]] = lut[intensity * (lut.size() - 1)];
 	}
 
 	void SetButtonLed(unsigned led, bool on) {
-		button_led_duty[Board::ButtonLedMap[led]] = on ? 32 : 0;
+		button_led_duty_buffer[Board::ButtonLedMap[led]] = on ? 32 : 0;
 	}
 
 	void SetPlayLed(bool on) {
@@ -166,9 +168,12 @@ public:
 		time_cnt++;
 	}
 	bool LedsReady() {
-		const auto ret = leds_ready_flag;
+		if (!leds_ready_flag) {
+			return false;
+		}
 		leds_ready_flag = false;
-		return ret;
+		button_led_duty = button_led_duty_buffer;
+		return true;
 	}
 	void Delay(uint32_t ms) {
 		HAL_Delay(ms);
