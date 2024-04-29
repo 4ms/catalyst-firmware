@@ -31,7 +31,7 @@ struct TestButtons : IButtonChecker {
 		if (channel == 13)
 			return UtilIF::controls->button.add.is_high();
 		if (channel == 14)
-			return UtilIF::controls->button.clocksense.is_high();
+			return UtilIF::controls->sense.trig.is_high();
 		return false;
 	}
 

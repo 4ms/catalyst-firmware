@@ -45,7 +45,6 @@ class Controls {
 		MuxedButton fine{Board::Buttons::Fine};
 		MuxedButton add{Board::Buttons::Add};
 		MuxedButton play{Board::Buttons::Play};
-		MuxedButton clocksense{Board::Buttons::ClockJackSense};
 	};
 	// Jacks
 	struct Jacks {
@@ -55,7 +54,7 @@ class Controls {
 
 	// jack sense pins
 	struct SensePins {
-		InvertedMuxedButton trig{13};
+		InvertedMuxedButton trig{Board::Buttons::ClockJackSense};
 	};
 
 	// Mux
@@ -226,7 +225,6 @@ private:
 		button.fine.update(raw_mux_read);
 		button.add.update(raw_mux_read);
 		button.play.update(raw_mux_read);
-		button.clocksense.update(raw_mux_read);
 		sense.trig.update(raw_mux_read);
 	}
 };
