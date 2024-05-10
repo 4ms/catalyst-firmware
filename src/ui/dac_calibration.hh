@@ -93,7 +93,7 @@ inline bool Calibrate(Data &d, Controls &c) {
 			c.SetButtonLed(idx, true);
 		});
 
-		for (auto [idx, o, c] : enumerate(out, d.channel)) {
+		for (auto [chan, o, c] : enumerate(out, d.channel)) {
 			o = Process(c, test_voltage[idx]);
 		}
 		auto color_func = [&c](uint8_t idx, float phase) {
