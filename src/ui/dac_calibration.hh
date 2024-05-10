@@ -5,7 +5,7 @@
 #include "conf/palette.hh"
 #include "controls.hh"
 #include "helper_functions.hh"
-#include "util/countzip.hh"
+#include "util/zip.hh"
 #include <array>
 
 namespace Catalyst2::Calibration::Dac
@@ -93,7 +93,7 @@ inline bool Calibrate(Data &d, Controls &c) {
 			c.SetButtonLed(idx, true);
 		});
 
-		for (auto [chan, o, c] : enumerate(out, d.channel)) {
+		for (auto [o, c] : zip(out, d.channel)) {
 			o = Process(c, test_voltage[idx]);
 		}
 		auto color_func = [&c](uint8_t idx, float phase) {
