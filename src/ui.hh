@@ -79,6 +79,7 @@ public:
 			if (params.shared.blinker.IsSet()) {
 				LedBlinker(controls, params.shared.blinker);
 			}
+			controls.WriteButtonLeds();
 		}
 	}
 

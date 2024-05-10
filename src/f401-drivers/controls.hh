@@ -166,12 +166,16 @@ public:
 		}
 		time_cnt++;
 	}
+
+	void WriteButtonLeds() {
+		button_led_duty = button_led_duty_buffer;
+	}
+
 	bool LedsReady() {
 		if (!leds_ready_flag) {
 			return false;
 		}
 		leds_ready_flag = false;
-		button_led_duty = button_led_duty_buffer;
 		return true;
 	}
 	void Delay(uint32_t ms) {

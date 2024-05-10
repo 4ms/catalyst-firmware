@@ -138,6 +138,7 @@ inline bool Calibrate(Data &d, Controls &c) {
 		}
 
 		c.Write(out);
+		c.WriteButtonLeds();
 		c.Delay(1);
 	}
 }
