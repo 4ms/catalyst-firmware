@@ -120,6 +120,9 @@ public:
 		// }
 	}
 
+	void WriteButtonLeds() {
+	}
+
 	bool LedsReady() {
 		return true;
 	}
