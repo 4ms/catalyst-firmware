@@ -40,7 +40,10 @@ void run_hardware_test() {
 			.priority1 = 2,
 			.priority2 = 0,
 		},
-		[&]() { controls.Update(); },
+		[&]() {
+			controls.Update();
+			controls.WriteButtonLeds();
+		},
 	};
 
 	controls_update_task.start();
