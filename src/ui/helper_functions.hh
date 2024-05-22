@@ -180,6 +180,7 @@ inline void StartupAnimation(Controls &c) {
 			c.SetEncoderLed(enc, col.blend(nextcol, cphase));
 		}
 		c.Delay(1);
+		c.WriteButtonLeds();
 	}
 }
 } // namespace Catalyst2::Ui
