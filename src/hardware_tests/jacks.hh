@@ -12,10 +12,23 @@ struct TestJacks : IGateInChecker {
 	Controls &controls;
 	ManualValue pulse;
 	Model::Output::Buffer outs;
-	static constexpr auto SampleRate = 2000u;
+	static constexpr auto SampleRate = 1000u;
 	static constexpr auto NumJacks = 2u;
 
 	uint8_t enc_map[NumJacks]{0, 3};
+
+	mdrivlib::Timekeeper dac_update_task{
+		{
+			.TIMx = TIM9,
+			.period_ns = mdrivlib::TimekeeperConfig::Hz(SampleRate),
+			.priority1 = 0,
+			.priority2 = 1,
+		},
+		[this]() {
+			outs[0] = pulse.update();
+			this->controls.Write(outs);
+		},
+	};
 
 	TestJacks(Controls &controls)
 		: IGateInChecker{NumJacks}
@@ -29,19 +42,11 @@ struct TestJacks : IGateInChecker {
 			controls.SetEncoderLed(i, Palette::off);
 		}
 
-		mdrivlib::Timekeeper dac_update_task{
-			{
-				.TIMx = TIM9,
-				.period_ns = mdrivlib::TimekeeperConfig::Hz(SampleRate),
-				.priority1 = 0,
-				.priority2 = 1,
-			},
-			[this]() {
-				outs[0] = pulse.update();
-				this->controls.Write(outs);
-			},
-		};
 		dac_update_task.start();
+	}
+
+	~TestJacks() {
+		dac_update_task.stop();
 	}
 
 	bool read_gate(uint8_t channel) override {

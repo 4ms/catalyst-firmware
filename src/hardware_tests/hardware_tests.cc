@@ -62,8 +62,10 @@ void run_hardware_test() {
 	auto adc_test = TestAdc{controls};
 	adc_test.run_test();
 
-	auto jack_test = TestJacks{controls};
-	jack_test.run_test();
+	{
+		auto jack_test = TestJacks{controls};
+		jack_test.run_test();
+	}
 
 	auto enc_test = TestEncoders{controls};
 	enc_test.run_test();
