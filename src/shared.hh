@@ -138,7 +138,6 @@ public:
 	bool do_save_seq = false;
 	bool did_paste = false;
 	bool did_copy = false;
-	float pos;
 	std::optional<uint8_t> youngest_scene_button;
 	Model::Mode mode = BuildOptions::default_mode;
 };
