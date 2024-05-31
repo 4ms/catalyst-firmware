@@ -78,6 +78,8 @@ public:
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
 			ConfirmPaste(p.shared, button);
+		} else if (p.bank.pathway.size() == Catalyst2::Macro::Pathway::PathwayData::MinPoints) {
+			p.bank.pathway.ReplaceScene(button);
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
