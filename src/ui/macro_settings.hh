@@ -69,7 +69,7 @@ public:
 				if (is_scene) {
 					break;
 				}
-				p.IncOutputOverride(inc);
+				p.blind.Inc(inc);
 				p.shared.hang.Cancel();
 				break;
 			case EncoderAlts::ClockDiv:
@@ -85,7 +85,7 @@ public:
 					break;
 				}
 				inc = hang.has_value() ? inc : 0;
-				p.slider_slew.Inc(inc, c.button.fine.is_high());
+				p.slew.Inc(inc, c.button.fine.is_high());
 				p.shared.hang.Set(encoder);
 				break;
 			case EncoderAlts::SliderSlewCurve:
@@ -93,9 +93,9 @@ public:
 					break;
 				}
 				if (inc > 0)
-					p.slider_slew.SetCurve(Catalyst2::Macro::SliderSlew::Curve::Linear);
+					p.slew.SetCurve(Catalyst2::Macro::Slew::Curve::Linear);
 				else if (inc < 0)
-					p.slider_slew.SetCurve(Catalyst2::Macro::SliderSlew::Curve::Expo);
+					p.slew.SetCurve(Catalyst2::Macro::Slew::Curve::Expo);
 				p.shared.hang.Cancel();
 				break;
 			default:
@@ -125,20 +125,17 @@ public:
 					} break;
 
 					case EncoderAlts::SliderSlew: {
-						float num_lights = p.slider_slew.Value() * 8.f;
+						float num_lights = p.slew.Value() * 8.f;
 						SetEncoderLedsFloat(c, num_lights, Palette::Setting::slider_slew, Palette::very_dim_grey);
 					} break;
 				}
 			} else {
-				c.SetEncoderLed(EncoderAlts::OutputOverride,
-								p.GetOutputOverride() ? Palette::Setting::OutputOverride::on :
-														Palette::Setting::OutputOverride::off);
+				c.SetEncoderLed(EncoderAlts::OutputOverride, Palette::Setting::Blind(p.blind.Read()));
 				c.SetEncoderLed(EncoderAlts::ClockDiv, Palette::Setting::active);
 				c.SetEncoderLed(EncoderAlts::SliderSlew,
-								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slider_slew.Value()));
-				auto col = p.slider_slew.GetCurve() == Catalyst2::Macro::SliderSlew::Curve::Linear ?
-							   Palette::Setting::curve_linear :
-							   Palette::Setting::curve_expo;
+								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slew.Value()));
+				auto col = p.slew.GetCurve() == Catalyst2::Macro::Slew::Curve::Linear ? Palette::Setting::curve_linear :
+																						Palette::Setting::curve_expo;
 				c.SetEncoderLed(EncoderAlts::SliderSlewCurve, col);
 				if (c.button.fine.is_high()) {
 					col = p.bank.randompool.IsRandomized() ? Palette::Random::color(p.bank.randompool.GetSeed()) :
