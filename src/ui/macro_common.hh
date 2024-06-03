@@ -19,21 +19,12 @@ public:
 	}
 	void Common() final {
 		if (c.jack.trig.just_went_high()) {
-			if (p.recorder.IsCued()) {
-				p.shared.clockdivider.Reset();
-				p.recorder.Record();
-			} else {
-				if (p.shared.clockdivider.Update(p.GetClockDiv())) {
-					p.recorder.Reset();
-				}
-			}
+			p.Trig();
 		}
 
 		PlayButtonDisplay();
 
-		auto pos = p.recorder.Update(c.ReadSlider() + c.ReadCv()) / 4095.f;
-		pos = p.slider_slew.Update(pos);
-		p.bank.pathway.Update(pos);
+		p.Update(c.ReadSlider() + c.ReadCv());
 	}
 
 private:

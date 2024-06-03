@@ -55,9 +55,24 @@ public:
 	}
 	void IncOutputOverride(int32_t inc) {
 		data.override_outputs = inc > 0 ? true : false;
+	void Update(uint16_t pos) {
+		const auto p = recorder.Update(pos) / 4095.f;
+		if (!(shared.youngest_scene_button && (data.override_outputs.mode == Blind::Mode::SLEW))) {
+			pos = slew.slider.Update(p);
+		}
+		bank.pathway.Update(p);
 	}
 	bool GetOutputOverride() const {
 		return data.override_outputs;
+	void Trig() {
+		if (recorder.IsCued()) {
+			shared.clockdivider.Reset();
+			recorder.Record();
+		} else {
+			if (shared.clockdivider.Update(data.clockdiv)) {
+				recorder.Reset();
+			}
+		}
 	}
 	void IncClockDiv(int32_t inc) {
 		data.clockdiv.Inc(inc);
