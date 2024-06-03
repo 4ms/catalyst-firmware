@@ -30,7 +30,7 @@ public:
 	}
 	void Inc(int32_t inc) {
 		auto t = std::to_underlying(data.mode);
-		t = std::clamp<int32_t>(t + inc, 0, ModeMax);
+		t = std::clamp<int32_t>(t + inc, 0, ModeMax - 1);
 		data.mode = static_cast<Mode>(t);
 	}
 	Mode Read() const {
