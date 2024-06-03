@@ -116,7 +116,7 @@ public:
 		c.SetPlayLed(p.recorder.IsPlaying());
 
 		auto ysb = p.shared.youngest_scene_button;
-		if (ysb.has_value()) {
+		if (ysb.has_value() && (p.blind.Read() != Catalyst2::Macro::Blind::Mode::SLEW)) {
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high())
 					c.SetButtonLed(i, true);
