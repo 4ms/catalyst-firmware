@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../lib/cpputil/util/colors.hh"
+#include "blind.hh"
 #include "channel.hh"
 #include "model.hh"
 #include "range.hh"
@@ -66,11 +67,13 @@ inline constexpr auto curve_expo = yellow;
 inline constexpr auto clock_mode_sync = grey;
 inline constexpr auto clock_mode_dinsync = orange;
 
-namespace OutputOverride
-{
-inline constexpr auto on = green;
-inline constexpr auto off = red;
-} // namespace OutputOverride
+inline Color Blind(Macro::Blind::Mode mode) {
+	constexpr auto on = red;
+	constexpr auto snap = green;
+	constexpr auto slew = blue;
+
+	return mode == Macro::Blind::Mode::ON ? on : mode == Macro::Blind::Mode::SNAP ? snap : slew;
+}
 
 namespace Transpose
 {
