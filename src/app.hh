@@ -125,58 +125,6 @@ private:
 									Channel::Output::gate_off;
 	}
 
-	Model::Output::Buffer Override() {
-		Model::Output::Buffer out;
-
-		const auto scene = p.shared.youngest_scene_button.value();
-
-		auto do_trigs = false;
-
-		if (did_override != scene) {
-			did_override = scene;
-			do_trigs = true;
-		}
-
-		for (auto [chan, o] : countzip(out)) {
-			if (p.bank.GetChannelMode(chan).IsGate()) {
-				const auto level = p.bank.GetGate(scene, chan);
-				o = Trig(do_trigs, chan, level);
-			} else {
-				const auto r = p.bank.GetRange(chan);
-				auto temp = Channel::Output::Scale(p.bank.GetCv(scene, chan), r.Min(), r.Max());
-				o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
-			}
-		}
-		return out;
-	}
-
-	Model::Output::Buffer Morph() {
-		did_override = Model::NumChans;
-		Model::Output::Buffer out;
-
-		const auto left = p.bank.pathway.SceneRelative(-1);
-		const auto right = p.bank.pathway.SceneRelative(1);
-
-		auto do_trigs = false;
-
-		const auto current_scene = p.bank.pathway.CurrentScene();
-
-		if (current_scene != p.bank.pathway.LastSceneOn() && current_scene.has_value()) {
-			do_trigs = true;
-		}
-
-		for (auto [chan, o] : countzip(out)) {
-			if (p.bank.GetChannelMode(chan).IsGate()) {
-				const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
-				o = Trig(do_trigs, chan, level);
-			} else {
-				const auto temp = GetInterpolatedScenes(chan, left, right);
-				o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
-			}
-		}
-		return out;
-	}
-
 	Model::Output::type GetInterpolatedScenes(uint8_t chan, uint8_t left, uint8_t right) {
 		const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
 		const auto &scale = p.bank.GetChannelMode(chan).GetScale();
