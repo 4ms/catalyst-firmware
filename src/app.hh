@@ -49,6 +49,8 @@ class App {
 	Interface &p;
 	Trigger trigger;
 	uint8_t did_override = Model::NumChans;
+	std::optional<uint8_t> prev_ysb;
+	Model::Output::Buffer last_out;
 
 public:
 	App(Interface &p)
@@ -56,11 +58,64 @@ public:
 	}
 
 	Model::Output::Buffer Update() {
-		return (p.main_mode && p.shared.youngest_scene_button.has_value() && p.GetOutputOverride()) ? Override() :
-																									  Morph();
+		Model::Output::Buffer goal;
+
+		// check for event, (scene button press or release)
+		const auto event = CheckEvent();
+		if (event) {
+			p.slew.button.Start(last_out);
+		}
+
+		if (p.shared.youngest_scene_button.has_value() && (p.blind.Read() != Blind::Mode::ON)) {
+			for (auto [chan, o] : countzip(goal)) {
+				if (p.bank.GetChannelMode(chan).IsGate()) {
+					const auto level = p.bank.GetGate(p.shared.youngest_scene_button.value(), chan);
+					o = Trig(event, chan, level);
+				} else {
+					const auto r = p.bank.GetRange(chan);
+					auto temp = Channel::Output::Scale(
+						p.bank.GetCv(p.shared.youngest_scene_button.value(), chan), r.Min(), r.Max());
+					o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+				}
+			}
+		} else {
+			const auto current_scene = p.bank.pathway.CurrentScene();
+			const auto do_trigs = (current_scene != p.bank.pathway.LastSceneOn() && current_scene);
+
+			const auto left = p.bank.pathway.SceneRelative(-1);
+			const auto right = p.bank.pathway.SceneRelative(1);
+
+			for (auto [chan, o] : countzip(goal)) {
+				if (p.bank.GetChannelMode(chan).IsGate()) {
+					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
+					o = Trig(do_trigs, chan, level);
+				} else {
+					const auto temp = GetInterpolatedScenes(chan, left, right);
+					o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+				}
+			}
+		}
+
+		if (p.blind.Read() == Blind::Mode::SLEW) {
+			p.slew.button.Update();
+			last_out = p.slew.button.Interpolate(goal);
+		} else {
+			last_out = goal;
+		}
+
+		return last_out;
 	}
 
 private:
+	bool CheckEvent() {
+		auto out = false;
+		if (prev_ysb != p.shared.youngest_scene_button) {
+			out = true;
+			prev_ysb = p.shared.youngest_scene_button;
+		}
+		return out;
+	}
+
 	Model::Output::type Trig(bool do_trig, uint8_t chan, float level) {
 		if (do_trig && level > 0.f) {
 			trigger.Trig(chan, level);
@@ -88,7 +143,7 @@ private:
 				o = Trig(do_trigs, chan, level);
 			} else {
 				const auto r = p.bank.GetRange(chan);
-				const auto temp = Channel::Output::Scale(p.bank.GetCv(scene, chan), r.Min(), r.Max());
+				auto temp = Channel::Output::Scale(p.bank.GetCv(scene, chan), r.Min(), r.Max());
 				o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 			}
 		}
@@ -115,16 +170,20 @@ private:
 				const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
 				o = Trig(do_trigs, chan, level);
 			} else {
-				const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
-				const auto &scale = p.bank.GetChannelMode(chan).GetScale();
-				const auto a = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(left, chan));
-				const auto b = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(right, chan));
-				const auto r = p.bank.GetRange(chan);
-				const auto temp = Channel::Output::Scale(MathTools::interpolate(a, b, phs), r.Min(), r.Max());
+				const auto temp = GetInterpolatedScenes(chan, left, right);
 				o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 			}
 		}
 		return out;
+	}
+
+	Model::Output::type GetInterpolatedScenes(uint8_t chan, uint8_t left, uint8_t right) {
+		const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
+		const auto &scale = p.bank.GetChannelMode(chan).GetScale();
+		const auto a = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(left, chan));
+		const auto b = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(right, chan));
+		const auto r = p.bank.GetRange(chan);
+		return Channel::Output::Scale(MathTools::interpolate(a, b, phs), r.Min(), r.Max());
 	}
 };
 } // namespace Macro
