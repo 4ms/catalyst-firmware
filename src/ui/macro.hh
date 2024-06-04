@@ -116,11 +116,16 @@ public:
 		c.SetPlayLed(p.recorder.IsPlaying());
 
 		auto ysb = p.shared.youngest_scene_button;
-		if (ysb.has_value() && (p.blind.Read() != Catalyst2::Macro::Blind::Mode::SLEW)) {
+		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high())
 					c.SetButtonLed(i, true);
 			}
+
+			if (p.blind.Read() == Catalyst2::Macro::Blind::Mode::SLEW) {
+				return;
+			}
+
 			const auto scene_to_display = ysb.value();
 			EncoderDisplayScene(scene_to_display);
 		} else {
