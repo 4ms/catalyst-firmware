@@ -120,14 +120,13 @@ struct Data {
 static_assert(sizeof(Data) % 4 == 0);
 
 class Interface {
-	using QuantizerArray = std::array<Quantizer::Interface, Model::NumChans>;
 
 public:
 	Data &data;
 	Interface(Data &data)
 		: data{data} {
 	}
-	QuantizerArray quantizer;
+	Quantizer::Interface quantizer;
 	Clock::Divider clockdivider;
 	DisplayHanger hang;
 	Clock::Timer reset{Model::HoldTimes::reset};
