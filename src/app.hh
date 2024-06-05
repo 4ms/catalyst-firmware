@@ -85,7 +85,7 @@ public:
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
 					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
 
-					const auto main = p.shared.quantizer.Process(scale, p.bank.GetCv(prev_ysb.value(), chan));
+					const auto main = Quantizer::Process(scale, p.bank.GetCv(prev_ysb.value(), chan));
 
 					const auto r = p.bank.GetRange(chan);
 					auto temp = Channel::Output::Scale(main, r.Min(), r.Max());
@@ -104,8 +104,8 @@ public:
 					out = Trig(do_trigs, chan, level);
 				} else {
 					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
-					const auto left_cv = p.shared.quantizer.Process(scale, p.bank.GetCv(left_scene, chan));
-					const auto right_cv = p.shared.quantizer.Process(scale, p.bank.GetCv(right_scene, chan));
+					const auto left_cv = Quantizer::Process(scale, p.bank.GetCv(left_scene, chan));
+					const auto right_cv = Quantizer::Process(scale, p.bank.GetCv(right_scene, chan));
 
 					const auto chan_morph = p.bank.GetMorph(chan);
 					const auto crossfader_phase = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), chan_morph);
@@ -254,11 +254,10 @@ private:
 		const auto current_step_random = p.player.randomvalue.ReadRelative(chan, 0, current_step.ReadProbability());
 
 		const auto &scale = p.slot.settings.GetChannelMode(chan).GetScale();
-		auto stepval = p.shared.quantizer.Process(scale, prev_step.ReadCv(prev_step_random * random));
-		const auto distance =
-			p.shared.quantizer.Process(scale, current_step.ReadCv(current_step_random * random)) - stepval;
+		auto stepval = Quantizer::Process(scale, prev_step.ReadCv(prev_step_random * random));
+		const auto distance = Quantizer::Process(scale, current_step.ReadCv(current_step_random * random)) - stepval;
 		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), current_step.ReadMorph());
-		stepval += (distance * stepmorph);
+		stepval += distance * stepmorph;
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
 		const auto r = p.slot.settings.GetRange(chan);
 		const auto temp = Channel::Output::Scale(stepval, r.Min(), r.Max());

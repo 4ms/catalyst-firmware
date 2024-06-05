@@ -126,7 +126,6 @@ public:
 	Interface(Data &data)
 		: data{data} {
 	}
-	Quantizer::Interface quantizer;
 	Clock::Divider clockdivider;
 	DisplayHanger hang;
 	Clock::Timer reset{Model::HoldTimes::reset};

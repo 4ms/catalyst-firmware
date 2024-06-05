@@ -87,28 +87,25 @@ static_assert([]() {
 	return true;
 }());
 
-class Interface {
-public:
-	Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
-		if (!scale.size()) {
-			return input;
-		}
-		using namespace Channel;
-
-		const auto octave = static_cast<uint8_t>(input / Cv::octave);
-		input -= octave * Cv::octave;
-
-		const auto note = input / static_cast<float>(Cv::note);
-
-		// lower bound is first element that is >= note
-		const auto lb = std::lower_bound(scale.begin(), scale.end(), note);
-
-		const float upper = *lb;
-		const float lower = lb == scale.begin() ? 0.f : *std::next(lb, -1);
-		const float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
-
-		return (closest * Cv::note) + (octave * Cv::octave);
+inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
+	if (!scale.size()) {
+		return input;
 	}
-};
+	using namespace Channel;
+
+	const auto octave = static_cast<uint8_t>(input / Cv::octave);
+	input -= octave * Cv::octave;
+
+	const auto note = input / static_cast<float>(Cv::note);
+
+	// lower bound is first element that is >= note
+	const auto lb = std::lower_bound(scale.begin(), scale.end(), note);
+
+	const float upper = *lb;
+	const float lower = lb == scale.begin() ? 0.f : *std::next(lb, -1);
+	const float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
+
+	return (closest * Cv::note) + (octave * Cv::octave);
+}
 
 } // namespace Catalyst2::Quantizer
