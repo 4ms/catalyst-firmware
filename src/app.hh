@@ -48,9 +48,10 @@ namespace Macro
 class App {
 	Interface &p;
 	Trigger trigger;
-	uint8_t did_override = Model::NumChans;
 	std::optional<uint8_t> prev_ysb;
-	Model::Output::Buffer last_out;
+	std::optional<uint8_t> prev_scene;
+
+	Model::Output::Buffer start_point;
 
 public:
 	App(Interface &p)
@@ -58,62 +59,83 @@ public:
 	}
 
 	Model::Output::Buffer Update() {
-		Model::Output::Buffer goal;
+		Model::Output::Buffer cv_output;
 
-		// check for event, (scene button press or release)
-		const auto event = CheckEvent();
-		if (event) {
-			p.slew.button.Start(last_out);
-		}
+		const auto override_phase = p.slew.button.GetPhase();
 
-		if (p.shared.youngest_scene_button.has_value() && (p.blind.Read() != Blind::Mode::ON)) {
-			for (auto [chan, o] : countzip(goal)) {
-				if (p.bank.GetChannelMode(chan).IsGate()) {
-					const auto level = p.bank.GetGate(p.shared.youngest_scene_button.value(), chan);
-					o = Trig(event, chan, level);
-				} else {
-					const auto r = p.bank.GetRange(chan);
-					auto temp = Channel::Output::Scale(
-						p.bank.GetCv(p.shared.youngest_scene_button.value(), chan), r.Min(), r.Max());
-					o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
-				}
-			}
-		} else {
-			const auto current_scene = p.bank.pathway.CurrentScene();
-			const auto do_trigs = (current_scene != p.bank.pathway.LastSceneOn() && current_scene);
+		const auto almost_finished = override_phase >= (1.f - Pathway::near_threshold);
 
-			const auto left = p.bank.pathway.SceneRelative(-1);
-			const auto right = p.bank.pathway.SceneRelative(1);
+		const auto current_scene = p.blind.Read() == Blind::Mode::ON || !prev_ysb ? p.bank.pathway.CurrentScene() :
+								   !almost_finished								  ? std::nullopt :
+																					prev_ysb;
 
-			for (auto [chan, o] : countzip(goal)) {
+		const auto do_trigs = current_scene != prev_scene && current_scene && almost_finished;
+		prev_scene = current_scene;
+
+		p.slew.button.Update(p.blind.Read() == Blind::Mode::SNAP);
+
+		if (prev_ysb && (p.blind.Read() != Blind::Mode::ON)) {
+			// fading to override scene
+			for (auto [chan, out, start] : countzip(cv_output, start_point)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
-					o = Trig(do_trigs, chan, level);
+					out = Trig(do_trigs, chan, level);
 				} else {
-					const auto temp = GetInterpolatedScenes(chan, left, right);
-					o = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+					const auto chan_morph = p.bank.GetMorph(chan);
+					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
+					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
+
+					const auto main = p.shared.quantizer.Process(scale, p.bank.GetCv(prev_ysb.value(), chan));
+
+					const auto r = p.bank.GetRange(chan);
+					auto temp = Channel::Output::Scale(main, r.Min(), r.Max());
+					temp = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+					out = MathTools::interpolate(start, temp, o_phase);
+				}
+			}
+		} else {
+			// fading to interpolated scenes
+			const auto left_scene = p.bank.pathway.SceneRelative(-1);
+			const auto right_scene = p.bank.pathway.SceneRelative(1);
+
+			for (auto [chan, out, start] : countzip(cv_output, start_point)) {
+				if (p.bank.GetChannelMode(chan).IsGate()) {
+					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
+					out = Trig(do_trigs, chan, level);
+				} else {
+					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
+					const auto left_cv = p.shared.quantizer.Process(scale, p.bank.GetCv(left_scene, chan));
+					const auto right_cv = p.shared.quantizer.Process(scale, p.bank.GetCv(right_scene, chan));
+
+					const auto chan_morph = p.bank.GetMorph(chan);
+					const auto crossfader_phase = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), chan_morph);
+					const auto main_interp = MathTools::interpolate(left_cv, right_cv, crossfader_phase);
+
+					const auto r = p.bank.GetRange(chan);
+					auto temp = Channel::Output::Scale(main_interp, r.Min(), r.Max());
+					temp = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+
+					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
+					out = MathTools::interpolate(start, temp, o_phase);
 				}
 			}
 		}
 
-		if (p.blind.Read() == Blind::Mode::SLEW) {
-			p.slew.button.Update();
-			last_out = p.slew.button.Interpolate(goal);
-		} else {
-			last_out = goal;
+		if (CheckEvent()) {
+			p.slew.button.Start();
+			start_point = cv_output;
 		}
 
-		return last_out;
+		return cv_output;
 	}
 
 private:
 	bool CheckEvent() {
-		auto out = false;
 		if (prev_ysb != p.shared.youngest_scene_button) {
-			out = true;
 			prev_ysb = p.shared.youngest_scene_button;
+			return true;
 		}
-		return out;
+		return false;
 	}
 
 	Model::Output::type Trig(bool do_trig, uint8_t chan, float level) {
@@ -123,15 +145,6 @@ private:
 		return trigger.Read(chan) ? Channel::Output::gate_high :
 			   level > 0.f		  ? Channel::Output::gate_armed :
 									Channel::Output::gate_off;
-	}
-
-	Model::Output::type GetInterpolatedScenes(uint8_t chan, uint8_t left, uint8_t right) {
-		const auto phs = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), p.bank.GetMorph(chan));
-		const auto &scale = p.bank.GetChannelMode(chan).GetScale();
-		const auto a = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(left, chan));
-		const auto b = p.shared.quantizer[chan].Process(scale, p.bank.GetCv(right, chan));
-		const auto r = p.bank.GetRange(chan);
-		return Channel::Output::Scale(MathTools::interpolate(a, b, phs), r.Min(), r.Max());
 	}
 };
 } // namespace Macro
@@ -241,9 +254,9 @@ private:
 		const auto current_step_random = p.player.randomvalue.ReadRelative(chan, 0, current_step.ReadProbability());
 
 		const auto &scale = p.slot.settings.GetChannelMode(chan).GetScale();
-		auto stepval = p.shared.quantizer[chan].Process(scale, prev_step.ReadCv(prev_step_random * random));
+		auto stepval = p.shared.quantizer.Process(scale, prev_step.ReadCv(prev_step_random * random));
 		const auto distance =
-			p.shared.quantizer[chan].Process(scale, current_step.ReadCv(current_step_random * random)) - stepval;
+			p.shared.quantizer.Process(scale, current_step.ReadCv(current_step_random * random)) - stepval;
 		const auto stepmorph = seqmorph(p.player.GetStepPhase(chan), current_step.ReadMorph());
 		stepval += (distance * stepmorph);
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));

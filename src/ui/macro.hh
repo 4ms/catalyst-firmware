@@ -115,35 +115,13 @@ public:
 		ClearButtonLeds(c);
 		c.SetPlayLed(p.recorder.IsPlaying());
 
-		auto ysb = p.shared.youngest_scene_button;
+		const auto ysb = p.shared.youngest_scene_button;
 		if (ysb.has_value()) {
 			for (auto [i, b] : countzip(c.button.scene)) {
 				if (b.is_high())
 					c.SetButtonLed(i, true);
 			}
-
-			if (p.blind.Read() == Catalyst2::Macro::Blind::Mode::SLEW) {
-				return;
-			}
-
-			const auto scene_to_display = ysb.value();
-			EncoderDisplayScene(scene_to_display);
 		} else {
-
-			for (auto [chan, val] : countzip(outs)) {
-				Color col;
-				if (p.bank.GetChannelMode(chan).IsGate()) {
-					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
-					// to.
-					col = p.bank.pathway.OnAScene() ?
-							  Palette::Gate::fromLevelMacro(p.bank.GetGate(p.bank.pathway.SceneRelative(), chan)) :
-							  Palette::off;
-				} else {
-					col = Palette::Cv::fromOutput(val);
-				}
-				c.SetEncoderLed(chan, col);
-			}
-
 			if (p.recorder.IsRecording())
 				SceneButtonDisplayRecording();
 			else {
@@ -160,6 +138,27 @@ public:
 						c.SetButtonLed(r, pos);
 					}
 				}
+			}
+		}
+
+		if (ysb.has_value() && (p.blind.Read() == Catalyst2::Macro::Blind::Mode::ON ||
+								p.slew.button.GetPhase() >= (1.f - Catalyst2::Macro::Pathway::near_threshold)))
+		{
+			const auto scene_to_display = ysb.value();
+			EncoderDisplayScene(scene_to_display);
+		} else {
+			for (auto [chan, val] : countzip(outs)) {
+				Color col;
+				if (p.bank.GetChannelMode(chan).IsGate()) {
+					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
+					// to.
+					col = p.bank.pathway.OnAScene() ?
+							  Palette::Gate::fromLevelMacro(p.bank.GetGate(p.bank.pathway.SceneRelative(), chan)) :
+							  Palette::off;
+				} else {
+					col = Palette::Cv::fromOutput(val);
+				}
+				c.SetEncoderLed(chan, col);
 			}
 		}
 	}

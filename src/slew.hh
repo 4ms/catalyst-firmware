@@ -2,6 +2,7 @@
 
 #include "conf/model.hh"
 #include "legacy/v1_0/conf/model.hh"
+#include "pathway.hh"
 #include "util/countzip.hh"
 #include "util/math.hh"
 #include "validate.hh"
@@ -87,33 +88,20 @@ public:
 class Button {
 	Data &data;
 
-	Model::Output::Buffer start;
-
-	float pos;
+	float pos = 1.f;
 
 public:
 	Button(Data &data)
 		: data{data} {
 	}
-	void Start(Model::Output::Buffer &current_output) {
+	void Start() {
 		pos = 0.f;
-		start = current_output;
 	}
-	void Update() {
-		pos = data.curve == Curve::Expo ? UpdateExpo(data, pos, 1.f) : UpdateLinear(data, pos, 1.f);
+	void Update(bool snap) {
+		pos = snap ? 1.f : data.curve == Curve::Expo ? UpdateExpo(data, pos, 1.f) : UpdateLinear(data, pos, 1.f);
 	}
-	bool MadeIt() {
-		return pos >= 1.f;
-	}
-	Model::Output::type Interpolate(uint8_t chan, Model::Output::type goal) {
-		return MathTools::interpolate(start[chan], goal, pos);
-	}
-	Model::Output::Buffer Interpolate(Model::Output::Buffer &goal) {
-		Model::Output::Buffer out;
-		for (auto [chan, g, o] : countzip(goal, out)) {
-			o = Interpolate(chan, g);
-		}
-		return out;
+	float GetPhase() const {
+		return pos;
 	}
 };
 
