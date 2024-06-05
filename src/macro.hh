@@ -57,10 +57,8 @@ public:
 		, shared{shared} {
 	}
 	void Update(uint16_t pos) {
-		const auto p = recorder.Update(pos) / 4095.f;
-		if (!(shared.youngest_scene_button && (data.override_outputs.mode == Blind::Mode::SLEW))) {
-			pos = slew.slider.Update(p);
-		}
+		auto p = recorder.Update(pos) / 4095.f;
+		p = slew.slider.Update(p);
 		bank.pathway.Update(p);
 	}
 	void Trig() {
