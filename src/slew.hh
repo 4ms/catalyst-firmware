@@ -54,7 +54,7 @@ struct Data {
 };
 
 inline float UpdateExpo(Data &data, float current, float new_val) {
-	return current + (new_val - current * data.coef);
+	return current + (new_val - current) * data.coef;
 }
 
 inline float UpdateLinear(Data &data, float current, float new_val) {
