@@ -10,6 +10,8 @@ namespace Catalyst2::Macro::Pathway
 {
 using SceneId = uint8_t;
 
+inline constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
+
 inline constexpr float CalcSceneWidth(uint32_t size) {
 	return 1.f / (size - 1u);
 }
@@ -19,7 +21,6 @@ inline uint32_t PhaseToIndex(float phase, uint32_t size) {
 	return out % size;
 }
 inline bool SceneIsNear(float point, float scene_width) {
-	static constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
 
 	while (point >= scene_width) {
 		point -= scene_width;
@@ -96,7 +97,6 @@ class Interface {
 	SceneId prev_index = 0;
 	bool on_a_scene = false;
 	float phase = 0.f;
-	std::optional<SceneId> last_scene_on;
 
 public:
 	void Load(PathwayData &d) {
@@ -106,7 +106,6 @@ public:
 	void Update(float point) {
 		const auto s = size();
 		const auto scene_width = CalcSceneWidth(s);
-		last_scene_on = CurrentScene();
 		on_a_scene = SceneIsNear(point, scene_width);
 		scene_left = PhaseToIndex(point, s);
 		scene_right = scene_left + 1 >= s ? 0 : scene_left + 1;
@@ -136,9 +135,6 @@ public:
 	}
 	bool OnAScene() const {
 		return on_a_scene;
-	}
-	std::optional<SceneId> LastSceneOn() {
-		return last_scene_on;
 	}
 	std::optional<SceneId> CurrentScene() {
 		if (on_a_scene) {
