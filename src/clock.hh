@@ -19,6 +19,9 @@ constexpr float TicksToBpm(uint32_t tick) {
 constexpr uint32_t MsToTicks(uint32_t ms) {
 	return (Model::sample_rate_hz / 1000.f) * ms;
 }
+constexpr uint32_t TicksToMs(uint32_t tick) {
+	return ((tick + 0.f) / Model::sample_rate_hz) * 1000;
+}
 
 class Timer {
 	const uint32_t duration;
