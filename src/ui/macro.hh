@@ -50,36 +50,24 @@ public:
 
 		if (p.shared.mode == Model::Mode::Sequencer) {
 			SwitchUiMode(sequencer);
-		}
-
-		else if (c.button.add.is_high())
-		{
+		} else if (c.button.add.is_high()) {
 			p.main_mode = false;
-			if (!p.bank.IsBankClassic())
+			if (!p.bank.IsBankClassic()) {
 				SwitchUiMode(add);
-		}
-
-		else if (c.button.bank.is_high())
-		{
+			}
+		} else if (c.button.bank.is_high()) {
 			SwitchUiMode(bank);
-		}
-
-		else if (c.button.morph.is_high())
-		{
+		} else if (c.button.morph.is_high()) {
 			if (c.button.shift.is_high()) {
 				SwitchUiMode(range);
 			} else {
 				SwitchUiMode(morph);
 			}
-		}
-
-		else if (c.button.shift.is_high())
-		{
+		} else if (c.button.shift.is_high()) {
 			SwitchUiMode(settings);
-		}
-
-		else
+		} else {
 			p.main_mode = true;
+		}
 	}
 	void OnSceneButtonPress(uint8_t button) {
 		if (p.bank.IsBankClassic() && c.button.add.is_high()) {
@@ -90,6 +78,8 @@ public:
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
 			ConfirmPaste(p.shared, button);
+		} else if (p.bank.pathway.size() == Catalyst2::Macro::Pathway::PathwayData::MinPoints) {
+			p.bank.pathway.ReplaceScene(button);
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {

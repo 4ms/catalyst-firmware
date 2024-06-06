@@ -38,7 +38,7 @@ public:
 		if (first_insert) {
 			first_insert = false;
 
-			if (path.OnAScene()) {
+			if (path.OnAScene() && (path.size() != Catalyst2::Macro::Pathway::PathwayData::MinPoints)) {
 				path.ReplaceScene(button);
 			} else {
 				path.InsertScene(button);

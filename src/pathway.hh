@@ -37,7 +37,8 @@ inline bool SceneIsNear(float point, float scene_width) {
 }
 
 struct PathwayData {
-	static inline constexpr auto MaxPoints = 64u;
+	static constexpr auto MaxPoints = 64u;
+	static constexpr auto MinPoints = 1u;
 
 	SceneId Read(uint32_t idx) const {
 		return vec[idx];
@@ -55,7 +56,7 @@ struct PathwayData {
 		return vec.size();
 	}
 	bool Validate() const {
-		if (vec.size() > MaxPoints || vec.size() < 2u) {
+		if (vec.size() > MaxPoints || vec.size() < MinPoints) {
 			return false;
 		}
 		for (auto &i : vec) {
@@ -157,7 +158,7 @@ public:
 	}
 
 	void RemoveSceneRelative(int8_t pos = 0) {
-		if (size() <= 2) {
+		if (size() <= PathwayData::MinPoints) {
 			return;
 		}
 
@@ -166,7 +167,7 @@ public:
 
 	void ClearScenes() {
 		// erase all scenes in between first and last one.
-		while (size() > 2) {
+		while (size() > PathwayData::MinPoints) {
 			pathway->Erase(1);
 		}
 	}
