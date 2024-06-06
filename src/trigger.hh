@@ -8,7 +8,13 @@
 namespace Catalyst2
 {
 class Trigger {
-	static constexpr auto min_gate_length = 2u, max_gate_length = 500u;
+	static constexpr auto min_gate_length = 2u;
+	static constexpr auto max_gate_length = 500u;
+	static constexpr auto sustain = 0xffffffffu;
+
+	static constexpr auto sustain_max_length =
+		Clock::TicksToMs(0xffffffff) / 1000.f / 60.f / 60.f / 24.f / 7.f; // weeks
+
 	struct State {
 		uint32_t length;
 		uint32_t time_trigged;
@@ -29,6 +35,9 @@ public:
 
 private:
 	uint32_t CalcTime(float pulse_width) {
+		if (pulse_width >= 1.f) {
+			return sustain;
+		}
 		const auto x = pulse_width;
 		return Clock::MsToTicks((max_gate_length - min_gate_length) * x * x * x + min_gate_length);
 	}
