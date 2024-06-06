@@ -38,6 +38,9 @@ private:
 		if (pulse_width >= 1.f) {
 			return sustain;
 		}
+		if (pulse_width <= 0.f) {
+			return 0;
+		}
 		const auto x = pulse_width;
 		return Clock::MsToTicks((max_gate_length - min_gate_length) * x * x * x + min_gate_length);
 	}
