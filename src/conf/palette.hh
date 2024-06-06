@@ -205,7 +205,7 @@ inline Color fromLevelSequencer(Channel::Gate::type level) {
 }
 
 inline Color fromLevelMacro(Channel::Gate::type level) {
-	return off.blend(color, level);
+	return fromLevelSequencer(level);
 }
 
 inline Color fromOutput(Model::Output::type level) {
