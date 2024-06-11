@@ -95,6 +95,9 @@ class Interface {
 	// TODO: std::array<std::array<ProbStep, 4>, Model::NumChans> buffer;
 
 public:
+	// Checks the dice-roll against the given probability threshold that the step will change.
+	// If dice-roll meets or exceeds the threshold then we have a "miss": step does not change and we return 0
+	// Otherwise, we have a "hit": Returns a non-zero float -1..+1 to indicate how much the value should change
 	float ReadRelative(uint8_t chan, int8_t relative_pos, type step_prob_threshold) const {
 		// TODO: auto step = buffer[chan][std::clamp(relative_pos+1, -1, 1)];
 		if (step_prob_threshold == 0)

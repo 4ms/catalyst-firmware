@@ -141,8 +141,8 @@ class Channel {
 				}
 			}
 
-			auto int_val = std::clamp<U>(static_cast<U>(val.value()) + inc, static_cast<U>(min), static_cast<U>(max));
-			val = T(int_val);
+			auto inc_val = std::clamp<U>(static_cast<U>(val.value()) + inc, static_cast<U>(min), static_cast<U>(max));
+			val = T(inc_val);
 		}
 
 		void UpdatePivot(T pivot) {

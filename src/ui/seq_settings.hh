@@ -172,9 +172,11 @@ public:
 
 			c.SetEncoderLed(EncoderAlts::ClockDiv, Setting::active);
 
-			col = random.has_value() ? Palette::off.blend(Palette::Random::set, random.value()) : Setting::null;
-			if (c.button.fine.is_high()) {
-				// col = Palette::Random::color(p.randompool.GetSeed());
+			if (random.has_value()) {
+				col = random.value() >= 1.0f ? Palette::full_white :
+											   Palette::off.blend(Palette::Random::set, random.value());
+			} else {
+				col = Setting::null;
 			}
 			c.SetEncoderLed(EncoderAlts::Random, col);
 

@@ -241,8 +241,16 @@ private:
 
 			const auto gate_period_ms = channel_period_ms / retrig_phase;
 
-			auto gate_width_phase = s.ReadGate(p.slot.settings.GetRandomOrGlobal(chan) *
-											   p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability()));
+			auto random_amount_setting = p.slot.settings.GetRandomOrGlobal(chan); // 0..1, in steps of semitones
+			auto amount_to_change_step = p.player.randomvalue.ReadRelative(chan, i, s.ReadProbability());
+
+			// Special case: @ max random amount setting, don't randomly change the PW.
+			// Either play or don't play the gate (at the programmed PW)
+			if (random_amount_setting == 1.f && amount_to_change_step != 0.f) {
+				continue;
+			}
+
+			auto gate_width_phase = s.ReadGate(random_amount_setting * amount_to_change_step);
 			if (gate_width_phase <= 0.f) {
 				continue;
 			}
