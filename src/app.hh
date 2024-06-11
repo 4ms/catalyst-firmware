@@ -49,7 +49,7 @@ class App {
 	Interface &p;
 	Trigger trigger;
 	std::optional<uint8_t> prev_ysb;
-	std::optional<uint8_t> prev_scene;
+	std::optional<uint8_t> last_scene_on;
 
 	Model::Output::Buffer start_point;
 
@@ -61,25 +61,26 @@ public:
 	Model::Output::Buffer Update() {
 		Model::Output::Buffer cv_output;
 
+		p.slew.button.Update(p.blind.Read() != Blind::Mode::SLEW);
+
 		const auto override_phase = p.slew.button.GetPhase();
 
-		const auto almost_finished = override_phase >= (1.f - Pathway::near_threshold);
-
-		const auto current_scene = p.blind.Read() == Blind::Mode::ON || !prev_ysb ? p.bank.pathway.CurrentScene() :
-								   !almost_finished								  ? std::nullopt :
-																					prev_ysb;
-
-		const auto do_trigs = current_scene != prev_scene && current_scene && almost_finished;
-		prev_scene = current_scene;
-
-		p.slew.button.Update(p.blind.Read() == Blind::Mode::SNAP);
+		const auto almost_finished = p.slew.button.AlmostFinished();
 
 		if (prev_ysb && (p.blind.Read() != Blind::Mode::ON)) {
 			// fading to override scene
+			const auto do_trigs = almost_finished;
+
 			for (auto [chan, out, start] : countzip(cv_output, start_point)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
-					out = Trig(do_trigs, chan, level);
+					const auto level = almost_finished ? p.bank.GetGate(prev_ysb.value(), chan) : 0.f;
+					if (do_trigs) {
+						trigger.Trig(chan, level);
+					}
+
+					out = trigger.Read(chan) ? Channel::Output::gate_high :
+						  level > 0.f		 ? Channel::Output::gate_armed :
+											   Channel::Output::gate_off;
 				} else {
 					const auto chan_morph = p.bank.GetMorph(chan);
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
@@ -95,13 +96,23 @@ public:
 			}
 		} else {
 			// fading to interpolated scenes
+			const auto current_scene = !p.slew.button.IsRunning() ? p.bank.pathway.CurrentScene() : std::nullopt;
+			const auto do_trigs = current_scene != last_scene_on;
+			last_scene_on = current_scene;
+
 			const auto left_scene = p.bank.pathway.SceneRelative(-1);
 			const auto right_scene = p.bank.pathway.SceneRelative(1);
 
 			for (auto [chan, out, start] : countzip(cv_output, start_point)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
-					out = Trig(do_trigs, chan, level);
+					if (do_trigs) {
+						trigger.Trig(chan, level);
+					}
+
+					out = trigger.Read(chan) ? Channel::Output::gate_high :
+						  level > 0.f		 ? Channel::Output::gate_armed :
+											   Channel::Output::gate_off;
 				} else {
 					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
 					const auto left_cv = Quantizer::Process(scale, p.bank.GetCv(left_scene, chan));
@@ -131,9 +142,20 @@ public:
 
 private:
 	bool CheckEvent() {
-		if (prev_ysb != p.shared.youngest_scene_button) {
-			prev_ysb = p.shared.youngest_scene_button;
-			return true;
+		if (p.blind.Read() == Blind::Mode::ON) {
+			return false;
+		}
+
+		if (p.bank.pathway.size() == 1) {
+			if (prev_ysb != p.shared.youngest_scene_button) {
+				prev_ysb = p.shared.youngest_scene_button;
+				return prev_ysb.has_value();
+			}
+		} else {
+			if (prev_ysb != p.shared.youngest_scene_button) {
+				prev_ysb = p.shared.youngest_scene_button;
+				return true;
+			}
 		}
 		return false;
 	}

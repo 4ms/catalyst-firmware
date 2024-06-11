@@ -89,6 +89,7 @@ class Button {
 	Data &data;
 
 	float pos = 1.f;
+	bool running = false;
 
 public:
 	Button(Data &data)
@@ -96,12 +97,26 @@ public:
 	}
 	void Start() {
 		pos = 0.f;
+		running = true;
 	}
 	void Update(bool snap) {
 		pos = snap ? 1.f : data.curve == Curve::Expo ? UpdateExpo(data, pos, 1.f) : UpdateLinear(data, pos, 1.f);
 	}
 	float GetPhase() const {
 		return pos;
+	}
+	bool AlmostFinished() {
+		if (!running) {
+			return false;
+		}
+		if (pos < (1.f - Pathway::near_threshold)) {
+			return false;
+		}
+		running = false;
+		return true;
+	}
+	bool IsRunning() {
+		return running;
 	}
 };
 

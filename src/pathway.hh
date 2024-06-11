@@ -105,12 +105,16 @@ public:
 	}
 
 	void Update(float point) {
-		const auto s = size();
+		auto s = size();
+		if (s == 1) {
+			point = 0.f;
+			s += 1;
+		}
 		const auto scene_width = CalcSceneWidth(s);
 		on_a_scene = SceneIsNear(point, scene_width);
 		scene_left = PhaseToIndex(point, s);
 		scene_right = scene_left + 1 >= s ? 0 : scene_left + 1;
-		auto n = PhaseToIndex(point + (scene_width * .5f), s);
+		const auto n = PhaseToIndex(point + (scene_width * .5f), s);
 		scene_nearest = n >= s ? 0 : n;
 		phase = point / scene_width;
 		phase -= static_cast<uint32_t>(phase);
