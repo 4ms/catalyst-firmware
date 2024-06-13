@@ -10,7 +10,6 @@
 #include "drivers/muxed_io.hh"
 #include "muxed_button.hh"
 #include "outputs.hh"
-#include "saved_settings.hh"
 #include "util/colors.hh"
 #include "util/countzip.hh"
 #include "util/filter.hh"
