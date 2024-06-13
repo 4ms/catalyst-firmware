@@ -4,6 +4,7 @@
 #include "conf/model.hh"
 #include "controls.hh"
 #include "params.hh"
+#include "saved_settings.hh"
 #include "ui/abstract.hh"
 #include "ui/dac_calibration.hh"
 #include "ui/macro.hh"
@@ -48,10 +49,11 @@ public:
 		ui = MainUI();
 		ui->Init();
 	}
+
 	void Update() {
 		controls.Update();
 		params.shared.blinker.Update();
-		params.shared.youngest_scene_button = YoungestSceneButton(controls);
+		params.shared.youngest_scene_button.Update(controls);
 
 		ui->Common();
 		ui->Update();

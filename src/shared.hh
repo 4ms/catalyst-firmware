@@ -6,6 +6,7 @@
 #include "quantizer.hh"
 #include "ui/dac_calibration.hh"
 #include "validate.hh"
+#include "youngest_scene_button.hh"
 #include <optional>
 #include <utility>
 
@@ -136,7 +137,7 @@ public:
 	bool do_save_seq = false;
 	bool did_paste = false;
 	bool did_copy = false;
-	std::optional<uint8_t> youngest_scene_button;
+	YoungestSceneButton youngest_scene_button;
 	Model::Mode mode = BuildOptions::default_mode;
 };
 
