@@ -130,7 +130,7 @@ public:
 					} break;
 				}
 			} else {
-				c.SetEncoderLed(EncoderAlts::OutputOverride, Palette::Setting::Blind(p.blind.Read()));
+				c.SetEncoderLed(EncoderAlts::OutputOverride, Palette::Setting::Blind(p.mode));
 				c.SetEncoderLed(EncoderAlts::ClockDiv, Palette::Setting::active);
 				c.SetEncoderLed(EncoderAlts::SliderSlew,
 								Palette::very_dim_grey.blend(Palette::Setting::slider_slew, p.slew.Value()));

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../lib/cpputil/util/colors.hh"
-#include "blind.hh"
 #include "channel.hh"
+#include "macro_mode.hh"
 #include "model.hh"
 #include "range.hh"
 #include "sequencer_step.hh"
@@ -67,12 +67,12 @@ inline constexpr auto curve_expo = yellow;
 inline constexpr auto clock_mode_sync = grey;
 inline constexpr auto clock_mode_dinsync = orange;
 
-inline Color Blind(Macro::Blind::Mode mode) {
-	constexpr auto on = red;
-	constexpr auto snap = green;
-	constexpr auto slew = blue;
+inline Color Blind(Macro::Mode::Interface &mode) {
+	constexpr auto blind = red;
+	constexpr auto normal = green;
+	constexpr auto latch = blue;
 
-	return mode == Macro::Blind::Mode::ON ? on : mode == Macro::Blind::Mode::SNAP ? snap : slew;
+	return mode == Macro::Mode::Mode::NORMAL ? normal : mode == Macro::Mode::Mode::BLIND ? blind : latch;
 }
 
 namespace Transpose
@@ -186,7 +186,7 @@ inline Color fromOutput(Model::Output::type out_level) {
 }
 
 inline Color fromLevel(Channel::Cv::type level, Channel::Cv::Range range) {
-	auto out = Channel::Output::Scale(level, range.Min(), range.Max());
+	auto out = Channel::Output::Scale(level, range);
 	return fromOutput(out);
 }
 
