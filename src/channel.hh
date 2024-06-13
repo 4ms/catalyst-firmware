@@ -79,9 +79,9 @@ inline constexpr Model::Output::type gate_armed = from_volts(0.f);
 inline constexpr Model::Output::type gate_off = gate_armed - 1;
 inline constexpr Model::Output::type gate_high = from_volts(5.f);
 
-inline constexpr Model::Output::type Scale(Cv::type val, float min_voltage, float max_voltage) {
+inline constexpr Model::Output::type Scale(Cv::type val, Cv::Range range) {
 	const auto t = val / static_cast<float>(Cv::max);
-	return std::clamp<int32_t>(t * Output::max, from_volts(min_voltage), from_volts(max_voltage));
+	return std::clamp<int32_t>(t * Output::max, from_volts(range.Min()), from_volts(range.Max()));
 }
 
 } // namespace Output
