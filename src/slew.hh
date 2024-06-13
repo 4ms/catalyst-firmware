@@ -144,5 +144,8 @@ public:
 	Curve GetCurve() const {
 		return data.curve;
 	}
+	void Clear() {
+		data = Data{};
+	}
 };
 } // namespace Catalyst2::Macro::Slew

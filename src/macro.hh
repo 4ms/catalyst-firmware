@@ -77,5 +77,12 @@ public:
 	Clock::Divider::type GetClockDiv() const {
 		return data.clockdiv;
 	}
+	void Clear() {
+		bank.Clear();
+		recorder.Clear();
+		slew.Clear();
+		mode.Clear();
+		main_mode = true;
+	}
 };
 } // namespace Catalyst2::Macro

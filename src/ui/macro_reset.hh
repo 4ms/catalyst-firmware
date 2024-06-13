@@ -37,7 +37,7 @@ public:
 				}
 			}
 			if (c.button.add.is_high()) {
-				p.bank.Clear();
+				p.Clear();
 				SwitchUiMode(main_ui);
 				return;
 			}

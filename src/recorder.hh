@@ -78,6 +78,10 @@ public:
 		flags.cue_rec = false;
 		flags.recording = true;
 	}
+	void Clear() {
+		Stop();
+		data = Data{};
+	}
 	void Reset() {
 		Stop();
 		if (flags.cue_rec) {
