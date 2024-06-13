@@ -8,25 +8,6 @@
 
 namespace Catalyst2::Ui
 {
-inline std::optional<uint8_t> YoungestSceneButton(Controls &c) {
-	auto age = 0xffffffffu;
-	uint8_t youngest = 0xffu;
-
-	for (auto [i, b] : countzip(c.button.scene)) {
-		if (!b.is_high()) {
-			continue;
-		}
-		if (b.time_high > age) {
-			continue;
-		}
-		age = b.time_high;
-		youngest = i;
-	}
-	if (youngest == 0xff) {
-		return std::nullopt;
-	}
-	return youngest;
-}
 inline void ClearEncoderEvents(Controls &c) {
 	for (auto &e : c.encoders) {
 		static_cast<void>(e.read());
