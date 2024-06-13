@@ -48,10 +48,10 @@ public:
 	constexpr float PosAmount() const {
 		return options[val].max / absmaxv;
 	}
-	float Min() const {
+	constexpr float Min() const {
 		return options[val].min;
 	}
-	float Max() const {
+	constexpr float Max() const {
 		return options[val].max;
 	}
 	bool Validate() const {
