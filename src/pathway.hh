@@ -38,7 +38,7 @@ inline bool SceneIsNear(float point, float scene_width) {
 
 struct PathwayData {
 	static constexpr auto MaxPoints = 64u;
-	static constexpr auto MinPoints = 1u;
+	static constexpr auto MinPoints = 2u;
 
 	SceneId Read(uint32_t idx) const {
 		return vec[idx];
@@ -106,10 +106,6 @@ public:
 
 	void Update(float point) {
 		auto s = size();
-		if (s == 1) {
-			point = 0.f;
-			s += 1;
-		}
 		const auto scene_width = CalcSceneWidth(s);
 		on_a_scene = SceneIsNear(point, scene_width);
 		scene_left = PhaseToIndex(point, s);
