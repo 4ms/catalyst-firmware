@@ -165,13 +165,6 @@ public:
 		pathway->Erase(Relative(pos));
 	}
 
-	void ClearScenes() {
-		// erase all scenes in between first and last one.
-		while (size() > PathwayData::MinPoints) {
-			pathway->Erase(1);
-		}
-	}
-
 	uint8_t size() {
 		return pathway->size();
 	}
