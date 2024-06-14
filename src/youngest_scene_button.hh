@@ -28,15 +28,17 @@ public:
 		}
 
 		const auto prev = std::optional<uint8_t>::operator=(*this);
+		auto &cur = std::optional<uint8_t>::operator=(*this);
 
 		if (youngest == 0xff) {
-			std::optional<uint8_t>::operator=(std::nullopt);
+			cur = std::nullopt;
 		} else {
-			std::optional<uint8_t>::operator=(youngest);
+			cur = youngest;
 		}
-		if (prev.has_value() != has_value()) {
+		_pysb = has_value() ? value() : _pysb;
+
+		if (prev != cur) {
 			_event = 1;
-			_pysb = prev.has_value() ? prev.value() : _pysb;
 		}
 	}
 	bool Event() {
