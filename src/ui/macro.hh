@@ -78,8 +78,6 @@ public:
 		if (c.button.fine.is_high()) {
 			p.bank.Paste(button);
 			ConfirmPaste(p.shared, button);
-		} else if (p.bank.pathway.size() == Catalyst2::Macro::Pathway::PathwayData::MinPoints) {
-			p.bank.pathway.ReplaceScene(button);
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
@@ -92,12 +90,16 @@ public:
 					p.bank.IncChan(i, encoder, inc, fine);
 			}
 		} else {
-			const auto cscene = p.bank.pathway.CurrentScene();
-			if (cscene.has_value()) {
-				p.bank.IncChan(cscene.value(), encoder, inc, fine);
+			if (p.mode == Catalyst2::Macro::Mode::Mode::LATCH) {
+				p.bank.IncChan(p.shared.youngest_scene_button.Last(), encoder, inc, fine);
 			} else {
-				p.bank.IncChan(p.bank.pathway.SceneRelative(-1), encoder, inc, fine);
-				p.bank.IncChan(p.bank.pathway.SceneRelative(1), encoder, inc, fine);
+				const auto cscene = p.bank.pathway.CurrentScene();
+				if (cscene.has_value()) {
+					p.bank.IncChan(cscene.value(), encoder, inc, fine);
+				} else {
+					p.bank.IncChan(p.bank.pathway.SceneRelative(-1), encoder, inc, fine);
+					p.bank.IncChan(p.bank.pathway.SceneRelative(1), encoder, inc, fine);
+				}
 			}
 		}
 	}
@@ -111,18 +113,20 @@ public:
 				if (b.is_high())
 					c.SetButtonLed(i, true);
 			}
+		} else if (p.mode == Catalyst2::Macro::Mode::Mode::LATCH) {
+			c.SetButtonLed(p.shared.youngest_scene_button.Last(), true);
 		} else {
-			if (p.recorder.IsRecording())
+			if (p.recorder.IsRecording()) {
 				SceneButtonDisplayRecording();
-			else {
+			} else {
 				if (c.button.add.is_high()) {
 					c.SetButtonLed(p.bank.pathway.GetSceneB(), true);
 				} else {
 					const auto l = p.bank.pathway.SceneRelative(-1);
 					const auto r = p.bank.pathway.SceneRelative(1);
-					if (l == r)
+					if (l == r) {
 						c.SetButtonLed(l, true);
-					else {
+					} else {
 						const auto pos = p.bank.pathway.GetPhase();
 						c.SetButtonLed(l, 1.f - pos);
 						c.SetButtonLed(r, pos);
@@ -131,9 +135,7 @@ public:
 			}
 		}
 
-		if (ysb.has_value() && (p.blind.Read() == Catalyst2::Macro::Blind::Mode::ON ||
-								p.slew.button.GetPhase() >= (1.f - Catalyst2::Macro::Pathway::near_threshold)))
-		{
+		if (ysb.has_value() && (p.mode == Catalyst2::Macro::Mode::Mode::BLIND)) {
 			const auto scene_to_display = ysb.value();
 			EncoderDisplayScene(scene_to_display);
 		} else {
@@ -142,9 +144,12 @@ public:
 				if (p.bank.GetChannelMode(chan).IsGate()) {
 					// if channel is a gate, instead of displaying it's actual output, we should display what it is set
 					// to.
-					col = p.bank.pathway.OnAScene() ?
-							  Palette::Gate::fromLevelMacro(p.bank.GetGate(p.bank.pathway.SceneRelative(), chan)) :
-							  Palette::off;
+					const auto scene = p.slew.button.IsRunning() ? std::nullopt :
+									   p.mode == Catalyst2::Macro::Mode::Mode::LATCH ?
+																   p.shared.youngest_scene_button.Last() :
+									   p.shared.youngest_scene_button ? p.shared.youngest_scene_button.value() :
+																		p.bank.pathway.CurrentScene();
+					col = scene ? Palette::Gate::fromLevelMacro(p.bank.GetGate(scene.value(), chan)) : Palette::off;
 				} else {
 					col = Palette::Cv::fromOutput(val);
 				}

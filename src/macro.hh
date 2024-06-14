@@ -1,9 +1,9 @@
 #pragma once
 
 #include "bank.hh"
-#include "blind.hh"
 #include "clock.hh"
 #include "conf/model.hh"
+#include "macro_mode.hh"
 #include "pathway.hh"
 #include "random.hh"
 #include "recorder.hh"
@@ -20,7 +20,7 @@ struct Data {
 	Recorder::Data recorder{};
 	Slew::Data slew{};
 	Clock::Divider::type clockdiv{};
-	Blind::Data override_outputs;
+	Mode::Data mode{};
 
 	void PreSave() {
 		slew.PreSave();
@@ -36,7 +36,7 @@ struct Data {
 		ret &= clockdiv.Validate();
 		ret &= recorder.Validate();
 		ret &= slew.Validate();
-		ret &= override_outputs.Validate();
+		ret &= mode.Validate();
 		return ret;
 	}
 };
@@ -48,7 +48,7 @@ public:
 	Bank::Interface bank{data.bank};
 	Recorder::Interface recorder{data.recorder};
 	Slew::Interface slew{data.slew};
-	Blind::Interface blind{data.override_outputs};
+	Mode::Interface mode{data.mode};
 	Shared::Interface &shared;
 
 	Interface(Data &data, Shared::Interface &shared)

@@ -58,6 +58,10 @@ inline float UpdateExpo(Data &data, float current, float new_val) {
 	return current + (new_val - current) * data.coef;
 }
 
+inline float ShapeExpo(float val) {
+	return val;
+}
+
 inline float UpdateLinear(Data &data, float current, float new_val) {
 	// Rough adjustment to make linear vs expo curves perceived as more similar in rate of change
 	const auto lin_coef = data.coef / 3.f;
@@ -72,7 +76,7 @@ inline float UpdateLinear(Data &data, float current, float new_val) {
 
 class Slider {
 	Data &data;
-	float current{};
+	float pos;
 
 public:
 	Slider(Data &data)
@@ -80,8 +84,11 @@ public:
 	}
 
 	float Update(float new_val) {
-		return current = data.curve == Curve::Linear ? UpdateLinear(data, current, new_val) :
-													   UpdateExpo(data, current, new_val);
+		pos = UpdateLinear(data, pos, new_val);
+		if (data.curve == Curve::Expo) {
+			return ShapeExpo(pos);
+		}
+		return pos;
 	}
 };
 
@@ -99,21 +106,18 @@ public:
 		pos = 0.f;
 		running = true;
 	}
-	void Update(bool snap) {
-		pos = snap ? 1.f : data.curve == Curve::Expo ? UpdateExpo(data, pos, 1.f) : UpdateLinear(data, pos, 1.f);
-	}
-	float GetPhase() const {
-		return pos;
-	}
-	bool AlmostFinished() {
+	float Update() {
 		if (!running) {
-			return false;
+			return pos;
 		}
-		if (pos < (1.f - Pathway::near_threshold)) {
-			return false;
+		pos = UpdateLinear(data, pos, 1.f);
+		if (data.curve == Curve::Expo) {
+			return ShapeExpo(pos);
 		}
-		running = false;
-		return true;
+		if (pos >= 1.f) {
+			running = false;
+		}
+		return pos;
 	}
 	bool IsRunning() {
 		return running;

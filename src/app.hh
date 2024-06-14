@@ -48,8 +48,9 @@ namespace Macro
 class App {
 	Interface &p;
 	Trigger trigger;
-	std::optional<uint8_t> prev_ysb;
 	std::optional<uint8_t> last_scene_on;
+	bool override = false;
+	uint8_t override_scene;
 
 	Model::Output::Buffer start_point;
 
@@ -61,42 +62,47 @@ public:
 	Model::Output::Buffer Update() {
 		Model::Output::Buffer cv_output;
 
-		p.slew.button.Update(p.blind.Read() != Blind::Mode::SLEW);
+		const auto override_phase = p.slew.button.Update();
 
-		const auto override_phase = p.slew.button.GetPhase();
-
-		const auto almost_finished = p.slew.button.AlmostFinished();
-
-		if (prev_ysb && (p.blind.Read() != Blind::Mode::ON)) {
+		// if ((p.shared.youngest_scene_button && p.mode == Mode::Mode::NORMAL) || p.mode == Mode::Mode::LATCH) {
+		if (override) {
 			// fading to override scene
-			const auto do_trigs = almost_finished;
+			const auto scene_b = override_scene;
+
+			const auto current_scene = p.slew.button.IsRunning() ? std::nullopt : std::make_optional(scene_b);
+			const auto do_trigs = current_scene != last_scene_on;
+			last_scene_on = current_scene;
 
 			for (auto [chan, out, start] : countzip(cv_output, start_point)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					const auto level = almost_finished ? p.bank.GetGate(prev_ysb.value(), chan) : 0.f;
 					if (do_trigs) {
-						trigger.Trig(chan, level);
+						trigger.Trig(chan);
 					}
 
-					out = trigger.Read(chan) ? Channel::Output::gate_high :
-						  level > 0.f		 ? Channel::Output::gate_armed :
-											   Channel::Output::gate_off;
-				} else {
-					const auto chan_morph = p.bank.GetMorph(chan);
-					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
-					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
+					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
 
-					const auto main = Quantizer::Process(scale, p.bank.GetCv(prev_ysb.value(), chan));
+					const auto temp = trigger.Read(chan, level) ? Channel::Output::gate_high :
+									  level > 0.f				? Channel::Output::gate_armed :
+																  Channel::Output::gate_off;
+					const auto r = p.bank.GetRange(chan);
+					out = Channel::Output::ScaleGate(temp, r);
+				} else {
+					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
+					const auto main = Quantizer::Process(scale, p.bank.GetCv(scene_b, chan));
+
+					const auto chan_morph = p.bank.GetMorph(chan);
 
 					const auto r = p.bank.GetRange(chan);
-					auto temp = Channel::Output::Scale(main, r.Min(), r.Max());
+					auto temp = Channel::Output::ScaleCv(main, r);
 					temp = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+
+					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
 					out = MathTools::interpolate(start, temp, o_phase);
 				}
 			}
 		} else {
 			// fading to interpolated scenes
-			const auto current_scene = !p.slew.button.IsRunning() ? p.bank.pathway.CurrentScene() : std::nullopt;
+			const auto current_scene = p.slew.button.IsRunning() ? std::nullopt : p.bank.pathway.CurrentScene();
 			const auto do_trigs = current_scene != last_scene_on;
 			last_scene_on = current_scene;
 
@@ -105,14 +111,17 @@ public:
 
 			for (auto [chan, out, start] : countzip(cv_output, start_point)) {
 				if (p.bank.GetChannelMode(chan).IsGate()) {
-					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
 					if (do_trigs) {
-						trigger.Trig(chan, level);
+						trigger.Trig(chan);
 					}
 
-					out = trigger.Read(chan) ? Channel::Output::gate_high :
-						  level > 0.f		 ? Channel::Output::gate_armed :
-											   Channel::Output::gate_off;
+					const auto level = current_scene.has_value() ? p.bank.GetGate(current_scene.value(), chan) : 0.f;
+
+					const auto temp = trigger.Read(chan, level) ? Channel::Output::gate_high :
+									  level > 0.f				? Channel::Output::gate_armed :
+																  Channel::Output::gate_off;
+					const auto r = p.bank.GetRange(chan);
+					out = Channel::Output::ScaleGate(temp, r);
 				} else {
 					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
 					const auto left_cv = Quantizer::Process(scale, p.bank.GetCv(left_scene, chan));
@@ -123,7 +132,7 @@ public:
 					const auto main_interp = MathTools::interpolate(left_cv, right_cv, crossfader_phase);
 
 					const auto r = p.bank.GetRange(chan);
-					auto temp = Channel::Output::Scale(main_interp, r.Min(), r.Max());
+					auto temp = Channel::Output::ScaleCv(main_interp, r);
 					temp = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
@@ -132,41 +141,30 @@ public:
 			}
 		}
 
-		if (CheckEvent()) {
-			p.slew.button.Start();
-			start_point = cv_output;
-		}
+		CheckEvent(cv_output);
 
 		return cv_output;
 	}
 
 private:
-	bool CheckEvent() {
-		if (p.blind.Read() == Blind::Mode::ON) {
-			return false;
-		}
-
-		if (p.bank.pathway.size() == 1) {
-			if (prev_ysb != p.shared.youngest_scene_button) {
-				prev_ysb = p.shared.youngest_scene_button;
-				return prev_ysb.has_value();
+	void CheckEvent(const Model::Output::Buffer &out) {
+		if (p.mode == Mode::Mode::BLIND) {
+			override = false;
+		} else if (p.mode == Mode::Mode::NORMAL) {
+			override = p.shared.youngest_scene_button.has_value();
+			if (p.shared.youngest_scene_button.Event()) {
+				override_scene = p.shared.youngest_scene_button.value_or(override_scene);
+				p.slew.button.Start();
+				start_point = out;
 			}
 		} else {
-			if (prev_ysb != p.shared.youngest_scene_button) {
-				prev_ysb = p.shared.youngest_scene_button;
-				return true;
+			override = true;
+			if (p.shared.youngest_scene_button.Event() && p.shared.youngest_scene_button.has_value()) {
+				p.slew.button.Start();
+				start_point = out;
+				override_scene = p.shared.youngest_scene_button.value();
 			}
 		}
-		return false;
-	}
-
-	Model::Output::type Trig(bool do_trig, uint8_t chan, float level) {
-		if (do_trig && level > 0.f) {
-			trigger.Trig(chan, level);
-		}
-		return trigger.Read(chan) ? Channel::Output::gate_high :
-			   level > 0.f		  ? Channel::Output::gate_armed :
-									Channel::Output::gate_off;
 	}
 };
 } // namespace Macro
