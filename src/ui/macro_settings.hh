@@ -27,7 +27,7 @@ public:
 			p.shared.reset.SetAlarm();
 		}
 
-		if (c.button.play.just_went_low()) {
+		if (c.button.play.just_went_low() && (p.mode != Catalyst2::Macro::Mode::Mode::LATCH)) {
 			p.recorder.ToggleCueRecord();
 		}
 
@@ -69,7 +69,10 @@ public:
 				if (is_scene) {
 					break;
 				}
-				p.blind.Inc(inc);
+				p.mode.Inc(inc);
+				if (p.mode == Catalyst2::Macro::Mode::Mode::LATCH) {
+					p.recorder.Stop();
+				}
 				p.shared.hang.Cancel();
 				break;
 			case EncoderAlts::ClockDiv:

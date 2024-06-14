@@ -43,8 +43,9 @@ public:
 		}
 
 		p.main_mode = false;
+		const auto is_latch = p.mode == Catalyst2::Macro::Mode::Mode::LATCH;
 
-		if (c.button.play.just_went_high()) {
+		if (c.button.play.just_went_high() && !is_latch) {
 			p.recorder.Reset();
 		}
 
@@ -52,7 +53,7 @@ public:
 			SwitchUiMode(sequencer);
 		} else if (c.button.add.is_high()) {
 			p.main_mode = false;
-			if (!p.bank.IsBankClassic()) {
+			if (!p.bank.IsBankClassic() && !is_latch) {
 				SwitchUiMode(add);
 			}
 		} else if (c.button.bank.is_high()) {
@@ -70,6 +71,9 @@ public:
 		}
 	}
 	void OnSceneButtonPress(uint8_t button) {
+		if (p.mode == Catalyst2::Macro::Mode::Mode::LATCH) {
+			return;
+		}
 		if (p.bank.IsBankClassic() && c.button.add.is_high()) {
 			p.bank.pathway.ReplaceSceneB(button);
 		}
