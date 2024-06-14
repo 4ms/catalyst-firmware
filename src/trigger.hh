@@ -16,18 +16,16 @@ class Trigger {
 		Clock::TicksToMs(0xffffffff) / 1000.f / 60.f / 60.f / 24.f / 7.f; // weeks
 
 	struct State {
-		uint32_t length;
 		uint32_t time_trigged;
 	};
 	std::array<State, Model::NumChans> state;
 
 public:
-	void Trig(uint8_t chan, float pulse_width) {
-		state[chan].length = CalcTime(pulse_width);
+	void Trig(uint8_t chan) {
 		state[chan].time_trigged = Controls::TimeNow();
 	}
-	bool Read(uint8_t chan) {
-		if (Controls::TimeNow() - state[chan].time_trigged >= state[chan].length) {
+	bool Read(uint8_t chan, float pulse_width) {
+		if (Controls::TimeNow() - state[chan].time_trigged >= CalcTime(pulse_width)) {
 			return false;
 		}
 		return true;
