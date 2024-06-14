@@ -42,7 +42,6 @@ public:
 			ConfirmCopy(p.shared, p.shared.youngest_scene_button.value());
 		}
 
-		p.main_mode = false;
 		const auto is_latch = p.mode == Catalyst2::Macro::Mode::Mode::LATCH;
 
 		if (c.button.play.just_went_high() && !is_latch) {
@@ -52,7 +51,6 @@ public:
 		if (p.shared.mode == Model::Mode::Sequencer) {
 			SwitchUiMode(sequencer);
 		} else if (c.button.add.is_high()) {
-			p.main_mode = false;
 			if (!p.bank.IsBankClassic() && !is_latch) {
 				SwitchUiMode(add);
 			}
@@ -66,8 +64,6 @@ public:
 			}
 		} else if (c.button.shift.is_high()) {
 			SwitchUiMode(settings);
-		} else {
-			p.main_mode = true;
 		}
 	}
 	void OnSceneButtonPress(uint8_t button) {

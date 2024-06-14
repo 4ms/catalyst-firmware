@@ -50,7 +50,6 @@ public:
 	Slew::Interface slew{data.slew};
 	Blind::Interface blind{data.override_outputs};
 	Shared::Interface &shared;
-	bool main_mode = true;
 
 	Interface(Data &data, Shared::Interface &shared)
 		: data{data}
@@ -82,7 +81,6 @@ public:
 		recorder.Clear();
 		slew.Clear();
 		mode.Clear();
-		main_mode = true;
 	}
 };
 } // namespace Catalyst2::Macro
