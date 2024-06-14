@@ -265,7 +265,8 @@ private:
 			}
 		}
 
-		return out ? Channel::Output::gate_high : Channel::Output::gate_off;
+		return Channel::Output::ScaleCv(out ? Channel::Output::gate_high : Channel::Output::gate_off,
+										p.slot.settings.GetRange(chan));
 	}
 	Model::Output::type Cv(uint8_t chan) {
 		const auto random = p.slot.settings.GetRandomOrGlobal(chan);
@@ -282,7 +283,7 @@ private:
 		stepval += distance * stepmorph;
 		stepval = Transposer::Process(stepval, p.slot.settings.GetTransposeOrGlobal(chan));
 		const auto r = p.slot.settings.GetRange(chan);
-		const auto temp = Channel::Output::Scale(stepval, r.Min(), r.Max());
+		const auto temp = Channel::Output::ScaleCv(stepval, r);
 		return Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
 	}
 };

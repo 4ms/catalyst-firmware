@@ -186,7 +186,7 @@ inline Color fromOutput(Model::Output::type out_level) {
 }
 
 inline Color fromLevel(Channel::Cv::type level, Channel::Cv::Range range) {
-	auto out = Channel::Output::Scale(level, range);
+	auto out = Channel::Output::ScaleCv(level, range);
 	return fromOutput(out);
 }
 
