@@ -11,6 +11,7 @@ namespace Catalyst2::Macro::Pathway
 using SceneId = uint8_t;
 
 inline constexpr auto near_threshold = 1.f / Model::fader_width_mm * 2.5f;
+inline constexpr auto gate_threshold = 1.f / 256;
 
 inline constexpr float CalcSceneWidth(uint32_t size) {
 	return 1.f / (size - 1u);
@@ -20,20 +21,19 @@ inline uint32_t PhaseToIndex(float phase, uint32_t size) {
 	const auto out = static_cast<uint32_t>(phase * (size - 1));
 	return out % size;
 }
-inline bool SceneIsNear(float point, float scene_width) {
-
-	while (point >= scene_width) {
+inline bool SceneIsNear(float point, float scene_width, float threshold = near_threshold) {
+	while (point > scene_width) {
 		point -= scene_width;
 	}
 
 	// this prevents undefined clamp behaviour
 	// after twelve or so scenes are in the the path a scene is always near with a 2.5mm threshold.
-	auto high = scene_width - near_threshold;
-	if (high < near_threshold) {
-		high = near_threshold;
+	auto high = scene_width - threshold;
+	if (high < threshold) {
+		high = threshold;
 	}
 
-	return point != std::clamp(point, near_threshold, high);
+	return point != std::clamp(point, threshold, high);
 }
 
 struct PathwayData {
@@ -97,6 +97,7 @@ class Interface {
 	SceneId scene_nearest = 0;
 	SceneId prev_index = 0;
 	bool on_a_scene = false;
+	bool fire_gate = false;
 	float phase = 0.f;
 
 public:
@@ -108,6 +109,7 @@ public:
 		auto s = size();
 		const auto scene_width = CalcSceneWidth(s);
 		on_a_scene = SceneIsNear(point, scene_width);
+		fire_gate = SceneIsNear(point, scene_width, gate_threshold);
 		scene_left = PhaseToIndex(point, s);
 		scene_right = scene_left + 1 >= s ? 0 : scene_left + 1;
 		const auto n = PhaseToIndex(point + (scene_width * .5f), s);
@@ -137,8 +139,18 @@ public:
 	bool OnAScene() const {
 		return on_a_scene;
 	}
+	bool FireGate() const {
+		return fire_gate;
+	}
 	std::optional<SceneId> CurrentScene() {
 		if (on_a_scene) {
+			return SceneRelative();
+		} else {
+			return std::nullopt;
+		}
+	}
+	std::optional<SceneId> CurrentGateScene() {
+		if (fire_gate) {
 			return SceneRelative();
 		} else {
 			return std::nullopt;

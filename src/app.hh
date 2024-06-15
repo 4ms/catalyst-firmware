@@ -102,7 +102,7 @@ public:
 			}
 		} else {
 			// fading to interpolated scenes
-			const auto current_scene = p.slew.button.IsRunning() ? std::nullopt : p.bank.pathway.CurrentScene();
+			const auto current_scene = p.slew.button.IsRunning() ? std::nullopt : p.bank.pathway.CurrentGateScene();
 			const auto do_trigs = current_scene != last_scene_on;
 			last_scene_on = current_scene;
 
