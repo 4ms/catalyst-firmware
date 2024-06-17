@@ -62,15 +62,8 @@ struct InputRange {
 	static constexpr float max = 1.f;
 };
 
-inline constexpr float logish(float input, unsigned r_depth) {
-	input = (1.f - (1.f / (input + 1.f))) * 2.f;
-	if (r_depth) {
-		r_depth -= 1;
-		input = logish(input, r_depth);
-	}
-	return input;
-}
-inline constinit auto LogTable = LookupTable<32>::generate<InputRange>([](auto input) { return logish(input, 2); });
+inline constinit auto LogTable =
+	LookupTable<32>::generate<InputRange>([](auto input) { return (1.f - (1.f / (input + 1.f))) * 2.f; });
 } // namespace Details
 
 inline float ShapeExpo(float val) {
