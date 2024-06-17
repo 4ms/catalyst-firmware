@@ -62,8 +62,8 @@ inline Model::Output::type ApplyOffset(int32_t in, int16_t offset) {
 }
 
 inline Model::Output::type Process(const Data::Channel &d, Model::Output::type input) {
-	input = ApplySlope(input, d.slope);
-	return ApplyOffset(input, d.offset);
+	auto temp = ApplySlope(input, d.slope);
+	return ApplyOffset(temp, d.offset);
 }
 
 inline bool Calibrate(Data &d, Controls &c) {
