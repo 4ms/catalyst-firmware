@@ -88,15 +88,15 @@ public:
 					out = Channel::Output::ScaleGate(temp, r);
 				} else {
 					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
-					last_out[chan] = Quantizer::Process(scale, p.bank.GetCv(scene_b, chan));
+					const auto temp = Quantizer::Process(scale, p.bank.GetCv(scene_b, chan));
 
 					const auto chan_morph = p.bank.GetMorph(chan);
 
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
-					const auto temp = MathTools::interpolate(start, last_out[chan], o_phase);
+					last_out[chan] = MathTools::interpolate(start, temp, o_phase);
 
 					const auto r = p.bank.GetRange(chan);
-					const auto t = Channel::Output::ScaleCv(temp, r);
+					const auto t = Channel::Output::ScaleCv(last_out[chan], r);
 					out = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], t);
 				}
 			}
@@ -129,13 +129,13 @@ public:
 
 					const auto chan_morph = p.bank.GetMorph(chan);
 					const auto crossfader_phase = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), chan_morph);
-					last_out[chan] = MathTools::interpolate(left_cv, right_cv, crossfader_phase);
+					const auto temp = MathTools::interpolate(left_cv, right_cv, crossfader_phase);
 
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
-					auto temp = MathTools::interpolate(start, last_out[chan], o_phase);
+					last_out[chan] = MathTools::interpolate(start, temp, o_phase);
 
 					const auto r = p.bank.GetRange(chan);
-					const auto t = Channel::Output::ScaleCv(temp, r);
+					const auto t = Channel::Output::ScaleCv(last_out[chan], r);
 					out = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], t);
 				}
 			}
