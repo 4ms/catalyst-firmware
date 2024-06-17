@@ -8,10 +8,13 @@ namespace Catalyst2
 {
 
 class YoungestSceneButton : public std::optional<uint8_t> {
-	uint8_t _pysb : 7;
+	uint8_t _pysb : 7 = 0;
 	uint8_t _event : 1;
 
 public:
+	YoungestSceneButton()
+		: std::optional<uint8_t>{0} {
+	}
 	void Update(Controls &c) {
 		auto age = 0xffffffffu;
 		uint8_t youngest = 0xffu;
