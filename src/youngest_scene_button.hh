@@ -8,7 +8,7 @@ namespace Catalyst2
 {
 
 class YoungestSceneButton : public std::optional<uint8_t> {
-	uint8_t _pysb : 7;
+	uint8_t _pysb : 7 = 0;
 	uint8_t _event : 1;
 
 public:
