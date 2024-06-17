@@ -126,13 +126,14 @@ public:
 			return pos;
 		}
 		pos = UpdateLinear(data, pos, 1.f);
+		auto out = pos;
 		if (data.curve == Curve::Expo) {
-			return ShapeExpo(pos);
+			out = ShapeExpo(pos);
 		}
 		if (pos >= 1.f) {
 			running = false;
 		}
-		return pos;
+		return out;
 	}
 	bool IsRunning() {
 		return running;
