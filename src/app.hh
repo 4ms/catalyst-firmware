@@ -50,9 +50,9 @@ class App {
 	Trigger trigger;
 	std::optional<uint8_t> last_scene_on;
 	bool override = false;
-	uint8_t override_scene;
-
-	Model::Output::Buffer start_point;
+	uint8_t override_scene = 0;
+	std::array<Channel::Cv::type, Model::NumChans> last_out;
+	std::array<Channel::Cv::type, Model::NumChans> start_point;
 
 public:
 	App(Interface &p)
@@ -88,16 +88,16 @@ public:
 					out = Channel::Output::ScaleGate(temp, r);
 				} else {
 					const auto &scale = p.bank.GetChannelMode(chan).GetScale();
-					const auto main = Quantizer::Process(scale, p.bank.GetCv(scene_b, chan));
+					last_out[chan] = Quantizer::Process(scale, p.bank.GetCv(scene_b, chan));
 
 					const auto chan_morph = p.bank.GetMorph(chan);
 
-					const auto r = p.bank.GetRange(chan);
-					auto temp = Channel::Output::ScaleCv(main, r);
-					temp = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
-
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
-					out = MathTools::interpolate(start, temp, o_phase);
+					const auto temp = MathTools::interpolate(start, last_out[chan], o_phase);
+
+					const auto r = p.bank.GetRange(chan);
+					const auto t = Channel::Output::ScaleCv(temp, r);
+					out = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], t);
 				}
 			}
 		} else {
@@ -129,25 +129,25 @@ public:
 
 					const auto chan_morph = p.bank.GetMorph(chan);
 					const auto crossfader_phase = MathTools::crossfade_ratio(p.bank.pathway.GetPhase(), chan_morph);
-					const auto main_interp = MathTools::interpolate(left_cv, right_cv, crossfader_phase);
-
-					const auto r = p.bank.GetRange(chan);
-					auto temp = Channel::Output::ScaleCv(main_interp, r);
-					temp = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], temp);
+					last_out[chan] = MathTools::interpolate(left_cv, right_cv, crossfader_phase);
 
 					const auto o_phase = MathTools::crossfade_ratio(override_phase, chan_morph);
-					out = MathTools::interpolate(start, temp, o_phase);
+					auto temp = MathTools::interpolate(start, last_out[chan], o_phase);
+
+					const auto r = p.bank.GetRange(chan);
+					const auto t = Channel::Output::ScaleCv(temp, r);
+					out = Calibration::Dac::Process(p.shared.data.dac_calibration.channel[chan], t);
 				}
 			}
 		}
 
-		CheckEvent(cv_output);
+		CheckEvent();
 
 		return cv_output;
 	}
 
 private:
-	void CheckEvent(const Model::Output::Buffer &out) {
+	void CheckEvent() {
 		if (p.mode == Mode::Mode::BLIND) {
 			override = false;
 		} else if (p.mode == Mode::Mode::NORMAL) {
@@ -155,13 +155,13 @@ private:
 			if (p.shared.youngest_scene_button.Event()) {
 				override_scene = p.shared.youngest_scene_button.value_or(override_scene);
 				p.slew.button.Start();
-				start_point = out;
+				start_point = last_out;
 			}
 		} else {
 			override = true;
 			if (p.shared.youngest_scene_button.Event() && p.shared.youngest_scene_button.has_value()) {
 				p.slew.button.Start();
-				start_point = out;
+				start_point = last_out;
 				override_scene = p.shared.youngest_scene_button.value();
 			}
 		}
