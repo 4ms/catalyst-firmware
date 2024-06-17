@@ -76,7 +76,7 @@ inline float UpdateExpo(Data &data, float current, float new_val) {
 
 inline float UpdateLinear(Data &data, float current, float new_val) {
 	// Rough adjustment to make linear vs expo curves perceived as more similar in rate of change
-	const auto lin_coef = data.coef / 3.f;
+	const auto lin_coef = data.coef / (2.71828f * 2);
 
 	if (new_val > current) {
 		current = std::clamp(current + lin_coef, current, new_val);
