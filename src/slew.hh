@@ -77,6 +77,10 @@ inline float ShapeExpo(float val) {
 	return Details::LogTable.lookup(val);
 }
 
+inline float UpdateExpo(Data &data, float current, float new_val) {
+	return current + (new_val - current) * data.coef;
+}
+
 inline float UpdateLinear(Data &data, float current, float new_val) {
 	// Rough adjustment to make linear vs expo curves perceived as more similar in rate of change
 	const auto lin_coef = data.coef / 3.f;
@@ -99,11 +103,7 @@ public:
 	}
 
 	float Update(float new_val) {
-		pos = UpdateLinear(data, pos, new_val);
-		if (data.curve == Curve::Expo) {
-			return ShapeExpo(pos);
-		}
-		return pos;
+		return pos = data.curve == Curve::Expo ? UpdateExpo(data, pos, new_val) : UpdateLinear(data, pos, new_val);
 	}
 };
 
