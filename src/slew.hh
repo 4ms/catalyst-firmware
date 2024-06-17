@@ -4,6 +4,7 @@
 #include "legacy/v1_0/conf/model.hh"
 #include "pathway.hh"
 #include "util/countzip.hh"
+#include "util/lookup_table.hh"
 #include "util/math.hh"
 #include "validate.hh"
 #include <algorithm>
@@ -54,12 +55,26 @@ struct Data {
 	}
 };
 
-inline float UpdateExpo(Data &data, float current, float new_val) {
-	return current + (new_val - current) * data.coef;
+namespace Details
+{
+struct InputRange {
+	static constexpr float min = 0.f;
+	static constexpr float max = 1.f;
+};
+
+inline constexpr float logish(float input, unsigned r_depth) {
+	input = (1.f - (1.f / (input + 1.f))) * 2.f;
+	if (r_depth) {
+		r_depth -= 1;
+		input = logish(input, r_depth);
+	}
+	return input;
 }
+inline constinit auto LogTable = LookupTable<32>::generate<InputRange>([](auto input) { return logish(input, 2); });
+} // namespace Details
 
 inline float ShapeExpo(float val) {
-	return val;
+	return Details::LogTable.lookup(val);
 }
 
 inline float UpdateLinear(Data &data, float current, float new_val) {
