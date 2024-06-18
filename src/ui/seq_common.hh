@@ -74,7 +74,7 @@ protected:
 		const auto chan = p.GetSelectedChannel();
 		const auto step_offset = Catalyst2::Sequencer::SeqPageToStep(page);
 		const auto is_cv = !p.slot.settings.GetChannelMode(chan).IsGate();
-		const auto fine_pressed = c.button.fine.is_high();
+		const auto fine_pressed = c.button.fine.is_high() && !c.button.morph.is_high();
 		const auto seqhead_col =
 			p.slot.settings.GetChannelMode(chan).IsMuted() ? Palette::SeqHead::mute : Palette::SeqHead::active;
 

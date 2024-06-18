@@ -101,14 +101,15 @@ public:
 			} else {
 				SwitchUiMode(global_settings);
 			}
-		} else if (bmorph) {
+		} else if (bmorph && !c.button.fine.is_high()) {
 			SwitchUiMode(morph);
 		} else if (bbank) {
 			SwitchUiMode(bank);
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		const auto fine = c.button.fine.is_high();
+		const auto fine = c.button.fine.is_high() && !c.button.morph.is_high();
+		inc = c.button.fine.is_high() && c.button.morph.is_high() ? inc * 12 : inc;
 		p.IncStep(encoder, inc, fine);
 	}
 	void OnSceneButtonPress(uint8_t button) {
