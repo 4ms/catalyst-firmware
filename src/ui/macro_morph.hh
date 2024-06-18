@@ -27,15 +27,7 @@ public:
 			SwitchUiMode(main_ui);
 			return;
 		}
-
-		if (!c.button.fine.is_high() && !c.button.play.is_high()) {
-			p.shared.modeswitcher.SetAlarm();
-		}
-		if (p.shared.modeswitcher.Check()) {
-			p.shared.mode = Model::Mode::Sequencer;
-			for (auto i = 0u; i < Model::NumChans; i++) {
-				p.shared.blinker.Set(Model::NumChans - i - 1, 1, 200, 100 * i + 250);
-			}
+		if (c.button.fine.is_high()) {
 			SwitchUiMode(main_ui);
 			return;
 		}

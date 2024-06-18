@@ -31,6 +31,7 @@ public:
 	void Init() override {
 		c.button.fine.clear_events();
 		c.button.play.clear_events();
+		p.shared.modeswitcher.SetAlarm();
 	}
 	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -44,19 +45,28 @@ public:
 
 		const auto is_latch = p.mode == Catalyst2::Macro::Mode::Mode::LATCH;
 
+		if (!c.button.fine.is_high() || !c.button.play.is_high() || !c.button.morph.is_high()) {
+			p.shared.modeswitcher.SetAlarm();
+		}
+
 		if (c.button.play.just_went_high() && !is_latch) {
 			p.recorder.Reset();
 		}
 
-		if (p.shared.mode == Model::Mode::Sequencer) {
+		if (p.shared.modeswitcher.Check()) {
+			p.shared.mode = Model::Mode::Sequencer;
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				p.shared.blinker.Set(Model::NumChans - i - 1, 1, 200, 100 * i + 250);
+			}
 			SwitchUiMode(sequencer);
+			return;
 		} else if (c.button.add.is_high()) {
 			if (!p.bank.IsBankClassic() && !is_latch) {
 				SwitchUiMode(add);
 			}
 		} else if (c.button.bank.is_high()) {
 			SwitchUiMode(bank);
-		} else if (c.button.morph.is_high()) {
+		} else if (c.button.morph.is_high() && !c.button.fine.is_high()) {
 			if (c.button.shift.is_high()) {
 				SwitchUiMode(range);
 			} else {
@@ -82,7 +92,8 @@ public:
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		const auto scenebdown = p.shared.youngest_scene_button.has_value();
-		const auto fine = c.button.fine.is_high();
+		const auto fine = c.button.fine.is_high() && !c.button.morph.is_high();
+		inc = c.button.fine.is_high() && c.button.morph.is_high() ? inc * 12 : inc;
 
 		if (scenebdown) {
 			for (auto [i, b] : countzip(c.button.scene)) {
