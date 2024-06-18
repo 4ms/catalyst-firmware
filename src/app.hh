@@ -263,8 +263,8 @@ private:
 			}
 		}
 
-		return Channel::Output::ScaleCv(out ? Channel::Output::gate_high : Channel::Output::gate_off,
-										p.slot.settings.GetRange(chan));
+		return Channel::Output::ScaleGate(out ? Channel::Output::gate_high : Channel::Output::gate_off,
+										  p.slot.settings.GetRange(chan));
 	}
 	Model::Output::type Cv(uint8_t chan) {
 		const auto random = p.slot.settings.GetRandomOrGlobal(chan);
