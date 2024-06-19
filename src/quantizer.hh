@@ -13,10 +13,10 @@ struct Scale {
 
 	template<typename... T>
 	constexpr Scale(T... ts)
-		: scl{ts...}
+		: scl{Channel::Cv::fromFloat(ts)...}
 		, size_(sizeof...(T)) {
 	}
-	constexpr const float &operator[](const std::size_t idx) const {
+	constexpr const Channel::Cv::type &operator[](const std::size_t idx) const {
 		return scl[idx];
 	}
 	constexpr std::size_t size() const {
@@ -30,7 +30,7 @@ struct Scale {
 	}
 
 private:
-	std::array<float, MaxScaleNotes> scl;
+	std::array<Channel::Cv::type, MaxScaleNotes> scl;
 	std::size_t size_;
 };
 
@@ -79,24 +79,23 @@ inline constexpr std::array scale = {
 // Quantize and Channel::Cv assume 12-note octaves, and Channel::Mode:Scales must also be octave-based
 static_assert([]() {
 	for (auto s : scale) {
-		if (s.size() == 0)
+		if (s.size() <= 1)
 			continue;
-		if (s[s.size() - 1] != 12.f)
-			return false;
 	}
 	return true;
 }());
 
 inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
-	if (!scale.size()) {
+	if (scale.size() <= 1) {
 		return input;
 	}
 	using namespace Channel;
 
-	const auto octave = static_cast<uint8_t>(input / Cv::octave);
-	input -= octave * Cv::octave;
+	const auto scale_octave = scale[scale.size() - 1];
+	const auto octave = static_cast<uint8_t>(input / static_cast<float>(scale_octave));
+	input -= octave * scale_octave;
 
-	const auto note = input / static_cast<float>(Cv::note);
+	const auto note = input;
 
 	// lower bound is first element that is >= note
 	const auto lb = std::lower_bound(scale.begin(), scale.end(), note);
@@ -105,7 +104,7 @@ inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
 	const float lower = lb == scale.begin() ? 0.f : *std::next(lb, -1);
 	const float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
 
-	return (closest * Cv::note) + (octave * Cv::octave);
+	return closest + (octave * scale_octave);
 }
 
 } // namespace Catalyst2::Quantizer
