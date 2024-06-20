@@ -106,6 +106,11 @@ public:
 		else
 			return step.val ? step.val / static_cast<float>(INT8_MIN) : -1.f;
 	}
+	uint32_t ReadRelative(uint8_t chan, uint32_t step) const {
+		step %= 3;
+		const auto &t = step == 0 ? buffer[chan].prev : step == 1 ? buffer[chan].cur : buffer[chan].next;
+		return t.val + 128;
+	}
 	void Step(uint8_t chan) {
 		buffer[chan].pp = buffer[chan].prev;
 		buffer[chan].prev = buffer[chan].cur;

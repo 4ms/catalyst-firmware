@@ -5,7 +5,7 @@
 #include "conf/model.hh"
 #include "random.hh"
 #include "range.hh"
-#include "sequencer_player.hh"
+#include "sequence_phaser.hh"
 #include "transposer.hh"
 #include <algorithm>
 #include <array>
@@ -21,10 +21,11 @@ struct PlayMode {
 		Forward,
 		Backward,
 		PingPong,
-		Random,
+		Random0,
+		Random1,
 	};
 	static constexpr type min = static_cast<type>(Mode::Forward);
-	static constexpr type max = static_cast<type>(Mode::Random);
+	static constexpr type max = static_cast<type>(Mode::Random1);
 	static constexpr type def = min;
 	static Mode Read(type val) {
 		return static_cast<Mode>(val);
@@ -77,7 +78,7 @@ class Global {
 		}
 
 		bool Validate() const {
-			return val >= min || val <= max;
+			return val >= min && val <= max;
 		}
 
 	private:
@@ -170,7 +171,7 @@ class Channel {
 		}
 
 		bool Validate() const {
-			return val == std::nullopt || val >= min || val <= max;
+			return val == std::nullopt || (val >= min && val <= max);
 		}
 
 	private:

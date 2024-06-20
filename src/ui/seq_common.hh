@@ -29,6 +29,8 @@ inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::Pl
 			phase *= 2.f;
 			col = playmode_fwd.blend(Palette::off, 1.f - phase);
 		}
+	} else if (pm == Random0) {
+		col = Palette::green;
 	} else {
 		col = Palette::Random::color(time_now >> 8);
 	}

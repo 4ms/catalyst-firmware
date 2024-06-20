@@ -143,7 +143,10 @@ private:
 			case Backward:
 				step = length + -1 + -step;
 				break;
-			case Random:
+			case Random0:
+				step = randomvalue.ReadRelative(chan, step);
+				break;
+			case Random1:
 				step = randomsteps.Read(chan, step % length);
 				break;
 			case PingPong: {
