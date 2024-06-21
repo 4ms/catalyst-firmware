@@ -112,9 +112,18 @@ inline constexpr std::array color = {
 	blue.blend(off, 0.95f),	   // 16-TET
 	teal.blend(off, 0.95f),	   // 21-TET
 
+	red.blend(off, 0.5f),	   // custom 0
+	green.blend(off, 0.5f),	   // custom 1
+	orange.blend(off, 0.5f),   // custom 2
+	yellow.blend(off, 0.5f),   // custom 3
+	teal.blend(off, 0.5f),	   // custom 4
+	blue.blend(off, 0.5f),	   // custom 5
+	salmon.blend(off, 0.5f),   // custom 6
+	lavender.blend(off, 0.5f), // custom 7
+
 	green.blend(off, 0.5f), // gate
 };
-}
+} // namespace Scales
 
 namespace SeqHead
 {
