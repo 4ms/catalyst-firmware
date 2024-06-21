@@ -86,7 +86,7 @@ static_assert([]() {
 }());
 
 inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
-	if (scale.size() <= 1) {
+	if (scale.size() < 1) {
 		return input;
 	}
 	using namespace Channel;
