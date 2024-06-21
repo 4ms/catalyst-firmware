@@ -1,6 +1,8 @@
 #pragma once
 
 #include "channel.hh"
+#include "util/fixed_vector.hh"
+#include "util/zip.hh"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -16,7 +18,23 @@ struct Scale {
 		: scl{Channel::Cv::fromFloat(ts)...}
 		, size_(sizeof...(T)) {
 	}
+	Scale(FixedVector<Channel::Cv::type, MaxScaleNotes> &notes) {
+		std::sort(notes.begin(), notes.end());
+		notes.erase(std::unique(notes.begin(), notes.end()), notes.end());
+		const auto firse_note = notes[0];
+		if (notes.size() == 1) {
+			size_ = 0;
+		} else {
+			for (auto i = 0u; i < notes.size(); i++) {
+				scl[i] = notes[i] - firse_note;
+			}
+			size_ = notes.size();
+		}
+	}
 	constexpr const Channel::Cv::type &operator[](const std::size_t idx) const {
+		return scl[idx];
+	}
+	constexpr Channel::Cv::type &operator[](const std::size_t idx) {
 		return scl[idx];
 	}
 	constexpr std::size_t size() const {
@@ -28,11 +46,19 @@ struct Scale {
 	constexpr auto end() const {
 		return begin() + size_;
 	}
+	constexpr auto begin() {
+		return scl.begin();
+	}
+	constexpr auto end() {
+		return begin() + size_;
+	}
 
 private:
 	std::array<Channel::Cv::type, MaxScaleNotes> scl;
-	std::size_t size_;
+	std::size_t size_ = 0;
 };
+
+using CustomScales = std::array<Scale, Model::num_custom_scales>;
 
 inline constexpr std::array scale = {
 	Scale{},															  // none

@@ -100,9 +100,6 @@ public:
 	void Paste(uint8_t scene) {
 		data.bank[data.cur_bank].scene[scene] = clipboard;
 	}
-	void IncChannelMode(uint8_t channel, int32_t inc) {
-		data.bank[data.cur_bank].channelmode[channel].Inc(inc);
-	}
 	void IncRange(uint8_t channel, int32_t inc) {
 		data.bank[data.cur_bank].range[channel].Inc(inc);
 	}

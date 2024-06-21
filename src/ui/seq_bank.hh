@@ -46,7 +46,7 @@ public:
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
-		p.slot.settings.IncChannelMode(encoder, dir);
+		p.IncChannelMode(encoder, dir);
 	}
 	void OnSceneButtonRelease(uint8_t page) {
 		if ((c.button.play.is_high() || c.button.play.just_went_low()) && p.IsChannelSelected()) {
@@ -63,11 +63,17 @@ public:
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
+		ClearEncoderLeds(c);
 		if (p.IsChannelSelected()) {
 			c.SetButtonLed(p.GetSelectedChannel(), true);
 		}
+		const auto blink = Controls::TimeNow() & (1u << 9);
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetEncoderLed(i, p.slot.settings.GetChannelMode(i).GetColor());
+			const auto cm = p.slot.settings.GetChannelMode(i);
+			if (blink && cm.IsCustomScale()) {
+				continue;
+			}
+			c.SetEncoderLed(i, cm.GetColor());
 		}
 	}
 };

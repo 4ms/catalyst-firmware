@@ -9,8 +9,8 @@
 namespace Catalyst2::Channel
 {
 class Mode {
-	static_assert(Palette::Scales::color.size() - 1 == Quantizer::scale.size());
-	static constexpr uint8_t max = Quantizer::scale.size();
+	static constexpr uint8_t max = Quantizer::scale.size() + Model::num_custom_scales;
+	static_assert(Palette::Scales::color.size() - 1 == max);
 	static_assert(max < 0x80,
 				  "Note: In order to have more than 127 scales, the saved data structure will have to change size, "
 				  "data recovery will be necessary");
@@ -27,14 +27,14 @@ public:
 	bool IsGate() const {
 		return Val() == max;
 	}
-	bool IsQuantized() const {
-		return !IsGate();
+	uint8_t GetScaleIdx() const {
+		return Val();
 	}
-	const Quantizer::Scale &GetScale() const {
-		return Quantizer::scale[Val()];
-	}
-	Color GetColor() {
+	Color GetColor() const {
 		return Palette::Scales::color[Val()];
+	}
+	bool IsCustomScale() const {
+		return Val() >= Quantizer::scale.size() && !IsGate();
 	}
 	bool Validate() const {
 		return Val() <= max;
