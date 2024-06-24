@@ -11,7 +11,7 @@ TEST_CASE("Quantizer: number of transitions is correct") {
 		CHECK(i == Quantizer::Process(Quantizer::Scale{}, i));
 	}
 
-	constexpr auto tscale0 = Quantizer::Scale{12.f};
+	constexpr auto tscale0 = Quantizer::Scale{0.f, 12.f};
 
 	// this scale will be octaves only.
 	auto output_values = 0u;
@@ -33,7 +33,7 @@ TEST_CASE("Quantizer: number of transitions is correct") {
 	CHECK(output_values == expected_output_values);
 
 	// let's try a bigger scale
-	constexpr auto tscale1 = Quantizer::Scale{1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 12.f};
+	constexpr auto tscale1 = Quantizer::Scale{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 12.f};
 
 	output_values = 0u;
 	prev_out_value = -1;
@@ -86,8 +86,8 @@ void check_scale(Quantizer::Scale const &scale, unsigned step_size) {
 }
 
 TEST_CASE("Quantizer: picks closest note (chromatic)") {
-	constexpr auto chromatic = Quantizer::Scale{1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f};
-	constexpr auto wholetones = Quantizer::Scale{2.f, 4.f, 6.f, 8.f, 10.f, 12.f};
+	constexpr auto chromatic = Quantizer::Scale{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f};
+	constexpr auto wholetones = Quantizer::Scale{0.f, 2.f, 4.f, 6.f, 8.f, 10.f, 12.f};
 
 	check_scale(chromatic, Channel::Cv::note);
 	check_scale(wholetones, Channel::Cv::note * 2);

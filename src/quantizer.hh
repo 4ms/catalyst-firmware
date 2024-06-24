@@ -13,21 +13,28 @@ namespace Catalyst2::Quantizer
 struct Scale {
 	static constexpr auto MaxScaleNotes = 22;
 
+	constexpr Scale() = default;
+
 	template<typename... T>
-	constexpr Scale(T... ts)
-		: scl{Channel::Cv::fromFloat(ts)...}
+	constexpr Scale(float offset, T... ts)
+		: offset{fromFloat(offset)}
+		, scl{static_cast<Channel::Cv::type>(fromFloat(ts))...}
 		, size_(sizeof...(T)) {
 	}
 	Scale(FixedVector<Channel::Cv::type, MaxScaleNotes> &notes) {
+		std::for_each(notes.begin(), notes.end(), [](Channel::Cv::type &n) {
+			const auto t = n - Channel::Cv::zero;
+			n = t < 0 ? 0 : t;
+		});
 		std::sort(notes.begin(), notes.end());
 		notes.erase(std::unique(notes.begin(), notes.end()), notes.end());
-		const auto firse_note = notes[0];
-		if (notes.size() == 1) {
-			size_ = 0;
-		} else {
+		const int first_note = notes[0];
+		notes.erase(0);
+		if (notes.size() > 1) {
 			for (auto i = 0u; i < notes.size(); i++) {
-				scl[i] = notes[i] - firse_note;
+				scl[i] = notes[i] - first_note;
 			}
+			offset = first_note;
 			size_ = notes.size();
 		}
 	}
@@ -53,6 +60,8 @@ struct Scale {
 		return begin() + size_;
 	}
 
+	int16_t offset = 0;
+
 private:
 	std::array<Channel::Cv::type, MaxScaleNotes> scl;
 	std::size_t size_ = 0;
@@ -61,25 +70,26 @@ private:
 using CustomScales = std::array<Scale, Model::num_custom_scales>;
 
 inline constexpr std::array scale = {
-	Scale{},															  // none
-	Scale{1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f}, // chromatic
-	Scale{2.f, 4.f, 5.f, 7.f, 9.f, 11.f, 12.f},							  // major
-	Scale{2.f, 3.f, 5.f, 7.f, 8.f, 10.f, 12.f},							  // minor
-	Scale{2.f, 3.f, 5.f, 7.f, 8.f, 11.f, 12.f},							  // harmonic minor
-	Scale{2.f, 4.f, 7.f, 9.f, 12.f},									  // major pentatonic
-	Scale{3.f, 5.f, 7.f, 10.f, 12.f},									  // minor pentatonic
-	Scale{2.f, 4.f, 6.f, 8.f, 10.f, 12.f},								  // wholetone
-	Scale{2.f, 4.f, 6.f, 7.f, 9.f, 10.f, 12.f},							  // acoustic/lydian dom.
-	Scale{2.f, 4.f, 5.f, 7.f, 9.f, 10.f, 11.f, 12.f},					  // Beebop
-	Scale{1.f, 4.f, 6.f, 8.f, 10.f, 11.f, 12.f},						  // enigmatic
-	Scale{2.5f, 3.f, 4.f, 5.f, 7.f, 12.f},								  // vietnamese
-	Scale{3.f, 5.f, 7.f, 10.f, 12.f},									  // Yo scale
+	Scale{0.f},																   // none
+	Scale{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f}, // chromatic
+	Scale{0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 11.f, 12.f},						   // major
+	Scale{0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 10.f, 12.f},						   // minor
+	Scale{0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 11.f, 12.f},						   // harmonic minor
+	Scale{0.f, 2.f, 4.f, 7.f, 9.f, 12.f},									   // major pentatonic
+	Scale{0.f, 3.f, 5.f, 7.f, 10.f, 12.f},									   // minor pentatonic
+	Scale{0.f, 2.f, 4.f, 6.f, 8.f, 10.f, 12.f},								   // wholetone
+	Scale{0.f, 2.f, 4.f, 6.f, 7.f, 9.f, 10.f, 12.f},						   // acoustic/lydian dom.
+	Scale{0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 10.f, 11.f, 12.f},					   // Beebop
+	Scale{0.f, 1.f, 4.f, 6.f, 8.f, 10.f, 11.f, 12.f},						   // enigmatic
+	Scale{0.f, 2.5f, 3.f, 4.f, 5.f, 7.f, 12.f},								   // vietnamese
+	Scale{0.f, 3.f, 5.f, 7.f, 10.f, 12.f},									   // Yo scale
 
 	// 16-TET
-	Scale{0.75f, 1.5f, 2.25f, 3.f, 3.75f, 4.5f, 5.25f, 6.f, 6.75f, 7.5f, 8.25f, 9.f, 9.75f, 10.5f, 11.25f, 12.f},
+	Scale{0.f, 0.75f, 1.5f, 2.25f, 3.f, 3.75f, 4.5f, 5.25f, 6.f, 6.75f, 7.5f, 8.25f, 9.f, 9.75f, 10.5f, 11.25f, 12.f},
 
 	// 21-TET
-	Scale{0.571428571428571f,
+	Scale{0.f,
+		  0.571428571428571f,
 		  1.14285714285714f,
 		  1.71428571428571f,
 		  2.28571428571429f,
@@ -103,13 +113,6 @@ inline constexpr std::array scale = {
 };
 
 // Quantize and Channel::Cv assume 12-note octaves, and Channel::Mode:Scales must also be octave-based
-static_assert([]() {
-	for (auto s : scale) {
-		if (s.size() <= 1)
-			continue;
-	}
-	return true;
-}());
 
 inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
 	if (scale.size() < 1) {
@@ -130,7 +133,7 @@ inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
 	const float lower = lb == scale.begin() ? 0.f : *std::next(lb, -1);
 	const float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
 
-	return closest + (octave * scale_octave);
+	return (closest + (octave * scale_octave)) + scale.offset;
 }
 
 } // namespace Catalyst2::Quantizer
