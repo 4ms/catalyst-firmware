@@ -63,6 +63,9 @@ struct Scale {
 	int16_t offset = 0;
 
 private:
+	constexpr int16_t fromFloat(float in) {
+		return Channel::Cv::note * in;
+	}
 	std::array<Channel::Cv::type, MaxScaleNotes> scl;
 	std::size_t size_ = 0;
 };
