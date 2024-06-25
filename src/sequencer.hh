@@ -60,17 +60,6 @@ struct Slot {
 		ret &= clock_sync_mode.Validate();
 		return ret;
 	}
-
-	Quantizer::Scale toScale(uint8_t chan) const {
-		FixedVector<Channel::Cv::type, Quantizer::Scale::MaxScaleNotes> notes;
-		const auto seq_length = settings.GetLengthOrGlobal(chan);
-		const unsigned size =
-			seq_length > Quantizer::Scale::MaxScaleNotes ? Quantizer::Scale::MaxScaleNotes : seq_length;
-		for (auto i = 0u; i < size; i++) {
-			notes.push_back(channel[chan][i].ReadCv());
-		}
-		return Quantizer::Scale{notes};
-	}
 };
 
 struct Data {
@@ -129,6 +118,19 @@ public:
 		: data{data}
 		, shared{shared} {
 	}
+
+	Quantizer::Scale toScale() const {
+		const auto chan = cur_channel == Model::NumChans ? prev_channel : cur_channel;
+		FixedVector<Channel::Cv::type, Quantizer::Scale::MaxScaleNotes> notes;
+		const auto seq_length = slot.settings.GetLengthOrGlobal(chan);
+		const unsigned size =
+			seq_length > Quantizer::Scale::MaxScaleNotes ? Quantizer::Scale::MaxScaleNotes : seq_length;
+		for (auto i = 0u; i < size; i++) {
+			notes.push_back(slot.channel[chan][i].ReadCv());
+		}
+		return Quantizer::Scale{notes};
+	}
+
 	void Load() {
 		Load(data.startup_slot);
 	}
