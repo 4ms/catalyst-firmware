@@ -165,6 +165,13 @@ public:
 		} while (!slot.settings.GetChannelMode(chan).IsGate() && GetScale(chan).size() == 0 &&
 				 slot.settings.GetChannelMode(chan).GetScaleIdx() != 0);
 	}
+	void UpdateChannelMode() {
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			if (GetScale(i).size() == 0) {
+				IncChannelMode(i, -1);
+			}
+		}
+	}
 	const Quantizer::Scale &GetScale(uint8_t chan) {
 		const auto idx = slot.settings.GetChannelMode(chan).GetScaleIdx();
 		if (idx >= Quantizer::scale.size()) {
