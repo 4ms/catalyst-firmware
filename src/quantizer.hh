@@ -34,8 +34,8 @@ struct Scale {
 			for (auto i = 0u; i < notes.size(); i++) {
 				scl[i] = notes[i] - first_note;
 			}
-			offset = first_note;
 			size_ = notes.size();
+			offset = first_note % scl[size_ - 1];
 		}
 	}
 	constexpr const Channel::Cv::type &operator[](const std::size_t idx) const {
