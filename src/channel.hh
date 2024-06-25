@@ -30,9 +30,6 @@ inline constexpr type RangeToMin(Range range) {
 inline constexpr type RangeToMax(Range range) {
 	return MathTools::map_value(range.PosAmount(), 0.f, 1.f, zero, max);
 }
-inline constexpr type fromFloat(float in) {
-	return in * note;
-}
 
 inline type Inc(type val, int32_t inc, bool fine, Range range) {
 	inc *= fine ? inc_step_fine : inc_step;

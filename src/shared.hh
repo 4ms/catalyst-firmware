@@ -105,6 +105,7 @@ struct Data {
 	uint32_t SettingsVersionTag alignas(4);
 	Model::Mode saved_mode alignas(4) = BuildOptions::default_mode;
 	Calibration::Dac::Data dac_calibration alignas(4);
+	Quantizer::CustomScales custom_scale;
 
 	bool validate() const {
 		if (SettingsVersionTag == 0xffffffff) {
@@ -135,6 +136,7 @@ public:
 	Blinker blinker;
 	bool do_save_macro = false;
 	bool do_save_seq = false;
+	bool do_save_shared = false;
 	bool did_paste = false;
 	bool did_copy = false;
 	YoungestSceneButton youngest_scene_button;

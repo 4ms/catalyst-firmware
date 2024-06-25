@@ -82,5 +82,19 @@ public:
 		slew.Clear();
 		mode.Clear();
 	}
+	void IncChannelMode(uint8_t channel, int32_t inc) {
+		auto &cm = data.bank.bank[data.bank.cur_bank].channelmode[channel];
+		do {
+			cm.Inc(inc);
+		} while (!bank.GetChannelMode(channel).IsGate() && GetScale(channel).size() == 0 && cm.GetScaleIdx() != 0);
+	}
+	const Quantizer::Scale &GetScale(uint8_t channel) {
+		const auto idx = bank.GetChannelMode(channel).GetScaleIdx();
+		if (idx >= Quantizer::scale.size()) {
+			return shared.data.custom_scale[idx - Quantizer::scale.size()];
+		} else {
+			return Quantizer::scale[idx];
+		}
+	}
 };
 } // namespace Catalyst2::Macro

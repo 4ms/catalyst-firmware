@@ -21,6 +21,8 @@ inline constexpr auto output_octave_range = max_output_voltage - min_output_volt
 
 inline constexpr auto fader_width_mm = 60u;
 
+inline constexpr auto num_custom_scales = NumChans;
+
 namespace HoldTimes
 {
 inline constexpr auto mode_switcher = 3000u;

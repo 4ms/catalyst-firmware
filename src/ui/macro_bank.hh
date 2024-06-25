@@ -42,7 +42,7 @@ public:
 		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
-		p.bank.IncChannelMode(encoder, inc);
+		p.IncChannelMode(encoder, inc);
 	}
 
 	void OnSceneButtonRelease(uint8_t button) {
@@ -51,14 +51,20 @@ public:
 
 	void PaintLeds(const Model::Output::Buffer &outs) override {
 		ClearButtonLeds(c);
+		ClearEncoderLeds(c);
 		c.SetPlayLed(false);
 		if (p.bank.IsBankClassic()) {
 			c.SetPlayLed(true);
 		} else {
 			c.SetButtonLed(p.bank.GetSelectedBank(), true);
 		}
+		const auto blink = Controls::TimeNow() & (1u << 9);
 		for (auto i = 0u; i < Model::NumChans; i++) {
-			c.SetEncoderLed(i, p.bank.GetChannelMode(i).GetColor());
+			const auto cm = p.bank.GetChannelMode(i);
+			if (blink && cm.IsCustomScale()) {
+				continue;
+			}
+			c.SetEncoderLed(i, cm.GetColor());
 		}
 	}
 };

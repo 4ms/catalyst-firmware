@@ -13,8 +13,10 @@
 #include "shared.hh"
 #include "song_mode.hh"
 #include "util/countzip.hh"
+#include "util/fixed_vector.hh"
 #include <algorithm>
 #include <array>
+#include <vector>
 
 namespace Catalyst2::Sequencer
 {
@@ -116,6 +118,19 @@ public:
 		: data{data}
 		, shared{shared} {
 	}
+
+	Quantizer::Scale toScale() const {
+		const auto chan = cur_channel == Model::NumChans ? prev_channel : cur_channel;
+		FixedVector<Channel::Cv::type, Quantizer::Scale::MaxScaleNotes> notes;
+		const auto seq_length = slot.settings.GetLengthOrGlobal(chan);
+		const unsigned size =
+			seq_length > Quantizer::Scale::MaxScaleNotes ? Quantizer::Scale::MaxScaleNotes : seq_length;
+		for (auto i = 0u; i < size; i++) {
+			notes.push_back(slot.channel[chan][i].ReadCv());
+		}
+		return Quantizer::Scale{notes};
+	}
+
 	void Load() {
 		Load(data.startup_slot);
 	}
@@ -144,6 +159,28 @@ public:
 			}
 		}
 	}
+	void IncChannelMode(uint8_t chan, int32_t inc) {
+		do {
+			slot.settings.IncChannelMode(chan, inc);
+		} while (!slot.settings.GetChannelMode(chan).IsGate() && GetScale(chan).size() == 0 &&
+				 slot.settings.GetChannelMode(chan).GetScaleIdx() != 0);
+	}
+	void UpdateChannelMode() {
+		for (auto i = 0u; i < Model::NumChans; i++) {
+			if (GetScale(i).size() == 0) {
+				IncChannelMode(i, -1);
+			}
+		}
+	}
+	const Quantizer::Scale &GetScale(uint8_t chan) {
+		const auto idx = slot.settings.GetChannelMode(chan).GetScaleIdx();
+		if (idx >= Quantizer::scale.size()) {
+			return shared.data.custom_scale[idx - Quantizer::scale.size()];
+		} else {
+			return Quantizer::scale[idx];
+		}
+	}
+
 	bool ShowPlayhead() const {
 		return show_playhead;
 	}
