@@ -6,12 +6,14 @@
 #include "seq_save.hh"
 #include "sequencer.hh"
 #include "ui/seq_mutes.hh"
+#include "ui/seq_save_scales.hh"
 
 namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
 	Save save{p, c, &main_ui};
 	Mutes mutes{p, c, &main_ui};
+	SaveScales savescales{p, c, &main_ui};
 
 public:
 	using Usual::Usual;
@@ -19,6 +21,7 @@ public:
 		c.button.fine.clear_events();
 		c.button.morph.clear_events();
 		c.button.play.clear_events();
+		c.button.add.clear_events();
 	}
 	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
@@ -42,6 +45,10 @@ public:
 		}
 		if (p.shared.save.Check() && c.button.morph.is_high()) {
 			SwitchUiMode(save);
+			return;
+		}
+		if (c.button.add.just_went_high()) {
+			SwitchUiMode(savescales);
 			return;
 		}
 	}
