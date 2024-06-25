@@ -71,6 +71,10 @@ public:
 			params.shared.do_save_seq = false;
 			SaveSeq();
 		}
+		if (params.shared.do_save_shared) {
+			params.shared.do_save_shared = false;
+			SaveShared();
+		}
 	}
 
 	void SetOutputs(Model::Output::Buffer &outs) {

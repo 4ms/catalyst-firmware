@@ -136,6 +136,7 @@ public:
 	Blinker blinker;
 	bool do_save_macro = false;
 	bool do_save_seq = false;
+	bool do_save_shared = false;
 	bool did_paste = false;
 	bool did_copy = false;
 	YoungestSceneButton youngest_scene_button;
