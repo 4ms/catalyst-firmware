@@ -51,13 +51,11 @@ struct PhaseOffset {
 };
 
 class Global {
-	template<typename T>
+	template<typename T, T min, T max, T init = T{}>
 	struct Setting {
 
-		Setting(T min, T max, T init = T{})
-			: val{init}
-			, min{min}
-			, max{max} {
+		Setting()
+			: val{init} {
 		}
 
 		template<typename U>
@@ -83,17 +81,17 @@ class Global {
 
 	private:
 		T val;
-		T min;
-		T max;
+		T min_ = min; // not used anymore. need to keep to avoid data corruption
+		T max_ = max; // not used anymore. need to keep to avoid data corruption
 	};
 
 public:
-	Setting<PhaseOffset::type> phaseoffset{PhaseOffset::min, PhaseOffset::max, PhaseOffset::def};
-	Setting<Length::type> length{Length::min, Length::max, Length::def};
-	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max, StartOffset::def};
-	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max, PlayMode::def};
-	Setting<Transposer::type> transpose{Transposer::min, Transposer::max, Transposer::def};
-	Setting<Random::Amount::type> random{Random::Amount::min, Random::Amount::max, Random::Amount::def};
+	Setting<PhaseOffset::type, PhaseOffset::min, PhaseOffset::max, PhaseOffset::def> phaseoffset{};
+	Setting<Length::type, Length::min, Length::max, Length::def> length{};
+	Setting<StartOffset::type, StartOffset::min, StartOffset::max, StartOffset::def> startoffset{};
+	Setting<PlayMode::type, PlayMode::min, PlayMode::max, PlayMode::def> playmode{};
+	Setting<Transposer::type, Transposer::min, Transposer::max, Transposer::def> transpose{};
+	Setting<Random::Amount::type, Random::Amount::min, Random::Amount::max, Random::Amount::def> random{};
 
 	bool Validate() const {
 		auto ret = true;
@@ -108,12 +106,8 @@ public:
 };
 
 class Channel {
-	template<typename T>
+	template<typename T, T min, T max>
 	struct Setting {
-		Setting(T min, T max)
-			: min{min}
-			, max{max} {
-		}
 
 		template<typename U>
 		void Inc(U inc, T pivot)
@@ -177,17 +171,17 @@ class Channel {
 	private:
 		std::optional<T> val = std::nullopt;
 		bool above_pivot = false;
-		T min;
-		T max;
+		T min_ = min; // not used anymore. need to keep to avoid data corruption
+		T max_ = max; // not used anymore. need to keep to avoid data corruption
 	};
 
 public:
-	Setting<PhaseOffset::type> phaseoffset{PhaseOffset::min, PhaseOffset::max};
-	Setting<Length::type> length{Length::min, Length::max};
-	Setting<StartOffset::type> startoffset{StartOffset::min, StartOffset::max};
-	Setting<PlayMode::type> playmode{PlayMode::min, PlayMode::max};
-	Setting<Transposer::type> transpose{Transposer::min, Transposer::max};
-	Setting<Random::Amount::type> random{Random::Amount::min, Random::Amount::max};
+	Setting<PhaseOffset::type, PhaseOffset::min, PhaseOffset::max> phaseoffset{};
+	Setting<Length::type, Length::min, Length::max> length{};
+	Setting<StartOffset::type, StartOffset::min, StartOffset::max> startoffset{};
+	Setting<PlayMode::type, PlayMode::min, PlayMode::max> playmode{};
+	Setting<Transposer::type, Transposer::min, Transposer::max> transpose{};
+	Setting<Random::Amount::type, Random::Amount::min, Random::Amount::max> random{};
 	Catalyst2::Channel::Cv::Range range;
 	Catalyst2::Channel::Mode mode;
 
