@@ -32,7 +32,8 @@ inline void PlayModeLedAnimation(Controls &c, Catalyst2::Sequencer::Settings::Pl
 	} else if (pm == Random0) {
 		col = Palette::green;
 	} else {
-		col = Palette::Random::color(time_now >> 8);
+		uint8_t cphase = phase * 6;
+		col = Palette::Random::color(cphase << cphase);
 	}
 	c.SetEncoderLed(Model::Sequencer::EncoderAlts::PlayMode, col);
 }
