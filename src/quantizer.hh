@@ -22,10 +22,6 @@ struct Scale {
 		, size_(sizeof...(T)) {
 	}
 	Scale(FixedVector<Channel::Cv::type, MaxScaleNotes> &notes) {
-		std::for_each(notes.begin(), notes.end(), [](Channel::Cv::type &n) {
-			const auto t = n - Channel::Cv::zero;
-			n = t < 0 ? 0 : t;
-		});
 		std::sort(notes.begin(), notes.end());
 		notes.erase(std::unique(notes.begin(), notes.end()), notes.end());
 		const int first_note = notes[0];
