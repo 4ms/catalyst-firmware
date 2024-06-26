@@ -173,7 +173,7 @@ public:
 			}
 		}
 	}
-	const Quantizer::Scale &GetScale(uint8_t chan) {
+	const Quantizer::Scale &GetScale(uint8_t chan) const {
 		const auto idx = slot.settings.GetChannelMode(chan).GetScaleIdx();
 		if (idx >= Quantizer::scale.size()) {
 			return shared.data.custom_scale[idx - Quantizer::scale.size()];
