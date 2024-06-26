@@ -59,6 +59,20 @@ struct Scale {
 	constexpr auto end() {
 		return begin() + size_;
 	}
+	constexpr bool Validate() const {
+		if (size_ > MaxScaleNotes) {
+			return false;
+		}
+		if (offset >= scl[size_ - 1] / 2 || offset < -(scl[size_ - 1] / 2)) {
+			return false;
+		}
+		for (auto &n : *this) {
+			if (n > Channel::Cv::max) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	int16_t offset = 0;
 
