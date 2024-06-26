@@ -115,6 +115,11 @@ struct Data {
 			return false;
 		if (!dac_calibration.Validate())
 			return false;
+		for (auto &s : custom_scale) {
+			if (!s.Validate()) {
+				return false;
+			}
+		}
 		return true;
 	}
 };
