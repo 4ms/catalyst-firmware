@@ -125,8 +125,9 @@ public:
 		const auto seq_length = slot.settings.GetLengthOrGlobal(chan);
 		const unsigned size =
 			seq_length > Quantizer::Scale::MaxScaleNotes ? Quantizer::Scale::MaxScaleNotes : seq_length;
+		const auto &cur_scale = GetScale(chan);
 		for (auto i = 0u; i < size; i++) {
-			notes.push_back(slot.channel[chan][i].ReadCv());
+			notes.push_back(Quantizer::Process(cur_scale, slot.channel[chan][i].ReadCv()));
 		}
 		return Quantizer::Scale{notes};
 	}
