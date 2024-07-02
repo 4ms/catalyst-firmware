@@ -16,26 +16,38 @@ struct Scale {
 	constexpr Scale() = default;
 
 	template<typename... T>
-	constexpr Scale(float offset, T... ts)
-		: offset{fromFloat(offset)}
+	constexpr Scale(float octave, T... ts)
+		: octave{fromFloat(octave)}
 		, scl{static_cast<Channel::Cv::type>(fromFloat(ts))...}
 		, size_(sizeof...(T)) {
 	}
+	uint32_t getNoteOctave(uint16_t note, uint16_t octave_size) {
+		return note / octave_size;
+	}
 	Scale(FixedVector<Channel::Cv::type, MaxScaleNotes> &notes) {
-		std::sort(notes.begin(), notes.end());
-		notes.erase(std::unique(notes.begin(), notes.end()), notes.end());
-		const int first_note = notes[0];
-		notes.erase(0);
-		if (notes.size() > 1) {
+		if (notes.size() > 2) {
+			std::sort(notes.begin(), notes.end());
+			notes.erase(std::unique(notes.begin(), notes.end()), notes.end());
+			const auto last_note = notes[notes.size() - 1];
+			const auto octave_size = last_note - notes[0];
+			notes.erase(notes.size() - 1);
+			for (auto &note : notes) {
+				if (note / octave_size != notes[0] / octave_size) {
+					const auto middle = &note;
+					std::for_each(notes.begin(), middle, [octave_size](auto &i) { i += octave_size; });
+					std::rotate(notes.begin(), middle, notes.end());
+					break;
+				}
+			}
+
+			const auto cur_octave = notes[0] / octave_size;
+			const auto offset = cur_octave * octave_size;
+
 			for (auto i = 0u; i < notes.size(); i++) {
-				scl[i] = notes[i] - first_note;
+				scl[i] = notes[i] - offset;
 			}
 			size_ = notes.size();
-			const auto last_note = scl[size_ - 1];
-			offset = first_note % last_note;
-			if (offset >= (last_note / 2)) {
-				offset -= last_note;
-			}
+			octave = octave_size;
 		}
 	}
 	constexpr const Channel::Cv::type &operator[](const std::size_t idx) const {
@@ -66,7 +78,7 @@ struct Scale {
 		if (size_ == 0) {
 			return true;
 		}
-		if (offset >= scl[size_ - 1] / 2 || offset < -(scl[size_ - 1] / 2)) {
+		if (octave >= scl[size_ - 1] / 2 || octave < -(scl[size_ - 1] / 2)) {
 			return false;
 		}
 		for (auto &n : *this) {
@@ -77,10 +89,10 @@ struct Scale {
 		return true;
 	}
 
-	int16_t offset = 0;
+	Channel::Cv::type octave = 0;
 
 private:
-	constexpr int16_t fromFloat(float in) {
+	constexpr Channel::Cv::type fromFloat(float in) {
 		return Channel::Cv::note * in;
 	}
 	std::array<Channel::Cv::type, MaxScaleNotes> scl;
@@ -91,24 +103,25 @@ using CustomScales = std::array<Scale, Model::num_custom_scales>;
 
 inline constexpr std::array scale = {
 	Scale{0.f},																   // none
-	Scale{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f}, // chromatic
-	Scale{0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 11.f, 12.f},						   // major
-	Scale{0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 10.f, 12.f},						   // minor
-	Scale{0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 11.f, 12.f},						   // harmonic minor
-	Scale{0.f, 2.f, 4.f, 7.f, 9.f, 12.f},									   // major pentatonic
-	Scale{0.f, 3.f, 5.f, 7.f, 10.f, 12.f},									   // minor pentatonic
-	Scale{0.f, 2.f, 4.f, 6.f, 8.f, 10.f, 12.f},								   // wholetone
-	Scale{0.f, 2.f, 4.f, 6.f, 7.f, 9.f, 10.f, 12.f},						   // acoustic/lydian dom.
-	Scale{0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 10.f, 11.f, 12.f},					   // Beebop
-	Scale{0.f, 1.f, 4.f, 6.f, 8.f, 10.f, 11.f, 12.f},						   // enigmatic
-	Scale{0.f, 2.5f, 3.f, 4.f, 5.f, 7.f, 12.f},								   // vietnamese
-	Scale{0.f, 3.f, 5.f, 7.f, 10.f, 12.f},									   // Yo scale
+	Scale{12.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f}, // chromatic
+	Scale{12.f, 0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 11.f},						   // major
+	Scale{12.f, 0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 10.f},						   // minor
+	Scale{12.f, 0.f, 2.f, 3.f, 5.f, 7.f, 8.f, 11.f},						   // harmonic minor
+	Scale{12.f, 0.f, 2.f, 4.f, 7.f, 9.f},									   // major pentatonic
+	Scale{12.f, 0.f, 3.f, 5.f, 7.f, 10.f},									   // minor pentatonic
+	Scale{12.f, 0.f, 2.f, 4.f, 6.f, 8.f, 10.f},								   // wholetone
+	Scale{12.f, 0.f, 2.f, 4.f, 6.f, 7.f, 9.f, 10.f},						   // acoustic/lydian dom.
+	Scale{12.f, 0.f, 2.f, 4.f, 5.f, 7.f, 9.f, 10.f, 11.f},					   // Beebop
+	Scale{12.f, 0.f, 1.f, 4.f, 6.f, 8.f, 10.f, 11.f},						   // enigmatic
+	Scale{12.f, 0.f, 2.5f, 3.f, 4.f, 5.f, 7.f},								   // vietnamese
+	Scale{12.f, 0.f, 3.f, 5.f, 7.f, 10.f},									   // Yo scale
 
 	// 16-TET
-	Scale{0.f, 0.75f, 1.5f, 2.25f, 3.f, 3.75f, 4.5f, 5.25f, 6.f, 6.75f, 7.5f, 8.25f, 9.f, 9.75f, 10.5f, 11.25f, 12.f},
+	Scale{12.f, 0.f, 0.75f, 1.5f, 2.25f, 3.f, 3.75f, 4.5f, 5.25f, 6.f, 6.75f, 7.5f, 8.25f, 9.f, 9.75f, 10.5f, 11.25f},
 
 	// 21-TET
-	Scale{0.f,
+	Scale{12.f,
+		  0.f,
 		  0.571428571428571f,
 		  1.14285714285714f,
 		  1.71428571428571f,
@@ -128,8 +141,7 @@ inline constexpr std::array scale = {
 		  9.71428571428571f,
 		  10.2857142857143f,
 		  10.8571428571429f,
-		  11.4285714285714f,
-		  12.f},
+		  11.4285714285714f},
 };
 
 // Quantize and Channel::Cv assume 12-note octaves, and Channel::Mode:Scales must also be octave-based
@@ -140,20 +152,24 @@ inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
 	}
 	using namespace Channel;
 
-	const auto scale_octave = scale[scale.size() - 1];
-	const auto octave = static_cast<uint8_t>(input / static_cast<float>(scale_octave));
-	input -= octave * scale_octave;
+	// const auto octave = static_cast<uint8_t>(input / static_cast<float>(scale.octave));
+	auto cur_octave = input / scale.octave;
+	input -= cur_octave * scale.octave;
 
-	const auto note = input;
+	auto note = input;
 
 	// lower bound is first element that is >= note
 	const auto lb = std::lower_bound(scale.begin(), scale.end(), note);
 
-	const float upper = *lb;
-	const float lower = lb == scale.begin() ? 0.f : *std::next(lb, -1);
-	const float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
+	float upper = *lb;
+	float lower = lb == scale.begin() ? cur_octave == 0 ? scale[0] : scale.octave : *std::next(lb, -1);
+	//	if (lower == scale.octave) {
+	//		lower -= scale.octave;
+	//		cur_octave -= 1;
+	//	}
+	float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
 
-	return (closest + (octave * scale_octave)) + scale.offset;
+	return (closest + (cur_octave * scale.octave));
 }
 
 } // namespace Catalyst2::Quantizer
