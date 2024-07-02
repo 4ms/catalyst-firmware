@@ -63,6 +63,9 @@ struct Scale {
 		if (size_ > MaxScaleNotes) {
 			return false;
 		}
+		if (size_ == 0) {
+			return true;
+		}
 		if (offset >= scl[size_ - 1] / 2 || offset < -(scl[size_ - 1] / 2)) {
 			return false;
 		}
