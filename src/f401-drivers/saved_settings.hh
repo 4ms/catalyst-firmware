@@ -19,7 +19,7 @@ class SavedSettings {
 	WearLevel<mdrivlib::FlashBlock<SharedData, SharedSettingsFlashAddr, SharedSettingsSectorSize>>
 		shared_settings_flash;
 
-	static constexpr uint32_t CurrentVersionTag = Legacy::V1_1__V1_2::Shared::tag + 1;
+	static constexpr uint32_t CurrentSharedSettingsVersionTag = Legacy::V1_1__V1_2::Shared::tag + 1;
 
 public:
 	bool read(SeqModeData &data) {
@@ -41,7 +41,7 @@ public:
 	bool read(SharedData &data) {
 		// we know the incoming struct has been constructed using the current version's default values
 		const auto magic_number = *reinterpret_cast<uint32_t *>(SharedSettingsFlashAddr);
-		if (magic_number == CurrentVersionTag) {
+		if (magic_number == CurrentSharedSettingsVersionTag) {
 			return shared_settings_flash.read(data);
 		} else if (magic_number == Legacy::V1_1__V1_2::Shared::tag) {
 			WearLevel<mdrivlib::FlashBlock<Legacy::V1_1__V1_2::Shared::Data,
@@ -51,7 +51,7 @@ public:
 			if (v1_2Data.read(*reinterpret_cast<Legacy::V1_1__V1_2::Shared::Data *>(&data))) {
 				// we have the old data in the new struct.
 				shared_settings_flash.erase();
-				data.SettingsVersionTag = CurrentVersionTag;
+				data.SettingsVersionTag = CurrentSharedSettingsVersionTag;
 				shared_settings_flash.write(data);
 				return shared_settings_flash.read(data);
 			}
@@ -83,7 +83,7 @@ public:
 				// Try to write the extracted data, regardless if the above erasing failed
 				// Reset the settings WearLeveling sector since we just wiped it
 				auto reset_settings = decltype(shared_settings_flash){};
-				data.SettingsVersionTag = CurrentVersionTag;
+				data.SettingsVersionTag = CurrentSharedSettingsVersionTag;
 				reset_settings.write(data);
 
 				return true;
@@ -94,7 +94,7 @@ public:
 	}
 
 	bool write(SharedData &data) {
-		data.SettingsVersionTag = CurrentVersionTag;
+		data.SettingsVersionTag = CurrentSharedSettingsVersionTag;
 		return shared_settings_flash.write(data);
 	}
 };
