@@ -53,6 +53,9 @@ struct Scale {
 	constexpr Channel::Cv::type &operator[](const std::size_t idx) {
 		return scl[idx];
 	}
+	constexpr const Channel::Cv::type &back() const {
+		return scl[size_ - 1];
+	}
 	constexpr std::size_t size() const {
 		return size_;
 	}
@@ -75,7 +78,7 @@ struct Scale {
 		if (size_ == 0) {
 			return true;
 		}
-		if (octave >= scl[size_ - 1] / 2 || octave < -(scl[size_ - 1] / 2)) {
+		if (octave >= back() / 2 || octave < -(back() / 2)) {
 			return false;
 		}
 		for (auto &n : *this) {
@@ -157,7 +160,7 @@ inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
 	// lower bound is first element that is >= note
 	const auto lb = std::lower_bound(scale.begin(), scale.end(), note);
 	const auto upper = lb == scale.end() ? scale.octave : *lb;
-	const auto lower = lb == scale.begin() ? scale[scale.size() - 1] - scale.octave : *std::next(lb, -1);
+	const auto lower = lb == scale.begin() ? scale.back() - scale.octave : *std::next(lb, -1);
 
 	const auto closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
 	if (closest < 0 && !cur_octave) {
