@@ -21,9 +21,6 @@ struct Scale {
 		, scl{static_cast<Channel::Cv::type>(fromFloat(ts))...}
 		, size_(sizeof...(T)) {
 	}
-	uint32_t getNoteOctave(uint16_t note, uint16_t octave_size) {
-		return note / octave_size;
-	}
 	Scale(FixedVector<Channel::Cv::type, MaxScaleNotes> &notes) {
 		if (notes.size() > 2) {
 			std::sort(notes.begin(), notes.end());
@@ -152,24 +149,22 @@ inline Channel::Cv::type Process(const Scale &scale, Channel::Cv::type input) {
 	}
 	using namespace Channel;
 
-	// const auto octave = static_cast<uint8_t>(input / static_cast<float>(scale.octave));
-	auto cur_octave = input / scale.octave;
+	const auto cur_octave = input / scale.octave;
 	input -= cur_octave * scale.octave;
 
-	auto note = input;
+	const auto note = input;
 
 	// lower bound is first element that is >= note
 	const auto lb = std::lower_bound(scale.begin(), scale.end(), note);
+	const auto upper = lb == scale.end() ? scale.octave : *lb;
+	const auto lower = lb == scale.begin() ? scale[scale.size() - 1] - scale.octave : *std::next(lb, -1);
 
-	float upper = *lb;
-	float lower = lb == scale.begin() ? cur_octave == 0 ? scale[0] : scale.octave : *std::next(lb, -1);
-	//	if (lower == scale.octave) {
-	//		lower -= scale.octave;
-	//		cur_octave -= 1;
-	//	}
-	float closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
+	const auto closest = (std::abs(note - lower) <= std::abs(upper - note)) ? lower : upper;
+	if (closest < 0 && !cur_octave) {
+		return scale[0];
+	}
 
-	return (closest + (cur_octave * scale.octave));
+	return closest + (cur_octave * scale.octave);
 }
 
 } // namespace Catalyst2::Quantizer
