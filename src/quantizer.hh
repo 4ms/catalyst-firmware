@@ -25,9 +25,8 @@ struct Scale {
 		if (notes.size() > 2) {
 			std::sort(notes.begin(), notes.end());
 			notes.erase(std::unique(notes.begin(), notes.end()), notes.end());
-			const auto last_note = notes[notes.size() - 1];
+			const auto last_note = notes.pop_back();
 			const auto octave_size = last_note - notes[0];
-			notes.erase(notes.size() - 1);
 			for (auto &note : notes) {
 				if (note / octave_size != notes[0] / octave_size) {
 					const auto middle = &note;
