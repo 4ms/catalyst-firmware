@@ -10,7 +10,7 @@
 namespace Catalyst2::Ui::Sequencer::Settings
 {
 class Global : public Usual {
-	SongMode songmode{p, c, &main_ui};
+	SongMode songmode{p, c, main_ui};
 
 public:
 	using Usual::Usual;

@@ -22,10 +22,12 @@ inline void LedBlinker(Controls &c, const Shared::Blinker &b) {
 }
 
 class Abstract {
+
 public:
 	Controls &c;
-	Abstract(Controls &c)
-		: c{c} {
+	Abstract(Controls &c, Abstract &main_ui)
+		: c{c}
+		, main_ui{main_ui} {
 	}
 
 	virtual void Init() {
@@ -42,6 +44,7 @@ public:
 	}
 
 protected:
+	Abstract &main_ui;
 	void SwitchUiMode(Abstract &next) {
 		next_ui = &next;
 	}

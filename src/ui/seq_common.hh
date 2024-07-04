@@ -42,12 +42,10 @@ class Usual : public Abstract {
 
 public:
 	Catalyst2::Sequencer::Interface &p;
-	Abstract &main_ui;
 
-	Usual(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract *main_ui)
-		: Abstract{c}
-		, p{p}
-		, main_ui{*main_ui} {
+	Usual(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract &main_ui)
+		: Abstract{c, main_ui}
+		, p{p} {
 	}
 	void Common() final {
 		p.seqclock.external = c.sense.trig.is_high();

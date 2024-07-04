@@ -16,17 +16,15 @@ namespace Catalyst2::Ui::Macro
 {
 
 class Main : public Usual {
-	Add add{p, c, this};
-	Bank bank{p, c, this};
-	Morph morph{p, c, this};
-	Settings settings{p, c, this};
-	Range range{p, c, this};
-	Abstract &sequencer;
+	Add add{p, c, *this};
+	Bank bank{p, c, *this};
+	Morph morph{p, c, *this};
+	Settings settings{p, c, *this};
+	Range range{p, c, *this};
 
 public:
 	Main(Catalyst2::Macro::Interface &p, Controls &c, Abstract &sequencer)
-		: Usual{p, c, this}
-		, sequencer{sequencer} {
+		: Usual{p, c, sequencer} {
 	}
 	void Init() override {
 		c.button.fine.clear_events();
@@ -58,7 +56,7 @@ public:
 			for (auto i = 0u; i < Model::NumChans; i++) {
 				p.shared.blinker.Set(Model::NumChans - i - 1, 1, 200, 100 * i + 250);
 			}
-			SwitchUiMode(sequencer);
+			SwitchUiMode(main_ui);
 			return;
 		} else if (c.button.add.is_high()) {
 			if (!p.bank.IsBankClassic() && !is_latch) {

@@ -11,9 +11,9 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class Bank : public Usual {
-	Save save{p, c, &main_ui};
-	Mutes mutes{p, c, &main_ui};
-	SaveScales savescales{p, c, &main_ui};
+	Save save{p, c, main_ui};
+	Mutes mutes{p, c, main_ui};
+	SaveScales savescales{p, c, main_ui};
 
 public:
 	using Usual::Usual;

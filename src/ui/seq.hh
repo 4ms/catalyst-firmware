@@ -19,19 +19,17 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class Main : public Usual {
-	Bank bank{p, c, this};
-	Morph morph{p, c, this};
-	Probability probability{p, c, this};
-	Settings::Global global_settings{p, c, this};
-	Settings::Channel channel_settings{p, c, this};
-	PageParams page_params{p, c, this};
-	Abstract &macro;
+	Bank bank{p, c, *this};
+	Morph morph{p, c, *this};
+	Probability probability{p, c, *this};
+	Settings::Global global_settings{p, c, *this};
+	Settings::Channel channel_settings{p, c, *this};
+	PageParams page_params{p, c, *this};
 	bool just_queued = false;
 
 public:
 	Main(Catalyst2::Sequencer::Interface &p, Controls &c, Abstract &macro)
-		: Usual{p, c, this}
-		, macro{macro} {
+		: Usual{p, c, macro} {
 	}
 	//	using Usual::Usual;
 	void Init() override {
@@ -90,7 +88,7 @@ public:
 		const auto bbank = c.button.bank.is_high();
 
 		if (p.shared.mode == Model::Mode::Macro) {
-			SwitchUiMode(macro);
+			SwitchUiMode(main_ui);
 		} else if (c.button.shift.is_high()) {
 			if (bbank) {
 				SwitchUiMode(channel_settings);

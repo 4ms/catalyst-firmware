@@ -11,7 +11,7 @@ namespace Catalyst2::Ui::Macro
 {
 
 class Settings : public Usual {
-	Reset reset{p, c, &main_ui};
+	Reset reset{p, c, main_ui};
 
 public:
 	using Usual::Usual;

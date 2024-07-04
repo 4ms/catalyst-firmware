@@ -8,7 +8,7 @@
 namespace Catalyst2::Ui::Sequencer
 {
 class SongMode : public Usual {
-	Reset reset{p, c, &main_ui};
+	Reset reset{p, c, main_ui};
 
 public:
 	using Usual::Usual;
