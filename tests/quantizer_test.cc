@@ -2,6 +2,8 @@
 
 #include "doctest.h"
 #include "util/countzip.hh"
+#include <set>
+#include <span>
 
 using namespace Catalyst2;
 
@@ -91,4 +93,90 @@ TEST_CASE("Quantizer: picks closest note (chromatic)") {
 
 	check_scale(chromatic, Channel::Cv::note);
 	check_scale(wholetones, Channel::Cv::note * 2);
+}
+
+TEST_CASE("Create scale from sequence of notes") {
+
+	SUBCASE("100 300 600 + 1000*N") {
+		FixedVector<Channel::Cv::type, Quantizer::Scale::MaxScaleNotes> seq;
+
+		SUBCASE("notes in order, two octaves up") {
+			seq.push_back(2100);
+			seq.push_back(2300);
+			seq.push_back(2600);
+			seq.push_back(3100);
+		}
+
+		SUBCASE("notes out of order, with repeats") {
+			seq.push_back(1100);
+			seq.push_back(300);
+			seq.push_back(600);
+			seq.push_back(600);
+			seq.push_back(1100);
+			seq.push_back(100);
+		}
+
+		Quantizer::Scale scale{seq}; // construct scale from sequence
+		CHECK(scale.octave == 1000);
+		CHECK(scale.size() == 3);
+		CHECK(scale[0] == 100);
+		CHECK(scale[1] == 300);
+		CHECK(scale[2] == 600);
+	}
+
+	SUBCASE("D F + 5th * N, crosses an octave when normalized to 0") {
+		enum note : Channel::Cv::type { C, Cx, D, Dx, E, F, Fx, G, Gx, A, Ax, B };
+		auto n = [](note n, unsigned octave) -> Channel::Cv::type { return 12u * octave + n; };
+
+		FixedVector<Channel::Cv::type, Quantizer::Scale::MaxScaleNotes> seq;
+
+		CHECK(n(D, 2) == 26);
+		CHECK(n(F, 2) == 29); // 1
+		CHECK(n(A, 2) == 33); // 5
+		// Scale span is 7 (high-low)
+		// So scale "octaves" are 0-6, 7-13, 14-20, 21-27, 28-34, ...
+		// The notes 26, 29, 33 are in two different "octaves".
+		// 26 is one "octave" below 33, so we can drop it and use 29, 33
+		// for our scale definition.
+		// Thus, the lowest note >= 0 is 1 (29-28), then 5 (33-28), repeating +N*7
+
+		seq.push_back(n(D, 2));
+		seq.push_back(n(F, 2));
+		seq.push_back(n(A, 2));
+
+		Quantizer::Scale scale{seq}; // construct scale from sequence
+
+		auto check_is_in = [&](auto val) { CHECK(Quantizer::Process(scale, val) == val); };
+		auto check_is_out = [&](auto val) { CHECK(Quantizer::Process(scale, val) != val); };
+
+		// original values are in the scale:
+		check_is_in(n(D, 2));
+		check_is_in(n(F, 2));
+		check_is_in(n(A, 2));
+
+		// repeat this by adding fifths:
+		check_is_in(n(C, 3));
+		check_is_in(n(G, 3));
+		check_is_in(n(B, 3));
+		check_is_in(n(D, 4));
+		check_is_in(n(Fx, 4));
+		check_is_in(n(A, 4));
+		check_is_in(n(Cx, 5));
+		check_is_in(n(E, 5));
+		check_is_in(n(Gx, 5));
+
+		// make sure bogus values aren't also in scale (just check a few obvious ones)
+		check_is_out(n(D, 5));
+		check_is_out(n(F, 5));
+		check_is_out(n(A, 5));
+
+		// check going down from original notes, too
+		check_is_in(n(Ax, 1));
+		check_is_in(n(G, 1));
+		check_is_in(n(Dx, 1));
+		check_is_in(n(C, 1));
+		check_is_in(n(Gx, 0));
+		check_is_in(n(F, 0));
+		check_is_in(n(Cx, 0));
+	}
 }
