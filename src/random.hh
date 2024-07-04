@@ -12,13 +12,17 @@ namespace Catalyst2::Random
 {
 namespace Amount
 {
+#if defined(TESTPROJECT) && defined(__clang__)
+using type = unsigned;
+#else
 using type = float;
-inline constexpr auto min = 0.f;
-inline constexpr auto max = 1.f;
+#endif
+inline constexpr type min = 0.f;
+inline constexpr type max = 1.f;
 
 // +/1 2 semitones
-inline constexpr auto inc = (max / (Model::output_octave_range * 12));
-inline constexpr auto def = inc;
+inline constexpr type inc = (max / (Model::output_octave_range * 12));
+inline constexpr type def = inc;
 } // namespace Amount
 template<typename T>
 inline void RandomizeBuffer(T &d) {

@@ -44,7 +44,11 @@ struct StartOffset {
 	static constexpr type def = min;
 };
 struct PhaseOffset {
+#if defined(TESTPROJECT) && defined(__clang__)
+	using type = int;
+#else
 	using type = float;
+#endif
 	static constexpr type min = 0.f;
 	static constexpr type max = 1.f;
 	static constexpr type def = min;
