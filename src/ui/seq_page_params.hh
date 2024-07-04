@@ -77,7 +77,8 @@ public:
 
 		switch (encoder) {
 			case EncoderAlts::Transpose: {
-				const auto fine = c.button.fine.is_high();
+				const auto fine = c.button.fine.is_high() && !c.button.morph.is_high();
+				inc = c.button.fine.is_high() && c.button.morph.is_high() ? inc * 12 : inc;
 				const auto page_start = page * Steps::PerPage;
 				for (auto step = 0u; step < Steps::PerPage; step++) {
 					p.IncStepInSequence(step + page_start, inc, fine);
