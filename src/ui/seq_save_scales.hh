@@ -54,8 +54,8 @@ public:
 		const auto &col = Palette::Scales::color;
 		if (did_save == Model::NumChans) {
 			const auto blink = Controls::TimeNow() & (1u << 9);
-			if (blink) {
-				for (auto i = 0u; i < Model::NumChans; i++) {
+			for (auto i = 0u; i < Model::NumChans; i++) {
+				if (blink || p.shared.data.custom_scale[i].size()) {
 					c.SetEncoderLed(i, col[col.size() - Model::num_custom_scales + i - 1]);
 				}
 			}
