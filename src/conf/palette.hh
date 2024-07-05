@@ -202,7 +202,29 @@ inline Color CvRainbow(Model::Output::type level) {
 		lavender,
 		magenta,
 	};
-	return semitone_colors.interp_by_index_wrap(Channel::Output::to_semitone(level));
+	return semitone_colors.interp_by_index(Channel::Output::to_semitone(level));
+}
+
+inline Color OctaveRainbow(Model::Output::type level) {
+	constexpr InterpArray<Color, static_cast<uint8_t>(Model::output_octave_range + 1)> semitone_colors = {
+		full_red,
+		off,
+		orange,
+		yellow,
+		yellow.blend(orange, 0.5f),
+		grey,
+		orange,
+		orange.blend(green, .5f),
+		green,
+		cyan,
+		blue.blend(red, 0.5f),
+		lavender,
+		magenta,
+		pink,
+		blue,
+		blue,
+	};
+	return semitone_colors.interp_by_index(Channel::Output::to_octave(level));
 }
 
 inline Color Classic(Model::Output::type out_level) {
@@ -219,6 +241,7 @@ inline Color fromOutput(uint8_t palette, Model::Output::type out_level) {
 		case 1:
 			return CvRainbow(out_level);
 		case 2:
+			return OctaveRainbow(out_level);
 		case 3:
 		default:
 			return Classic(out_level);

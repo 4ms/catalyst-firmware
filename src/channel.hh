@@ -75,8 +75,13 @@ inline constexpr Model::Output::type from_volts(const float volts) {
 	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
 }
 
-constexpr float to_semitone(Model::Output::type raw) {
+inline constexpr float to_semitone(Model::Output::type raw) {
 	constexpr auto div = (UINT16_MAX + 1.f) / Model::output_octave_range / 12;
+	return raw / div;
+}
+
+inline constexpr float to_octave(Model::Output::type raw) {
+	constexpr auto div = (UINT16_MAX + 1.f) / (Model::output_octave_range);
 	return raw / div;
 }
 
