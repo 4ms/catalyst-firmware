@@ -202,7 +202,7 @@ inline Color CvRainbow(Model::Output::type level) {
 		lavender,
 		magenta,
 	};
-	return semitone_colors.interp_by_index(Channel::Output::to_semitone(level));
+	return semitone_colors.interp_by_index_wrap(Channel::Output::to_semitone(level));
 }
 
 inline Color OctaveRainbow(Model::Output::type level) {
