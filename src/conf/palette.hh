@@ -238,10 +238,10 @@ inline Color OctaveRainbow(Model::Output::type level) {
 	return semitone_colors.interp_by_index(Channel::Output::to_octave(level));
 }
 
-inline Color Classic(Model::Output::type out_level) {
+inline Color Classic(Model::Output::type out_level, Color negative, Color positive) {
 	constexpr auto zero = Channel::Output::from_volts(0.f);
 	int level = out_level - zero;
-	const auto color = level < 0 ? Voltage::Negative : Voltage::Positive;
+	const auto color = level < 0 ? negative : positive;
 	auto phase = level / static_cast<float>(zero);
 	phase *= level < 0 ? -1.f : 0.5f;
 	return off.blend(color, phase);
@@ -254,8 +254,9 @@ inline Color fromOutput(uint8_t palette, Model::Output::type out_level) {
 		case 2:
 			return OctaveRainbow(out_level);
 		case 3:
+			return Classic(out_level, full_blue, full_white);
 		default:
-			return Classic(out_level);
+			return Classic(out_level, Voltage::Negative, Voltage::Positive);
 	}
 }
 
