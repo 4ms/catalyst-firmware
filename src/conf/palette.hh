@@ -185,13 +185,44 @@ inline constexpr Color color(uint8_t val) {
 namespace Cv
 {
 
-inline Color fromOutput(uint8_t palette, Model::Output::type out_level) {
+inline constexpr auto num_palettes = 4;
+
+inline Color CvRainbow(Model::Output::type level) {
+	constexpr InterpArray<Color, 12> semitone_colors = {
+		grey,
+		pink,
+		red,
+		orange,
+		yellow,
+		yellow.blend(green, 0.5f),
+		green,
+		cyan,
+		blue,
+		blue.blend(red, 0.5f),
+		lavender,
+		magenta,
+	};
+	return semitone_colors.interp_by_index_wrap(Channel::Output::to_semitone(level));
+}
+
+inline Color Classic(Model::Output::type out_level) {
 	constexpr auto zero = Channel::Output::from_volts(0.f);
 	int level = out_level - zero;
 	const auto color = level < 0 ? Voltage::Negative : Voltage::Positive;
 	auto phase = level / static_cast<float>(zero);
 	phase *= level < 0 ? -1.f : 0.5f;
 	return off.blend(color, phase);
+}
+
+inline Color fromOutput(uint8_t palette, Model::Output::type out_level) {
+	switch (palette) {
+		case 1:
+			return CvRainbow(out_level);
+		case 2:
+		case 3:
+		default:
+			return Classic(out_level);
+	}
 }
 
 inline Color fromLevel(uint8_t palette, Channel::Cv::type level, Channel::Cv::Range range) {
