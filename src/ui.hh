@@ -54,7 +54,6 @@ public:
 		controls.Update();
 		params.shared.blinker.Update();
 		params.shared.youngest_scene_button.Update(controls);
-		params.shared.data.palette = 1;
 
 		ui->Common();
 		ui->Update();
