@@ -174,12 +174,14 @@ public:
 		}
 	}
 	const Quantizer::Scale &GetScale(uint8_t chan) const {
-		const auto idx = slot.settings.GetChannelMode(chan).GetScaleIdx();
-		if (idx >= Quantizer::scale.size()) {
-			return shared.data.custom_scale[idx - Quantizer::scale.size()];
-		} else {
-			return Quantizer::scale[idx];
+		const auto mode = slot.settings.GetChannelMode(chan);
+		if (mode.IsGate()) {
+			return Quantizer::scale[0];
 		}
+		if (mode.IsCustomScale()) {
+			return shared.data.custom_scale[mode.GetScaleIdx() - Quantizer::scale.size()];
+		}
+		return Quantizer::scale[mode.GetScaleIdx()];
 	}
 
 	bool ShowPlayhead() const {
