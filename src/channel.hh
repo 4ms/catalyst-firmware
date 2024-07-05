@@ -75,6 +75,11 @@ inline constexpr Model::Output::type from_volts(const float volts) {
 	return MathTools::map_value(v, Model::min_output_voltage, Model::max_output_voltage, min, max);
 }
 
+constexpr float to_semitone(Model::Output::type raw) {
+	constexpr auto div = (UINT16_MAX + 1.f) / Model::output_octave_range / 12;
+	return raw / div;
+}
+
 inline constexpr Model::Output::type gate_armed = from_volts(0.f);
 inline constexpr Model::Output::type gate_off = gate_armed - 1;
 inline constexpr Model::Output::type gate_high = from_volts(10.f);
