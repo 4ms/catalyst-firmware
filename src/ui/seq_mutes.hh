@@ -65,8 +65,8 @@ public:
 			if (cm.IsMuted()) {
 				col = Palette::very_dim_grey;
 			} else {
-				col = cm.IsGate() ? Palette::Gate::fromOutput(val) :
-									Palette::Cv::fromOutput(p.shared.data.palette[chan], val);
+				col =
+					cm.IsGate() ? Palette::Gate::fromOutput(val) : Palette::Cv::fromOutput(p.shared.data.palette, val);
 			}
 			c.SetEncoderLed(chan, col);
 		}

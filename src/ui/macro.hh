@@ -160,7 +160,7 @@ public:
 																		p.bank.pathway.CurrentScene();
 					col = scene ? Palette::Gate::fromLevelMacro(p.bank.GetGate(scene.value(), chan)) : Palette::off;
 				} else {
-					col = Palette::Cv::fromOutput(p.shared.data.palette[chan], val);
+					col = Palette::Cv::fromOutput(p.shared.data.palette, val);
 				}
 				c.SetEncoderLed(chan, col);
 			}
@@ -170,10 +170,10 @@ public:
 private:
 	void EncoderDisplayScene(Catalyst2::Macro::Pathway::SceneId scene) {
 		for (auto chan = 0u; chan < Model::NumChans; chan++) {
-			const auto col = p.bank.GetChannelMode(chan).IsGate() ?
-								 Palette::Gate::fromLevelMacro(p.bank.GetGate(scene, chan)) :
-								 Palette::Cv::fromLevel(
-									 p.shared.data.palette[chan], p.bank.GetCv(scene, chan), p.bank.GetRange(chan));
+			const auto col =
+				p.bank.GetChannelMode(chan).IsGate() ?
+					Palette::Gate::fromLevelMacro(p.bank.GetGate(scene, chan)) :
+					Palette::Cv::fromLevel(p.shared.data.palette, p.bank.GetCv(scene, chan), p.bank.GetRange(chan));
 			c.SetEncoderLed(chan, col);
 		}
 	}
