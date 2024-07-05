@@ -168,6 +168,10 @@ public:
 	}
 	void UpdateChannelMode() {
 		for (auto i = 0u; i < Model::NumChans; i++) {
+			const auto mode = slot.settings.GetChannelMode(i);
+			if (mode.IsGate()) {
+				continue;
+			}
 			if (GetScale(i).size() == 0) {
 				IncChannelMode(i, -1);
 			}
