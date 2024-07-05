@@ -77,11 +77,8 @@ struct Scale {
 		if (size_ == 0) {
 			return true;
 		}
-		if (octave >= back() / 2 || octave < -(back() / 2)) {
-			return false;
-		}
 		for (auto &n : *this) {
-			if (n > Channel::Cv::max) {
+			if (n > octave) {
 				return false;
 			}
 		}
