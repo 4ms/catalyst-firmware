@@ -7,6 +7,7 @@
 #include "range.hh"
 #include "sequencer_step.hh"
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <type_traits>
 
@@ -28,7 +29,7 @@ inline constexpr Color green = Color(0, 0, 90);
 inline constexpr Color cyan = Color(0, 90, 90);
 inline constexpr Color teal = Color(0, 32, 90);
 inline constexpr Color blue = Color(0, 128, 0);
-inline constexpr Color magenta = Color(100, 50, 0);
+inline constexpr Color magenta = Color(130, 50, 0);
 inline constexpr Color salmon = Color(153, 5, 13);
 inline constexpr Color lavender = Color(100, 100, 0);
 
@@ -190,19 +191,29 @@ inline constexpr auto num_palettes = 4;
 inline Color CvRainbow(Model::Output::type level) {
 	constexpr InterpArray<Color, 12> semitone_colors = {
 		grey,
+		pink.blend(grey, 0.3f),
 		pink,
 		red,
 		orange,
 		yellow,
-		yellow.blend(green, 0.5f),
 		green,
-		cyan,
+		teal,
+		Color(0, 60, 60), // dimmer cyan,
 		blue,
-		blue.blend(red, 0.5f),
-		lavender,
-		magenta,
+		Color(34, 51, 0),	// lavendar-ish
+		Color(230, 170, 0), // magenta-ish
 	};
-	return semitone_colors.interp_by_index_wrap(Channel::Output::to_semitone(level));
+	const auto min_brightness = 0.2f;
+
+	const auto color = semitone_colors.interp_by_index_wrap(Channel::Output::to_semitone(level));
+
+	// brightness varies from 0V to 5V as 0.2f to 1.0f:
+	constexpr auto zero = Channel::Output::from_volts(0.f);
+	auto brightness = float(level - zero) / zero;
+	brightness = std::clamp(brightness, 0.f, 1.f);
+	brightness = MathTools::map_value(brightness, 0.f, 1.f, min_brightness, 1.f);
+
+	return off.blend(color, brightness);
 }
 
 inline Color Classic(Model::Output::type out_level) {
