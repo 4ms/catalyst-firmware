@@ -218,22 +218,22 @@ inline Color CvRainbow(Model::Output::type level) {
 
 inline Color OctaveRainbow(Model::Output::type level) {
 	constexpr InterpArray<Color, static_cast<uint8_t>(Model::output_octave_range + 1)> semitone_colors = {
-		full_red,
+		magenta.blend(off, 0.75f),
+		lavender.blend(off, 0.5f),
+		blue.blend(off, 0.65f),
+		cyan.blend(off, 0.75f),
+		grey.blend(off, 0.65f),
+		off,
+		red,
 		orange,
 		yellow,
-		yellow.blend(orange, 0.5f),
-		grey,
-		off,
-		orange,
-		orange.blend(green, .5f),
 		green,
 		cyan,
-		blue.blend(red, 0.5f),
-		lavender,
-		magenta,
-		pink,
-		blue.blend(off, .5f),
 		blue,
+		magenta,
+		lavender,
+		grey,
+		full_white,
 	};
 	return semitone_colors.interp_by_index(Channel::Output::to_octave(level));
 }
