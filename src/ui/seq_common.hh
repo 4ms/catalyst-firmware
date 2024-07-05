@@ -83,7 +83,7 @@ protected:
 			const auto range = p.slot.settings.GetRange(chan);
 			for (auto step_i = 0u; step_i < Model::Sequencer::Steps::PerPage; step_i++) {
 				const auto step = p.GetStep(step_offset + step_i);
-				const auto color = Palette::Cv::fromLevel(step.ReadCv(), range);
+				const auto color = Palette::Cv::fromLevel(p.shared.data.palette[chan], step.ReadCv(), range);
 				PaintStep(page, step_i, color, seqhead_col);
 			}
 		} else {

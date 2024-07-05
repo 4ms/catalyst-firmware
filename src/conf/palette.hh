@@ -185,7 +185,7 @@ inline constexpr Color color(uint8_t val) {
 namespace Cv
 {
 
-inline Color fromOutput(Model::Output::type out_level) {
+inline Color fromOutput(uint8_t palette, Model::Output::type out_level) {
 	constexpr auto zero = Channel::Output::from_volts(0.f);
 	int level = out_level - zero;
 	const auto color = level < 0 ? Voltage::Negative : Voltage::Positive;
@@ -194,9 +194,9 @@ inline Color fromOutput(Model::Output::type out_level) {
 	return off.blend(color, phase);
 }
 
-inline Color fromLevel(Channel::Cv::type level, Channel::Cv::Range range) {
+inline Color fromLevel(uint8_t palette, Channel::Cv::type level, Channel::Cv::Range range) {
 	auto out = Channel::Output::ScaleCv(level, range);
-	return fromOutput(out);
+	return fromOutput(palette, out);
 }
 
 } // namespace Cv

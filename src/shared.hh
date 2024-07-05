@@ -106,7 +106,7 @@ struct Data {
 	Model::Mode saved_mode alignas(4) = BuildOptions::default_mode;
 	Calibration::Dac::Data dac_calibration alignas(4);
 	Quantizer::CustomScales custom_scale{};
-	uint8_t reserved[8];
+	uint8_t palette[8];
 
 	bool validate() const {
 		if (SettingsVersionTag == 0xffffffff) {
