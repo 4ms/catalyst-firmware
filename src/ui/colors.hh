@@ -3,25 +3,23 @@
 #include "conf/model.hh"
 #include "conf/palette.hh"
 #include "controls.hh"
+#include "macro_common.hh"
 #include "params.hh"
 #include "seq_common.hh"
-#include "sequencer.hh"
 #include <algorithm>
 
-namespace Catalyst2::Ui::Sequencer
+namespace Catalyst2::Ui
 {
+template<typename Usual>
 class Colors : public Usual {
 
 public:
 	using Usual::Usual;
-	void Init() override {
-	}
 	void Update() override {
-		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
-		if (!c.button.bank.is_high()) {
-			SwitchUiMode(main_ui);
-			p.shared.do_save_shared = true;
+		ForEachEncoderInc(Usual::c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
+		if (!Usual::c.button.bank.is_high()) {
+			Usual::SwitchUiMode(Usual::main_ui);
+			Usual::p.shared.do_save_shared = true;
 			return;
 		}
 	}
@@ -29,17 +27,15 @@ public:
 		if (encoder > 0) {
 			return;
 		}
-		p.shared.data.palette[0] =
-			std::clamp<int32_t>(p.shared.data.palette[0] + dir, 0, Palette::Cv::num_palettes - 1);
-		std::fill(p.shared.data.palette.begin() + 1, p.shared.data.palette.end(), p.shared.data.palette[0]);
-	}
-	void OnSceneButtonRelease(uint8_t page) {
+		auto &s = Usual::p.shared.data.palette;
+		s[0] = std::clamp<int32_t>(s[0] + dir, 0, Palette::Cv::num_palettes - 1);
+		std::fill(s.begin() + 1, s.end(), s[0]);
 	}
 	void PaintLeds(const Model::Output::Buffer &outs) override {
-		ClearEncoderLeds(c);
+		ClearEncoderLeds(Usual::c);
 		const auto blink = Controls::TimeNow() & (1u << 9);
 		if (blink) {
-			c.SetEncoderLed(0, Palette::dim_grey);
+			Usual::c.SetEncoderLed(0, Palette::dim_grey);
 		}
 		using namespace Channel::Output;
 		constexpr std::array notes = {from_octave_note(-3, 6),
@@ -50,9 +46,12 @@ public:
 									  from_octave_note(2, 4),
 									  from_octave_note(3, 5)};
 		for (auto i = 0u; i < 7; i++) {
-			c.SetEncoderLed(i + 1, Palette::Cv::fromOutput(p.shared.data.palette[0], notes[i]));
+			Usual::c.SetEncoderLed(i + 1, Palette::Cv::fromOutput(Usual::p.shared.data.palette[0], notes[i]));
 		}
 	}
 };
 
-} // namespace Catalyst2::Ui::Sequencer
+using SeqColors = Colors<Sequencer::Usual>;
+using MacroColors = Colors<Macro::Usual>;
+
+} // namespace Catalyst2::Ui
