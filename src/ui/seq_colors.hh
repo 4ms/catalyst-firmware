@@ -8,9 +8,6 @@
 #include "sequencer.hh"
 #include <algorithm>
 
-// maybe we come up with a set of values like 7 different notes in different octaves, three negative, one zero, and
-// three positive
-
 namespace Catalyst2::Ui::Sequencer
 {
 class Colors : public Usual {
@@ -45,13 +42,13 @@ public:
 			c.SetEncoderLed(0, Palette::dim_grey);
 		}
 		using namespace Channel::Output;
-		constexpr std::array notes = {from_octave_note(-4, 0),
-									  from_octave_note(-2, 1),
-									  from_octave_note(-1, 2),
+		constexpr std::array notes = {from_octave_note(-3, 6),
+									  from_octave_note(-2, 8),
+									  from_octave_note(-1, 10),
 									  from_octave_note(0, 0),
-									  from_octave_note(1, 3),
-									  from_octave_note(4, 4),
-									  from_octave_note(7, 5)};
+									  from_octave_note(1, 2),
+									  from_octave_note(2, 4),
+									  from_octave_note(3, 5)};
 		for (auto i = 0u; i < 7; i++) {
 			c.SetEncoderLed(i + 1, Palette::Cv::fromOutput(p.shared.data.palette[0], notes[i]));
 		}
