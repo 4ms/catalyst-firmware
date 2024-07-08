@@ -1,4 +1,4 @@
 #pragma once
 
 inline constexpr unsigned FirmwareMajorVersion = 1;
-inline constexpr unsigned FirmwareMinorVersion = 2;
+inline constexpr unsigned FirmwareMinorVersion = 3;
