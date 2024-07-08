@@ -144,6 +144,7 @@ public:
 	Clock::Timer reset{Model::HoldTimes::reset};
 	Clock::Timer modeswitcher{Model::HoldTimes::mode_switcher};
 	Clock::Timer save{Model::HoldTimes::save};
+	Clock::Timer colors{Model::HoldTimes::colors};
 	Blinker blinker;
 	bool do_save_macro = false;
 	bool do_save_seq = false;

@@ -5,6 +5,7 @@
 #include "seq_common.hh"
 #include "seq_save.hh"
 #include "sequencer.hh"
+#include "ui/seq_colors.hh"
 #include "ui/seq_mutes.hh"
 #include "ui/seq_save_scales.hh"
 
@@ -14,6 +15,8 @@ class Bank : public Usual {
 	Save save{p, c, main_ui};
 	Mutes mutes{p, c, main_ui};
 	SaveScales savescales{p, c, main_ui};
+	Colors colors{p, c, main_ui};
+	bool touched = false;
 
 public:
 	using Usual::Usual;
@@ -22,10 +25,18 @@ public:
 		c.button.morph.clear_events();
 		c.button.play.clear_events();
 		c.button.add.clear_events();
+		p.shared.colors.SetAlarm();
+		touched = false;
 	}
 	void Update() override {
-		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) {
+			OnEncoderInc(encoder, inc);
+			touched = true;
+		});
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) {
+			OnSceneButtonRelease(button);
+			touched = true;
+		});
 
 		if (!p.IsChannelSelected()) {
 			SwitchUiMode(mutes);
@@ -35,6 +46,10 @@ public:
 		if (c.button.fine.just_went_high()) {
 			p.CopySequence();
 			ConfirmCopy(p.shared, p.GetSelectedChannel());
+		}
+		if (p.shared.colors.Check() && !touched) {
+			SwitchUiMode(colors);
+			return;
 		}
 		if ((!c.button.bank.is_high() && !p.shared.youngest_scene_button.has_value()) || c.button.shift.is_high()) {
 			SwitchUiMode(main_ui);
