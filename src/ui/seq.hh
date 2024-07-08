@@ -92,7 +92,7 @@ public:
 		} else if (c.button.shift.is_high()) {
 			if (bbank) {
 				SwitchUiMode(channel_settings);
-			} else if (bmorph) {
+			} else if (bmorph && !c.button.fine.is_high()) {
 				SwitchUiMode(probability);
 			} else if (ysb) {
 				SwitchUiMode(page_params);
