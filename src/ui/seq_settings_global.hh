@@ -21,8 +21,8 @@ public:
 	void Update() override {
 		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
 
-		if (!c.button.shift.is_high() || c.button.bank.is_high() || c.button.morph.is_high() ||
-			p.shared.youngest_scene_button.has_value())
+		if (!c.button.shift.is_high() || c.button.bank.is_high() ||
+			(c.button.morph.is_high() && !c.button.fine.is_high()) || p.shared.youngest_scene_button.has_value())
 		{
 			SwitchUiMode(main_ui);
 			return;
@@ -41,7 +41,11 @@ public:
 		switch (encoder) {
 			using namespace Model::Sequencer;
 			case EncoderAlts::Transpose:
-				p.slot.settings.IncTranspose(inc, fine);
+				if (c.button.morph.is_high()) {
+					p.slot.settings.IncTranspose(inc * 12, false);
+				} else {
+					p.slot.settings.IncTranspose(inc, fine);
+				}
 				p.shared.hang.Cancel();
 				break;
 			case EncoderAlts::Random:

@@ -22,6 +22,10 @@ public:
 			SwitchUiMode(main_ui);
 			return;
 		}
+		if (c.button.fine.is_high()) {
+			SwitchUiMode(main_ui);
+			return;
+		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t inc) {
 		p.IncStepProbability(encoder, inc);

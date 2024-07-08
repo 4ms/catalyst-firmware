@@ -134,7 +134,7 @@ class Channel {
 				return;
 			}
 			if (above_pivot) {
-				if (static_cast<U>(val.value()) + inc < static_cast<U>(pivot) && val.value() <= pivot) {
+				if (static_cast<U>(val.value()) + inc < static_cast<U>(pivot) && val.value() >= pivot) {
 					val = std::nullopt;
 					return;
 				}
