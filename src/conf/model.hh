@@ -28,6 +28,7 @@ namespace HoldTimes
 inline constexpr auto mode_switcher = 3000u;
 inline constexpr auto reset = 3000u;
 inline constexpr auto save = 800u;
+inline constexpr auto colors = 4000u;
 } // namespace HoldTimes
 
 namespace Sequencer

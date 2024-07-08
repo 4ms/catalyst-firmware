@@ -106,7 +106,7 @@ struct Data {
 	Model::Mode saved_mode alignas(4) = BuildOptions::default_mode;
 	Calibration::Dac::Data dac_calibration alignas(4);
 	Quantizer::CustomScales custom_scale{};
-	uint8_t reserved[8];
+	std::array<uint8_t, Model::NumChans> palette;
 
 	bool validate() const {
 		if (SettingsVersionTag == 0xffffffff) {
@@ -118,6 +118,11 @@ struct Data {
 			return false;
 		for (auto &s : custom_scale) {
 			if (!s.Validate()) {
+				return false;
+			}
+		}
+		for (auto &i : palette) {
+			if (i >= Palette::Cv::num_palettes) {
 				return false;
 			}
 		}
@@ -139,6 +144,7 @@ public:
 	Clock::Timer reset{Model::HoldTimes::reset};
 	Clock::Timer modeswitcher{Model::HoldTimes::mode_switcher};
 	Clock::Timer save{Model::HoldTimes::save};
+	Clock::Timer colors{Model::HoldTimes::colors};
 	Blinker blinker;
 	bool do_save_macro = false;
 	bool do_save_seq = false;

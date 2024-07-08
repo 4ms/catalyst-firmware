@@ -7,6 +7,7 @@
 #include "range.hh"
 #include "sequencer_step.hh"
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <type_traits>
 
@@ -28,7 +29,7 @@ inline constexpr Color green = Color(0, 0, 90);
 inline constexpr Color cyan = Color(0, 90, 90);
 inline constexpr Color teal = Color(0, 32, 90);
 inline constexpr Color blue = Color(0, 128, 0);
-inline constexpr Color magenta = Color(100, 50, 0);
+inline constexpr Color magenta = Color(130, 50, 0);
 inline constexpr Color salmon = Color(153, 5, 13);
 inline constexpr Color lavender = Color(100, 100, 0);
 
@@ -185,18 +186,83 @@ inline constexpr Color color(uint8_t val) {
 namespace Cv
 {
 
-inline Color fromOutput(Model::Output::type out_level) {
+inline constexpr auto num_palettes = 4;
+
+inline Color CvRainbow(Model::Output::type level) {
+	constexpr InterpArray<Color, 12> semitone_colors = {
+		grey,
+		pink.blend(grey, 0.3f),
+		pink,
+		red,
+		orange,
+		yellow,
+		green,
+		teal,
+		Color(0, 60, 60), // dimmer cyan,
+		blue,
+		Color(34, 51, 0),	// lavendar-ish
+		Color(230, 170, 0), // magenta-ish
+	};
+	const auto min_brightness = 0.2f;
+
+	const auto color = semitone_colors.interp_by_index_wrap(Channel::Output::to_semitone(level));
+
+	// brightness varies from 0V to 5V as 0.2f to 1.0f:
+	constexpr auto zero = Channel::Output::from_volts(0.f);
+	auto brightness = float(level - zero) / zero;
+	brightness = std::clamp(brightness, 0.f, 1.f);
+	brightness = MathTools::map_value(brightness, 0.f, 1.f, min_brightness, 1.f);
+
+	return off.blend(color, brightness);
+}
+
+inline Color OctaveRainbow(Model::Output::type level) {
+	constexpr InterpArray<Color, static_cast<uint8_t>(Model::output_octave_range + 1)> semitone_colors = {
+		magenta.blend(off, 0.75f),
+		lavender.blend(off, 0.5f),
+		blue.blend(off, 0.65f),
+		cyan.blend(off, 0.75f),
+		grey.blend(off, 0.65f),
+		off,
+		red,
+		orange,
+		yellow,
+		green,
+		cyan,
+		blue,
+		magenta,
+		lavender,
+		grey,
+		full_white,
+	};
+	return semitone_colors.interp_by_index(Channel::Output::to_octave(level));
+}
+
+inline Color Classic(Model::Output::type out_level, Color negative, Color positive) {
 	constexpr auto zero = Channel::Output::from_volts(0.f);
 	int level = out_level - zero;
-	const auto color = level < 0 ? Voltage::Negative : Voltage::Positive;
+	const auto color = level < 0 ? negative : positive;
 	auto phase = level / static_cast<float>(zero);
 	phase *= level < 0 ? -1.f : 0.5f;
 	return off.blend(color, phase);
 }
 
-inline Color fromLevel(Channel::Cv::type level, Channel::Cv::Range range) {
+inline Color fromOutput(uint8_t palette, Model::Output::type out_level) {
+	switch (palette) {
+		case 1:
+			return CvRainbow(out_level);
+		case 2:
+			return OctaveRainbow(out_level);
+		case 3:
+			return Classic(out_level, full_blue, full_white);
+		default:
+			return Classic(out_level, Voltage::Negative, Voltage::Positive);
+	}
+}
+
+inline Color fromLevel(uint8_t palette, Channel::Cv::type level, Channel::Cv::Range range) {
 	auto out = Channel::Output::ScaleCv(level, range);
-	return fromOutput(out);
+	return fromOutput(palette, out);
 }
 
 } // namespace Cv

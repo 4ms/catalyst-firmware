@@ -4,12 +4,15 @@
 #include "controls.hh"
 #include "macro_common.hh"
 #include "params.hh"
+#include "ui/colors.hh"
 
 namespace Catalyst2::Ui::Macro
 {
 
 class Bank : public Usual {
 	bool did_save = false;
+	MacroColors colors{p, c, main_ui};
+	bool touched = false;
 
 public:
 	using Usual::Usual;
@@ -17,12 +20,21 @@ public:
 		c.button.play.clear_events();
 		c.button.morph.clear_events();
 		did_save = false;
+		p.shared.colors.SetAlarm();
+		touched = false;
 	}
 	void Update() override {
-		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) { OnEncoderInc(encoder, inc); });
-		ForEachSceneButtonJustReleased(c, [this](uint8_t button) { OnSceneButtonRelease(button); });
+		ForEachEncoderInc(c, [this](uint8_t encoder, int32_t inc) {
+			OnEncoderInc(encoder, inc);
+			touched = true;
+		});
+		ForEachSceneButtonJustReleased(c, [this](uint8_t button) {
+			OnSceneButtonRelease(button);
+			touched = true;
+		});
 		if (c.button.play.just_went_low()) {
 			p.bank.SelectBank(Model::Macro::Bank::NumNormal);
+			touched = true;
 		}
 
 		if (c.button.morph.just_went_high()) {
@@ -35,6 +47,10 @@ public:
 				p.shared.blinker.Set(16, 500);
 				did_save = true;
 			}
+		}
+		if (p.shared.colors.Check() && !touched) {
+			SwitchUiMode(colors);
+			return;
 		}
 
 		if (!c.button.bank.is_high() && p.shared.youngest_scene_button == std::nullopt) {

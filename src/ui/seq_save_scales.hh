@@ -29,6 +29,10 @@ public:
 			}
 			return;
 		}
+		if (c.button.shift.is_high()) {
+			SwitchUiMode(main_ui);
+			return;
+		}
 	}
 	void OnEncoderInc(uint8_t encoder, int32_t dir) {
 		if (dir < 0) {
