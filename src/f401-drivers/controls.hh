@@ -125,11 +125,12 @@ public:
 
 	uint16_t ReadSlider() {
 		auto val = std::clamp(sliderf.val(), Board::MinSliderVal, Board::MaxSliderVal);
-		return MathTools::map_value(val, Board::MinSliderVal, Board::MaxSliderVal, 4095.9f, 0.f);
+		return MathTools::map_value(val, Board::MinSliderVal, Board::MaxSliderVal, 4095.f, 0.f);
 	}
 
 	uint16_t ReadCv() {
-		return cv.val();
+		auto val = std::clamp(cv.val(), Board::MinCvVal, Board::MaxCvVal);
+		return MathTools::map_value(val, Board::MinCvVal, Board::MaxCvVal, 0.f, 4095.f);
 	}
 
 	void SetEncoderLed(unsigned led, Color color) {

@@ -145,6 +145,8 @@ inline constexpr std::array<mdrivlib::AdcChannelConf, NumAdcs> AdcChans = {{
 
 inline constexpr uint16_t MinSliderVal = 8;
 inline constexpr uint16_t MaxSliderVal = 4095 - MinSliderVal;
+inline constexpr uint16_t MinCvVal = 4;
+inline constexpr uint16_t MaxCvVal = 4095;
 
 ////////////////// DAC
 
