@@ -17,10 +17,6 @@ inline constexpr float CalcSceneWidth(uint32_t size) {
 	return 1.f / (size - 1u);
 }
 
-inline uint32_t PhaseToIndex(float phase, uint32_t size) {
-	const auto out = static_cast<uint32_t>(phase * (size - 1));
-	return out % size;
-}
 inline bool SceneIsNear(float point, float scene_width, float threshold = near_threshold) {
 	while (point > scene_width) {
 		point -= scene_width;
@@ -111,11 +107,11 @@ public:
 		const auto s = size();
 		on_a_scene = SceneIsNear(point, scene_width);
 		fire_gate = SceneIsNear(point, scene_width, gate_threshold);
-		scene_left = PhaseToIndex(point, s);
-		scene_right = scene_left + 1 >= s ? 0 : scene_left + 1;
-		scene_nearest = PhaseToIndex(point + (scene_width * .5f), s);
-		phase = point / scene_width;
-		phase -= static_cast<uint32_t>(phase);
+		const auto path_phase = point * (s - 1);
+		scene_left = static_cast<uint32_t>(path_phase) % s;
+		scene_nearest = static_cast<uint32_t>(path_phase + (scene_width * .5f)) % s;
+		scene_right = scene_left + 1 == s ? 0 : scene_left + 1;
+		phase = path_phase - static_cast<uint32_t>(path_phase);
 	}
 	// classic fucntions
 	void ReplaceSceneA(SceneId scene) {
