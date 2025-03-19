@@ -99,15 +99,16 @@ class Interface {
 	bool on_a_scene = false;
 	bool fire_gate = false;
 	float phase = 0.f;
+	float scene_width = 0.f;
 
 public:
 	void Load(PathwayData &d) {
 		pathway = &d;
+		scene_width = CalcSceneWidth(size());
 	}
 
 	void Update(float point) {
-		auto s = size();
-		const auto scene_width = CalcSceneWidth(s);
+		const auto s = size();
 		on_a_scene = SceneIsNear(point, scene_width);
 		fire_gate = SceneIsNear(point, scene_width, gate_threshold);
 		scene_left = PhaseToIndex(point, s);
@@ -163,10 +164,12 @@ public:
 	void InsertScene(SceneId scene) {
 		prev_index = scene_left + 1;
 		pathway->Insert(prev_index, scene);
+		scene_width = CalcSceneWidth(size());
 	}
 	void InsertSceneAfterLast(SceneId scene) {
 		prev_index++;
 		pathway->Insert(prev_index, scene);
+		scene_width = CalcSceneWidth(size());
 	}
 
 	void RemoveSceneRelative(int8_t pos = 0) {
@@ -175,6 +178,7 @@ public:
 		}
 
 		pathway->Erase(Relative(pos));
+		scene_width = CalcSceneWidth(size());
 	}
 
 	uint8_t size() {
