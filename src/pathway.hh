@@ -113,8 +113,7 @@ public:
 		fire_gate = SceneIsNear(point, scene_width, gate_threshold);
 		scene_left = PhaseToIndex(point, s);
 		scene_right = scene_left + 1 >= s ? 0 : scene_left + 1;
-		const auto n = PhaseToIndex(point + (scene_width * .5f), s);
-		scene_nearest = n >= s ? 0 : n;
+		scene_nearest = PhaseToIndex(point + (scene_width * .5f), s);
 		phase = point / scene_width;
 		phase -= static_cast<uint32_t>(phase);
 	}
