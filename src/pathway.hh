@@ -3,6 +3,7 @@
 #include "util/fixed_vector.hh"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <optional>
 
@@ -18,10 +19,6 @@ inline constexpr float CalcSceneWidth(uint32_t size) {
 }
 
 inline bool SceneIsNear(float point, float scene_width, float threshold = near_threshold) {
-	while (point > scene_width) {
-		point -= scene_width;
-	}
-
 	// this prevents undefined clamp behaviour
 	// after twelve or so scenes are in the the path a scene is always near with a 2.5mm threshold.
 	auto high = scene_width - threshold;
@@ -105,8 +102,11 @@ public:
 
 	void Update(float point) {
 		const auto s = size();
-		on_a_scene = SceneIsNear(point, scene_width);
-		fire_gate = SceneIsNear(point, scene_width, gate_threshold);
+
+		const auto t = std::fmod(point, scene_width);
+		on_a_scene = SceneIsNear(t, scene_width);
+		fire_gate = SceneIsNear(t, scene_width, gate_threshold);
+
 		const auto path_phase = point * (s - 1);
 		scene_left = static_cast<uint32_t>(path_phase) % s;
 		scene_nearest = static_cast<uint32_t>(path_phase + (scene_width * .5f)) % s;
