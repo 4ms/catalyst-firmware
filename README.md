@@ -9,6 +9,7 @@ Requirements:
 ```
 git clone https://github.com/4ms/catalyst-firmware.git
 cd catalyst-firmware
+git submodule update --init --recursive
 make all
 
 ls -l build/f401/*.hex
